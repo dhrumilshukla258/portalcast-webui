@@ -119,6 +119,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [showChannelList, setShowChannelList] = useState(false);
   const [showEpisodeList, setShowEpisodeList] = useState(false);
+  const [showNextEpisodeButton, setShowNextEpisodeButton] = useState(false);
   const [seekOverlay, setSeekOverlay] = useState<SeekOverlayData | null>(null);
   const [subtitles, setSubtitles] = useState<any[]>([]);
 
@@ -163,7 +164,9 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
 
   useEffect(() => {
     if (fitMode && user) {
-      updatePreferences({ videoFitMode: fitMode });
+      if (user.preferences?.videoFitMode !== fitMode) {
+        updatePreferences({ videoFitMode: fitMode });
+      }
     }
   }, [fitMode, user, updatePreferences]);
 
@@ -561,6 +564,18 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       });
     }
 
+    if (dur > 0 && contentType === 'series' && (dur - time <= 300)) {
+      setShowNextEpisodeButton((prev) => {
+        if (!prev) return true;
+        return prev;
+      });
+    } else {
+      setShowNextEpisodeButton((prev) => {
+        if (prev) return false;
+        return prev;
+      });
+    }
+
     if (dur > 0 && contentType !== 'tv' && time / dur >= 0.9 && mediaId) {
       completePlayback();
     }
@@ -771,7 +786,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
     }
   }, [episodes, item, onEpisodeSelect, onLoadMoreEpisodes, completePlayback]);
 
-  const playNextEpisode = useCallback(() => {
+  const playNextEpisode = useCallback(async () => {
     if (episodes && episodes.length > 0 && item && onEpisodeSelect) {
       const activeCardId = item._episodeCardId || item.id;
       const activeCardIdStr = activeCardId !== undefined && activeCardId !== null ? String(activeCardId) : '';
@@ -810,7 +825,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
         }
 
         if (nextEp) {
-          saveProgress();
+          await completePlayback();
           toast.info(`Playing Next Episode: ${nextEp.name || nextEp.title}`);
           onEpisodeSelect(nextEp);
           return;
@@ -819,7 +834,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
         const nextIndex = isDescending ? curIndex - 1 : curIndex + 1;
         if (nextIndex >= 0 && nextIndex < episodes.length) {
           const nextEp = episodes[nextIndex];
-          saveProgress();
+          await completePlayback();
           toast.info(`Playing Next Episode: ${nextEp.name || nextEp.title}`);
           onEpisodeSelect(nextEp);
         } else if (nextIndex === episodes.length && onLoadMoreEpisodes) {
@@ -832,7 +847,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
         }
       }
     }
-  }, [episodes, item, onEpisodeSelect, onLoadMoreEpisodes, saveProgress]);
+  }, [episodes, item, onEpisodeSelect, onLoadMoreEpisodes, completePlayback]);
 
   const playPrevEpisode = useCallback(() => {
     if (episodes && episodes.length > 0 && item && onEpisodeSelect) {
@@ -890,16 +905,26 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
     }
   }, [episodes, item, onEpisodeSelect, saveProgress]);
 
+  const saveProgressRef = useRef(saveProgress);
+  useEffect(() => {
+    saveProgressRef.current = saveProgress;
+  }, [saveProgress]);
+
   useEffect(() => {
     if (contentType === 'tv') return;
-    const interval = setInterval(saveProgress, 30000);
-    window.addEventListener('beforeunload', saveProgress);
+    const interval = setInterval(() => {
+      saveProgressRef.current();
+    }, 30000);
+    const handleUnload = () => {
+      saveProgressRef.current();
+    };
+    window.addEventListener('beforeunload', handleUnload);
     return () => {
       clearInterval(interval);
-      window.removeEventListener('beforeunload', saveProgress);
-      saveProgress();
+      window.removeEventListener('beforeunload', handleUnload);
+      saveProgressRef.current();
     };
-  }, [contentType, saveProgress]);
+  }, [contentType]);
 
   const handleProxyToggle = useCallback(
     (newProxyState: boolean) => {
@@ -980,6 +1005,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       isSettingsMenuOpen,
       activeSettingsMenu,
       showSettingsButton,
+      showNextEpisodeButton,
   
       currentProgram,
       nextProgram,
@@ -1030,6 +1056,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       setFocusedIndex,
       setShowChannelList,
       setShowEpisodeList,
+      setShowNextEpisodeButton,
       showControlsAndCursor,
       cycleFitMode,
       toggleSettingsMenu,

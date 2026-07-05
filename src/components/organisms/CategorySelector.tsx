@@ -184,12 +184,12 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
   if (!categories || categories.length <= 1) return null;
 
   return (
-    <div className="mb-8 px-2 sm:px-0">
+    <div className="mb-4 px-2 sm:px-0">
       <div className="flex items-center gap-3">
         <div
           ref={scrollContainerRef}
           data-focus-group="categories"
-          className="hide-scrollbar flex-grow flex gap-3 overflow-x-auto px-4 py-4 scroll-smooth"
+          className="hide-scrollbar flex-grow flex gap-2 overflow-x-auto px-3 py-2 scroll-smooth"
         >
           {outsideCategories.map((cat, idx) => {
             const isActive = selectedCategory === cat.id;
@@ -200,13 +200,13 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
                 data-focusable="true"
                 data-selected={isActive ? "true" : "false"}
                 onClick={() => handleSelect(cat.id, cat.title)}
-                className={`flex h-12 shrink-0 items-center justify-center rounded-full px-6 text-center transition-all duration-300 outline-none text-sm sm:text-base ${
+                className={`flex h-8 shrink-0 items-center justify-center rounded-full px-4 text-center transition-all duration-300 outline-none text-xs sm:text-sm ${
                   isActive
                     ? 'border-transparent bg-gradient-to-r from-sky-400 via-blue-500 to-blue-600 text-white font-extrabold shadow-lg shadow-blue-500/30'
                     : 'border-gray-800/80 bg-gray-900/30 text-gray-400 font-bold hover:border-gray-750 hover:text-gray-200'
                 } focus:scale-105 focus:border-transparent focus:text-white focus:bg-gradient-to-r focus:from-sky-400 focus:to-blue-500 focus:shadow-[0_0_20px_rgba(56,189,248,0.4)] [&.focused]:scale-105 [&.focused]:!border-transparent [&.focused]:text-white [&.focused]:bg-gradient-to-r [&.focused]:from-sky-400 [&.focused]:to-blue-500 [&.focused]:shadow-[0_0_20px_rgba(56,189,248,0.4)]`}
               >
-                <span className="font-extrabold whitespace-nowrap">
+                <span className="font-bold whitespace-nowrap">
                   {cat.title}
                 </span>
               </button>

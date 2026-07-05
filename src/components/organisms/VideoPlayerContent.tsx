@@ -43,6 +43,8 @@ const VideoPlayerContent: React.FC = () => {
     focusedIndex,
     showChannelList,
     showEpisodeList,
+    showNextEpisodeButton,
+    setShowNextEpisodeButton,
     seekOverlay,
     fitMode,
     isSettingsMenuOpen,
@@ -101,6 +103,11 @@ const VideoPlayerContent: React.FC = () => {
   const backPressRef = useRef<NodeJS.Timeout | null>(null);
   const lastTouchTime = useRef(0);
   const isKeyboardModeRef = useRef(false);
+  const longPressTimerRef = useRef<any>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const lastTapReleaseTimeRef = useRef<number>(0);
+  const singleTapTimeoutRef = useRef<any>(null);
+  const speedBannerRef = useRef<HTMLDivElement>(null);
 
   // Detect pointer vs keyboard usage to hide focus highlights on touch/click
   useEffect(() => {
@@ -120,6 +127,45 @@ const VideoPlayerContent: React.FC = () => {
       window.removeEventListener('pointerdown', handlePointerDown, { capture: true });
     };
   }, []);
+
+  // Cleanup refs
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    };
+  }, []);
+
+  // TV Browser unexpected pause / stall recovery listener
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player) return;
+
+    const handlePause = () => {
+      if (player.state?.waiting || player.waiting) {
+        console.log("[TV Recovery] Player paused while buffering, forcing play...");
+        setTimeout(() => {
+          player.play().catch((err: any) => {
+            console.error("[TV Recovery] Forced play failed:", err);
+          });
+        }, 1000);
+      }
+    };
+
+    const handleStalled = () => {
+      console.log("[TV Recovery] Stalled event detected, attempting play nudge...");
+      if (player.paused) {
+        player.play().catch(() => {});
+      }
+    };
+
+    player.addEventListener('pause', handlePause);
+    player.addEventListener('stalled', handleStalled);
+
+    return () => {
+      player.removeEventListener('pause', handlePause);
+      player.removeEventListener('stalled', handleStalled);
+    };
+  }, [reloadTrigger, useProxy]);
 
   // 🚀 FIX 1: Synchronous Navigation Ref (Prevents getting stuck on fast clicks)
   const navRef = useRef({
@@ -417,6 +463,11 @@ const VideoPlayerContent: React.FC = () => {
           e.preventDefault();
           e.stopPropagation();
 
+          if (showNextEpisodeButton) {
+            setShowNextEpisodeButton(false);
+            return;
+          }
+
           if (showEpisodeList) {
             setShowEpisodeList(false);
             setFocusSync(0);
@@ -571,15 +622,115 @@ const VideoPlayerContent: React.FC = () => {
     } as PlayerSrc;
   }, [useProxy, streamUrl, rawStreamUrl]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    lastTouchTime.current = Date.now();
+    
+    const target = e.target as HTMLElement;
+    if (target && (target.closest('button') || target.closest('.media-controls') || target.closest('.more-options-menu') || target.closest('.episode-overlay') || target.closest('.channel-list'))) {
+      return;
+    }
+
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      const touchX = touch.clientX;
+      const touchY = touch.clientY;
+      
+      longPressTimerRef.current = setTimeout(() => {
+        const player = playerRef.current;
+        if (player) {
+          player.playbackRate = 2.0;
+          if (speedBannerRef.current) {
+            speedBannerRef.current.style.display = 'flex';
+          }
+        }
+      }, 500);
+      
+      touchStartPosRef.current = { x: touchX, y: touchY };
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+
+    const player = playerRef.current;
+    if (player && player.playbackRate === 2.0) {
+      player.playbackRate = 1.0;
+      if (speedBannerRef.current) {
+        speedBannerRef.current.style.display = 'none';
+      }
+      e.preventDefault();
+      return;
+    }
+
+    const target = e.target as HTMLElement;
+    if (target && (target.closest('button') || target.closest('.media-controls') || target.closest('.more-options-menu') || target.closest('.episode-overlay') || target.closest('.channel-list'))) {
+      return;
+    }
+
+    const touchDuration = Date.now() - lastTouchTime.current;
+    if (touchDuration < 300 && touchStartPosRef.current) {
+      const changedTouch = e.changedTouches[0];
+      const diffX = Math.abs(changedTouch.clientX - touchStartPosRef.current.x);
+      const diffY = Math.abs(changedTouch.clientY - touchStartPosRef.current.y);
+      
+      if (diffX < 20 && diffY < 20) {
+        const now = Date.now();
+        const timeSinceLastTap = now - lastTapReleaseTimeRef.current;
+        lastTapReleaseTimeRef.current = now;
+
+        const containerWidth = playerContainerRef.current?.getBoundingClientRect().width || window.innerWidth;
+        const tapX = changedTouch.clientX;
+        const ratio = tapX / containerWidth;
+
+        if (timeSinceLastTap < 300) {
+          // Double Tap!
+          if (singleTapTimeoutRef.current) {
+            clearTimeout(singleTapTimeoutRef.current);
+            singleTapTimeoutRef.current = null;
+          }
+
+          if (ratio < 0.3) {
+            handleSkipButtonClick(-10);
+          } else if (ratio > 0.7) {
+            handleSkipButtonClick(10);
+          } else {
+            // Center double-tap → toggle fullscreen
+            remote.toggleFullscreen();
+          }
+        } else {
+          // Single Tap - Wait 300ms to see if it is a double tap
+          if (singleTapTimeoutRef.current) {
+            clearTimeout(singleTapTimeoutRef.current);
+          }
+          singleTapTimeoutRef.current = setTimeout(() => {
+            if (ratio >= 0.3 && ratio <= 0.7) {
+              if (player) {
+                if (player.paused) {
+                  player.play().catch(() => {});
+                } else {
+                  player.pause();
+                }
+              }
+            } else {
+              // Single tap on sides toggles controls visibility
+              setControlsVisible(!controlsVisible);
+            }
+            singleTapTimeoutRef.current = null;
+          }, 300);
+        }
+      }
+    }
+  };
+
   return (
     <div
       className="h-[100dvh] w-full bg-black"
       data-focusable="true"
       tabIndex={-1}
       style={{ '--video-fit-mode': fitMode } as React.CSSProperties}
-      onTouchStart={() => {
-        lastTouchTime.current = Date.now();
-      }}
     >
       <div
         ref={playerContainerRef}
@@ -642,6 +793,13 @@ const VideoPlayerContent: React.FC = () => {
               />
             ))}
           </MediaProvider>
+
+          {/* Transparent Gesture Overlay to intercept touches on Vidstack media provider */}
+          <div
+            className="absolute inset-0 z-10 touch-none"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          />
 
           <Captions
             className={`media-captions pointer-events-none absolute left-0 right-0 z-10 select-none break-words text-center transition-[bottom] duration-300 ease-in-out ${
@@ -768,6 +926,34 @@ const VideoPlayerContent: React.FC = () => {
             </div>
           )}
 
+          {showNextEpisodeButton && (
+            <div className="absolute bottom-24 right-8 z-[90] flex items-center gap-3">
+              <button
+                data-focusable="true"
+                data-control="next-episode"
+                onClick={() => {
+                  setShowNextEpisodeButton(false);
+                  playNextEpisode?.();
+                }}
+                className="flex items-center gap-2 px-5 py-3 rounded-lg border border-white/10 bg-black/80 text-white font-semibold shadow-lg backdrop-blur-md hover:bg-white/20 transition-all duration-200 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-blue-600 focus:border-blue-400"
+              >
+                <span>Next Episode</span>
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" stroke="currentColor" strokeWidth="1" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          <div
+            ref={speedBannerRef}
+            style={{ display: 'none' }}
+            className="absolute top-10 left-1/2 -translate-x-1/2 z-[100] pointer-events-none flex items-center gap-2 px-4 py-2 rounded-full border border-yellow-500/30 bg-black/80 shadow-lg backdrop-blur-sm"
+          >
+            <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+            <span className="text-yellow-500 text-xs font-bold tracking-wider uppercase">2x Speed Active</span>
+          </div>
+          
           <BufferingOverlay />
         </MediaPlayer>
       </div>

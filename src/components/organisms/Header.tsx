@@ -100,7 +100,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           onClick={() => navigate('/')}
         />
         <span className="text-slate-600 hidden sm:inline text-lg select-none pointer-events-none">|</span>
-        <h1 className="hidden text-sm font-extrabold tracking-wider text-white sm:block sm:text-base md:text-lg lg:text-xl uppercase bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent drop-shadow-sm self-center">
+        <h1 className="hidden text-sm font-extrabold tracking-wider text-white sm:block sm:text-base md:text-lg lg:text-xl uppercase bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent drop-shadow-sm self-center truncate max-w-[180px] sm:max-w-xs md:max-w-sm">
           {currentTitle}
         </h1>
       </div>
@@ -230,11 +230,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
                 tabIndex={-1}
                 title="User Profile"
               >
-                {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  user.name ? user.name[0].toUpperCase() : 'U'
-                )}
+                {user.name ? user.name[0].toUpperCase() : 'U'}
               </button>
 
               {dropdownOpen && (

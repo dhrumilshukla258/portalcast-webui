@@ -150,14 +150,26 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     [searchTerm, context.search, pushFrame, handleSearch]
   );
 
-  // Push a history entry when the modal opens so the browser Back button
-  // closes the modal rather than popping a navigation frame.
   React.useEffect(() => {
     if (detailItem) {
       window.history.pushState({ modal: 'detail' }, '');
       detailHistoryPushed.current = true;
     }
   }, [detailItem]);
+
+  const scrollPositionRef = React.useRef(0);
+
+  React.useEffect(() => {
+    if (streamUrl) {
+      scrollPositionRef.current = window.scrollY || document.documentElement.scrollTop;
+    } else if (scrollPositionRef.current > 0) {
+      const savedPosition = scrollPositionRef.current;
+      setTimeout(() => {
+        window.scrollTo(0, savedPosition);
+      }, 100);
+      scrollPositionRef.current = 0;
+    }
+  }, [streamUrl]);
 
   // Hardware Back (popstate) while the modal is open — just close the modal.
   React.useEffect(() => {
@@ -484,6 +496,7 @@ export default function App() {
       <Routes>
         <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/reset-password" element={<Login />} />
         <Route path="/verify" element={<Verify />} />
         <Route
           path="/"

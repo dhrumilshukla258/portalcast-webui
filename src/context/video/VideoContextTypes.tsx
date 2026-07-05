@@ -24,6 +24,7 @@ export interface VideoContextType {
   isSettingsMenuOpen: boolean;
   activeSettingsMenu: 'main' | 'quality' | 'audio' | 'subtitles' | 'cast';
   showSettingsButton: boolean;
+  showNextEpisodeButton: boolean;
 
   // --- Live TV States ---
   currentProgram: any | null;
@@ -81,6 +82,7 @@ export interface VideoContextType {
   setFocusedIndex: (i: number | null) => void;
   setShowChannelList: (v: boolean) => void;
   setShowEpisodeList: (v: boolean) => void;
+  setShowNextEpisodeButton: (v: boolean) => void;
   showControlsAndCursor: () => void;
   cycleFitMode: () => void;
   setActiveSettingsMenu: (

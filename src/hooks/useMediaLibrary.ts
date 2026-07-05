@@ -148,7 +148,7 @@ export function useMediaLibrary() {
     if (user) {
       fetchProgress();
     }
-  }, [user, fetchProgress, cwRefreshKey]);
+  }, [user?.id, fetchProgress, cwRefreshKey]);
 
   const isFetchingMore = useRef(false);
   const isRestoringFromHistory = useRef(false);
@@ -301,41 +301,42 @@ export function useMediaLibrary() {
     fetchProviderKey();
   }, [fetchProviderKey]);
 
+  // 1. Initial Load of main content (runs once providerKey is ready)
   useEffect(() => {
     if (!providerKey) return;
+    if (initialLoadRef.current) return;
 
-    if (!initialLoadRef.current) {
-      // Determine initial category for this provider from preferences
-      const savedType = user?.preferences?.preferredContentType || 'movie';
-      const key = `${providerKey}_${savedType}`;
-      const lastCategory = user?.preferences?.lastSelectedCategory?.[key] || '*';
-      const lastCategoryTitle = user?.preferences?.lastSelectedCategoryTitle?.[key];
-      const newTitle = savedType === 'series' ? 'Series' : savedType === 'tv' ? 'TV' : 'Movies';
+    const savedType = user?.preferences?.preferredContentType || 'movie';
+    const key = `${providerKey}_${savedType}`;
+    const lastCategory = user?.preferences?.lastSelectedCategory?.[key] || '*';
+    const lastCategoryTitle = user?.preferences?.lastSelectedCategoryTitle?.[key];
+    const newTitle = savedType === 'series' ? 'Series' : savedType === 'tv' ? 'TV' : 'Movies';
 
-      const initialCtx = {
-        ...initialContext,
-        contentType: savedType,
-        category: savedType === 'tv' ? null : lastCategory,
-        parentTitle: savedType === 'tv' ? 'TV' : (lastCategory === '*' ? newTitle : (lastCategoryTitle || newTitle)),
-      };
+    const initialCtx = {
+      ...initialContext,
+      contentType: savedType,
+      category: savedType === 'tv' ? null : lastCategory,
+      parentTitle: savedType === 'tv' ? 'TV' : (lastCategory === '*' ? newTitle : (lastCategoryTitle || newTitle)),
+    };
 
-      fetchData(initialCtx, savedType);
-      initialLoadRef.current = true;
-    }
+    fetchData(initialCtx, savedType);
+    initialLoadRef.current = true;
+  }, [providerKey, user, fetchData]);
 
+  // 2. Fetch ancillary items (carousel, categories, epg) when contentType or providerKey changes
+  useEffect(() => {
+    if (!providerKey) return;
     fetchCarousel();
     if (contentType !== 'tv') {
       fetchVodCategories(contentType as 'movie' | 'series');
-    }
-
-    if (contentType === 'tv') {
+    } else {
       loadEpgData();
       if (isTizen) {
         const lastPlayedId = user?.preferences?.lastSelectedCategory?.['lastPlayedTvChannelId'];
         setPlayLastTvChannel(lastPlayedId || '__play_first__');
       }
     }
-  }, [fetchData, loadEpgData, isTizen, fetchCarousel, fetchVodCategories, user, contentType, providerKey, fetchProviderKey]);
+  }, [contentType, providerKey, fetchCarousel, fetchVodCategories, loadEpgData, isTizen, user?.preferences?.lastSelectedCategory?.['lastPlayedTvChannelId']]);
 
   const handlePageChange = useCallback(
     (direction: number) => {
@@ -565,7 +566,7 @@ export function useMediaLibrary() {
     window.addEventListener('config-changed', handleConfigChange);
     return () =>
       window.removeEventListener('config-changed', handleConfigChange);
-  }, [fetchData, contentType, loadEpgData, fetchCarousel, fetchVodCategories, user, providerKey, fetchProviderKey]);
+  }, [fetchData, contentType, loadEpgData, fetchCarousel, fetchVodCategories, user?.id, providerKey, fetchProviderKey]);
 
   useEffect(() => {
     const handleCarouselChange = () => {

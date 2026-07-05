@@ -5,6 +5,14 @@ import { URL_PATHS } from '@/services/api';
 import { isTizenDevice } from '@/utils/helpers';
 import { SocketContext } from '@/context/useSocket';
 import type { Device } from '@/context/SocketContextTypes';
+import { useAuth } from '@/context/AuthContext';
+
+const SOCKET_URL = URL_PATHS.HOST;
+const getIsReceiver = () => {
+  const isTizen = isTizenDevice();
+  const searchParams = new URLSearchParams(window.location.search);
+  return isTizen || searchParams.get('device') === 'receiver';
+};
 
 export const SocketProvider: React.FC<{ children: ReactNode }> = ({
   children,
@@ -15,12 +23,8 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
   const [activeUserCount, setActiveUserCount] = useState<number>(1);
   const [activeDevices, setActiveDevices] = useState<Device[]>([]);
 
-  const SOCKET_URL = URL_PATHS.HOST;
-
-  const isTizen = isTizenDevice();
-
-  const searchParams = new URLSearchParams(window.location.search);
-  const isReceiver = isTizen || searchParams.get('device') === 'receiver';
+  const isReceiver = getIsReceiver();
+  const { user } = useAuth();
 
   useEffect(() => {
     let deviceId = localStorage.getItem('device_id');
@@ -29,11 +33,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       localStorage.setItem('device_id', deviceId);
     }
     const currentDeviceId = deviceId;
-
-    const deviceName = isReceiver
-      ? `TV (${currentDeviceId.substring(0, 4)})`
-      : `Controller (${currentDeviceId.substring(0, 4)})`;
-
+ 
     const newSocket = io(SOCKET_URL, {
       transports: ['polling', 'websocket'],
       reconnection: true,
@@ -56,6 +56,9 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
 
     newSocket.on('connect', () => {
       setIsConnected(true);
+      
+      const displayName = isReceiver ? 'TV' : 'Controller';
+      const deviceName = `${displayName} (${currentDeviceId.substring(0, 4)})`;
       newSocket.emit('register', {
         id: currentDeviceId,
         name: deviceName,
@@ -99,7 +102,21 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       newSocket.off('config_changed');
       newSocket.disconnect();
     };
-  }, [SOCKET_URL, isReceiver]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    const deviceId = localStorage.getItem('device_id') || '';
+    const displayName = user?.name || user?.email || (isReceiver ? 'TV' : 'Controller');
+    const deviceName = `${displayName} (${deviceId.substring(0, 4)})`;
+
+    socket.emit('register', {
+      id: deviceId,
+      name: deviceName,
+      type: isReceiver ? 'receiver' : 'controller',
+    });
+  }, [socket, isConnected, user?.name, user?.email, isReceiver]);
 
   const castTo = (
     targetDeviceId: string,

@@ -17,7 +17,7 @@ export interface User {
   email: string;
   name: string;
   role: 'admin' | 'user';
-  avatarUrl?: string;
+
   preferences: {
     preferredContentType?: 'movie' | 'series' | 'tv';
     favorites?: string[];
@@ -48,6 +48,7 @@ interface AuthContextType {
   ) => Promise<void>;
   isLoggedIn: boolean;
   refreshProfile: () => Promise<void>;
+
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -226,6 +227,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+
+
   // Listen to token expiry event from API client
   useEffect(() => {
     const handleAuthExpired = () => {
@@ -251,6 +254,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         syncProgress,
         isLoggedIn: !!token,
         refreshProfile,
+
       }}
     >
       {children}
