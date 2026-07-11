@@ -16,6 +16,9 @@ import {
   ArrowUp,
   ArrowDown,
   Upload,
+  BarChart3,
+  FolderTree,
+  Code2,
 } from 'lucide-react';
 import { getCarouselSlides, saveCarouselSlides, type CarouselSlide, uploadFile } from '@/services/services';
 import { api } from '@/services/api';
@@ -25,6 +28,9 @@ import ConfirmationModal from '@/components/molecules/ConfirmationModal';
 import { useSocket } from '@/context/useSocket';
 import { useAuth } from '@/context/AuthContext';
 import UserManager from '@/components/organisms/UserManager';
+import ContentManager from '@/components/organisms/ContentManager';
+import AdminStats from '@/components/organisms/AdminStats';
+import ApiReference from '@/components/organisms/ApiReference';
 
 type Config = {
   hostname: string;
@@ -56,9 +62,9 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
   const { logout } = useAuth();
   const { socket } = useSocket();
   const isAuthenticated = true;
-  const [activeTab, setActiveTab] = useState<'profiles' | 'users' | 'config' | 'logs' | 'carousel'>(
-    'profiles'
-  );
+  const [activeTab, setActiveTab] = useState<
+    'profiles' | 'users' | 'config' | 'logs' | 'carousel' | 'stats' | 'content' | 'api'
+  >('stats');
   const [serverLogs, setServerLogs] = useState<
     { level: string; message: string; timestamp: string }[]
   >([]);
@@ -378,16 +384,29 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
             <nav className="flex w-full items-center gap-1 rounded-2xl border border-gray-800 bg-gray-900/50 p-1.5 backdrop-blur-md sm:w-auto">
               {[
+                { id: 'stats', label: 'Stats', icon: BarChart3 },
                 { id: 'profiles', label: 'Profiles', icon: Globe },
                 { id: 'users', label: 'Users', icon: Users },
+                { id: 'content', label: 'Content', icon: FolderTree },
                 { id: 'carousel', label: 'Carousel', icon: Layout },
                 { id: 'config', label: 'Config', icon: Settings },
                 { id: 'logs', label: 'Logs', icon: Terminal },
+                { id: 'api', label: 'API', icon: Code2 },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() =>
-                    setActiveTab(tab.id as 'profiles' | 'users' | 'config' | 'logs' | 'carousel')
+                    setActiveTab(
+                      tab.id as
+                        | 'profiles'
+                        | 'users'
+                        | 'config'
+                        | 'logs'
+                        | 'carousel'
+                        | 'stats'
+                        | 'content'
+                        | 'api'
+                    )
                   }
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-bold transition-all duration-200 sm:flex-none sm:gap-2 sm:px-4 sm:text-sm ${
                     activeTab === tab.id
@@ -436,6 +455,24 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
 
         {/* --- Content Area --- */}
         <main className="transition-all duration-300">
+          {activeTab === 'stats' && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <AdminStats />
+            </div>
+          )}
+
+          {activeTab === 'content' && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <ContentManager />
+            </div>
+          )}
+
+          {activeTab === 'api' && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <ApiReference />
+            </div>
+          )}
+
           {activeTab === 'profiles' && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <ProfileManager />

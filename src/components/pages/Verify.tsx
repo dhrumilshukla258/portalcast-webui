@@ -64,14 +64,14 @@ export default function Verify() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-indigo-950 flex justify-center items-center font-sans text-gray-200">
+      <div className="min-h-screen app-bg flex justify-center items-center font-sans text-gray-200">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-indigo-950 flex flex-col justify-center items-center px-4 font-sans text-gray-200">
+    <div className="min-h-screen app-bg flex flex-col justify-center items-center px-4 font-sans text-gray-200">
       <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center">
         
         {/* Logo */}

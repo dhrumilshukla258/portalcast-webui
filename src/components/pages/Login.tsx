@@ -371,7 +371,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-indigo-950 flex flex-col justify-center items-center px-4 font-sans text-gray-200">
+    <div className="min-h-screen app-bg flex flex-col justify-center items-center px-4 font-sans text-gray-200">
       <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center">
         
         {/* Logo */}

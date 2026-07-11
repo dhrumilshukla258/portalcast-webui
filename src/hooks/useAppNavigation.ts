@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/context/AuthContext';
 import { getMedia, getMovieUrl, getUserProgress } from '@/services/services';
-import { BASE_URL, URL_PATHS } from '@/services/api';
+import { URL_PATHS } from '@/services/api';
 import type { MediaItem, ContextType } from '@/types';
 import { isTizenDevice } from '@/utils/helpers';
 import { initialContext } from './useMediaLibrary';
@@ -17,33 +17,45 @@ interface NavFrame {
   totalItemsCount: number;
 }
 
-function buildProxiedUrl(raw: string) {
-  return `${BASE_URL}/proxy?url=${btoa(raw)}`;
-}
-
+// The backend always hands back a URL that's already routed through our own
+// server behind an opaque token (/live.m3u8?t=..., /api/proxy?t=...) — never
+// a raw upstream address, so there's nothing left for the client to wrap.
 async function resolveStreamUrl(
   item: MediaItem,
-  isPortal: boolean,
-  seriesNumber?: number
+  seriesNumber?: number,
+  displayOverride?: { title?: string; category?: string }
 ): Promise<{ raw: string; proxied: string }> {
-  if (!isPortal && item.cmd) {
-    return { raw: item.cmd, proxied: buildProxiedUrl(item.cmd) };
-  }
-
+  // NOTE: there used to be a shortcut here (`if (!isPortal && item.cmd) return
+  // item.cmd directly`) for Xtream-provider setups. That's unsafe now: for
+  // episode/movie *files* (unlike already-tokenized live channels via
+  // mapChannel), item.cmd from the listing API is the raw, untokenized
+  // upstream URL — using it directly bypasses the backend entirely, which is
+  // both a security leak (raw portal URL, sometimes with embedded admin
+  // credentials, handed to the browser) and why playback failed outright
+  // (browsers can't play a random external CDN URL directly — CORS/host
+  // issues). Always resolve through the backend, which tokenizes uniformly
+  // for both provider types.
   const urlParams: Record<string, any> = { id: item.id };
-
-  // if (item.cmd) {
-  //   urlParams.cmd = item.cmd;
-  // }
 
   if (seriesNumber !== undefined) {
     urlParams.series = seriesNumber;
   }
 
+  // Purely for the admin "active streams" view — lets it show a real title
+  // and category instead of an opaque resource key. `item` here is sometimes
+  // a resolved *file/quality variant* (e.g. "Hindi / Excellent quality
+  // (1080)"), not the actual episode/movie metadata, so callers that know
+  // the real title (e.g. combining series + episode name) should pass it via
+  // displayOverride rather than relying on item.title/item.name.
+  const displayTitle = displayOverride?.title || item.title || item.name;
+  if (displayTitle) urlParams.title = displayTitle;
+  const displayCategory = displayOverride?.category || item.genres_str || item.tv_genre_id || item.category_id;
+  if (displayCategory) urlParams.category = String(displayCategory);
+
   const linkData = (await getMovieUrl(urlParams)) as Record<string, any>;
   const raw = linkData?.js?.cmd || linkData?.cmd;
   if (typeof raw !== 'string') throw new Error('Stream URL not found.');
-  return { raw, proxied: buildProxiedUrl(raw) };
+  return { raw, proxied: raw };
 }
 
 function getResumeTime(): number | undefined {
@@ -67,7 +79,8 @@ export function useAppNavigation(
   setContext: React.Dispatch<React.SetStateAction<ContextType>>,
   setTotalItemsCount: React.Dispatch<React.SetStateAction<number>>,
   isRestoringFromHistory: React.MutableRefObject<boolean>,
-  onOpenDetail?: (item: MediaItem) => void
+  onOpenDetail?: (item: MediaItem) => void,
+  setCwRefreshKey?: React.Dispatch<React.SetStateAction<number>>
 ) {
   const { user, updatePreferences } = useAuth();
   const isTizen = isTizenDevice();
@@ -201,9 +214,10 @@ export function useAppNavigation(
       } else if (isEpisodeCWT) {
         urlParams.series = 1;
       }
-      // if (item.cmd) {
-      //   urlParams.cmd = item.cmd;
-      // }
+      const streamTitle = item.title || item.name;
+      if (streamTitle) urlParams.title = streamTitle;
+      const streamCategory = item.genres_str || item.tv_genre_id || item.category_id;
+      if (streamCategory) urlParams.category = String(streamCategory);
 
       const linkData = (await getMovieUrl(urlParams)) as Record<string, any>;
       const freshCmd = linkData?.js?.cmd || linkData?.cmd;
@@ -211,7 +225,7 @@ export function useAppNavigation(
         throw new Error('Fresh stream URL not found.');
 
       setRawStreamUrl(freshCmd);
-      setStreamUrl(buildProxiedUrl(freshCmd));
+      setStreamUrl(freshCmd);
       setResumePlaybackState(
         savedResumeTime ? { currentTime: savedResumeTime } : undefined
       );
@@ -228,10 +242,14 @@ export function useAppNavigation(
         }
         const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
         let channelUrl = item.cmd;
-        if (startTime && endTime) {
-          channelUrl = `${baseUrl}/live.m3u8?cmd=${encodeURIComponent(item.cmd)}&id=${item.id}&start_time=${startTime}&end_time=${endTime}`;
-        } else if (channelUrl.startsWith('/')) {
+        if (channelUrl.startsWith('/')) {
           channelUrl = `${baseUrl}${channelUrl}`;
+        }
+        if (startTime && endTime) {
+          // item.cmd is already a full /live.m3u8?t=<token>&id=...&proxy=1
+          // URL from the backend (the token carries the real channel + our
+          // identity) — just append the catchup window, don't re-wrap it.
+          channelUrl = `${channelUrl}&start_time=${startTime}&end_time=${endTime}`;
         }
 
         updatePreferences({
@@ -241,28 +259,12 @@ export function useAppNavigation(
           },
         });
         addToRecentChannels(item);
-        openPlayer(
-          item,
-          channelUrl,
-          item.isPortal || (startTime && endTime)
-            ? channelUrl
-            : buildProxiedUrl(channelUrl)
-        );
+        openPlayer(item, channelUrl, channelUrl);
         return;
       }
 
       if (item.is_episode) {
         try {
-          if (!isPortal && item.cmd) {
-            const { raw, proxied } = await resolveStreamUrl(
-              item,
-              isPortal,
-              item.series_number
-            );
-            openPlayer(item as any, raw, proxied, getResumeTime());
-            return;
-          }
-
           const res = await getMedia({
             movieId: context.movieId,
             seasonId: context.seasonId,
@@ -281,10 +283,22 @@ export function useAppNavigation(
             series_number: item.series_number,
           };
 
+          // episodeFile is a resolved file/quality variant (its name is often
+          // just "Hindi / Excellent quality (1080)", not the episode title) —
+          // build the display title from the real episode entry + series name.
+          const seriesName = currentSeriesItem?.title || currentSeriesItem?.name;
+          const episodeLabel =
+            item.title || item.name || (item.episode_num ? `Episode ${item.episode_num}` : undefined);
+          const displayTitle = [seriesName, episodeLabel].filter(Boolean).join(' - ') || undefined;
+          const displayCategory = currentSeriesItem?.genres_str
+            || currentSeriesItem?.category_id
+            || item.genres_str
+            || item.category_id;
+
           const { raw, proxied } = await resolveStreamUrl(
             episodeFile,
-            isPortal,
-            item.series_number
+            item.series_number,
+            { title: displayTitle, category: displayCategory ? String(displayCategory) : undefined }
           );
 
           openPlayer(enrichedItem as any, raw, proxied, getResumeTime());
@@ -300,12 +314,6 @@ export function useAppNavigation(
 
       if (isInsideMovieCategory || item.is_playable_movie) {
         try {
-          if (!isPortal && item.cmd) {
-            const { raw, proxied } = await resolveStreamUrl(item, isPortal);
-            openPlayer(item as any, raw, proxied, getResumeTime());
-            return;
-          }
-
           const res = await getMedia({
             movieId: item.id,
             category: context.category || '*',
@@ -317,7 +325,15 @@ export function useAppNavigation(
           const { id, cmd, ...filteredItem } = item;
           const finalMovieItem = { ...movieFile, ...filteredItem };
 
-          const { raw, proxied } = await resolveStreamUrl(movieFile, isPortal);
+          // movieFile is a resolved file/quality variant, same issue as the
+          // episode case above — use the real movie item's title, not the
+          // variant's own name (often just a quality/language descriptor).
+          const movieTitle = item.title || item.name;
+          const movieCategory = item.genres_str || item.category_id;
+          const { raw, proxied } = await resolveStreamUrl(movieFile, undefined, {
+            title: movieTitle,
+            category: movieCategory ? String(movieCategory) : undefined,
+          });
           openPlayer(finalMovieItem, raw, proxied, getResumeTime());
         } catch (err) {
           console.error(err);
@@ -334,6 +350,7 @@ export function useAppNavigation(
       context,
       updatePreferences,
       user?.preferences?.lastSelectedCategory,
+      currentSeriesItem,
     ]
   );
 
@@ -407,6 +424,13 @@ export function useAppNavigation(
         item.is_playable_movie ||
         contentType === 'tv';
       if (isPlayable) {
+        // Episodes are selected from the expandable episode row inside the series page
+        // (which already shows their details) — pressing Play there should go straight to
+        // the player, not through a separate detail step.
+        if (item.is_episode) {
+          await startPlayback(item);
+          return;
+        }
         if (onOpenDetail && contentType !== 'tv') {
           const enrichedItem = {
             ...item,
@@ -458,6 +482,15 @@ export function useAppNavigation(
       setRawStreamUrl(null);
       setCurrentItem(null);
       setResumePlaybackState(undefined);
+      // Closing the player is the natural point to refresh Continue Watching —
+      // playback just wrote fresh progress via saveProgress()'s periodic/unload
+      // saves, but nothing else ever triggers ContinueWatching.tsx to refetch
+      // (its own loadItems() only runs once on mount, keyed off this exact
+      // refreshKey — which, before this fix, was never incremented anywhere
+      // in the app). Without this, the CW row can show stale state (including
+      // a blank title/poster from before this exact viewing session) until
+      // an unrelated full page reload happens to remount it.
+      setCwRefreshKey?.((prev) => prev + 1);
       return;
     }
 
@@ -465,25 +498,38 @@ export function useAppNavigation(
       const previousFrame = history[history.length - 1];
       setHistory((prev) => prev.slice(0, -1));
 
-      isRestoringFromHistory.current = true;
-
       setFocusedIndex(previousFrame.focusedIndex);
       setCurrentSeriesItem(previousFrame.currentSeriesItem);
-      setItems(previousFrame.items);
       setContext(previousFrame.context);
       setTotalItemsCount(previousFrame.totalItemsCount);
 
-      setTimeout(() => {
-        isRestoringFromHistory.current = false;
-      }, 500);
+      if (previousFrame.items.length > 0) {
+        // Real cached data (this frame was actually loaded before) — restore
+        // instantly, no refetch needed. Block fetchData briefly so the
+        // context-change effect below doesn't immediately stomp on it.
+        isRestoringFromHistory.current = true;
+        setItems(previousFrame.items);
+        setTimeout(() => {
+          isRestoringFromHistory.current = false;
+        }, 500);
+      } else {
+        // Placeholder frame pushed without ever being populated (e.g. Continue
+        // Watching jumps straight to playback and pushes an empty season/series
+        // frame for "back" to land on) — fetch it for real instead of leaving
+        // the page stuck on an empty list until some unrelated click refetches it.
+        setItems([]);
+        fetchData(previousFrame.context);
+      }
     }
   }, [
     streamUrl,
+    fetchData,
     history,
     isRestoringFromHistory,
     setItems,
     setContext,
     setTotalItemsCount,
+    setCwRefreshKey,
   ]);
 
   const closePlayer = useCallback(() => {

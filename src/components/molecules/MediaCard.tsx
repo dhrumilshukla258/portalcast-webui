@@ -78,7 +78,7 @@ const MediaCard: React.FC<MediaCardProps> = ({
         <div className="absolute right-2 top-2 z-10 h-3 w-3 rounded-full bg-green-500"></div>
       )}
 
-      <div className="relative flex aspect-[2/3] w-full items-center justify-center overflow-hidden bg-black/20 md:aspect-auto md:h-56">
+      <div className="relative flex aspect-[2/3] w-full items-center justify-center overflow-hidden bg-black/20">
         {isVisible && imageUrl && !imageError ? (
           <img
             src={imageUrl}

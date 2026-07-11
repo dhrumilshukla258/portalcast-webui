@@ -23,7 +23,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-indigo-950 text-gray-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen app-bg text-gray-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
       {/* Top Navbar */}
       <header className="px-6 py-5 border-b border-gray-800/40 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between">
         <div className="flex items-center">

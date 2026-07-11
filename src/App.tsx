@@ -9,14 +9,11 @@ import Login from '@/components/pages/Login';
 import Verify from '@/components/pages/Verify';
 import { Loader2 } from 'lucide-react';
 
-import { URL_PATHS } from '@/services/api';
-
 import { Header } from '@/components/organisms/Header';
 import Admin from '@/components/organisms/Admin';
 import VideoPlayer from '@/components/organisms/VideoPlayer';
 import ConfirmationModal from '@/components/molecules/ConfirmationModal';
 import MainContentGrid from '@/components/organisms/MainContentGrid';
-import DetailModal from '@/components/organisms/DetailModal';
 
 import { useMediaLibrary, initialContext } from '@/hooks/useMediaLibrary';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
@@ -31,7 +28,6 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   const [detailItem, setDetailItem] = useState<MediaItem | null>(null);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   // Track whether the detail modal pushed its own history entry
-  const detailHistoryPushed = React.useRef(false);
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     title: '',
@@ -52,7 +48,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     channelGroups,
     favorites,
     recentChannels,
-    handleContentTypeChange,
+    handleContentTypeChange: handleContentTypeChangeRaw,
     handleSearch,
     cycleSort,
     handlePageChange,
@@ -60,6 +56,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     fetchData,
     handleClearWatched,
     cwRefreshKey,
+    setCwRefreshKey,
     isPortal,
     addToRecentChannels,
     playLastTvChannel,
@@ -108,7 +105,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     setContext,
     setTotalItemsCount,
     isRestoringFromHistory,
-    setDetailItem
+    setDetailItem,
+    setCwRefreshKey
   );
 
   const onClearWatched = useCallback(
@@ -130,7 +128,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     handleBack,
     handlePageChange,
     cycleSort,
-    handleContentTypeChange,
+    handleContentTypeChange: handleContentTypeChangeRaw,
     handleClearWatched: onClearWatched,
     isConfirmingDelete: confirmModal.isOpen,
     isDetailOpen: !!detailItem,
@@ -139,23 +137,25 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     setFocusedIndex,
   });
 
+  const handleContentTypeChange = useCallback(
+    (type: 'movie' | 'series' | 'tv') => {
+      setDetailItem(null);
+      handleContentTypeChangeRaw(type);
+    },
+    [handleContentTypeChangeRaw]
+  );
+
   const onSearchSubmit = useCallback(
     (e?: React.FormEvent) => {
       if (e) e.preventDefault();
       if (searchTerm !== context.search) {
         pushFrame();
       }
+      setDetailItem(null);
       handleSearch(searchTerm);
     },
     [searchTerm, context.search, pushFrame, handleSearch]
   );
-
-  React.useEffect(() => {
-    if (detailItem) {
-      window.history.pushState({ modal: 'detail' }, '');
-      detailHistoryPushed.current = true;
-    }
-  }, [detailItem]);
 
   const scrollPositionRef = React.useRef(0);
 
@@ -171,26 +171,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     }
   }, [streamUrl]);
 
-  // Hardware Back (popstate) while the modal is open — just close the modal.
-  React.useEffect(() => {
-    const onPop = (e: PopStateEvent) => {
-      if (detailItem) {
-        e.stopImmediatePropagation();
-        setDetailItem(null);
-        detailHistoryPushed.current = false;
-      }
-    };
-    window.addEventListener('popstate', onPop, true); // capture phase → runs before nav handler
-    return () => window.removeEventListener('popstate', onPop, true);
-  }, [detailItem]);
-
   const handleCloseDetail = useCallback(() => {
-    // If we pushed a history entry for the modal, remove it cleanly.
-    if (detailHistoryPushed.current) {
-      window.history.back();
-    } else {
-      setDetailItem(null);
-    }
+    setDetailItem(null);
   }, []);
 
   const { pendingPlaybackState } = useCastReceiver({
@@ -270,6 +252,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   const onSelectCategory = useCallback(
     (categoryId: string, categoryTitle: string) => {
+      setDetailItem(null);
       const newContext = {
         ...initialContext,
         category: categoryId,
@@ -327,8 +310,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
           }
         />
       ) : (
-        <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-indigo-950 font-sans text-gray-200">
-          <div className="container mx-auto p-0 pb-4 sm:p-6">
+        <div className="flex h-screen flex-col overflow-hidden app-bg font-sans text-gray-200">
+          <div className="flex min-h-0 w-full flex-1 flex-col px-2 py-0 sm:px-6 sm:py-6">
             <Header
               currentTitle={currentTitle}
               contentType={contentType}
@@ -351,7 +334,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
               isTizen={isTizen}
             />
 
-            <main>
+            <main className="min-h-0 flex-1">
               <MainContentGrid
                 items={items}
                 currentSeriesItem={currentSeriesItem}
@@ -379,73 +362,13 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                 providerKey={providerKey}
                 isCategoriesOpen={isCategoriesOpen}
                 setIsCategoriesOpen={setIsCategoriesOpen}
+                detailItem={detailItem}
+                onCloseDetail={handleCloseDetail}
+                onPlayDetailItem={startPlayback}
               />
             </main>
           </div>
         </div>
-      )}
-
-      {detailItem && (
-        <DetailModal
-          item={detailItem}
-          epgData={epgData}
-          onClose={handleCloseDetail}
-          onPlay={(item, startTime, endTime) => {
-            if (detailHistoryPushed.current) {
-              detailHistoryPushed.current = false;
-              window.history.back();
-            }
-            setDetailItem(null);
-            setTimeout(() => {
-              startPlayback(item, startTime, endTime);
-            }, 50);
-          }}
-          onDownload={async (item) => {
-            try {
-              toast.info('Resolving download link...');
-              let downloadItem = item;
-              if (item.is_episode && !isPortal && !item.cmd) {
-                const res = await getMedia({
-                  movieId: context.movieId,
-                  seasonId: context.seasonId,
-                  episodeId: item.id,
-                  category: '*',
-                });
-                if (res.data?.length) {
-                  downloadItem = res.data[0];
-                }
-              } else if (contentType === 'movie' && !isPortal && !item.cmd) {
-                const res = await getMedia({
-                  movieId: item.id,
-                  category: context.category || '*',
-                });
-                if (res.data?.length) {
-                  downloadItem = res.data[0];
-                }
-              }
-
-              const isSeries = item.is_episode ? '1' : '0';
-              const cmdParam = downloadItem.cmd ? `&cmd=${encodeURIComponent(downloadItem.cmd)}` : '';
-              
-              let seriesVal = '';
-              if (item.series_number !== undefined) {
-                seriesVal = String(item.series_number);
-              } else if (item.is_episode) {
-                seriesVal = '1';
-              }
-              const seriesParam = seriesVal ? `&series=${seriesVal}` : '';
-
-              const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
-              const downloadUrl = `${baseUrl}/api/v2/download?id=${downloadItem.id}&isSeries=${isSeries}${seriesParam}${cmdParam}`;
-              
-              window.open(downloadUrl, '_blank');
-              toast.success('Download started!');
-            } catch (err) {
-              console.error(err);
-              toast.error('Failed to start download');
-            }
-          }}
-        />
       )}
 
       <ConfirmationModal
@@ -470,7 +393,7 @@ function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-indigo-950 flex justify-center items-center font-sans text-gray-200">
+      <div className="min-h-screen app-bg flex justify-center items-center font-sans text-gray-200">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
       </div>
     );
@@ -510,7 +433,7 @@ export default function App() {
           path="/admin"
           element={
             <ProtectedRoute adminOnly>
-              <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-indigo-950 font-sans text-gray-200">
+              <div className="min-h-screen app-bg font-sans text-gray-200">
                 <Admin onBack={() => navigate('/')} />
               </div>
             </ProtectedRoute>

@@ -22,7 +22,7 @@ export interface VideoContextType {
   seekOverlay: SeekOverlayData | null;
   fitMode: VideoFitMode;
   isSettingsMenuOpen: boolean;
-  activeSettingsMenu: 'main' | 'quality' | 'audio' | 'subtitles' | 'cast';
+  activeSettingsMenu: 'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast';
   showSettingsButton: boolean;
   showNextEpisodeButton: boolean;
 
@@ -45,6 +45,8 @@ export interface VideoContextType {
   rawStreamUrl?: string | null;
   itemId?: string | null;
   subtitles?: any[];
+  onlineSubtitleResults?: any[];
+  subtitleSearchLoading?: boolean;
   contentType: 'movie' | 'series' | 'tv';
   mediaId?: string | null;
   item?: any;
@@ -86,7 +88,7 @@ export interface VideoContextType {
   showControlsAndCursor: () => void;
   cycleFitMode: () => void;
   setActiveSettingsMenu: (
-    menu: 'main' | 'quality' | 'audio' | 'subtitles' | 'cast'
+    menu: 'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast'
   ) => void;
   setIsSettingsMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setUseProxy: (v: boolean) => void;
@@ -102,6 +104,11 @@ export interface VideoContextType {
   onProviderChange: (provider: MediaProviderAdapter | null) => void;
   handleCast: (deviceId: string) => void;
   handleCopyLink: () => void;
+  handleDownload: () => void;
+  searchOnlineSubtitles: (language?: string) => Promise<void>;
+  addOnlineSubtitle: (result: { fileId: number; language: string; releaseName: string }) => void;
+  addLocalSubtitleFile: (file: File) => Promise<void>;
+  clearSubtitleSearch: () => void;
 }
 
 // Create and export the Context

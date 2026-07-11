@@ -1,6 +1,7 @@
-import React, { useMemo, useEffect, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import type { ChannelGroup } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import { DraggableCategoryList } from '@/components/organisms/DraggableCategoryList';
 
 interface CategorySelectorProps {
   categories: ChannelGroup[];
@@ -10,6 +11,7 @@ interface CategorySelectorProps {
   providerKey: string;
   showAllOverlay: boolean;
   setShowAllOverlay: (show: boolean) => void;
+  layout?: 'bar' | 'sidebar';
 }
 
 export const CategorySelector: React.FC<CategorySelectorProps> = ({
@@ -20,6 +22,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
   providerKey,
   showAllOverlay,
   setShowAllOverlay,
+  layout = 'bar',
 }) => {
   const { user, updatePreferences } = useAuth();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -30,48 +33,36 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
     return user?.preferences?.pinnedCategories?.[key] || [];
   }, [user, key]);
 
-  // Parse and sort categories based on recency + alphabetical order
+  // User's manually-dragged order (does NOT change based on what was watched/selected —
+  // only an explicit drag-and-drop reorder updates this).
+  const customOrder = useMemo(() => {
+    return user?.preferences?.categoryOrder?.[key] || [];
+  }, [user, key]);
+
+  // Sort categories: "ALL" first, then the user's saved manual order (if any), then any
+  // remaining categories alphabetically, with "adult" categories always pushed to the end.
   const sortedCategories = useMemo(() => {
     if (!categories || categories.length === 0) return [];
 
-    const recents = user?.preferences?.recentCategories?.[key] || [];
-    const recentIds = recents.filter((id) => id !== '*');
-
-    // Separate categories
-    const allCategory = categories.find((cat) => cat.id === '*');
+    const allCategory = categories.find((cat) => cat.id === '*') || { id: '*', title: 'ALL' };
     const remainingCategories = categories.filter((cat) => cat.id !== '*');
 
-    // Sort remaining categories alphabetically first
-    const alphabetical = [...remainingCategories].sort((a, b) =>
-      a.title.localeCompare(b.title)
-    );
-
-    // Now split the alphabetical list into recents and others
-    const recentItems: ChannelGroup[] = [];
-    const otherItems: ChannelGroup[] = [];
-
-    alphabetical.forEach((cat) => {
-      if (recentIds.includes(cat.id)) {
-        recentItems.push(cat);
-      } else {
-        otherItems.push(cat);
-      }
-    });
-
-    recentItems.sort((a, b) => {
-      const indexA = recentIds.indexOf(a.id);
-      const indexB = recentIds.indexOf(b.id);
-      return indexA - indexB;
-    });
-
-    const finalCategories: ChannelGroup[] = [];
-    if (allCategory) {
-      finalCategories.push(allCategory);
+    let ordered: ChannelGroup[];
+    if (customOrder.length > 0) {
+      const byId = new Map(remainingCategories.map((c) => [c.id, c]));
+      const known = customOrder
+        .map((id: string) => byId.get(id))
+        .filter((c): c is ChannelGroup => !!c);
+      const knownIds = new Set(customOrder);
+      const rest = remainingCategories
+        .filter((c) => !knownIds.has(c.id))
+        .sort((a, b) => a.title.localeCompare(b.title));
+      ordered = [...known, ...rest];
     } else {
-      finalCategories.push({ id: '*', title: 'ALL' });
+      ordered = [...remainingCategories].sort((a, b) => a.title.localeCompare(b.title));
     }
 
-    const combined = [...finalCategories, ...recentItems, ...otherItems];
+    const combined = [allCategory, ...ordered];
 
     // Filter adult categories and push them to the end
     const cleanCategories = combined.filter(
@@ -82,7 +73,14 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
     );
 
     return [...cleanCategories, ...adultCategories];
-  }, [categories, key, user]);
+  }, [categories, customOrder]);
+
+  const handleReorder = async (orderedIds: string[]) => {
+    const currentOrderRecord = user?.preferences?.categoryOrder || {};
+    await updatePreferences({
+      categoryOrder: { ...currentOrderRecord, [key]: orderedIds },
+    });
+  };
 
   // Determine what is listed "outside" (the horizontal bar)
   const outsideCategories = useMemo(() => {
@@ -166,22 +164,171 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
     });
   };
 
-  // Auto-scroll the active/focused category card into view
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const activeEl = scrollContainerRef.current?.querySelector('.focused');
-      if (activeEl) {
-        activeEl.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'center',
-        });
-      }
-    }, 50);
-    return () => clearTimeout(timer);
-  }, [selectedCategory]);
-
   if (!categories || categories.length <= 1) return null;
+
+  const overlayModal = showAllOverlay && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200 categories-modal-container">
+      <div className="w-full max-w-4xl bg-gray-900/90 border border-gray-800 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-800/60 pb-3">
+          <div className="text-left">
+            <h4 className="text-lg font-black text-white uppercase tracking-tight">Pin & Select Categories</h4>
+            <p className="text-xs text-gray-500">
+              Select a category to view it, or check the pin box to pin it outside.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {pinnedIds.length > 0 && (
+              <button
+                onClick={handleClearAllPins}
+                data-focusable="true"
+                className="px-3 py-1.5 text-xs rounded-lg bg-red-950/40 border border-red-900/50 text-red-400 hover:bg-red-900/30 hover:text-red-200 transition-all cursor-pointer outline-none focus:border-red-500 [&.focused]:border-red-500"
+              >
+                Clear All Pins
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setShowAllOverlay(false);
+                setSearchQuery('');
+              }}
+              data-focusable="true"
+              className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-755 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer outline-none focus:bg-gray-700 [&.focused]:bg-gray-700"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Search Box */}
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search categories..."
+            data-focusable="true"
+            data-default-focus="true"
+            className="w-full bg-gray-950 border border-gray-800 hover:border-gray-750 focus:border-blue-500 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500 outline-none [&.focused]:border-blue-500 [&.focused]:ring-1 [&.focused]:ring-blue-500"
+            autoFocus
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-3 text-gray-500 hover:text-gray-300"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        {/* Categories Grid (Scrollable) */}
+        <div className="flex-grow overflow-y-auto custom-scrollbar pr-1 max-h-[50vh]">
+          {filteredCategories.length === 0 ? (
+            <div className="text-center py-12 text-gray-500 italic">
+              No matching categories found.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-0.5">
+              {filteredCategories.map((cat, idx) => {
+                const isActive = selectedCategory === cat.id;
+                const isPinned = pinnedIds.includes(cat.id);
+                const isAll = cat.id === '*';
+
+                return (
+                  <div
+                    key={cat.id || idx}
+                    className={`flex items-center justify-between p-2 rounded-xl border transition-all ${
+                      isActive
+                        ? 'bg-blue-600/20 border-blue-500 text-white'
+                        : 'bg-gray-950/40 border-gray-800 text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    <button
+                      data-focusable="true"
+                      onClick={() => handleSelect(cat.id, cat.title)}
+                      className={`flex-grow text-left p-2.5 rounded-lg text-xs sm:text-sm font-bold truncate transition-all cursor-pointer outline-none focus:scale-[1.02] focus:bg-gray-800/40 [&.focused]:scale-[1.02] [&.focused]:bg-gray-800/40`}
+                    >
+                      <span className="truncate">{cat.title}</span>
+                    </button>
+
+                    {!isAll && (
+                      <button
+                        data-focusable="true"
+                        onClick={(e) => handleTogglePin(e, cat.id)}
+                        title={isPinned ? "Unpin Category" : "Pin Category"}
+                        className={`p-2 rounded-lg border transition-all shrink-0 ml-1 outline-none ${
+                          isPinned
+                            ? 'bg-sky-500/20 border-sky-400/50 text-sky-300 hover:bg-sky-500/30'
+                            : 'bg-gray-900 border-gray-800 hover:border-gray-700 text-gray-500 hover:text-gray-300'
+                        } focus:scale-110 focus:border-sky-400 [&.focused]:scale-110 [&.focused]:border-sky-400`}
+                      >
+                        {/* Pin Icon */}
+                        <svg
+                          className="w-4 h-4"
+                          fill={isPinned ? "currentColor" : "none"}
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+                          />
+                          <circle cx="12" cy="10.5" r="2.5" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (layout === 'sidebar') {
+    return (
+      <div className="flex h-full w-full flex-col">
+        <div className="mb-3 flex items-center justify-between px-1">
+          <h2 className="text-sm font-black uppercase tracking-tight text-white/80 drop-shadow-md">
+            Categories
+          </h2>
+          <button
+            onClick={() => setShowAllOverlay(true)}
+            data-focusable="true"
+            title="Pin / Manage Categories"
+            className="rounded-full p-1.5 text-gray-400 transition-all hover:bg-white/10 hover:text-white"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        </div>
+
+        <div
+          ref={scrollContainerRef}
+          data-focus-group="categories"
+          className="custom-scrollbar flex-1 overflow-y-auto pr-1"
+        >
+          <DraggableCategoryList
+            items={outsideCategories}
+            selectedCategory={selectedCategory}
+            onSelect={handleSelect}
+            onReorder={handleReorder}
+          />
+        </div>
+
+        {overlayModal}
+      </div>
+    );
+  }
 
   return (
     <div className="mb-4 px-2 sm:px-0">
@@ -227,133 +374,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
         </button>
       </div>
 
-      {/* Grid Overlay Modal */}
-      {showAllOverlay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200 categories-modal-container">
-          <div className="w-full max-w-4xl bg-gray-900/90 border border-gray-800 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
-            
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-gray-800/60 pb-3">
-              <div className="text-left">
-                <h4 className="text-lg font-black text-white uppercase tracking-tight">Pin & Select Categories</h4>
-                <p className="text-xs text-gray-500">
-                  Select a category to view it, or check the pin box to pin it outside.
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                {pinnedIds.length > 0 && (
-                  <button
-                    onClick={handleClearAllPins}
-                    data-focusable="true"
-                    className="px-3 py-1.5 text-xs rounded-lg bg-red-950/40 border border-red-900/50 text-red-400 hover:bg-red-900/30 hover:text-red-200 transition-all cursor-pointer outline-none focus:border-red-500 [&.focused]:border-red-500"
-                  >
-                    Clear All Pins
-                  </button>
-                )}
-                <button
-                  onClick={() => {
-                    setShowAllOverlay(false);
-                    setSearchQuery('');
-                  }}
-                  data-focusable="true"
-                  className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-755 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer outline-none focus:bg-gray-700 [&.focused]:bg-gray-700"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Search Box */}
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search categories..."
-                data-focusable="true"
-                data-default-focus="true"
-                className="w-full bg-gray-950 border border-gray-800 hover:border-gray-750 focus:border-blue-500 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500 outline-none [&.focused]:border-blue-500 [&.focused]:ring-1 [&.focused]:ring-blue-500"
-                autoFocus
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-300"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-
-            {/* Categories Grid (Scrollable) */}
-            <div className="flex-grow overflow-y-auto custom-scrollbar pr-1 max-h-[50vh]">
-              {filteredCategories.length === 0 ? (
-                <div className="text-center py-12 text-gray-500 italic">
-                  No matching categories found.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-0.5">
-                  {filteredCategories.map((cat, idx) => {
-                    const isActive = selectedCategory === cat.id;
-                    const isPinned = pinnedIds.includes(cat.id);
-                    const isAll = cat.id === '*';
-
-                    return (
-                      <div
-                        key={cat.id || idx}
-                        className={`flex items-center justify-between p-2 rounded-xl border transition-all ${
-                          isActive
-                            ? 'bg-blue-600/20 border-blue-500 text-white'
-                            : 'bg-gray-950/40 border-gray-800 text-gray-400 hover:text-gray-200'
-                        }`}
-                      >
-                        <button
-                          data-focusable="true"
-                          onClick={() => handleSelect(cat.id, cat.title)}
-                          className={`flex-grow text-left p-2.5 rounded-lg text-xs sm:text-sm font-bold truncate transition-all cursor-pointer outline-none focus:scale-[1.02] focus:bg-gray-800/40 [&.focused]:scale-[1.02] [&.focused]:bg-gray-800/40`}
-                        >
-                          <span className="truncate">{cat.title}</span>
-                        </button>
-                        
-                        {!isAll && (
-                          <button
-                            data-focusable="true"
-                            onClick={(e) => handleTogglePin(e, cat.id)}
-                            title={isPinned ? "Unpin Category" : "Pin Category"}
-                            className={`p-2 rounded-lg border transition-all shrink-0 ml-1 outline-none ${
-                              isPinned
-                                ? 'bg-sky-500/20 border-sky-400/50 text-sky-300 hover:bg-sky-500/30'
-                                : 'bg-gray-900 border-gray-800 hover:border-gray-700 text-gray-500 hover:text-gray-300'
-                            } focus:scale-110 focus:border-sky-400 [&.focused]:scale-110 [&.focused]:border-sky-400`}
-                          >
-                            {/* Pin Icon */}
-                            <svg
-                              className="w-4 h-4"
-                              fill={isPinned ? "currentColor" : "none"}
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-                              />
-                              <circle cx="12" cy="10.5" r="2.5" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {overlayModal}
     </div>
   );
 };

@@ -19,7 +19,15 @@ export const SettingsMenu = React.memo(() => {
     setFocusedIndex,
     receivers,
     handleCast,
+    onlineSubtitleResults,
+    subtitleSearchLoading,
+    searchOnlineSubtitles,
+    addOnlineSubtitle,
+    addLocalSubtitleFile,
+    clearSubtitleSearch,
   } = useVideoContext();
+
+  const localSubtitleInputRef = React.useRef<HTMLInputElement>(null);
 
   const qualities = useVideoQualityOptions({ auto: true, sort: 'ascending' });
   const audioOptions = useAudioOptions();
@@ -51,7 +59,7 @@ export const SettingsMenu = React.memo(() => {
 
   // Helper function to handle menu changes smoothly
   const handleMenuChange = (
-    menuName: 'main' | 'quality' | 'audio' | 'subtitles' | 'cast'
+    menuName: 'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast'
   ) => {
     setActiveSettingsMenu(menuName);
     setFocusedIndex(0);
@@ -191,7 +199,7 @@ export const SettingsMenu = React.memo(() => {
         </div>
       )}
 
-      {/* CAPTIONS SUBMENU */}
+      {/* CAPTIONS SUBMENU — already-available tracks, plus one clean way to add more */}
       {activeSettingsMenu === 'subtitles' && (
         <div className="flex max-h-[250px] flex-col overflow-y-auto overflow-x-hidden">
           <button
@@ -221,6 +229,94 @@ export const SettingsMenu = React.memo(() => {
               )}
             </button>
           ))}
+
+          <button
+            data-focusable="true"
+            data-control="settings-item"
+            onClick={() => {
+              clearSubtitleSearch?.();
+              handleMenuChange('add-subtitle');
+            }}
+            className="mt-1 flex items-center justify-between rounded border-t border-gray-700 px-3 py-2 text-blue-400 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+          >
+            <span>+ Add Subtitle</span>
+            <ChevronRightIcon className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* ADD SUBTITLE SUBMENU — exactly two choices, results replace them once you search */}
+      {activeSettingsMenu === 'add-subtitle' && (
+        <div className="flex max-h-[250px] flex-col overflow-y-auto overflow-x-hidden">
+          <button
+            data-focusable="true"
+            data-control="settings-back"
+            onClick={() => {
+              clearSubtitleSearch?.();
+              handleMenuChange('subtitles');
+            }}
+            className="mb-2 flex items-center rounded border-b border-gray-700 px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+          >
+            <ChevronLeftIcon className="mr-1 h-4 w-4" />
+            <span>Back</span>
+          </button>
+
+          <input
+            ref={localSubtitleInputRef}
+            type="file"
+            accept=".srt,.vtt"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                addLocalSubtitleFile?.(file);
+                handleMenuChange('subtitles');
+              }
+              e.target.value = '';
+            }}
+          />
+
+          {!onlineSubtitleResults?.length && (
+            <>
+              <button
+                data-focusable="true"
+                data-control="settings-item"
+                onClick={() => searchOnlineSubtitles?.()}
+                disabled={subtitleSearchLoading}
+                className="flex items-center justify-between rounded px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none disabled:opacity-50"
+              >
+                <span>{subtitleSearchLoading ? 'Searching…' : 'Search Online'}</span>
+              </button>
+              <button
+                data-focusable="true"
+                data-control="settings-item"
+                onClick={() => localSubtitleInputRef.current?.click()}
+                className="flex items-center justify-between rounded px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+              >
+                <span>From Device</span>
+              </button>
+            </>
+          )}
+
+          {onlineSubtitleResults && onlineSubtitleResults.length > 0 && (
+            <div className="flex flex-col gap-0.5">
+              {onlineSubtitleResults.map((result: any) => (
+                <button
+                  key={result.fileId}
+                  data-focusable="true"
+                  data-control="settings-item"
+                  onClick={() => {
+                    addOnlineSubtitle?.(result);
+                    handleMenuChange('subtitles');
+                  }}
+                  className="flex flex-col items-start rounded px-3 py-2 text-left transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+                >
+                  <span className="truncate text-sm">{result.releaseName}</span>
+                  <span className="text-xs uppercase text-gray-400">{result.language}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

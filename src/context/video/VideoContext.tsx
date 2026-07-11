@@ -16,7 +16,7 @@ import {
   VideoContext,
   type VideoContextType,
 } from '@/context/video/VideoContextTypes';
-import { saveUserProgress, getUserProgress } from '@/services/services';
+import { saveUserProgress, getUserProgress, getDownloadLink } from '@/services/services';
 import { useAuth } from '@/context/AuthContext';
 
 interface VideoProviderProps {
@@ -122,6 +122,8 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
   const [showNextEpisodeButton, setShowNextEpisodeButton] = useState(false);
   const [seekOverlay, setSeekOverlay] = useState<SeekOverlayData | null>(null);
   const [subtitles, setSubtitles] = useState<any[]>([]);
+  const [onlineSubtitleResults, setOnlineSubtitleResults] = useState<any[]>([]);
+  const [subtitleSearchLoading, setSubtitleSearchLoading] = useState(false);
 
   const [fitMode, setFitMode] = useState<VideoFitMode>(
     (user?.preferences?.videoFitMode as VideoFitMode) || 'contain'
@@ -135,7 +137,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
 
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const [activeSettingsMenu, setActiveSettingsMenu] = useState<
-    'main' | 'quality' | 'audio' | 'subtitles' | 'cast'
+    'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast'
   >('main');
 
   // --- Live TV States ---
@@ -183,18 +185,18 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       return;
     }
 
-    const isProgressive = [
-      ".mp4",
-      ".mkv",
-      ".avi",
-      ".mov",
-      ".flv",
-      ".wmv",
-      ".m4v",
-      ".3gp",
-      ".mpg",
-      ".mpeg",
-    ].some((ext) => rawStreamUrl?.toLowerCase().split("?")[0].endsWith(ext));
+    // Extension-sniffing the URL doesn't work anymore — stream URLs are opaque
+    // tokens (`/api/vod/play?t=...`), never a real file extension. Use the
+    // same signal the player itself uses to pick HLS vs progressive playback
+    // (see VideoPlayerContent.tsx's isM3u8 check): the `&m3u8=1` tag that
+    // proxyUrlFor() appends server-side when the underlying resource is HLS.
+    // Absence of that tag means progressive — the only case embedded
+    // subtitles are even possible to extract from (HLS segments aren't a
+    // single seekable file `ffprobe` can inspect for muxed tracks).
+    const isProgressive = !(
+      (rawStreamUrl && rawStreamUrl.toLowerCase().includes('m3u8')) ||
+      streamUrl.toLowerCase().includes('m3u8')
+    );
 
     if (!isProgressive) {
       setSubtitles([]);
@@ -203,15 +205,22 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
 
     const fetchSubtitles = async () => {
       try {
+        // The active stream's own token proves identity to the subtitle
+        // probe/extract endpoints — they can't require a Bearer header
+        // (the <track> element can't attach one), so they reuse whatever
+        // token is already minted for this playback session.
+        const streamToken = new URL(streamUrl!, window.location.origin).searchParams.get('t');
+        if (!streamToken) return;
+
         const b64url = btoa(rawStreamUrl!);
-        const response = await fetch(`${BASE_URL}/media/info?url=${b64url}`);
+        const response = await fetch(`${BASE_URL}/media/info?url=${b64url}&t=${streamToken}`);
         if (!response.ok) return;
         const data = await response.json();
         if (data.subtitles && Array.isArray(data.subtitles)) {
           const mapped = data.subtitles.map((sub: any, idx: number) => {
             const hostPart = BASE_URL.replace("/api", "");
             return {
-              src: `${hostPart}/api/media/subtitle?url=${b64url}&track=${sub.index}`,
+              src: `${hostPart}/api/media/subtitle?url=${b64url}&track=${sub.index}&t=${streamToken}`,
               label: sub.title || sub.language || `Track ${idx + 1}`,
               srclang: sub.language || 'und',
               id: sub.index,
@@ -341,6 +350,128 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       setTimeout(() => setCopied(false), 2000);
     }
   }, [rawStreamUrl]);
+
+  const handleDownload = useCallback(async () => {
+    if (!item && !itemId) return;
+    try {
+      const isSeries = contentType === 'series' || item?.is_episode ? '1' : '0';
+      const cmdSource = item?.cmd || rawStreamUrl || '';
+
+      let seriesVal = '';
+      if (item?.series_number !== undefined) {
+        seriesVal = String(item.series_number);
+      } else if (item?.is_episode) {
+        seriesVal = '1';
+      }
+
+      const targetId = item?.id ?? itemId;
+
+      // For an episode, name the file "<Series> S<season>E<episode>" instead of just the
+      // episode's own (often generic) title — for a movie, just the movie's title.
+      let title = '';
+      if (item?.is_episode) {
+        const seriesName = seriesItem?.name || seriesItem?.title || '';
+        const seasonNum = item?.series_number;
+        const epNum = item?.episode_num;
+        if (seriesName && seasonNum !== undefined && epNum !== undefined) {
+          const pad = (n: number) => String(n).padStart(2, '0');
+          title = `${seriesName} S${pad(Number(seasonNum))}E${pad(Number(epNum))}`;
+        } else {
+          title = seriesName || item?.title || item?.name || '';
+        }
+      } else {
+        title = item?.title || item?.name || '';
+      }
+
+      // The download itself is opened via a plain `window.open` navigation,
+      // which can't carry a Bearer header — so mint a short-lived, server-side
+      // token bound to this exact target first (authenticated, via the JWT
+      // the `api` client attaches), then open the tokenized URL it returns.
+      const { url } = await getDownloadLink({
+        id: targetId,
+        isSeries,
+        series: seriesVal || undefined,
+        cmd: cmdSource || undefined,
+        title: title || undefined,
+      });
+      const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
+      window.open(`${baseUrl}${url}`, '_blank');
+      toast.success('Download started!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to start download');
+    }
+  }, [item, itemId, rawStreamUrl, contentType, seriesItem]);
+
+  const searchOnlineSubtitles = useCallback(async (language?: string) => {
+    const seriesName = seriesItem?.name || seriesItem?.title || '';
+    const title = item?.is_episode ? (seriesName || item?.title || item?.name || '') : (item?.title || item?.name || '');
+    if (!title) return;
+
+    setSubtitleSearchLoading(true);
+    try {
+      const params = new URLSearchParams({ title });
+      if (item?.year) params.set('year', String(item.year));
+      if (item?.is_episode && item?.series_number !== undefined) params.set('season', String(item.series_number));
+      if (item?.is_episode && item?.episode_num !== undefined) params.set('episode', String(item.episode_num));
+      if (language) params.set('lang', language);
+
+      const res = await fetch(`${BASE_URL}/v2/subtitles/search?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}` },
+      });
+      const data = await res.json();
+      setOnlineSubtitleResults(data?.results || []);
+      if (!data?.results?.length) toast.info('No subtitles found.');
+    } catch (err) {
+      console.error('Subtitle search failed:', err);
+      toast.error('Subtitle search failed.');
+    } finally {
+      setSubtitleSearchLoading(false);
+    }
+  }, [item, seriesItem]);
+
+  const addOnlineSubtitle = useCallback((result: { fileId: number; language: string; releaseName: string }) => {
+    const hostPart = BASE_URL.replace('/api', '');
+    const track = {
+      src: `${hostPart}/api/v2/subtitles/download?fileId=${result.fileId}`,
+      label: `${result.language?.toUpperCase() || 'Subtitle'} — ${result.releaseName}`,
+      srclang: result.language || 'und',
+      id: `os_${result.fileId}`,
+    };
+    setSubtitles((prev) => [...prev.filter((t) => t.id !== track.id), track]);
+    setOnlineSubtitleResults([]);
+    toast.success('Subtitle added — select it from the Subtitles menu.');
+  }, []);
+
+  const clearSubtitleSearch = useCallback(() => {
+    setOnlineSubtitleResults([]);
+  }, []);
+
+  const addLocalSubtitleFile = useCallback(async (file: File) => {
+    try {
+      const raw = await file.text();
+      const isSrt = /\.srt$/i.test(file.name) || !/^WEBVTT/.test(raw.trim());
+      // Same conversion the server does for OpenSubtitles results — SRT uses "," for
+      // milliseconds, WebVTT (the only format the native <track> element understands) uses ".".
+      const vtt = isSrt
+        ? `WEBVTT\n\n${raw.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2')}`
+        : raw;
+
+      const blob = new Blob([vtt], { type: 'text/vtt' });
+      const src = URL.createObjectURL(blob);
+      const track = {
+        src,
+        label: file.name.replace(/\.(srt|vtt)$/i, ''),
+        srclang: 'und',
+        id: `local_${file.name}_${file.size}`,
+      };
+      setSubtitles((prev) => [...prev.filter((t) => t.id !== track.id), track]);
+      toast.success('Subtitle loaded — select it from the Subtitles menu.');
+    } catch (err) {
+      console.error('Failed to load local subtitle:', err);
+      toast.error('Failed to load subtitle file.');
+    }
+  }, []);
 
   const handleCast = useCallback(
     (deviceId: string) => {
@@ -509,6 +640,11 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
 
     if (contentType === 'series' && itemId && itemId !== mediaId) {
       if (nextEp) {
+        // Same blank-title guard as saveProgress() above — a blank title here
+        // renders as a bare "??" in Continue Watching.
+        const nextResolvedTitle = seriesItem?.name || seriesItem?.title || '';
+        if (!nextResolvedTitle) return;
+
         // If there is a next episode, update the series progress to point to that next episode (completed = false)
         const nextProgressData = {
           id: itemId,
@@ -518,12 +654,12 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
           seasonId,
           categoryId,
           type: contentType,
-          title: seriesItem?.name || seriesItem?.title || '',
+          title: nextResolvedTitle,
           currentTime: 0,
           duration: 0,
           progressPercent: 0,
           timestamp: Date.now(),
-          name: seriesItem?.name || seriesItem?.title || '',
+          name: nextResolvedTitle,
           episodeTitle: nextEp.name || nextEp.title || '',
           screenshot_uri: seriesItem?.screenshot_uri || nextEp.screenshot_uri || '',
           is_series: 1,
@@ -667,6 +803,15 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
 
     if (player.currentTime / player.duration >= 0.9) return;
 
+    const resolvedTitle =
+      seriesItem?.name || seriesItem?.title || item?.name || item?.title || '';
+    // Item/series metadata can still be mid-fetch on the very first tick after
+    // playback starts (autoplay can beat the metadata request) — skip saving
+    // rather than persist a blank title, which renders as a bare "??" in the
+    // Continue Watching row (see MediaCard's initials fallback). A later tick
+    // with the real title will upsert over any earlier save for this mediaId.
+    if (!resolvedTitle) return;
+
     const targetKeyId = itemId && itemId !== mediaId ? itemId : mediaId;
     const progressData = {
       id: targetKeyId,
@@ -676,22 +821,12 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       seasonId,
       categoryId,
       type: contentType,
-      title:
-        seriesItem?.name ||
-        seriesItem?.title ||
-        item?.name ||
-        item?.title ||
-        '',
+      title: resolvedTitle,
       currentTime: player.currentTime,
       duration: player.duration,
       progressPercent: Math.round((player.currentTime / player.duration) * 100),
       timestamp: Date.now(),
-      name:
-        seriesItem?.name ||
-        seriesItem?.title ||
-        item?.name ||
-        item?.title ||
-        '',
+      name: resolvedTitle,
       episodeTitle: item?.name || item?.title || '',
       screenshot_uri: seriesItem?.screenshot_uri || item?.screenshot_uri || '',
       is_series: seriesItem ? 1 : 0,
@@ -1022,6 +1157,8 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       rawStreamUrl,
       itemId,
       subtitles,
+      onlineSubtitleResults,
+      subtitleSearchLoading,
       contentType,
       mediaId,
       item,
@@ -1063,6 +1200,11 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       setActiveSettingsMenu,
       setIsSettingsMenuOpen,
       handleCopyLink,
+      handleDownload,
+      searchOnlineSubtitles,
+      addOnlineSubtitle,
+      addLocalSubtitleFile,
+      clearSubtitleSearch,
       setUseProxy: handleProxyToggle,
       handleCast,
       onProviderChange,

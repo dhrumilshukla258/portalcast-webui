@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowDownAZ, SortDesc, SortAsc, LogOut, Shield, Trash2 } from 'lucide-react';
+import { ArrowDownAZ, SortDesc, SortAsc, LogOut, Shield, Trash2, Captions } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '@/context/useSocket';
+import OpenSubtitlesModal from '@/components/molecules/OpenSubtitlesModal';
 
 export interface HeaderProps {
   currentTitle: string;
@@ -50,6 +51,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
     const { activeUserCount } = useSocket();
     const navigate = useNavigate();
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [showSubtitlesModal, setShowSubtitlesModal] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -255,6 +257,15 @@ export const Header: React.FC<HeaderProps> = React.memo(
                       </button>
                     )}
                     <button
+                      onClick={() => { setDropdownOpen(false); setShowSubtitlesModal(true); }}
+                      className="flex w-full items-center space-x-2 rounded-xl px-3 py-2.5 text-left text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white transition-colors duration-250 cursor-pointer"
+                      data-focusable="true"
+                      tabIndex={-1}
+                    >
+                      <Captions className="h-4 w-4 text-gray-400" />
+                      <span>Subtitle Account</span>
+                    </button>
+                    <button
                       onClick={() => { setDropdownOpen(false); handleClearWatched(); }}
                       className="flex w-full items-center space-x-2 rounded-xl px-3 py-2.5 text-left text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white transition-colors duration-250 cursor-pointer"
                       data-focusable="true"
@@ -291,6 +302,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
       </div>
     )}
   </div>
+  <OpenSubtitlesModal isOpen={showSubtitlesModal} onClose={() => setShowSubtitlesModal(false)} />
 </header>
     );
   }

@@ -1,13 +1,14 @@
 import React from 'react';
 import { useVideoContext } from '@/context/video';
-import { BackArrowIcon, CopyLinkIcon } from '@/components/atoms/Icons';
+import { BackArrowIcon, CopyLinkIcon, DownloadIcon } from '@/components/atoms/Icons';
 
 interface TopBarProps {
   onBack: () => void;
 }
 
 export const TopBar = React.memo<TopBarProps>(({ onBack }) => {
-  const { handleCopyLink, copied, isTizen } = useVideoContext();
+  const { handleCopyLink, handleDownload, copied, isTizen, contentType } =
+    useVideoContext();
 
   if (isTizen) return null;
   return (
@@ -32,6 +33,17 @@ export const TopBar = React.memo<TopBarProps>(({ onBack }) => {
             {copied ? 'Copied!' : 'Copy Link'}
           </span>
         </button>
+
+        {contentType !== 'tv' && (
+          <button
+            data-focusable="true"
+            onClick={handleDownload}
+            className="flex items-center rounded-lg border border-gray-700/50 bg-gray-900/70 px-3 py-1.5 text-sm text-white shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-gray-800/90 hover:shadow-md active:scale-95 md:px-4 md:py-2 md:text-base"
+          >
+            <DownloadIcon className="h-4 w-4 md:mr-2 md:h-5 md:w-5" />
+            <span className="hidden md:inline">Download</span>
+          </button>
+        )}
       </div>
     </div>
   );

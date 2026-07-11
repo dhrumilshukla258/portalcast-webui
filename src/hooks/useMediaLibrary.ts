@@ -153,6 +153,14 @@ export function useMediaLibrary() {
   const isFetchingMore = useRef(false);
   const isRestoringFromHistory = useRef(false);
   const initialLoadRef = useRef(false);
+  // Guards against out-of-order network responses: if the user switches
+  // category/page fast enough, an older request can resolve *after* a newer
+  // one and clobber its state with stale data (e.g. a "4K Hindi" response
+  // landing after a "4K English" click, showing Hindi titles under the
+  // English category). Every fetchData call stamps its own id; only the
+  // call whose id is still the latest by the time its response lands is
+  // allowed to commit state.
+  const fetchRequestRef = useRef(0);
 
   const loadEpgData = useCallback(async () => {
     try {
@@ -172,6 +180,9 @@ export function useMediaLibrary() {
         console.log('Restoring from history... Fetch blocked, Bro!');
         return;
       }
+      const requestId = ++fetchRequestRef.current;
+      const isStale = () => fetchRequestRef.current !== requestId;
+
       const currentContentType = typeOverride || contentType;
       setLoading(true);
       setError(null);
@@ -181,6 +192,14 @@ export function useMediaLibrary() {
         setItems([]);
         setTotalItemsCount(0);
       }
+
+      // Set context immediately, not after the fetch resolves — components
+      // like MainContentGrid decide which page to render (e.g. season list vs
+      // episode list) based on context fields (seasonId, movieId, etc.), so a
+      // late setContext left the tree rendering the *previous* page's data
+      // against the *new* loading/items state for the whole fetch duration,
+      // flashing an empty/wrong view until the response landed.
+      setContext(newContext);
 
       try {
         let response: PaginatedResponse<MediaItem>;
@@ -196,6 +215,7 @@ export function useMediaLibrary() {
             sort: newContext.sort,
           };
           response = await getMedia(params);
+          if (isStale()) return;
           const responseData = response.data || [];
           setItems((prev) => {
             if (newContext.page === 1) return responseData;
@@ -243,6 +263,7 @@ export function useMediaLibrary() {
               sort: newContext.sort,
             });
           }
+          if (isStale()) return;
           const responseData = response.data || [];
           setItems((prev) => {
             if (newContext.page === 1) return responseData;
@@ -267,6 +288,7 @@ export function useMediaLibrary() {
             getChannels(),
             getChannelGroups(),
           ]);
+          if (isStale()) return;
           const allChannels = channelResponse.data || [];
           const allGroups = groupResponse.data || [];
           const filteredChannels = newContext.search
@@ -284,14 +306,18 @@ export function useMediaLibrary() {
             ...allGroups,
           ]);
         }
-        setContext(newContext);
       } catch {
+        if (isStale()) return;
         if (newContext.page > 1)
           setPaginationError('Could not load more content.');
         else setError('Could not load content. Please try again later.');
       } finally {
-        setLoading(false);
-        isFetchingMore.current = false;
+        // A stale request finishing after a newer one must not clear the
+        // newer request's own loading state.
+        if (!isStale()) {
+          setLoading(false);
+          isFetchingMore.current = false;
+        }
       }
     },
     [contentType]
@@ -500,7 +526,11 @@ export function useMediaLibrary() {
       return;
 
     const timer = setTimeout(() => {
-      if (document.documentElement.scrollHeight <= window.innerHeight + 50) {
+      // The page's own scroll (main.tsx/App.tsx) is fixed at 100vh — actual scrolling
+      // happens inside MainContentGrid's own content pane (#app-content-scroll). Check
+      // that container's fill state, not the document's, or this fires on every render.
+      const pane = document.getElementById('app-content-scroll');
+      if (!pane || pane.scrollHeight <= pane.clientHeight + 50) {
         handlePageChange(1);
       }
     }, 100);
@@ -508,21 +538,23 @@ export function useMediaLibrary() {
   }, [items, loading, contentType, totalItemsCount, handlePageChange]);
 
   useEffect(() => {
+    const pane = document.getElementById('app-content-scroll');
+    if (!pane) return;
+
     const handleScroll = () => {
       const isTizen = !!(window as Window & { tizen?: unknown }).tizen;
       if (isTizen || contentType === 'tv') return;
 
       const buffer = 200;
       const isNearBottom =
-        window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - buffer;
+        pane.scrollTop + pane.clientHeight >= pane.scrollHeight - buffer;
       if (isNearBottom) {
         handlePageChange(1);
       }
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [contentType, handlePageChange]);
+    pane.addEventListener('scroll', handleScroll);
+    return () => pane.removeEventListener('scroll', handleScroll);
+  }, [contentType, handlePageChange, items]);
 
   useEffect(() => {
     const handleConfigChange = async () => {

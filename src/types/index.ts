@@ -36,6 +36,9 @@ export interface MediaItem {
   genres_str?: string;
   enable_tv_archive?: number;
   tv_archive_duration?: string | number;
+  episode_num?: number | string;
+  backdrop_path?: string;
+  trailer_key?: string;
 }
 
 export interface ContextType {

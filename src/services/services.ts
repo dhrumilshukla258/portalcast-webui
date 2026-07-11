@@ -176,6 +176,10 @@ export const saveCarouselSlides = async (
 
 export const getMovieUrl = async (params: Record<string, any> = {}) =>
   (await api.get(API_PATHS.MOVIE_LINK, { params })).data;
+export const getDownloadLink = async (
+  params: Record<string, any> = {}
+): Promise<{ url: string }> =>
+  (await api.get<{ url: string }>('/v2/download-link', { params })).data;
 export const getChannelUrl = async (cmd: string) =>
   (await api.get(API_PATHS.CHANNEL_LINK, { params: { cmd } })).data;
 export const getEPG = async (): Promise<
