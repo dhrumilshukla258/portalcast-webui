@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="public/stalker-logo.svg" alt="Stalker VOD Logo" width="200" />
+  <img src="public/portalcast-logo.svg" alt="Portalcast Logo" width="200" />
 </p>
 
-<h1 align="center">Stalker VOD Client</h1>
+<h1 align="center">Portalcast</h1>
 
 <p align="center">
   A modern, feature-rich OTT/IPTV Player built with React, Vite, and TypeScript.
@@ -59,7 +59,7 @@
     Edit `.env`:
 
     ```ini
-    # Set this to your Stalker Server IP
+    # Set this to your Portalcast server IP
     VITE_API_HOST=http://YOUR_SERVER_IP:3000
 
     # Deployment Targets
