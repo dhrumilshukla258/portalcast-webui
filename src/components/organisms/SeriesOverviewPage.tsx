@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { ArrowLeft, Play, Star, Calendar, Globe2, Film } from 'lucide-react';
 import type { MediaItem } from '@/types';
-import type { ProgressRecord } from '@/services/services';
-import { URL_PATHS } from '@/services/api';
+import type { ProgressRecord } from '@/api/types/user';
+import { URL_PATHS } from '@/api/config';
 
 interface SeriesOverviewPageProps {
   seriesItem: MediaItem;

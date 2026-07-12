@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import type { MediaItem } from '@/types';
-import type { ProgressRecord } from '@/services/services';
+import type { ProgressRecord } from '@/api/types/user';
 import EpisodeAccordionRow from '@/components/molecules/EpisodeAccordionRow';
-import { URL_PATHS } from '@/services/api';
+import { URL_PATHS } from '@/api/config';
 
 interface SeasonEpisodesPageProps {
   seriesItem: MediaItem;

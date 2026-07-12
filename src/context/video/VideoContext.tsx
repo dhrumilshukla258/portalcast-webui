@@ -10,13 +10,16 @@ import React, {
 import { formatTime, isTizenDevice } from '@/utils/helpers';
 import { isHLSProvider, type MediaProviderAdapter } from '@vidstack/react';
 import { toast } from 'react-toastify';
-import { URL_PATHS, BASE_URL } from '@/services/api';
+import { URL_PATHS, BASE_URL } from '@/api/config';
+import { authFetch } from '@/api/client';
 import type { VideoFitMode, SeekOverlayData } from '@/types';
 import {
   VideoContext,
   type VideoContextType,
 } from '@/context/video/VideoContextTypes';
-import { saveUserProgress, getUserProgress, getDownloadLink } from '@/services/services';
+import { saveUserProgress, getUserProgress } from '@/api/endpoints/user';
+import { getDownloadLink } from '@/api/endpoints/downloads';
+import { probeStreamSubtitles, searchOnlineSubtitles as apiSearchOnlineSubtitles } from '@/api/endpoints/subtitles';
 import { useAuth } from '@/context/AuthContext';
 
 interface VideoProviderProps {
@@ -213,9 +216,8 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
         if (!streamToken) return;
 
         const b64url = btoa(rawStreamUrl!);
-        const response = await fetch(`${BASE_URL}/media/info?url=${b64url}&t=${streamToken}`);
-        if (!response.ok) return;
-        const data = await response.json();
+        const data = await probeStreamSubtitles(rawStreamUrl!, streamToken);
+        if (!data) return;
         if (data.subtitles && Array.isArray(data.subtitles)) {
           const mapped = data.subtitles.map((sub: any, idx: number) => {
             const hostPart = BASE_URL.replace("/api", "");
@@ -416,10 +418,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       if (item?.is_episode && item?.episode_num !== undefined) params.set('episode', String(item.episode_num));
       if (language) params.set('lang', language);
 
-      const res = await fetch(`${BASE_URL}/v2/subtitles/search?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}` },
-      });
-      const data = await res.json();
+      const data = await apiSearchOnlineSubtitles(params);
       setOnlineSubtitleResults(data?.results || []);
       if (!data?.results?.length) toast.info('No subtitles found.');
     } catch (err) {
@@ -736,14 +735,14 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       if (!is404 && streamUrl && contentType === 'tv') {
         try {
           // Perform a fast HEAD request to check URL status
-          const response = await fetch(streamUrl, { method: 'HEAD' });
+          const response = await authFetch(streamUrl, { method: 'HEAD' });
           if (response.status === 404) {
             is404 = true;
           }
         } catch {
           // Try with GET and a short timeout
           try {
-            const response = await fetch(streamUrl, { signal: AbortSignal.timeout(2000) });
+            const response = await authFetch(streamUrl, { signal: AbortSignal.timeout(2000) });
             if (response.status === 404) {
               is404 = true;
             }

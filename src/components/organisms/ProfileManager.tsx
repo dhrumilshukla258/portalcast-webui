@@ -1,7 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useRef } from 'react';
 import { toast } from 'react-toastify';
-import { api } from '@/services/api';
+import {
+  getProfiles,
+  activateProfile,
+  setProfileEnabled,
+  deleteProfile,
+  createProfile,
+} from '@/api/endpoints/profiles';
+import { getConfig } from '@/api/endpoints/admin';
 import ConfirmationModal from '@/components/molecules/ConfirmationModal';
 
 type ConfigProfile = {
@@ -71,8 +78,8 @@ const ProfileManager = () => {
   const loadProfiles = async () => {
     try {
       setLoading(true);
-      const response = await api.get<ConfigProfile[]>('/profiles');
-      setProfiles(response.data);
+      const data = await getProfiles();
+      setProfiles(data);
     } catch (error) {
       toast.error('Failed to load profiles');
       console.error('Error loading profiles:', error);
@@ -88,7 +95,7 @@ const ProfileManager = () => {
     const performActivation = async () => {
       setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       try {
-        await api.post(`/profiles/${profileId}/activate`);
+        await activateProfile(profileId);
         toast.success('Profile activated! Server is restarting...');
         setTimeout(() => {
           loadProfiles();
@@ -109,9 +116,8 @@ const ProfileManager = () => {
   };
 
   const handleToggleEnabled = async (profile: ConfigProfile) => {
-    const endpoint = profile.isEnabled ? 'disable' : 'enable';
     try {
-      await api.post(`/profiles/${profile.id}/${endpoint}`);
+      await setProfileEnabled(profile.id, !profile.isEnabled);
       toast.success(`Profile ${profile.isEnabled ? 'disabled' : 'enabled'}`);
       loadProfiles();
     } catch (error: any) {
@@ -129,7 +135,7 @@ const ProfileManager = () => {
       onConfirm: async () => {
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
         try {
-          await api.delete(`/profiles/${profile.id}`);
+          await deleteProfile(profile.id);
           toast.success('Profile deleted');
           loadProfiles();
         } catch (error: any) {
@@ -151,8 +157,7 @@ const ProfileManager = () => {
     }
 
     try {
-      const configResponse = await api.get<ConfigProfile['config']>('/config');
-      const currentConfig = configResponse.data;
+      const currentConfig = await getConfig() as ConfigProfile['config'];
 
       const newConfig = {
         ...currentConfig,
@@ -167,7 +172,7 @@ const ProfileManager = () => {
             : currentConfig.password,
       };
 
-      await api.post('/profiles', {
+      await createProfile({
         name: safeName,
         description: newProfileDescription,
         config: newConfig,
@@ -206,7 +211,7 @@ const ProfileManager = () => {
 
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
         try {
-          await api.post('/profiles', {
+          await createProfile({
             name: safeName,
             description: profile.description,
             config: profile.config,

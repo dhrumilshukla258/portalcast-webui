@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Play, ChevronDown, Clock } from 'lucide-react';
 import type { MediaItem } from '@/types';
-import { URL_PATHS } from '@/services/api';
+import { URL_PATHS } from '@/api/config';
 
 interface EpisodeAccordionRowProps {
   item: MediaItem;

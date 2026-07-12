@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { URL_PATHS } from '@/services/api';
+import { URL_PATHS } from '@/api/config';
 import type { MediaItem } from '@/types';
 
 interface EpisodeCardProps {

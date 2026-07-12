@@ -21,7 +21,10 @@ import { useTVFocus } from '@/hooks/useTVFocus';
 import { useCastReceiver } from '@/hooks/useCastReceiver';
 import { isTizenDevice } from './utils/helpers';
 import type { MediaItem } from '@/types';
-import { getMedia, getSeries, getChannels, type CarouselSlide } from '@/services/services';
+import { getMedia } from '@/api/endpoints/movies';
+import { getSeries } from '@/api/endpoints/series';
+import { getChannels } from '@/api/endpoints/channels';
+import type { CarouselSlide } from '@/api/endpoints/carousel';
 
 function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   const isTizen = isTizenDevice();

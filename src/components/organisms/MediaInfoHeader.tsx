@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Play, Clock, Star, Calendar, Globe2 } from 'lucide-react';
 import type { MediaItem } from '@/types';
-import { URL_PATHS } from '@/services/api';
+import { URL_PATHS } from '@/api/config';
 
 interface MediaInfoHeaderProps {
   item: MediaItem;

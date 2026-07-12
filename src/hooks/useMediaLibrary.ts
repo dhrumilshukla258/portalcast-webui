@@ -2,23 +2,16 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/context/AuthContext';
-import { api } from '@/services/api';
-import {
-  getChannels,
-  getMedia,
-  getSeries,
-  getEPG,
-  getChannelGroups,
-  getMovieCategories,
-  getSeriesCategories,
-  getCarouselSlides,
-  type CarouselSlide,
-  clearUserProgress,
-  getUserProgress,
-  type ProgressRecord,
-} from '@/services/services';
+import { api } from '@/api/client';
+import { getChannels, getChannelGroups } from '@/api/endpoints/channels';
+import { getMedia, getMovieCategories } from '@/api/endpoints/movies';
+import { getSeries, getSeriesCategories } from '@/api/endpoints/series';
+import { getEPG } from '@/api/endpoints/epg';
+import { getCarouselSlides, type CarouselSlide } from '@/api/endpoints/carousel';
+import { clearUserProgress, getUserProgress } from '@/api/endpoints/user';
+import type { ProgressRecord } from '@/api/types/user';
 import type { MediaItem, ContextType, EPG_List, ChannelGroup } from '@/types';
-import type { PaginatedResponse } from '@/services/services';
+import type { PaginatedResponse } from '@/api/types/channels';
 import { isTizenDevice } from '@/utils/helpers';
 
 export const getInitialState = (): {

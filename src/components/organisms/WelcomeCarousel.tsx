@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Play, Info, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { CarouselSlide } from '@/services/services';
+import type { CarouselSlide } from '@/api/endpoints/carousel';
 
 interface WelcomeCarouselProps {
   slides: CarouselSlide[];

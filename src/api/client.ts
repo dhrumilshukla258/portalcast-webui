@@ -1,9 +1,14 @@
-export const URL_PATHS = {
-  HOST: import.meta.env.VITE_API_HOST || 'http://localhost:3000',
-};
+import { BASE_URL, URL_PATHS } from '@/api/config';
+import { webPlatformAdapter, type PlatformAdapter } from '@/api/platform';
 
-export const BASE_URL =
-  URL_PATHS.HOST === '/' ? '/api' : `${URL_PATHS.HOST}/api`;
+// The active platform adapter used for token storage. Defaults to the web
+// adapter (localStorage-backed) so existing behavior is unchanged; a native
+// client can call `setClientPlatformAdapter()` to swap it out.
+let platformAdapter: PlatformAdapter = webPlatformAdapter;
+
+export function setClientPlatformAdapter(adapter: PlatformAdapter): void {
+  platformAdapter = adapter;
+}
 
 export interface ApiResponse<T = unknown> {
   data: T;
@@ -13,7 +18,7 @@ let isRefreshing = false;
 let refreshQueue: Array<(token: string) => void> = [];
 
 async function performTokenRefresh(): Promise<string | null> {
-  const refreshToken = localStorage.getItem('refresh_token');
+  const refreshToken = platformAdapter.storage.get('refresh_token');
   if (!refreshToken) return null;
 
   try {
@@ -31,9 +36,9 @@ async function performTokenRefresh(): Promise<string | null> {
 
     const data = await response.json();
     if (data.accessToken) {
-      localStorage.setItem('auth_token', data.accessToken);
+      platformAdapter.storage.set('auth_token', data.accessToken);
       if (data.refreshToken) {
-        localStorage.setItem('refresh_token', data.refreshToken);
+        platformAdapter.storage.set('refresh_token', data.refreshToken);
       }
       return data.accessToken;
     }
@@ -75,7 +80,7 @@ async function request<T = unknown>(
     }
     if (body) {
     if (body instanceof FormData) {
-      // DO NOT set Content-Type header manually here! 
+      // DO NOT set Content-Type header manually here!
       // Fetch will automatically inject dynamic boundary tokens
     } else {
       headers['Content-Type'] = 'application/json';
@@ -90,7 +95,7 @@ async function request<T = unknown>(
     });
   };
 
-  const token = localStorage.getItem('auth_token');
+  const token = platformAdapter.storage.get('auth_token');
   let response = await makeRequest(token);
 
   if (response.status === 401) {
@@ -140,9 +145,9 @@ async function request<T = unknown>(
     } else {
       // Refresh failed, logout
       refreshQueue = [];
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('auth_user');
+      platformAdapter.storage.remove('auth_token');
+      platformAdapter.storage.remove('refresh_token');
+      platformAdapter.storage.remove('auth_user');
       window.dispatchEvent(new Event('auth-expired'));
       throw new Error('Session expired');
     }
@@ -177,3 +182,60 @@ export const api = {
   put: <T = unknown>(path: string, body?: unknown, config?: RequestConfig) => request<T>('PUT', path, body, config),
   delete: <T = unknown>(path: string, config?: RequestConfig) => request<T>('DELETE', path, undefined, config),
 };
+
+/**
+ * Lower-level escape hatch for call sites that need the raw `Response`
+ * instead of parsed-JSON-or-throw semantics (e.g. probing an arbitrary
+ * stream URL for a 404, or hitting an endpoint whose response isn't always
+ * JSON). Still attaches the bearer token and — unlike a bare `fetch()` —
+ * performs the same 401-refresh-and-retry-once flow as `api.*`.
+ *
+ * NOTE: this is the one behavior-adjacent piece of this refactor. Call
+ * sites that used to call `fetch()` directly (VideoContext's subtitle
+ * search/probe and stream 404-check) had no 401-refresh handling at all;
+ * routing them through `authFetch` gives them that behavior for free. See
+ * migration notes in VideoContext.tsx.
+ */
+export async function authFetch(
+  url: string,
+  init?: RequestInit
+): Promise<Response> {
+  const makeRequest = async (tokenToUse: string | null): Promise<Response> => {
+    const headers = new Headers(init?.headers);
+    if (tokenToUse) {
+      headers.set('Authorization', `Bearer ${tokenToUse}`);
+    }
+    return fetch(url, { ...init, headers });
+  };
+
+  const token = platformAdapter.storage.get('auth_token');
+  let response = await makeRequest(token);
+
+  if (response.status === 401 && !url.includes('/auth/')) {
+    if (isRefreshing) {
+      return new Promise<Response>((resolve, reject) => {
+        refreshQueue.push((newToken) => {
+          makeRequest(newToken).then(resolve).catch(reject);
+        });
+      });
+    }
+
+    isRefreshing = true;
+    const newAccessToken = await performTokenRefresh();
+    isRefreshing = false;
+
+    if (newAccessToken) {
+      refreshQueue.forEach((cb) => cb(newAccessToken));
+      refreshQueue = [];
+      response = await makeRequest(newAccessToken);
+    } else {
+      refreshQueue = [];
+      platformAdapter.storage.remove('auth_token');
+      platformAdapter.storage.remove('refresh_token');
+      platformAdapter.storage.remove('auth_user');
+      window.dispatchEvent(new Event('auth-expired'));
+    }
+  }
+
+  return response;
+}

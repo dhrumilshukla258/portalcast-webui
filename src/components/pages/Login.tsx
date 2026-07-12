@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { api } from '@/services/api';
+import { api } from '@/api/client';
+import { webPlatformAdapter } from '@/api/platform';
 import { toast } from 'react-toastify';
 import { Loader2, RefreshCw, KeyRound, Mail, ShieldAlert, User, Check } from 'lucide-react';
 import { isTizenDevice } from '@/utils/helpers';
@@ -308,9 +309,9 @@ export default function Login() {
             clearInterval(pollIntervalRef.current!);
             
             // Set context auth state
-            localStorage.setItem('auth_token', accessToken);
-            localStorage.setItem('refresh_token', refreshToken);
-            localStorage.setItem('auth_user', JSON.stringify(user));
+            webPlatformAdapter.storage.set('auth_token', accessToken);
+            webPlatformAdapter.storage.set('refresh_token', refreshToken);
+            webPlatformAdapter.storage.set('auth_user', JSON.stringify(user));
             
             toast.success(`Logged in as ${user.name}`);
             window.location.reload(); // Reload triggers AuthProvider init

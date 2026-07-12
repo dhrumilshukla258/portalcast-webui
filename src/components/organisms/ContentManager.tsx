@@ -13,7 +13,18 @@ import {
   ArrowUpAZ,
   X,
 } from 'lucide-react';
-import { api } from '@/services/api';
+import {
+  getGenres,
+  getGenreItems,
+  updateGenre,
+  deleteGenre,
+  createGenre,
+  reorderGenres,
+  resetGenreOrder,
+  updateGenreItem,
+  deleteGenreItem,
+  reorderGenreItems,
+} from '@/api/endpoints/admin';
 
 type ContentType = 'channel' | 'movie' | 'series';
 
@@ -59,9 +70,9 @@ const ContentManager: React.FC = () => {
     const requestId = ++catsRequestRef.current;
     setLoadingCats(true);
     try {
-      const res = await api.get<Category[]>('/admin/genres', { params: { type: t } });
+      const res = await getGenres(t);
       if (requestId !== catsRequestRef.current) return;
-      setCategories(res.data);
+      setCategories(res);
     } catch {
       if (requestId !== catsRequestRef.current) return;
       toast.error('Failed to load categories');
@@ -80,9 +91,9 @@ const ContentManager: React.FC = () => {
     const requestId = ++itemsRequestRef.current;
     setLoadingItems(true);
     try {
-      const res = await api.get<Item[]>('/admin/items', { params: { type: t, category_id: categoryId } });
+      const res = await getGenreItems(t, categoryId);
       if (requestId !== itemsRequestRef.current) return;
-      setItems(res.data);
+      setItems(res);
     } catch {
       if (requestId !== itemsRequestRef.current) return;
       toast.error('Failed to load items');
@@ -118,9 +129,9 @@ const ContentManager: React.FC = () => {
     try {
       const val = catNameDraft.trim();
       if (isVirtual(cat.id)) {
-        await api.put(`/admin/genres/${type}/${cat.id}`, { display_name: null, hidden: false, virtual_title: val || cat.title });
+        await updateGenre(type, cat.id, { display_name: null, hidden: false, virtual_title: val || cat.title });
       } else {
-        await api.put(`/admin/genres/${type}/${cat.id}`, { display_name: val || null, hidden: cat.hidden ?? false });
+        await updateGenre(type, cat.id, { display_name: val || null, hidden: cat.hidden ?? false });
       }
       setEditingCatId(null);
       await loadCategories(type);
@@ -131,7 +142,7 @@ const ContentManager: React.FC = () => {
 
   const toggleCatHidden = async (cat: Category) => {
     try {
-      await api.put(`/admin/genres/${type}/${cat.id}`, { display_name: cat.display_name ?? null, hidden: !cat.hidden });
+      await updateGenre(type, cat.id, { display_name: cat.display_name ?? null, hidden: !cat.hidden });
       await loadCategories(type);
     } catch {
       toast.error('Failed to update category');
@@ -147,7 +158,7 @@ const ContentManager: React.FC = () => {
       if (!window.confirm(msg)) return;
     }
     try {
-      await api.delete(`/admin/genres/${type}/${cat.id}`);
+      await deleteGenre(type, cat.id);
       setEditingCatId(null);
       if (selectedCategoryId === cat.id) {
         setSelectedCategoryId(null);
@@ -163,7 +174,7 @@ const ContentManager: React.FC = () => {
     const title = newCatTitle.trim();
     if (!title) return;
     try {
-      await api.post(`/admin/genres/${type}`, { title });
+      await createGenre(type, title);
       setNewCatTitle('');
       setAddingCat(false);
       await loadCategories(type);
@@ -174,7 +185,7 @@ const ContentManager: React.FC = () => {
 
   const persistCatOrder = async (ordered: Category[]) => {
     try {
-      await api.put(`/admin/genres/${type}/reorder`, {
+      await reorderGenres(type, {
         order: ordered.map((c, i) => ({ id: c.id, sort_order: i })),
       });
     } catch {
@@ -203,7 +214,7 @@ const ContentManager: React.FC = () => {
   const resetCatOrder = async () => {
     if (!window.confirm('Reset category order to original portal order?')) return;
     try {
-      await api.delete(`/admin/genres/${type}/order`);
+      await resetGenreOrder(type);
       await loadCategories(type);
     } catch {
       toast.error('Failed to reset order');
@@ -220,7 +231,7 @@ const ContentManager: React.FC = () => {
 
   const saveItemEdit = async (item: Item) => {
     try {
-      await api.put(`/admin/items/${type}/${item.id}`, {
+      await updateGenreItem(type, item.id, {
         display_name: itemNameDraft.trim() || null,
         hidden: item.hidden ?? false,
         target_category_id: itemCatDraft || null,
@@ -235,7 +246,7 @@ const ContentManager: React.FC = () => {
 
   const toggleItemHidden = async (item: Item) => {
     try {
-      await api.put(`/admin/items/${type}/${item.id}`, {
+      await updateGenreItem(type, item.id, {
         display_name: item.display_name ?? null,
         hidden: !item.hidden,
         target_category_id: item.target_category_id ?? null,
@@ -249,7 +260,7 @@ const ContentManager: React.FC = () => {
 
   const resetItem = async (item: Item) => {
     try {
-      await api.delete(`/admin/items/${type}/${item.id}`);
+      await deleteGenreItem(type, item.id);
       setEditingItemId(null);
       if (selectedCategoryId) await loadItems(selectedCategoryId, type);
     } catch {
@@ -266,7 +277,7 @@ const ContentManager: React.FC = () => {
     [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
     setItems(reordered);
     try {
-      await api.put(`/admin/items/${type}/${selectedCategoryId}/reorder`, {
+      await reorderGenreItems(type, selectedCategoryId, {
         order: reordered.map((it, i) => ({ id: it.id, sort_order: i })),
       });
     } catch {

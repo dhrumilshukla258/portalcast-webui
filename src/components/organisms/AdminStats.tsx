@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { RefreshCw, Users, UserCheck, UserCog, Clock, Wifi, Film, Tv2, PlayCircle, Radio } from 'lucide-react';
-import { api } from '@/services/api';
+import { api } from '@/api/client';
 import { useSocket } from '@/context/useSocket';
 
 const DEFAULT_REFRESH_MS = 5000;

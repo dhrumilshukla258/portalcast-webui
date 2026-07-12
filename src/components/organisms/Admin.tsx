@@ -20,9 +20,18 @@ import {
   FolderTree,
   Code2,
 } from 'lucide-react';
-import { getCarouselSlides, saveCarouselSlides, type CarouselSlide, uploadFile } from '@/services/services';
-import { api } from '@/services/api';
-import { getChannelGroups } from '@/services/services';
+import { getCarouselSlides, saveCarouselSlides, type CarouselSlide } from '@/api/endpoints/carousel';
+import { uploadFile } from '@/api/endpoints/downloads';
+import { getChannelGroups } from '@/api/endpoints/channels';
+import {
+  getConfig,
+  saveConfig,
+  refreshGroups,
+  refreshChannels,
+  refreshMovieGroups,
+  refreshSeriesGroups,
+  clearServerCache,
+} from '@/api/endpoints/admin';
 import ProfileManager from '@/components/organisms/ProfileManager';
 import ConfirmationModal from '@/components/molecules/ConfirmationModal';
 import { useSocket } from '@/context/useSocket';
@@ -228,8 +237,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
 
   const loadConfig = async (signal?: AbortSignal) => {
     try {
-      const response = await api.get('/config', { signal });
-      const data = response.data as Partial<Config>;
+      const data = await getConfig(signal) as Partial<Config>;
       setConfig((prev) => ({
         ...prev,
         ...data,
@@ -267,9 +275,9 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await api.post<{ message?: string }>('/config', config);
+      const response = await saveConfig(config);
       toast.success(
-        response.data.message || 'Configuration updated successfully'
+        response.message || 'Configuration updated successfully'
       );
     } catch {
       toast.error('Error updating configuration');
@@ -279,7 +287,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
   const handleReloadGroups = async () => {
     setLoadingGroups(true);
     try {
-      await api.get('/v2/refresh-groups');
+      await refreshGroups();
       toast.success('Groups refreshed successfully');
       await loadGroups();
     } catch {
@@ -292,7 +300,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
   const handleRefreshChannels = async () => {
     setLoadingChannels(true);
     try {
-      await api.get('/v2/refresh-channels');
+      await refreshChannels();
       toast.success('Channels refreshed successfully');
     } catch {
       toast.error('Error refreshing channels');
@@ -304,7 +312,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
   const handleRefreshMovieGroups = async () => {
     setLoadingMovies(true);
     try {
-      await api.get('/v2/refresh-movie-groups');
+      await refreshMovieGroups();
       toast.success('Movie groups refreshed successfully');
     } catch {
       toast.error('Error refreshing movie groups');
@@ -316,7 +324,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
   const handleRefreshSeriesGroups = async () => {
     setLoadingSeries(true);
     try {
-      await api.get('/v2/refresh-series-groups');
+      await refreshSeriesGroups();
       toast.success('Series groups refreshed successfully');
     } catch {
       toast.error('Error refreshing Series groups');
@@ -354,7 +362,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
       onConfirm: async () => {
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
         try {
-          await api.post('/clear-cache');
+          await clearServerCache();
           toast.success('Server cache cleared successfully.');
         } catch {
           toast.error('Failed to clear server cache.');
@@ -835,7 +843,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
                           action: async () => {
                             try {
                               const { getExpiry } = await import(
-                                '@/services/services'
+                                '@/api/endpoints/epg'
                               );
                               const response = await getExpiry();
                               if (response.success && response.expiry) {

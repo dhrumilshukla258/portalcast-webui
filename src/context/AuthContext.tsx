@@ -5,31 +5,19 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
-import { api } from '@/services/api';
+import { webPlatformAdapter } from '@/api/platform';
+import type { User } from '@/api/types/user';
+import {
+  getUserProfile,
+  loginWithCredentials as apiLoginWithCredentials,
+  loginWithGoogle as apiLoginWithGoogle,
+  updateUserPreferences,
+  syncUserProgress,
+} from '@/api/endpoints/auth';
 
-interface CustomWindow extends Window {
-  __isSyncingFromServer?: boolean;
-  tizen?: unknown;
-}
+export type { User };
 
-export interface User {
-  id: number;
-  email: string;
-  name: string;
-  role: 'admin' | 'user';
-
-  preferences: {
-    preferredContentType?: 'movie' | 'series' | 'tv';
-    favorites?: string[];
-    recentChannels?: string[];
-    videoFitMode?: string;
-    lastSelectedCategory?: Record<string, string>;
-    lastSelectedCategoryTitle?: Record<string, string>;
-    recentCategories?: Record<string, string[]>;
-    pinnedCategories?: Record<string, string[]>;
-    categoryOrder?: Record<string, string[]>;
-  };
-}
+const authStorage = webPlatformAdapter.storage;
 
 interface AuthContextType {
   token: string | null;
@@ -58,14 +46,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem('auth_token')
+    authStorage.get('auth_token')
   );
   const [refreshToken, setRefreshToken] = useState<string | null>(() =>
-    localStorage.getItem('refresh_token')
+    authStorage.get('refresh_token')
   );
   const [user, setUser] = useState<User | null>(() => {
     try {
-      const savedUser = localStorage.getItem('auth_user');
+      const savedUser = authStorage.get('auth_user');
       return savedUser ? JSON.parse(savedUser) : null;
     } catch {
       return null;
@@ -88,10 +76,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const refreshProfile = useCallback(async () => {
     if (!token) return;
     try {
-      const response = await api.get<User>('/user/profile');
-      if (response.data) {
-        setUser(response.data);
-        localStorage.setItem('auth_user', JSON.stringify(response.data));
+      const profile = await getUserProfile();
+      if (profile) {
+        setUser(profile);
+        authStorage.set('auth_user', JSON.stringify(profile));
       }
     } catch (error) {
       console.error('Failed to refresh user profile:', error);
@@ -110,31 +98,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const loginWithGoogle = async (idToken: string) => {
     try {
-      const isTv =
-        !!(window as CustomWindow).tizen ||
-        (window.innerHeight === 1080 && window.innerWidth === 1920); // heuristic or TV check
-      const response = await api.post<{
-        accessToken: string;
-        refreshToken: string;
-        user: User;
-      }>('/auth/google', {
-        idToken,
-        clientType: isTv ? 'tv' : 'web',
-      });
+      // clientType is resolved once at adapter-construction time via
+      // isTizenDevice() (see @/api/platform) rather than the previous
+      // inline window.tizen/viewport heuristic. The wire value sent to the
+      // server ('tv' | 'web') is preserved.
+      const clientType = webPlatformAdapter.clientType === 'tizen' ? 'tv' : 'web';
+      const data = await apiLoginWithGoogle(idToken, clientType);
 
-      if (response.data) {
+      if (data) {
         const {
           accessToken,
           refreshToken: newRefreshToken,
           user: userData,
-        } = response.data;
+        } = data;
         setToken(accessToken);
         setRefreshToken(newRefreshToken);
         setUser(userData);
 
-        localStorage.setItem('auth_token', accessToken);
-        localStorage.setItem('refresh_token', newRefreshToken);
-        localStorage.setItem('auth_user', JSON.stringify(userData));
+        authStorage.set('auth_token', accessToken);
+        authStorage.set('refresh_token', newRefreshToken);
+        authStorage.set('auth_user', JSON.stringify(userData));
       }
     } catch (error) {
       console.error('Google Sign-In failed:', error);
@@ -144,32 +127,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const loginWithCredentials = async (email: string, password: string) => {
     try {
-      const isTv =
-        !!(window as CustomWindow).tizen ||
-        (window.innerHeight === 1080 && window.innerWidth === 1920); // heuristic or TV check
-      const response = await api.post<{
-        accessToken: string;
-        refreshToken: string;
-        user: User;
-      }>('/auth/login', {
-        email,
-        password,
-        clientType: isTv ? 'tv' : 'web',
-      });
+      const clientType = webPlatformAdapter.clientType === 'tizen' ? 'tv' : 'web';
+      const data = await apiLoginWithCredentials(email, password, clientType);
 
-      if (response.data) {
+      if (data) {
         const {
           accessToken,
           refreshToken: newRefreshToken,
           user: userData,
-        } = response.data;
+        } = data;
         setToken(accessToken);
         setRefreshToken(newRefreshToken);
         setUser(userData);
 
-        localStorage.setItem('auth_token', accessToken);
-        localStorage.setItem('refresh_token', newRefreshToken);
-        localStorage.setItem('auth_user', JSON.stringify(userData));
+        authStorage.set('auth_token', accessToken);
+        authStorage.set('refresh_token', newRefreshToken);
+        authStorage.set('auth_user', JSON.stringify(userData));
       }
     } catch (error) {
       console.error('Credentials login failed:', error);
@@ -182,9 +155,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setRefreshToken(null);
     setUser(null);
 
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('auth_user');
+    authStorage.remove('auth_token');
+    authStorage.remove('refresh_token');
+    authStorage.remove('auth_user');
 
     window.location.hash = '/home';
   }, []);
@@ -192,18 +165,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const updatePreferences = async (newPrefs: Partial<User['preferences']>) => {
     if (!token || !user) return {};
     try {
-      const response = await api.put<{
-        success: boolean;
-        preferences: User['preferences'];
-      }>('/user/preferences', newPrefs);
-      if (response.data?.preferences) {
+      const data = await updateUserPreferences(newPrefs);
+      if (data?.preferences) {
         const updatedUser = {
           ...user,
-          preferences: response.data.preferences,
+          preferences: data.preferences,
         };
         setUser(updatedUser);
-        localStorage.setItem('auth_user', JSON.stringify(updatedUser));
-        return response.data.preferences;
+        authStorage.set('auth_user', JSON.stringify(updatedUser));
+        return data.preferences;
       }
     } catch (error) {
       console.error('Failed to sync preferences:', error);
@@ -218,11 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     if (!token) return;
     try {
-      await api.put('/user/progress', {
-        mediaId,
-        progress,
-        completed,
-      });
+      await syncUserProgress(mediaId, progress, completed);
     } catch (error) {
       console.error('Failed to sync progress:', error);
     }

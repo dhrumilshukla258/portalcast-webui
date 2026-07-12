@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { api } from '@/services/api';
+import {
+  getOpenSubtitlesStatus,
+  linkOpenSubtitles,
+  unlinkOpenSubtitles,
+} from '@/api/endpoints/user';
 
 type OpenSubtitlesModalProps = {
   isOpen: boolean;
@@ -18,9 +22,8 @@ const OpenSubtitlesModal: React.FC<OpenSubtitlesModalProps> = ({ isOpen, onClose
   useEffect(() => {
     if (!isOpen) return;
     setStatusLoaded(false);
-    api
-      .get<{ linked: boolean; username: string | null }>('/user/opensubtitles')
-      .then(({ data }) => {
+    getOpenSubtitlesStatus()
+      .then((data) => {
         setLinked(Boolean(data?.linked));
         setLinkedUsername(data?.username ?? null);
       })
@@ -40,7 +43,7 @@ const OpenSubtitlesModal: React.FC<OpenSubtitlesModalProps> = ({ isOpen, onClose
     }
     setLoading(true);
     try {
-      await api.put('/user/opensubtitles', { username, password });
+      await linkOpenSubtitles(username, password);
       toast.success('OpenSubtitles account linked');
       setLinked(true);
       setLinkedUsername(username);
@@ -55,7 +58,7 @@ const OpenSubtitlesModal: React.FC<OpenSubtitlesModalProps> = ({ isOpen, onClose
   const handleUnlink = async () => {
     setLoading(true);
     try {
-      await api.delete('/user/opensubtitles');
+      await unlinkOpenSubtitles();
       toast.success('OpenSubtitles account unlinked');
       setLinked(false);
       setLinkedUsername(null);

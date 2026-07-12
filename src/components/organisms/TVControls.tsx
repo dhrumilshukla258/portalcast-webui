@@ -24,7 +24,7 @@ import {
   FullscreenExitIcon,
   FullscreenIcon,
 } from '@/components/atoms/Icons';
-import { URL_PATHS } from '@/services/api';
+import { URL_PATHS } from '@/api/config';
 import { SettingsMenu } from '@/components/molecules/SettingsMenu';
 import { useVideoContext } from '@/context/video';
 

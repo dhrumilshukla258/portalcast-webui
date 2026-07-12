@@ -3,8 +3,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/context/AuthContext';
-import { getMedia, getMovieUrl, getUserProgress } from '@/services/services';
-import { URL_PATHS } from '@/services/api';
+import { getMedia } from '@/api/endpoints/movies';
+import { getMovieUrl } from '@/api/endpoints/movies';
+import { getUserProgress } from '@/api/endpoints/user';
+import { URL_PATHS } from '@/api/config';
 import type { MediaItem, ContextType } from '@/types';
 import { isTizenDevice } from '@/utils/helpers';
 import { initialContext } from './useMediaLibrary';

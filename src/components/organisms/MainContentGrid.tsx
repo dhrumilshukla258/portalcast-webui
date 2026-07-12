@@ -13,7 +13,8 @@ import SeasonEpisodesPage from '@/components/organisms/SeasonEpisodesPage';
 import { useResizableWidth } from '@/hooks/useResizableWidth';
 import { isTizenDevice } from '@/utils/helpers';
 import type { MediaItem, ContextType, ChannelGroup } from '@/types';
-import type { CarouselSlide, ProgressRecord } from '@/services/services';
+import type { CarouselSlide } from '@/api/endpoints/carousel';
+import type { ProgressRecord } from '@/api/types/user';
 
 interface MainContentGridProps {
   items: MediaItem[];

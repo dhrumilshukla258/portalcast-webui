@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import MediaCard from '@/components/molecules/MediaCard';
 import type { MediaItem } from '@/types';
-import { getUserProgress, deleteUserProgress } from '@/services/services';
+import { getUserProgress, deleteUserProgress } from '@/api/endpoints/user';
 
 interface ContinueWatchingProps {
   onClick: (item: MediaItem) => void;

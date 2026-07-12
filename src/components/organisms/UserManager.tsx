@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { api } from '@/services/api';
+import { getUsers, createUser, updateUser, deleteUser } from '@/api/endpoints/admin';
 import { toast } from 'react-toastify';
 import { Plus, Trash2, Edit2, Users, Check, X, Shield, Loader2, Monitor, Smartphone, Activity } from 'lucide-react';
 import ConfirmationModal from '@/components/molecules/ConfirmationModal';
@@ -46,9 +46,9 @@ export default function UserManager() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await api.get<UserRecord[]>('/admin/users');
-      if (response.data) {
-        setUsers(response.data);
+      const data = await getUsers();
+      if (data) {
+        setUsers(data);
       }
     } catch {
       toast.error('Failed to load user list');
@@ -69,7 +69,7 @@ export default function UserManager() {
     }
 
     try {
-      const response = await api.post<UserRecord>('/admin/users', {
+      const response = await createUser({
         email: email.trim(),
         name: name.trim(),
         role,
@@ -77,7 +77,7 @@ export default function UserManager() {
         password: password.trim() || undefined,
       });
 
-      if (response.data) {
+      if (response) {
         toast.success(`User ${name} added successfully`);
         setShowAddModal(false);
         // Reset form
@@ -108,14 +108,14 @@ export default function UserManager() {
     if (!currentUser) return;
 
     try {
-      const response = await api.put<UserRecord>(`/admin/users/${currentUser.id}`, {
+      const response = await updateUser(currentUser.id, {
         name: name.trim(),
         role,
         isActive,
         password: password.trim() || undefined,
       });
 
-      if (response.data) {
+      if (response) {
         toast.success('User updated successfully');
         setShowEditModal(false);
         setCurrentUser(null);
@@ -141,7 +141,7 @@ export default function UserManager() {
     if (!userId) return;
 
     try {
-      await api.delete(`/admin/users/${userId}`);
+      await deleteUser(userId);
       toast.success('User deleted successfully');
       setConfirmDelete({ isOpen: false, userId: null, email: '' });
       fetchUsers();

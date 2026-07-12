@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { api } from '@/services/api';
+import { api } from '@/api/client';
 import { toast } from 'react-toastify';
 import { KeyRound, Loader2, CheckCircle2, ShieldAlert } from 'lucide-react';
 
