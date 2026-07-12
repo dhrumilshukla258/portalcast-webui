@@ -39,8 +39,8 @@
 1.  **Clone the repository**
 
     ```bash
-    git clone https://github.com/yourusername/stalker-ui-v2.git
-    cd stalker-ui-v2
+    git clone https://github.com/yourusername/portalcast-webui.git
+    cd portalcast-webui
     ```
 
 2.  **Install dependencies**
@@ -64,7 +64,7 @@
 
     # Deployment Targets
     TIZEN_DIR=/path/to/tizen/project/public
-    SERVER_DIR=../stalker-m3u-server/public
+    SERVER_DIR=../portalcast-server/public
     ```
 
 4.  **Run Development Server**
@@ -103,7 +103,7 @@ This will:
 
 1.  Read your configuration.
 2.  Build the Vite project.
-3.  Deploy the `dist/` artifacts to your configured `DEPLOY_DIR` (default: `../stalker-m3u-server/public`).
+3.  Deploy the `dist/` artifacts to your configured `DEPLOY_DIR` (default: `../portalcast-server/public`).
 
 ## ⚠️ Disclaimer
 

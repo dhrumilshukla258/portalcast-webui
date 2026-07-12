@@ -1,16 +1,16 @@
 # Admin Panel — Skill Reference
 
-Covers the React admin dashboard (`/admin` route) — `Admin.tsx` and its tab components. Backend counterpart: stalker-m3u-server's `skill-admin-dashboard.md` and `skill-stream-tokens.md`.
+Covers the React admin dashboard (`/admin` route) — `Admin.tsx` and its tab components. Backend counterpart: portalcast-server's `skill-admin-dashboard.md` and `skill-stream-tokens.md`.
 
 ---
 
 ## Deploying changes made here
 
-This repo has no backend of its own — `stalker-m3u-server` serves the built output from its own `public/` folder, copied in at Docker build time (it does **not** build this project). After any change here:
+This repo has no backend of its own — `portalcast-server` serves the built output from its own `public/` folder, copied in at Docker build time (it does **not** build this project). After any change here:
 
 1. `npm run build` → `dist/`
-2. Copy `dist/*` into `stalker-m3u-server`'s `public/` (or run `./deploy.sh`, which automates this)
-3. Rebuild/redeploy `stalker-m3u-server`'s Docker image
+2. Copy `dist/*` into `portalcast-server`'s `public/` (or run `./deploy.sh`, which automates this)
+3. Rebuild/redeploy `portalcast-server`'s Docker image
 
 Skipping step 2–3 is the most common cause of "I fixed it but it's still broken" reports — the deployed instance is still running the previous build.
 
@@ -37,7 +37,7 @@ Route guard: `App.tsx`'s `ProtectedRoute adminOnly` — redirects non-admins to 
 
 ## `ContentManager.tsx` — React port of `/contentmanager`
 
-The legacy page (`stalker-m3u-server`'s `src/routes/contentmanager.ts`) is a self-contained vanilla-JS mini-app with its own login. This component hits the **same backend endpoints** (`/api/admin/genres`, `/api/admin/items`, see stalker-m3u-server's `skill-content-manager.md`) from inside the normal app shell — no separate URL/login needed.
+The legacy page (`portalcast-server`'s `src/routes/contentmanager.ts`) is a self-contained vanilla-JS mini-app with its own login. This component hits the **same backend endpoints** (`/api/admin/genres`, `/api/admin/items`, see portalcast-server's `skill-content-manager.md`) from inside the normal app shell — no separate URL/login needed.
 
 Simplifications vs. the legacy page (deliberate, not oversights):
 - **Up/down arrow reordering instead of drag-and-drop** — matches the existing `CarouselConfigManager` pattern already in this codebase. Reorder buttons are disabled while a search filter is active (reordering a filtered subset would corrupt the real sort order — same rule the legacy page enforces via its own `isFiltering` check).

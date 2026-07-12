@@ -1,12 +1,12 @@
 # Video Playback & Navigation — Skill Reference
 
-Covers `useAppNavigation.ts` and `useMediaLibrary.ts` — how browsing (movies/series/live TV grids, season/episode drill-down) and playback URL resolution work, plus several real bugs fixed in this area. Backend counterpart: stalker-m3u-server's `skill-stream-tokens.md`.
+Covers `useAppNavigation.ts` and `useMediaLibrary.ts` — how browsing (movies/series/live TV grids, season/episode drill-down) and playback URL resolution work, plus several real bugs fixed in this area. Backend counterpart: portalcast-server's `skill-stream-tokens.md`.
 
 ---
 
 ## The backend always hands back a ready-to-use URL now
 
-Since the backend moved to opaque stream tokens (see stalker-m3u-server's `skill-stream-tokens.md`), **every stream URL the frontend receives is already fully routed through the backend** — `/live.m3u8?t=...`, `/api/proxy?t=...`. There is nothing left for the client to wrap, encode, or resolve further.
+Since the backend moved to opaque stream tokens (see portalcast-server's `skill-stream-tokens.md`), **every stream URL the frontend receives is already fully routed through the backend** — `/live.m3u8?t=...`, `/api/proxy?t=...`. There is nothing left for the client to wrap, encode, or resolve further.
 
 This means the old `buildProxiedUrl()` helper (`${BASE_URL}/proxy?url=${btoa(raw)}` — client-side base64-wrapping) is **gone**. It's not just unused, it was actively harmful once the backend stopped accepting a raw `url=` param — using it would either double-wrap an already-tokenized URL (`?url=<base64 of "/api/proxy?t=...">`, which the backend can't resolve, sent as an actual failing request) or, worse, wrap a genuinely raw URL that should never have reached the client in the first place. If you see `btoa(` or `/proxy?url=` reappear anywhere in a diff, that's a regression — grep the whole `src/` tree for it before merging.
 
@@ -48,7 +48,7 @@ const movieTitle = item.title || item.name;
 
 `currentSeriesItem` must be in `startPlayback`'s `useCallback` dependency array — it was missing once (stale-closure bug: the label-building code read a stale/null `currentSeriesItem` because the memoized callback never re-created when it changed).
 
-Same pattern applies to the **download filename** on the backend side — see stalker-m3u-server's download handler, which had the identical bug (using the upstream portal's own `Content-Disposition` filename instead of a computed one) in four separate code branches.
+Same pattern applies to the **download filename** on the backend side — see portalcast-server's download handler, which had the identical bug (using the upstream portal's own `Content-Disposition` filename instead of a computed one) in four separate code branches.
 
 ---
 
@@ -76,7 +76,7 @@ Reported symptom: clicking a category shows the *previous* category's content (e
 
 **Fix**: `fetchRequestRef` (a monotonic counter) — every `fetchData` call stamps its own id at the top (`const requestId = ++fetchRequestRef.current`), and an `isStale()` check gates every `setItems`/`setTotalItemsCount`/`setChannelGroups`/error-state commit after each `await` boundary. Only the call whose id is still the current value of the ref by the time its response lands is allowed to touch state. The `finally` block's `setLoading(false)` is also gated — a stale request finishing late must not clear the *newer* request's loading state.
 
-**Investigated but not confirmed as the root cause**: in the specific report that prompted this fix, the user later found the same wrong-category content appeared even on a single deliberate click (not fast switching) — which this guard does nothing for, since there's no race without overlapping requests. Network trace showed the same category request firing twice back-to-back (a separate, real bug — see stalker-m3u-server's `skill-xtream-provider.md`, "in-flight deduplication" — closed regardless since it's wasteful either way), but the wrong-category-content symptom itself was ultimately judged more likely a portal-side (upstream Stalker/Xtream) data issue than anything in this codebase. Keep this fix — it closes a real class of bug — but don't assume it was *the* fix for that specific report without further evidence.
+**Investigated but not confirmed as the root cause**: in the specific report that prompted this fix, the user later found the same wrong-category content appeared even on a single deliberate click (not fast switching) — which this guard does nothing for, since there's no race without overlapping requests. Network trace showed the same category request firing twice back-to-back (a separate, real bug — see portalcast-server's `skill-xtream-provider.md`, "in-flight deduplication" — closed regardless since it's wasteful either way), but the wrong-category-content symptom itself was ultimately judged more likely a portal-side (upstream Stalker/Xtream) data issue than anything in this codebase. Keep this fix — it closes a real class of bug — but don't assume it was *the* fix for that specific report without further evidence.
 
 ---
 
