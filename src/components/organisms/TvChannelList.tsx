@@ -9,6 +9,7 @@ import {
 } from 'react';
 import type { MediaItem, ChannelGroup } from '@/types';
 import TvChannelListCard from '@/components/molecules/TvChannelListCard';
+import { useResizableWidth } from '@/hooks/useResizableWidth';
 import '@/components/organisms/TvChannelList.css';
 
 export interface TvChannelListRef {
@@ -25,6 +26,7 @@ interface TvChannelListProps {
   isOverlay?: boolean;
   favorites?: string[];
   recentChannels?: string[];
+  providerKey?: string;
 }
 
 const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
@@ -39,9 +41,12 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
       isOverlay = false,
       favorites = [],
       recentChannels = [],
+      providerKey = 'default',
     },
     ref
   ) => {
+    const { width: groupsWidth, onMouseDown: onGroupsResizeStart } =
+      useResizableWidth(`tvGroupsWidth_${providerKey}`, 150, 120, 360);
     const findInitialIndexes = useCallback(() => {
       if (!currentItemId) return { groupIdx: 0, channelIdx: 0 };
       const currentChannel = channels.find((c) => c.id === currentItemId);
@@ -310,7 +315,8 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
         {}
         <div
           ref={groupListRef}
-          className={`custom-scrollbar no-scrollbar-mobile z-20 flex h-full w-full flex-shrink-0 flex-col overflow-y-auto border-r border-white/5 bg-gray-900/60 p-3 shadow-[4px_0_24px_rgba(0,0,0,0.2)] md:w-[150px] lg:w-[180px] ${
+          style={!isMobile ? { width: groupsWidth } : undefined}
+          className={`custom-scrollbar no-scrollbar-mobile z-20 flex h-full w-full flex-shrink-0 flex-col overflow-y-auto border-r border-white/5 bg-gray-900/60 p-3 shadow-[4px_0_24px_rgba(0,0,0,0.2)] ${
             isMobile && showChannelsList
               ? 'hidden'
               : 'animate-in slide-in-from-left block duration-300'
@@ -385,6 +391,17 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
             })}
           </div>
         </div>
+
+        {/* Drag handle to resize the categories panel */}
+        {!isMobile && (
+          <div
+            onMouseDown={onGroupsResizeStart}
+            title="Drag to resize categories panel"
+            className="group z-20 hidden w-3 shrink-0 cursor-col-resize items-center justify-center bg-gray-900/40 md:flex"
+          >
+            <div className="h-16 w-1 rounded-full bg-gray-700/60 transition-colors group-hover:bg-blue-500" />
+          </div>
+        )}
 
         {}
         <div

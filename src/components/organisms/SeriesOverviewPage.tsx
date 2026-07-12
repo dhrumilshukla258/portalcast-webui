@@ -258,6 +258,8 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
                   ? imgUri
                   : `${baseUrl}/api/images${imgUri}`
                 : null;
+              const seasonLabel = season.title || season.name || '';
+              const parsedSeasonNumber = seasonLabel.match(/\d+/)?.[0];
               return (
                 <button
                   key={`${season.id}-${index}`}
@@ -271,13 +273,13 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/10 to-transparent">
                         <span className="select-none text-4xl font-black text-white/20">
-                          S{index + 1}
+                          S{parsedSeasonNumber || index + 1}
                         </span>
                       </div>
                     )}
                   </div>
                   <span className="truncate text-sm font-bold text-gray-200">
-                    {season.title || season.name}
+                    {seasonLabel}
                   </span>
                 </button>
               );

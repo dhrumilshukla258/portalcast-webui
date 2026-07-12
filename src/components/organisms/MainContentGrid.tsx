@@ -156,6 +156,7 @@ const MainContentGrid = React.memo(
               showCloseButton={false}
               favorites={favorites}
               recentChannels={recentChannels}
+              providerKey={providerKey}
             />
           </div>
         ) : (

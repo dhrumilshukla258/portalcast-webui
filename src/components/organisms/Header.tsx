@@ -96,7 +96,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           </button>
         )}
         <img
-          src="portalcast-logo.svg"
+          src="/portalcast-logo.svg"
           className="w-24 sm:w-28 md:w-44 cursor-pointer"
           alt="Portalcast Logo"
           onClick={() => navigate('/')}

@@ -77,7 +77,7 @@ export default function Verify() {
         {/* Logo */}
         <div className="flex items-center mb-8">
           <img
-            src="portalcast-logo.svg"
+            src="/portalcast-logo.svg"
             className="w-28 sm:w-32 cursor-pointer"
             alt="Portalcast Logo"
             onClick={() => navigate('/')}

@@ -28,7 +28,7 @@ export default function Home() {
       <header className="px-6 py-5 border-b border-gray-800/40 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between">
         <div className="flex items-center">
           <img
-            src="portalcast-logo.svg"
+            src="/portalcast-logo.svg"
             className="w-24 sm:w-28 md:w-36 cursor-pointer"
             alt="Portalcast Logo"
             onClick={() => navigate('/')}

@@ -755,7 +755,6 @@ const VideoPlayerContent: React.FC = () => {
             autoJoinPolicy: 'origin_scoped' as any,
             language: 'en-US',
           }}
-          crossOrigin
           playsInline
           autoplay
           load="eager"
