@@ -378,9 +378,9 @@ export default function Login() {
         {/* Logo */}
         <div className="flex items-center mb-6">
           <img
-            src="stalker-logo.svg"
+            src="portalcast-logo.svg"
             className="w-28 sm:w-32 cursor-pointer"
-            alt="Stalker Logo"
+            alt="Portalcast Logo"
             onClick={() => navigate('/')}
           />
         </div>

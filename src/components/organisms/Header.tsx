@@ -96,9 +96,9 @@ export const Header: React.FC<HeaderProps> = React.memo(
           </button>
         )}
         <img
-          src="stalker-logo.svg"
+          src="portalcast-logo.svg"
           className="w-24 sm:w-28 md:w-44 cursor-pointer"
-          alt="Stalker Logo"
+          alt="Portalcast Logo"
           onClick={() => navigate('/')}
         />
         <span className="text-slate-600 hidden sm:inline text-lg select-none pointer-events-none">|</span>

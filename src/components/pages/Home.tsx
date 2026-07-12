@@ -28,9 +28,9 @@ export default function Home() {
       <header className="px-6 py-5 border-b border-gray-800/40 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between">
         <div className="flex items-center">
           <img
-            src="stalker-logo.svg"
+            src="portalcast-logo.svg"
             className="w-24 sm:w-28 md:w-36 cursor-pointer"
-            alt="Stalker Logo"
+            alt="Portalcast Logo"
             onClick={() => navigate('/')}
           />
         </div>
@@ -67,7 +67,7 @@ export default function Home() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
               A Premium Hub for{' '}
               <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                Stalker Streams
+                Portalcast Streams
               </span>
             </h1>
 
@@ -259,7 +259,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="py-6 border-t border-gray-900 text-center text-xs text-gray-500 bg-gray-950">
-        <p>&copy; {new Date().getFullYear()} Stalker VOD Portal. All Rights Reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Portalcast. All Rights Reserved.</p>
       </footer>
     </div>
   );

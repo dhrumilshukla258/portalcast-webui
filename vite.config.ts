@@ -38,8 +38,8 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'Stalker VOD',
-        short_name: 'Stalker',
+        name: 'Portalcast',
+        short_name: 'Portalcast',
         start_url: '.',
         display: 'standalone',
         background_color: '#111827',
