@@ -1,4 +1,4 @@
-// Public SDK surface for stalker-ui's networking layer. Native client ports
+// Public SDK surface for portalcast-webui's networking layer. Native client ports
 // should be able to depend on `endpoints/` + `types/` alone.
 
 export * from '@/api/client';
