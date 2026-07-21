@@ -7,20 +7,27 @@ import React, {
   useMemo,
   type ReactNode,
 } from 'react';
-import { formatTime, isTizenDevice } from '@/utils/helpers';
-import { isHLSProvider, type MediaProviderAdapter } from '@vidstack/react';
-import { toast } from 'react-toastify';
-import { URL_PATHS, BASE_URL } from '@/api/config';
-import { authFetch } from '@/api/client';
-import type { VideoFitMode, SeekOverlayData } from '@/types';
+import { isTizenDevice } from '@/utils/helpers';
+import type { VideoFitMode } from '@/types';
 import {
   VideoContext,
   type VideoContextType,
 } from '@/context/video/VideoContextTypes';
-import { saveUserProgress, getUserProgress } from '@/api/endpoints/user';
-import { getDownloadLink } from '@/api/endpoints/downloads';
-import { probeStreamSubtitles, searchOnlineSubtitles as apiSearchOnlineSubtitles } from '@/api/endpoints/subtitles';
 import { useAuth } from '@/context/AuthContext';
+import { useEpgSync } from '@/context/video/useEpgSync';
+import { useHlsRecovery } from '@/context/video/useHlsRecovery';
+import { useVideoSeek } from '@/context/video/useVideoSeek';
+import { useSubtitles } from '@/context/video/useSubtitles';
+import { useCasting } from '@/context/video/useCasting';
+import { useProgressTracking } from '@/context/video/useProgressTracking';
+import { useDownloadActions } from '@/context/video/useDownloadActions';
+
+// Stable fallback references for optional props below — `receivers || []`
+// (etc.) would otherwise create a brand-new array/function on every render
+// whenever the prop is undefined, defeating the value-object useMemo below
+// even when nothing meaningful changed.
+const EMPTY_RECEIVERS: any[] = [];
+const noopRefreshReceivers = () => {};
 
 interface VideoProviderProps {
   children: ReactNode;
@@ -97,38 +104,15 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
   const playerRef = useRef<any | null>(null);
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cursorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const seekRunTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const seekRunStart = useRef<number | null>(null);
-  const seekRunLevel = useRef<number>(0);
-  const seekRunDirection = useRef<number>(0);
-  const hasRestoredProgress = useRef(false);
-  const isRetrying = useRef(false);
-  const hlsInstanceRef = useRef<any>(null);
-  const mediaErrorRecoveryAttempted = useRef(false);
-  const seekFadeOutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasCompletedPlayback = useRef(false);
-
-  const SEEK_LEVELS = useMemo(() => [10, 30, 60, 180], []);
 
   // --- App & UI States ---
   const [controlsVisible, setControlsVisible] = useState(true);
   const [cursorVisible, setCursorVisible] = useState(true);
-  const [copied, setCopied] = useState(false);
   const [useProxy, setUseProxy] = useState(!isTizenDevice());
-  const [retryCount, setRetryCount] = useState(0);
-  const [reloadTrigger, setReloadTrigger] = useState(0);
-  const [isRecovering, setIsRecovering] = useState(false);
-  const [streamError, setStreamError] = useState<string | null>(null);
-  const [pendingNextIndex, setPendingNextIndex] = useState<number | null>(null);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [showChannelList, setShowChannelList] = useState(false);
   const [showEpisodeList, setShowEpisodeList] = useState(false);
-  const [showNextEpisodeButton, setShowNextEpisodeButton] = useState(false);
-  const [seekOverlay, setSeekOverlay] = useState<SeekOverlayData | null>(null);
-  const [subtitles, setSubtitles] = useState<any[]>([]);
-  const [onlineSubtitleResults, setOnlineSubtitleResults] = useState<any[]>([]);
-  const [subtitleSearchLoading, setSubtitleSearchLoading] = useState(false);
 
   const [fitMode, setFitMode] = useState<VideoFitMode>(
     (user?.preferences?.videoFitMode as VideoFitMode) || 'contain'
@@ -146,10 +130,12 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
   >('main');
 
   // --- Live TV States ---
-  const [currentProgram, setCurrentProgram] = useState<any | null>(null);
-  const [nextProgram, setNextProgram] = useState<any | null>(null);
-  const [programProgress, setProgramProgress] = useState(0);
   const [liveTime, setLiveTime] = useState('');
+  const { currentProgram, nextProgram, programProgress } = useEpgSync(
+    contentType,
+    channelInfo,
+    epgData
+  );
 
   const isFavorite = channelInfo ? favorites.includes(channelInfo.id) : false;
   // Always true now since we use Vidstack's native menus which auto-populate
@@ -177,68 +163,63 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
     }
   }, [fitMode, user, updatePreferences]);
 
-  useEffect(() => {
-    setIsRecovering(false);
-    isRetrying.current = false;
-    setRetryCount(0);
-    hasCompletedPlayback.current = false;
-  }, [streamUrl, rawStreamUrl]);
+  const {
+    retryCount,
+    reloadTrigger,
+    isRecovering,
+    streamError,
+    setStreamError,
+    setRetryCount,
+    setReloadTrigger,
+    resetRecoveryState,
+    onProviderChange,
+    handleError,
+  } = useHlsRecovery(contentType, streamUrl, playerRef);
 
-  useEffect(() => {
-    if (!streamUrl || contentType === 'tv') {
-      setSubtitles([]);
-      return;
-    }
+  const {
+    subtitles,
+    onlineSubtitleResults,
+    subtitleSearchLoading,
+    searchOnlineSubtitles,
+    addOnlineSubtitle,
+    addLocalSubtitleFile,
+    clearSubtitleSearch,
+  } = useSubtitles(streamUrl, rawStreamUrl, contentType, item, seriesItem);
 
-    // Extension-sniffing the URL doesn't work anymore — stream URLs are opaque
-    // tokens (`/api/vod/play?t=...`), never a real file extension. Use the
-    // same signal the player itself uses to pick HLS vs progressive playback
-    // (see VideoPlayerContent.tsx's isM3u8 check): the `&m3u8=1` tag that
-    // proxyUrlFor() appends server-side when the underlying resource is HLS.
-    // Absence of that tag means progressive — the only case embedded
-    // subtitles are even possible to extract from (HLS segments aren't a
-    // single seekable file `ffprobe` can inspect for muxed tracks).
-    const isProgressive = !(
-      (rawStreamUrl && rawStreamUrl.toLowerCase().includes('m3u8')) ||
-      streamUrl.toLowerCase().includes('m3u8')
-    );
+  const {
+    showNextEpisodeButton,
+    setShowNextEpisodeButton,
+    saveProgress,
+    handleTimeUpdate,
+    handleEnded,
+    playNextEpisode,
+    playPrevEpisode,
+    hasRestoredProgress,
+  } = useProgressTracking({
+    playerRef,
+    contentType,
+    mediaId,
+    itemId,
+    seasonId,
+    categoryId,
+    item,
+    seriesItem,
+    rawStreamUrl,
+    episodes,
+    onEpisodeSelect,
+    onLoadMoreEpisodes,
+    initialPlaybackState,
+    streamUrl,
+    resetRecoveryState,
+  });
 
-    if (!isProgressive) {
-      setSubtitles([]);
-      return;
-    }
-
-    const fetchSubtitles = async () => {
-      try {
-        // The active stream's own token proves identity to the subtitle
-        // probe/extract endpoints — they can't require a Bearer header
-        // (the <track> element can't attach one), so they reuse whatever
-        // token is already minted for this playback session.
-        const streamToken = new URL(streamUrl!, window.location.origin).searchParams.get('t');
-        if (!streamToken) return;
-
-        const b64url = btoa(rawStreamUrl!);
-        const data = await probeStreamSubtitles(rawStreamUrl!, streamToken);
-        if (!data) return;
-        if (data.subtitles && Array.isArray(data.subtitles)) {
-          const mapped = data.subtitles.map((sub: any, idx: number) => {
-            const hostPart = BASE_URL.replace("/api", "");
-            return {
-              src: `${hostPart}/api/media/subtitle?url=${b64url}&track=${sub.index}&t=${streamToken}`,
-              label: sub.title || sub.language || `Track ${idx + 1}`,
-              srclang: sub.language || 'und',
-              id: sub.index,
-            };
-          });
-          setSubtitles(mapped);
-        }
-      } catch (err) {
-        console.error("Failed to fetch subtitles:", err);
-      }
-    };
-
-    fetchSubtitles();
-  }, [streamUrl, rawStreamUrl, contentType]);
+  const { copied, handleCopyLink, handleDownload } = useDownloadActions({
+    item,
+    itemId,
+    rawStreamUrl,
+    contentType,
+    seriesItem,
+  });
 
   // --- Controls & Cursor Visibility ---
   const showControlsAndCursor = useCallback(() => {
@@ -261,71 +242,13 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
     };
   }, [showControlsAndCursor]);
 
-  // --- Actions ---
-  const handleSkipButtonClick = useCallback(
-    (seconds: number, isLeftRight: boolean = false) => {
-      const player = playerRef.current;
-      if (!player) return;
-
-      const direction = seconds > 0 ? 1 : -1;
-
-      const currentDuration = player.state?.duration || player.duration || 0;
-      const currentTime = player.state?.currentTime || player.currentTime || 0;
-
-      if (seekRunTimer.current) clearTimeout(seekRunTimer.current);
-      if (seekFadeOutTimer.current) clearTimeout(seekFadeOutTimer.current);
-
-      if (
-        seekRunStart.current === null ||
-        seekRunDirection.current !== direction
-      ) {
-        seekRunStart.current = currentTime;
-        seekRunLevel.current = 0;
-        seekRunDirection.current = direction;
-      } else {
-        seekRunLevel.current += 1;
-      }
-
-      const maxLevelIndex = SEEK_LEVELS.length - 1;
-      const offset =
-        seekRunLevel.current <= maxLevelIndex
-          ? SEEK_LEVELS[seekRunLevel.current]
-          : SEEK_LEVELS[maxLevelIndex] +
-            (seekRunLevel.current - maxLevelIndex) * 60;
-
-      const targetTime = Math.max(
-        0,
-        Math.min(currentDuration, seekRunStart.current! + offset * direction)
-      );
-
-      player.currentTime = targetTime;
-
-      setSeekOverlay({
-        visible: true,
-        text: `${direction > 0 ? '+' : '-'}${offset}s`,
-        time: formatTime(targetTime),
-        isLeftRight,
-      });
-
-      if (!isLeftRight) {
-        showControlsAndCursor();
-      }
-
-      seekRunTimer.current = setTimeout(() => {
-        seekRunStart.current = null;
-        seekRunLevel.current = 0;
-        if (isLeftRight) {
-          setControlsVisible(false);
-        }
-        seekFadeOutTimer.current = setTimeout(() => {
-          setSeekOverlay(null);
-          seekFadeOutTimer.current = null;
-        }, 300);
-      }, 1500);
-    },
-    [SEEK_LEVELS, showControlsAndCursor]
+  const { seekOverlay, handleSkipButtonClick } = useVideoSeek(
+    playerRef,
+    showControlsAndCursor,
+    setControlsVisible
   );
 
+  // --- Actions ---
   const cycleFitMode = useCallback(() => {
     const FIT_MODES: VideoFitMode[] = ['contain', 'cover', 'fill'];
     setFitMode(
@@ -338,181 +261,16 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
     if (!isSettingsMenuOpen) setActiveSettingsMenu('main');
   }, [isSettingsMenuOpen]);
 
-  const handleCopyLink = useCallback(async () => {
-    if (rawStreamUrl) {
-      try {
-        await navigator.clipboard.writeText(rawStreamUrl);
-      } catch {
-        const tempInput = document.createElement('textarea');
-        tempInput.value = rawStreamUrl;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempInput);
-      }
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  }, [rawStreamUrl]);
-
-  const handleDownload = useCallback(async () => {
-    if (!item && !itemId) return;
-    try {
-      const isSeries = contentType === 'series' || item?.is_episode ? '1' : '0';
-      const cmdSource = item?.cmd || rawStreamUrl || '';
-
-      let seriesVal = '';
-      if (item?.series_number !== undefined) {
-        seriesVal = String(item.series_number);
-      } else if (item?.is_episode) {
-        seriesVal = '1';
-      }
-
-      const targetId = item?.id ?? itemId;
-
-      // For an episode, name the file "<Series> S<season>E<episode>" instead of just the
-      // episode's own (often generic) title — for a movie, just the movie's title.
-      let title = '';
-      if (item?.is_episode) {
-        const seriesName = seriesItem?.name || seriesItem?.title || '';
-        const seasonNum = item?.series_number;
-        const epNum = item?.episode_num;
-        if (seriesName && seasonNum !== undefined && epNum !== undefined) {
-          const pad = (n: number) => String(n).padStart(2, '0');
-          title = `${seriesName} S${pad(Number(seasonNum))}E${pad(Number(epNum))}`;
-        } else {
-          title = seriesName || item?.title || item?.name || '';
-        }
-      } else {
-        title = item?.title || item?.name || '';
-      }
-
-      // The download itself is opened via a plain `window.open` navigation,
-      // which can't carry a Bearer header — so mint a short-lived, server-side
-      // token bound to this exact target first (authenticated, via the JWT
-      // the `api` client attaches), then open the tokenized URL it returns.
-      const { url } = await getDownloadLink({
-        id: targetId,
-        isSeries,
-        series: seriesVal || undefined,
-        cmd: cmdSource || undefined,
-        title: title || undefined,
-      });
-      const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
-      window.open(`${baseUrl}${url}`, '_blank');
-      toast.success('Download started!');
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to start download');
-    }
-  }, [item, itemId, rawStreamUrl, contentType, seriesItem]);
-
-  const searchOnlineSubtitles = useCallback(async (language?: string) => {
-    const seriesName = seriesItem?.name || seriesItem?.title || '';
-    const title = item?.is_episode ? (seriesName || item?.title || item?.name || '') : (item?.title || item?.name || '');
-    if (!title) return;
-
-    setSubtitleSearchLoading(true);
-    try {
-      const params = new URLSearchParams({ title });
-      if (item?.year) params.set('year', String(item.year));
-      if (item?.is_episode && item?.series_number !== undefined) params.set('season', String(item.series_number));
-      if (item?.is_episode && item?.episode_num !== undefined) params.set('episode', String(item.episode_num));
-      if (language) params.set('lang', language);
-
-      const data = await apiSearchOnlineSubtitles(params);
-      setOnlineSubtitleResults(data?.results || []);
-      if (!data?.results?.length) toast.info('No subtitles found.');
-    } catch (err) {
-      console.error('Subtitle search failed:', err);
-      toast.error('Subtitle search failed.');
-    } finally {
-      setSubtitleSearchLoading(false);
-    }
-  }, [item, seriesItem]);
-
-  const addOnlineSubtitle = useCallback((result: { fileId: number; language: string; releaseName: string }) => {
-    const hostPart = BASE_URL.replace('/api', '');
-    const track = {
-      src: `${hostPart}/api/v2/subtitles/download?fileId=${result.fileId}`,
-      label: `${result.language?.toUpperCase() || 'Subtitle'} — ${result.releaseName}`,
-      srclang: result.language || 'und',
-      id: `os_${result.fileId}`,
-    };
-    setSubtitles((prev) => [...prev.filter((t) => t.id !== track.id), track]);
-    setOnlineSubtitleResults([]);
-    toast.success('Subtitle added — select it from the Subtitles menu.');
-  }, []);
-
-  const clearSubtitleSearch = useCallback(() => {
-    setOnlineSubtitleResults([]);
-  }, []);
-
-  const addLocalSubtitleFile = useCallback(async (file: File) => {
-    try {
-      const raw = await file.text();
-      const isSrt = /\.srt$/i.test(file.name) || !/^WEBVTT/.test(raw.trim());
-      // Same conversion the server does for OpenSubtitles results — SRT uses "," for
-      // milliseconds, WebVTT (the only format the native <track> element understands) uses ".".
-      const vtt = isSrt
-        ? `WEBVTT\n\n${raw.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2')}`
-        : raw;
-
-      const blob = new Blob([vtt], { type: 'text/vtt' });
-      const src = URL.createObjectURL(blob);
-      const track = {
-        src,
-        label: file.name.replace(/\.(srt|vtt)$/i, ''),
-        srclang: 'und',
-        id: `local_${file.name}_${file.size}`,
-      };
-      setSubtitles((prev) => [...prev.filter((t) => t.id !== track.id), track]);
-      toast.success('Subtitle loaded — select it from the Subtitles menu.');
-    } catch (err) {
-      console.error('Failed to load local subtitle:', err);
-      toast.error('Failed to load subtitle file.');
-    }
-  }, []);
-
-  const handleCast = useCallback(
-    (deviceId: string) => {
-      if (!item && !previewChannelInfo && !channelInfo) return;
-      const baseUrl = URL_PATHS.HOST || window.location.origin;
-      const formatUrl = (url?: string | null) =>
-        url?.startsWith('http')
-          ? url
-          : url
-            ? `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`
-            : undefined;
-
-      if (castTo) {
-        castTo(
-          deviceId,
-          {
-            media: item || previewChannelInfo || channelInfo,
-            streamUrl: formatUrl(streamUrl),
-            rawStreamUrl: formatUrl(rawStreamUrl),
-            contentType,
-          },
-          {
-            currentTime: playerRef.current?.currentTime || 0,
-            volume: playerRef.current?.volume || 1,
-            muted: playerRef.current?.muted || false,
-          }
-        );
-      }
-      toast.success('Casting started...');
-      setIsSettingsMenuOpen(false);
-    },
-    [
-      item,
-      previewChannelInfo,
-      channelInfo,
-      streamUrl,
-      rawStreamUrl,
-      castTo,
-      contentType,
-    ]
+  const { handleCast } = useCasting(
+    playerRef,
+    item,
+    previewChannelInfo,
+    channelInfo,
+    streamUrl,
+    rawStreamUrl,
+    contentType,
+    castTo,
+    setIsSettingsMenuOpen
   );
 
   const toggleChannelList = useCallback(() => {
@@ -520,96 +278,10 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
     if (controlsVisible) setShowChannelList(true);
   }, [controlsVisible, showControlsAndCursor]);
 
-  const onProviderChange = useCallback(
-    (provider: MediaProviderAdapter | null) => {
-      if (provider && isHLSProvider(provider)) {
-        console.log('[VideoPlayer] HLS provider loaded');
-        provider.config = {
-          enableSoftwareAES: true,
-          enableWorker: true,
-          stretchShortVideoTrack: true,
-          manifestLoadingTimeOut: 30000, // 30s
-          manifestLoadingMaxRetry: 10,
-          manifestLoadingRetryDelay: 1000,
-          levelLoadingTimeOut: 30000, // 30s
-          levelLoadingMaxRetry: 10,
-          levelLoadingRetryDelay: 1000,
-          fragLoadingTimeOut: 30000, // 30s
-          fragLoadingMaxRetry: 10,
-          fragLoadingRetryDelay: 1000,
-        };
-
-        // Listen for hls.js instances and attach error listeners
-        (provider as any).onInstance?.((hlsInstance: any) => {
-          hlsInstanceRef.current = hlsInstance;
-          if (!hlsInstance) return;
-          console.log('[VideoPlayer] HLS instance changed, binding error listener');
-          mediaErrorRecoveryAttempted.current = false;
-          hlsInstance.on('hlsError', (_event: any, data: any) => {
-            console.log('[VideoPlayer] HLS event error details:', data);
-
-            // Non-fatal errors (a single dropped fragment, a level load
-            // hiccup, etc.) are already being retried internally by hls.js
-            // per the fragLoadingMaxRetry/levelLoadingMaxRetry config above —
-            // acting on them here (tearing down the whole player) just races
-            // hls.js's own recovery and is what caused the "reconnecting" loop
-            // even while segments were loading fine (VLC, hitting the same
-            // proxy URL, never sees this because it has no such layer).
-            if (!data.fatal) return;
-
-            const isNetwork404 =
-              data.response?.status === 404 ||
-              data.response?.code === 404 ||
-              data.details?.includes('404') ||
-              data.reason?.includes('404');
-
-            if (isNetwork404) {
-              if (contentType === 'tv') {
-                console.log('[VideoPlayer] HLS fatal 404 error detected, setting error state');
-                setStreamError('Channel is not available 404 status');
-                setIsRecovering(false);
-              }
-              return;
-            }
-
-            // For other fatal errors, try hls.js's own in-place recovery
-            // (recommended by hls.js docs) before falling back to the
-            // destructive full-player remount in handleError — that remount
-            // re-fetches the manifest as a brand-new session (new server
-            // token) and is visibly disruptive, so it should be the last
-            // resort, not the first response to a fatal error.
-            if (data.type === 'networkError') {
-              console.log('[VideoPlayer] Fatal network error, calling hls.startLoad()');
-              try {
-                hlsInstance.startLoad();
-                return;
-              } catch (e) {
-                console.log('[VideoPlayer] startLoad() failed, falling back to remount', e);
-              }
-            } else if (data.type === 'mediaError' && !mediaErrorRecoveryAttempted.current) {
-              console.log('[VideoPlayer] Fatal media error, calling hls.recoverMediaError()');
-              mediaErrorRecoveryAttempted.current = true;
-              try {
-                hlsInstance.recoverMediaError();
-                return;
-              } catch (e) {
-                console.log('[VideoPlayer] recoverMediaError() failed, falling back to remount', e);
-              }
-            }
-          });
-        });
-      }
-    },
-    [contentType, streamUrl]
-  );
-
   const handleCanPlay = useCallback(() => {
     const player = playerRef.current;
     if (!player) return;
-    setIsRecovering(false);
-    isRetrying.current = false;
-    setRetryCount(0);
-    mediaErrorRecoveryAttempted.current = false;
+    resetRecoveryState();
 
     if (initialPlaybackState) {
       if (initialPlaybackState.volume !== undefined)
@@ -617,509 +289,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       if (initialPlaybackState.muted !== undefined)
         player.muted = initialPlaybackState.muted;
     }
-  }, [initialPlaybackState]);
-
-  const completePlayback = useCallback(async () => {
-    if (!mediaId || contentType === 'tv' || hasCompletedPlayback.current) return;
-    hasCompletedPlayback.current = true;
-    const player = playerRef.current;
-    const dur = player?.duration || 0;
-
-    // Resolve next episode
-    let nextEp: any = null;
-    if (contentType === 'series' && episodes && episodes.length > 0 && item) {
-      const activeCardId = item._episodeCardId || item.id;
-      const activeCardIdStr = activeCardId !== undefined && activeCardId !== null ? String(activeCardId) : '';
-      const curIndex = episodes.findIndex((ep: any) => {
-        if (ep.id === undefined || ep.id === null) return false;
-        const epIdStr = String(ep.id);
-        return (
-          epIdStr === activeCardIdStr ||
-          epIdStr === activeCardIdStr.replace('ep_', '') ||
-          activeCardIdStr === epIdStr.replace('ep_', '')
-        );
-      });
-
-      if (curIndex !== -1) {
-        const getEpNum = (ep: any) => {
-          const numVal = ep.series_number ?? ep.episode_number;
-          return numVal !== undefined ? Number(numVal) : NaN;
-        };
-
-        let isDescending = false;
-        const firstEpNum = getEpNum(episodes[0]);
-        const lastEpNum = getEpNum(episodes[episodes.length - 1]);
-        if (!isNaN(firstEpNum) && !isNaN(lastEpNum) && episodes.length > 1) {
-          isDescending = firstEpNum > lastEpNum;
-        }
-
-        const currentEpisodeObj = episodes[curIndex];
-        const curEpNum = getEpNum(currentEpisodeObj);
-
-        if (!isNaN(curEpNum)) {
-          nextEp = episodes.find((ep: any) => getEpNum(ep) === curEpNum + 1);
-        }
-
-        if (!nextEp) {
-          const nextIndex = isDescending ? curIndex - 1 : curIndex + 1;
-          if (nextIndex >= 0 && nextIndex < episodes.length) {
-            nextEp = episodes[nextIndex];
-          }
-        }
-      }
-    }
-
-    const completedMeta = {
-      mediaId,
-      itemId,
-      type: contentType,
-      timestamp: Date.now(),
-    };
-
-    // Mark current episode completed
-    await saveUserProgress(mediaId, dur, true, completedMeta).catch(() => {});
-
-    if (contentType === 'series' && itemId && itemId !== mediaId) {
-      if (nextEp) {
-        // Same blank-title guard as saveProgress() above — a blank title here
-        // renders as a bare "??" in Continue Watching.
-        const nextResolvedTitle = seriesItem?.name || seriesItem?.title || '';
-        if (!nextResolvedTitle) return;
-
-        // If there is a next episode, update the series progress to point to that next episode (completed = false)
-        const nextProgressData = {
-          id: itemId,
-          playbackFileId: nextEp.id,
-          mediaId: nextEp.id, // next episode ID
-          itemId,             // series ID
-          seasonId,
-          categoryId,
-          type: contentType,
-          title: nextResolvedTitle,
-          currentTime: 0,
-          duration: 0,
-          progressPercent: 0,
-          timestamp: Date.now(),
-          name: nextResolvedTitle,
-          episodeTitle: nextEp.name || nextEp.title || '',
-          screenshot_uri: seriesItem?.screenshot_uri || nextEp.screenshot_uri || '',
-          is_series: 1,
-          cmd: nextEp.cmd || '',
-          series_number: nextEp.series_number,
-        };
-        await saveUserProgress(itemId, 0, false, nextProgressData).catch(() => {});
-        await saveUserProgress(nextEp.id, 0, false, nextProgressData).catch(() => {});
-      } else {
-        // If no next episode, mark the series as completed
-        await saveUserProgress(itemId, dur, true, completedMeta).catch(() => {});
-      }
-    }
-  }, [contentType, mediaId, itemId, episodes, item, seasonId, categoryId, seriesItem]);
-
-  // Cleaned TimeUpdate: No UI Re-renders, only progress restore & completion logic
-  const handleTimeUpdate = useCallback(() => {
-    const player = playerRef.current;
-    if (!player) return;
-
-    const time = player.currentTime;
-    const dur = player.duration;
-
-    if (!hasRestoredProgress.current && time >= 1) {
-      hasRestoredProgress.current = true;
-      let targetTime = initialPlaybackState?.currentTime || 0;
-      getUserProgress().then((records) => {
-        const record = records.find(r => r.mediaId === (itemId || mediaId));
-        if (record && !record.completed && record.progress > targetTime) {
-          targetTime = record.progress;
-        }
-        if (targetTime > 2) {
-          player.currentTime = targetTime;
-        }
-      }).catch(err => {
-        console.error("Failed to restore progress from API:", err);
-        if (targetTime > 2) player.currentTime = targetTime;
-      });
-    }
-
-    if (dur > 0 && contentType === 'series' && (dur - time <= 300)) {
-      setShowNextEpisodeButton((prev) => {
-        if (!prev) return true;
-        return prev;
-      });
-    } else {
-      setShowNextEpisodeButton((prev) => {
-        if (prev) return false;
-        return prev;
-      });
-    }
-
-    if (dur > 0 && contentType !== 'tv' && time / dur >= 0.9 && mediaId) {
-      completePlayback();
-    }
-  }, [contentType, mediaId, itemId, initialPlaybackState, completePlayback]);
-
-  const handleError = useCallback(
-    async (event: any) => {
-      if (isRetrying.current) return;
-      const error = event?.detail || event?.error || playerRef.current?.error || playerRef.current?.state?.error;
-      console.log('[VideoPlayer] handleError details:', { error, event });
-
-      let is404 = false;
-      if (
-        error?.code === 4 ||
-        error?.message?.includes('404') ||
-        String(error)?.includes('404')
-      ) {
-        is404 = true;
-      }
-
-      // vidstack's HLS provider only auto-recovers fatal *media* errors
-      // (it calls hls.recoverMediaError() itself); fatal *network* errors go
-      // straight to this handler with no attempt at recovery. hls.js's own
-      // docs recommend hls.startLoad() as the cheap, in-place fix for those —
-      // try it once before falling back to a full player remount, which tears
-      // down and re-fetches everything as a brand-new session (visible
-      // freeze, new server-side token) for what's often just a momentary
-      // network blip that a live stream naturally recovers from on retry.
-      if (!is404 && contentType === 'tv' && !mediaErrorRecoveryAttempted.current && hlsInstanceRef.current) {
-        mediaErrorRecoveryAttempted.current = true;
-        try {
-          console.log('[VideoPlayer] Attempting in-place hls.startLoad() recovery before remount');
-          hlsInstanceRef.current.startLoad();
-          return;
-        } catch (e) {
-          console.log('[VideoPlayer] startLoad() recovery failed, continuing to remount path', e);
-        }
-      }
-
-      // Check stream URL status directly if we suspect a network/resource error
-      if (!is404 && streamUrl && contentType === 'tv') {
-        try {
-          // Perform a fast HEAD request to check URL status
-          const response = await authFetch(streamUrl, { method: 'HEAD' });
-          if (response.status === 404) {
-            is404 = true;
-          }
-        } catch {
-          // Try with GET and a short timeout
-          try {
-            const response = await authFetch(streamUrl, { signal: AbortSignal.timeout(2000) });
-            if (response.status === 404) {
-              is404 = true;
-            }
-          } catch (err) {
-            console.error('[VideoPlayer] Fetch check for 404 failed:', err);
-          }
-        }
-      }
-
-      if (is404) {
-        if (contentType === 'tv') {
-          console.log('[VideoPlayer] 404 status confirmed. Showing error overlay.');
-          setStreamError('Channel is not available 404 status');
-          setIsRecovering(false);
-          return;
-        }
-      }
-
-      if (
-        error?.code === 4 ||
-        error?.message?.includes('500')
-      ) {
-        toast.error('Stream error. Please try another source.');
-        return;
-      }
-
-      if (retryCount < 10) {
-        isRetrying.current = true;
-        setIsRecovering(true);
-        setTimeout(
-          () => {
-            setRetryCount((prev) => prev + 1);
-            setReloadTrigger((prev) => prev + 1);
-            setIsRecovering(false);
-          },
-          Math.min(1000 * Math.pow(2, retryCount), 5000)
-        );
-      } else {
-        toast.error('Failed to load stream after multiple attempts');
-        setIsRecovering(false);
-      }
-    },
-    [retryCount, contentType, streamUrl]
-  );
-
-  const saveProgress = useCallback(() => {
-    if (contentType === 'tv') return;
-    const player = playerRef.current;
-    if (
-      !player ||
-      !mediaId ||
-      !player.duration ||
-      player.duration <= 0 ||
-      player.currentTime <= 2
-    )
-      return;
-
-    if (player.currentTime / player.duration >= 0.9) return;
-
-    const resolvedTitle =
-      seriesItem?.name || seriesItem?.title || item?.name || item?.title || '';
-    // Item/series metadata can still be mid-fetch on the very first tick after
-    // playback starts (autoplay can beat the metadata request) — skip saving
-    // rather than persist a blank title, which renders as a bare "??" in the
-    // Continue Watching row (see MediaCard's initials fallback). A later tick
-    // with the real title will upsert over any earlier save for this mediaId.
-    if (!resolvedTitle) return;
-
-    const targetKeyId = itemId && itemId !== mediaId ? itemId : mediaId;
-    const progressData = {
-      id: targetKeyId,
-      playbackFileId: itemId || mediaId,
-      mediaId,
-      itemId,
-      seasonId,
-      categoryId,
-      type: contentType,
-      title: resolvedTitle,
-      currentTime: player.currentTime,
-      duration: player.duration,
-      progressPercent: Math.round((player.currentTime / player.duration) * 100),
-      timestamp: Date.now(),
-      name: resolvedTitle,
-      episodeTitle: item?.name || item?.title || '',
-      screenshot_uri: seriesItem?.screenshot_uri || item?.screenshot_uri || '',
-      is_series: seriesItem ? 1 : 0,
-      cmd: item?.cmd || rawStreamUrl || '',
-      series_number: item?.series_number,
-    };
-
-    saveUserProgress(targetKeyId, player.currentTime, false, progressData).catch(err => {
-      console.error('Failed to save progress to DB:', err);
-    });
-    if (mediaId) {
-      saveUserProgress(mediaId, player.currentTime, false, progressData).catch(() => {});
-    }
-  }, [
-    contentType,
-    mediaId,
-    itemId,
-    seasonId,
-    categoryId,
-    seriesItem,
-    item?.name,
-    item?.title,
-    item?.screenshot_uri,
-    item?.cmd,
-    item?.series_number,
-    rawStreamUrl,
-  ]);
-
-
-
-  const handleEnded = useCallback(() => {
-    completePlayback();
-
-    // Smart Auto-Play next episode
-    if (episodes && episodes.length > 0 && item && onEpisodeSelect) {
-      const activeCardId = item._episodeCardId || item.id;
-      const activeCardIdStr = activeCardId !== undefined && activeCardId !== null ? String(activeCardId) : '';
-      const curIndex = episodes.findIndex((ep: any) => {
-        if (ep.id === undefined || ep.id === null) return false;
-        const epIdStr = String(ep.id);
-        return (
-          epIdStr === activeCardIdStr ||
-          epIdStr === activeCardIdStr.replace('ep_', '') ||
-          activeCardIdStr === epIdStr.replace('ep_', '')
-        );
-      });
-
-      if (curIndex !== -1) {
-        const getEpNum = (ep: any) => {
-          const numVal = ep.series_number ?? ep.episode_number;
-          return numVal !== undefined ? Number(numVal) : NaN;
-        };
-
-        // Determine if the episode list is descending based on episode numbers
-        let isDescending = false;
-        const firstEpNum = getEpNum(episodes[0]);
-        const lastEpNum = getEpNum(episodes[episodes.length - 1]);
-        if (!isNaN(firstEpNum) && !isNaN(lastEpNum) && episodes.length > 1) {
-          isDescending = firstEpNum > lastEpNum;
-        }
-
-        const currentEpisodeObj = episodes[curIndex];
-        const curEpNum = getEpNum(currentEpisodeObj);
-
-        if (!isNaN(curEpNum)) {
-          // Look for next episode number N + 1
-          const nextEp = episodes.find(
-            (ep: any) => getEpNum(ep) === curEpNum + 1
-          );
-          if (nextEp) {
-            toast.info(`Playing Next Episode: ${nextEp.name || nextEp.title}`);
-            onEpisodeSelect(nextEp);
-            return;
-          }
-        }
-
-        // Fallback: Use index based on list direction (if descending, next is index-1)
-        const nextIndex = isDescending ? curIndex - 1 : curIndex + 1;
-        if (nextIndex >= 0 && nextIndex < episodes.length) {
-          const nextEp = episodes[nextIndex];
-          toast.info(`Playing Next Episode: ${nextEp.name || nextEp.title}`);
-          onEpisodeSelect(nextEp);
-        } else if (nextIndex === episodes.length && onLoadMoreEpisodes) {
-          toast.info("Loading next episodes...");
-          setPendingNextIndex(nextIndex);
-          onLoadMoreEpisodes().catch((err) => {
-            console.error("Failed to load more episodes:", err);
-            setPendingNextIndex(null);
-          });
-        }
-      }
-    }
-  }, [episodes, item, onEpisodeSelect, onLoadMoreEpisodes, completePlayback]);
-
-  const playNextEpisode = useCallback(async () => {
-    if (episodes && episodes.length > 0 && item && onEpisodeSelect) {
-      const activeCardId = item._episodeCardId || item.id;
-      const activeCardIdStr = activeCardId !== undefined && activeCardId !== null ? String(activeCardId) : '';
-      const curIndex = episodes.findIndex((ep: any) => {
-        if (ep.id === undefined || ep.id === null) return false;
-        const epIdStr = String(ep.id);
-        return (
-          epIdStr === activeCardIdStr ||
-          epIdStr === activeCardIdStr.replace('ep_', '') ||
-          activeCardIdStr === epIdStr.replace('ep_', '')
-        );
-      });
-
-      if (curIndex !== -1) {
-        const getEpNum = (ep: any) => {
-          const numVal = ep.series_number ?? ep.episode_number;
-          return numVal !== undefined ? Number(numVal) : NaN;
-        };
-
-        // Determine if the episode list is descending based on episode numbers
-        let isDescending = false;
-        const firstEpNum = getEpNum(episodes[0]);
-        const lastEpNum = getEpNum(episodes[episodes.length - 1]);
-        if (!isNaN(firstEpNum) && !isNaN(lastEpNum) && episodes.length > 1) {
-          isDescending = firstEpNum > lastEpNum;
-        }
-
-        const currentEpisodeObj = episodes[curIndex];
-        const curEpNum = getEpNum(currentEpisodeObj);
-
-        let nextEp = null;
-        if (!isNaN(curEpNum)) {
-          nextEp = episodes.find(
-            (ep: any) => getEpNum(ep) === curEpNum + 1
-          );
-        }
-
-        if (nextEp) {
-          await completePlayback();
-          toast.info(`Playing Next Episode: ${nextEp.name || nextEp.title}`);
-          onEpisodeSelect(nextEp);
-          return;
-        }
-
-        const nextIndex = isDescending ? curIndex - 1 : curIndex + 1;
-        if (nextIndex >= 0 && nextIndex < episodes.length) {
-          const nextEp = episodes[nextIndex];
-          await completePlayback();
-          toast.info(`Playing Next Episode: ${nextEp.name || nextEp.title}`);
-          onEpisodeSelect(nextEp);
-        } else if (nextIndex === episodes.length && onLoadMoreEpisodes) {
-          toast.info("Loading next episodes...");
-          setPendingNextIndex(nextIndex);
-          onLoadMoreEpisodes().catch((err) => {
-            console.error("Failed to load more episodes:", err);
-            setPendingNextIndex(null);
-          });
-        }
-      }
-    }
-  }, [episodes, item, onEpisodeSelect, onLoadMoreEpisodes, completePlayback]);
-
-  const playPrevEpisode = useCallback(() => {
-    if (episodes && episodes.length > 0 && item && onEpisodeSelect) {
-      const activeCardId = item._episodeCardId || item.id;
-      const activeCardIdStr = activeCardId !== undefined && activeCardId !== null ? String(activeCardId) : '';
-      const curIndex = episodes.findIndex((ep: any) => {
-        if (ep.id === undefined || ep.id === null) return false;
-        const epIdStr = String(ep.id);
-        return (
-          epIdStr === activeCardIdStr ||
-          epIdStr === activeCardIdStr.replace('ep_', '') ||
-          activeCardIdStr === epIdStr.replace('ep_', '')
-        );
-      });
-
-      if (curIndex !== -1) {
-        const getEpNum = (ep: any) => {
-          const numVal = ep.series_number ?? ep.episode_number;
-          return numVal !== undefined ? Number(numVal) : NaN;
-        };
-
-        // Determine if the episode list is descending based on episode numbers
-        let isDescending = false;
-        const firstEpNum = getEpNum(episodes[0]);
-        const lastEpNum = getEpNum(episodes[episodes.length - 1]);
-        if (!isNaN(firstEpNum) && !isNaN(lastEpNum) && episodes.length > 1) {
-          isDescending = firstEpNum > lastEpNum;
-        }
-
-        const currentEpisodeObj = episodes[curIndex];
-        const curEpNum = getEpNum(currentEpisodeObj);
-
-        let prevEp = null;
-        if (!isNaN(curEpNum)) {
-          prevEp = episodes.find(
-            (ep: any) => getEpNum(ep) === curEpNum - 1
-          );
-        }
-
-        if (prevEp) {
-          saveProgress();
-          toast.info(`Playing Previous Episode: ${prevEp.name || prevEp.title}`);
-          onEpisodeSelect(prevEp);
-          return;
-        }
-
-        const prevIndex = isDescending ? curIndex + 1 : curIndex - 1;
-        if (prevIndex >= 0 && prevIndex < episodes.length) {
-          const prevEp = episodes[prevIndex];
-          saveProgress();
-          toast.info(`Playing Previous Episode: ${prevEp.name || prevEp.title}`);
-          onEpisodeSelect(prevEp);
-        }
-      }
-    }
-  }, [episodes, item, onEpisodeSelect, saveProgress]);
-
-  const saveProgressRef = useRef(saveProgress);
-  useEffect(() => {
-    saveProgressRef.current = saveProgress;
-  }, [saveProgress]);
-
-  useEffect(() => {
-    if (contentType === 'tv') return;
-    const interval = setInterval(() => {
-      saveProgressRef.current();
-    }, 30000);
-    const handleUnload = () => {
-      saveProgressRef.current();
-    };
-    window.addEventListener('beforeunload', handleUnload);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('beforeunload', handleUnload);
-      saveProgressRef.current();
-    };
-  }, [contentType]);
+  }, [initialPlaybackState, resetRecoveryState]);
 
   const handleProxyToggle = useCallback(
     (newProxyState: boolean) => {
@@ -1128,66 +298,35 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       hasRestoredProgress.current = false;
       setReloadTrigger((prev) => prev + 1);
     },
-    [saveProgress]
+    [saveProgress, setReloadTrigger, hasRestoredProgress]
   );
 
-  // --- EPG Updates ---
   useEffect(() => {
-    if (contentType !== 'tv' || !channelInfo || !epgData) return;
-    const updateEPG = () => {
-      const now = Date.now();
-      const programs = epgData[channelInfo.id] || [];
-      const current = programs.find(
-        (p: any) =>
-          now >= parseInt(p.start_timestamp) * 1000 &&
-          now < parseInt(p.stop_timestamp) * 1000
-        );
-        setCurrentProgram(current || null);
+    setStreamError(null);
+    setRetryCount(0);
+  }, [itemId, streamUrl, setStreamError, setRetryCount]);
 
-        if (current) {
-          const start = parseInt(current.start_timestamp) * 1000;
-          const end = parseInt(current.stop_timestamp) * 1000;
-          setProgramProgress(
-            Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100))
-          );
-          setNextProgram(
-            programs.find((p: any) => parseInt(p.start_timestamp) * 1000 >= end) || null
-          );
-        }
-      };
-      updateEPG();
-      const interval = setInterval(updateEPG, 10000);
-      return () => clearInterval(interval);
-    }, [contentType, channelInfo, epgData]);
-  
-    useEffect(() => {
-      setStreamError(null);
-      setRetryCount(0);
-    }, [itemId, streamUrl]);
-  
-    useEffect(() => {
-      if (previewChannelInfo) showControlsAndCursor();
-    }, [previewChannelInfo, showControlsAndCursor]);
-  
-    // Autoplay next page of episodes when they are loaded
-    useEffect(() => {
-      if (pendingNextIndex !== null && episodes && pendingNextIndex < episodes.length) {
-        const nextEp = episodes[pendingNextIndex];
-        setPendingNextIndex(null);
-        if (nextEp && onEpisodeSelect) {
-          toast.info(`Playing Next Episode: ${nextEp.name || nextEp.title}`);
-          onEpisodeSelect(nextEp);
-        }
-      }
-    }, [episodes, pendingNextIndex, onEpisodeSelect]);
-  
-    // Note: Only the essential non-video states are passed here.
-    // Make sure your `VideoContextTypes.ts` matches the cleaned up version provided in the previous step!
-    const value: VideoContextType = {
+  useEffect(() => {
+    if (previewChannelInfo) showControlsAndCursor();
+  }, [previewChannelInfo, showControlsAndCursor]);
+
+  // Note: Only the essential non-video states are passed here.
+  // Make sure your `VideoContextTypes.ts` matches the cleaned up version provided in the previous step!
+  //
+  // Memoized — this provider's own state changes legitimately produce a new
+  // value (that's correct: consumers that read that field need to
+  // re-render). What this guards against is a *parent* re-render (e.g. the
+  // search box in App.tsx re-rendering TVPortal while a video plays) forcing
+  // every context consumer to re-render even though nothing here actually
+  // changed. All state setters (setControlsVisible etc.) are omitted from
+  // the deps array since React guarantees their identity is stable across
+  // renders; refs (playerRef etc.) are omitted for the same reason.
+  const value: VideoContextType = useMemo(
+    () => ({
       playerRef,
       playerContainerRef,
       settingsMenuRef,
-  
+
       controlsVisible,
       cursorVisible,
       copied,
@@ -1202,7 +341,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       activeSettingsMenu,
       showSettingsButton,
       showNextEpisodeButton,
-  
+
       currentProgram,
       nextProgram,
       programProgress,
@@ -1213,7 +352,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       isRecovering,
       isTizen,
       streamError,
-  
+
       streamUrl,
       rawStreamUrl,
       itemId,
@@ -1233,10 +372,10 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       channelGroups,
       favorites,
       recentChannels,
-      receivers: receivers || [],
+      receivers: receivers || EMPTY_RECEIVERS,
       isReceiver: isReceiver || false,
-      refreshReceivers: refreshReceivers || (() => {}),
-  
+      refreshReceivers: refreshReceivers || noopRefreshReceivers,
+
       onBack,
       toggleFavorite,
       onNextChannel,
@@ -1246,7 +385,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       onLoadMoreEpisodes,
       playNextEpisode,
       playPrevEpisode,
-  
+
       handleSkipButtonClick,
       setControlsVisible,
       setCursorVisible,
@@ -1276,9 +415,85 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       toggleChannelList,
       handleVideoClick: showControlsAndCursor,
       handleMouseMove: showControlsAndCursor,
-    };
-  
-    return (
-      <VideoContext.Provider value={value}>{children}</VideoContext.Provider>
-    );
-  };
+    }),
+    [
+      controlsVisible,
+      cursorVisible,
+      copied,
+      useProxy,
+      isTooltipVisible,
+      focusedIndex,
+      showChannelList,
+      showEpisodeList,
+      seekOverlay,
+      fitMode,
+      isSettingsMenuOpen,
+      activeSettingsMenu,
+      showSettingsButton,
+      showNextEpisodeButton,
+      currentProgram,
+      nextProgram,
+      programProgress,
+      liveTime,
+      isFavorite,
+      retryCount,
+      reloadTrigger,
+      isRecovering,
+      isTizen,
+      streamError,
+      streamUrl,
+      rawStreamUrl,
+      itemId,
+      subtitles,
+      onlineSubtitleResults,
+      subtitleSearchLoading,
+      contentType,
+      mediaId,
+      item,
+      seriesItem,
+      channelInfo,
+      previewChannelInfo,
+      epgData,
+      channels,
+      episodes,
+      initialPlaybackState,
+      channelGroups,
+      favorites,
+      recentChannels,
+      receivers,
+      isReceiver,
+      refreshReceivers,
+      onBack,
+      toggleFavorite,
+      onNextChannel,
+      onPrevChannel,
+      onChannelSelect,
+      onEpisodeSelect,
+      onLoadMoreEpisodes,
+      playNextEpisode,
+      playPrevEpisode,
+      handleSkipButtonClick,
+      showControlsAndCursor,
+      cycleFitMode,
+      toggleSettingsMenu,
+      handleCopyLink,
+      handleDownload,
+      searchOnlineSubtitles,
+      addOnlineSubtitle,
+      addLocalSubtitleFile,
+      clearSubtitleSearch,
+      handleProxyToggle,
+      handleCast,
+      onProviderChange,
+      handleCanPlay,
+      handleTimeUpdate,
+      handleError,
+      handleEnded,
+      toggleChannelList,
+    ]
+  );
+
+  return (
+    <VideoContext.Provider value={value}>{children}</VideoContext.Provider>
+  );
+};

@@ -25,7 +25,7 @@ const TvChannelListCard: React.FC<TvChannelListCardProps> = ({
     <div
       className={`group my-0.5 flex cursor-pointer items-center rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 ${
         isFocused
-          ? 'z-10 scale-[1.01] border border-stalker-light/50 bg-gradient-to-r from-stalker-light to-stalker-dark shadow-md shadow-stalker-dark/30'
+          ? 'z-10 scale-[1.01] border border-portalcast-light/50 bg-gradient-to-r from-portalcast-light to-portalcast-dark shadow-md shadow-portalcast-dark/30'
           : 'border border-transparent bg-transparent hover:scale-[1.01] hover:bg-white/10'
       }`}
       onClick={() => onClick(item)}

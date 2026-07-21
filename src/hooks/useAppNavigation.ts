@@ -10,55 +10,8 @@ import { URL_PATHS } from '@/api/config';
 import type { MediaItem, ContextType } from '@/types';
 import { isTizenDevice } from '@/utils/helpers';
 import { initialContext } from './useMediaLibrary';
-
-interface NavFrame {
-  context: ContextType;
-  items: MediaItem[];
-  focusedIndex: number | null;
-  currentSeriesItem: MediaItem | null;
-  totalItemsCount: number;
-}
-
-// The backend always hands back a URL that's already routed through our own
-// server behind an opaque token (/live.m3u8?t=..., /api/proxy?t=...) — never
-// a raw upstream address, so there's nothing left for the client to wrap.
-async function resolveStreamUrl(
-  item: MediaItem,
-  seriesNumber?: number,
-  displayOverride?: { title?: string; category?: string }
-): Promise<{ raw: string; proxied: string }> {
-  // NOTE: there used to be a shortcut here (`if (!isPortal && item.cmd) return
-  // item.cmd directly`) for Xtream-provider setups. That's unsafe now: for
-  // episode/movie *files* (unlike already-tokenized live channels via
-  // mapChannel), item.cmd from the listing API is the raw, untokenized
-  // upstream URL — using it directly bypasses the backend entirely, which is
-  // both a security leak (raw portal URL, sometimes with embedded admin
-  // credentials, handed to the browser) and why playback failed outright
-  // (browsers can't play a random external CDN URL directly — CORS/host
-  // issues). Always resolve through the backend, which tokenizes uniformly
-  // for both provider types.
-  const urlParams: Record<string, any> = { id: item.id };
-
-  if (seriesNumber !== undefined) {
-    urlParams.series = seriesNumber;
-  }
-
-  // Purely for the admin "active streams" view — lets it show a real title
-  // and category instead of an opaque resource key. `item` here is sometimes
-  // a resolved *file/quality variant* (e.g. "Hindi / Excellent quality
-  // (1080)"), not the actual episode/movie metadata, so callers that know
-  // the real title (e.g. combining series + episode name) should pass it via
-  // displayOverride rather than relying on item.title/item.name.
-  const displayTitle = displayOverride?.title || item.title || item.name;
-  if (displayTitle) urlParams.title = displayTitle;
-  const displayCategory = displayOverride?.category || item.genres_str || item.tv_genre_id || item.category_id;
-  if (displayCategory) urlParams.category = String(displayCategory);
-
-  const linkData = (await getMovieUrl(urlParams)) as Record<string, any>;
-  const raw = linkData?.js?.cmd || linkData?.cmd;
-  if (typeof raw !== 'string') throw new Error('Stream URL not found.');
-  return { raw, proxied: raw };
-}
+import { resolveStreamUrl } from './resolveStreamUrl';
+import { useNavigationHistory } from './useNavigationHistory';
 
 function getResumeTime(): number | undefined {
   return undefined;
@@ -81,13 +34,18 @@ export function useAppNavigation(
   setContext: React.Dispatch<React.SetStateAction<ContextType>>,
   setTotalItemsCount: React.Dispatch<React.SetStateAction<number>>,
   isRestoringFromHistory: React.MutableRefObject<boolean>,
-  onOpenDetail?: (item: MediaItem) => void,
-  setCwRefreshKey?: React.Dispatch<React.SetStateAction<number>>
+  detailItem: MediaItem | null,
+  onOpenDetail?: (item: MediaItem | null) => void,
+  setCwRefreshKey?: React.Dispatch<React.SetStateAction<number>>,
+  showDiscover: boolean = false,
+  onSetShowDiscover?: (value: boolean) => void,
+  variantPickerItem: MediaItem | null = null,
+  variantPickerOptions: MediaItem[] = [],
+  onSetVariantPicker?: (item: MediaItem | null, options: MediaItem[]) => void
 ) {
   const { user, updatePreferences } = useAuth();
   const isTizen = isTizenDevice();
 
-  const [history, setHistory] = useState<NavFrame[]>([]);
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [rawStreamUrl, setRawStreamUrl] = useState<string | null>(null);
   const [currentItem, setCurrentItem] = useState<MediaItem | null>(null);
@@ -102,12 +60,39 @@ export function useAppNavigation(
 
   const channelChangeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const pushFrame = useCallback(() => {
-    setHistory((prev) => [
-      ...prev,
-      { context, items, focusedIndex, currentSeriesItem, totalItemsCount },
-    ]);
-  }, [context, items, focusedIndex, currentSeriesItem, totalItemsCount]);
+  const {
+    history,
+    setHistory,
+    isFromContinueWatching,
+    pushFrame,
+    handleBack,
+  } = useNavigationHistory({
+    context,
+    items,
+    focusedIndex,
+    currentSeriesItem,
+    totalItemsCount,
+    detailItem,
+    showDiscover,
+    variantPickerItem,
+    variantPickerOptions,
+    streamUrl,
+    setFocusedIndex,
+    setCurrentSeriesItem,
+    setContext,
+    setTotalItemsCount,
+    setItems,
+    isRestoringFromHistory,
+    onOpenDetail,
+    onSetShowDiscover,
+    onSetVariantPicker,
+    fetchData,
+    setStreamUrl,
+    setRawStreamUrl,
+    setCurrentItem,
+    setResumePlaybackState,
+    setCwRefreshKey,
+  });
 
   const openPlayer = useCallback(
     (item: MediaItem, raw: string, proxied: string, resumeTime?: number) => {
@@ -159,40 +144,52 @@ export function useAppNavigation(
         (item as any).series_id !== undefined;
 
       if (isEpisodeCWT && mainSeriesId) {
+        // item.title/.name are the CW card's composite "Series – Episode"
+        // display string (see ContinueWatching.tsx) — using them here as the
+        // series' own name would feed that composite string back into
+        // saveProgress()'s title resolution on this play, and the next time
+        // this entry surfaces in Continue Watching it gets composed *again*,
+        // doubling the episode-quality suffix. series_name/series_name_alt
+        // carry the pre-composition series name instead; only CW items ever
+        // set them, so falling back to item.title/.name below still covers
+        // any other caller of playContinueWatching.
         const seriesObj = {
           ...item,
           id: mainSeriesId,
           is_series: 1,
+          title: (item as any).series_name || item.title,
+          name: (item as any).series_name_alt || item.name,
           category_id: item.category_id || (item as any).cw_category_id,
+          // Same catalogId stamping as the direct series-click path — a
+          // resumed-from-Continue-Watching series needs it too, not just a
+          // freshly-clicked one, for "Because You Watched" to resolve.
+          catalogId: item.catalogId || `series_${mainSeriesId}`,
         } as MediaItem;
 
         setCurrentSeriesItem(seriesObj);
 
-        const homeState: NavFrame = {
+        // Only the real previous page goes on the stack — no synthetic
+        // Series/Season frame, since the user never actually visited one.
+        const homeState = {
           context,
           items,
           focusedIndex,
           currentSeriesItem: null,
           totalItemsCount,
+          detailItem,
+          showDiscover,
+          variantPickerItem,
+          variantPickerOptions,
         };
+        setHistory((prev) => [...prev, homeState]);
+        isFromContinueWatching.current = true;
+
+        // Loaded in the background (not pushed to history) purely so "next
+        // episode" autoplay has a real episode list to work from while this
+        // session plays — restorePreviousFrame below fully overwrites
+        // context/items with homeState's snapshot on Back, so this never
+        // lingers as visible state once the user leaves.
         const cwCategory = item.category_id ? String(item.category_id) : ((item as any).cw_category_id ? String((item as any).cw_category_id) : '*');
-        const seasonContext: ContextType = {
-          ...initialContext,
-          category: cwCategory,
-          movieId: mainSeriesId,
-          parentTitle: displayTitle,
-          contentType: 'series',
-        };
-        const seasonState: NavFrame = {
-          context: seasonContext,
-          items: [],
-          focusedIndex: null,
-          currentSeriesItem: seriesObj,
-          totalItemsCount: 0,
-        };
-
-        setHistory((prev) => [...prev, homeState, seasonState]);
-
         const episodeContext: ContextType = {
           ...initialContext,
           category: cwCategory,
@@ -208,6 +205,12 @@ export function useAppNavigation(
         ...item,
         title: item.title || item.name,
         name: item.name || item.title,
+        // Same catalogId stamping as the direct movie-click path and the
+        // series branch above — a movie resumed from Continue Watching
+        // (isEpisodeCWT false, so seriesObj/catalogId above never runs) was
+        // the one remaining play path that left this unset, so its
+        // "Because You Watched" title still came back blank.
+        catalogId: item.catalogId || (isEpisodeCWT ? undefined : `movie_${item.id}`),
       } as MediaItem);
 
       const urlParams: Record<string, any> = { id: playbackId };
@@ -232,7 +235,7 @@ export function useAppNavigation(
         savedResumeTime ? { currentTime: savedResumeTime } : undefined
       );
     },
-    [context, fetchData, focusedIndex, items, totalItemsCount]
+    [context, fetchData, focusedIndex, items, totalItemsCount, detailItem, showDiscover, variantPickerItem, variantPickerOptions, setHistory, isFromContinueWatching]
   );
 
   const startPlayback = useCallback(
@@ -267,9 +270,15 @@ export function useAppNavigation(
 
       if (item.is_episode) {
         try {
+          // Prefer the episode's own series/season ids over the ambient
+          // navigation context — the series overview page's season tabs
+          // fetch episodes directly (bypassing fetchData/context so tab
+          // switches don't push history frames), so context.seasonId is
+          // never populated there. Falling back to context keeps the old
+          // season-page flow (which does set it) working unchanged.
           const res = await getMedia({
-            movieId: context.movieId,
-            seasonId: context.seasonId,
+            movieId: item.series_id || context.movieId,
+            seasonId: item.season_id || context.seasonId,
             episodeId: item.id,
             category: '*',
           });
@@ -316,16 +325,41 @@ export function useAppNavigation(
 
       if (isInsideMovieCategory || item.is_playable_movie) {
         try {
-          const res = await getMedia({
-            movieId: item.id,
-            category: context.category || '*',
-          });
-          if (!res.data?.length) throw new Error('No movie files returned.');
+          // item.cmd already present means this item was already resolved to
+          // a specific playable file — e.g. Discover's openDiscoverItem
+          // already did a getMedia() lookup to build detailItem, and its .id
+          // (item.id here) is that FILE's own id, not a catalog movieId. This
+          // second getMedia lookup was re-querying the category-LISTING
+          // endpoint with that file id, which was never a valid lookup key
+          // there (confirmed via real traffic — it came back empty/wrong
+          // regardless of which category was tried). resolveStreamUrl always
+          // calls movie-link with the item's own id regardless (no item.cmd
+          // shortcut, see its own top comment) — for an already-resolved
+          // item that's exactly what's needed, so skip straight to it instead
+          // of re-deriving the same file via a lookup that doesn't work for
+          // file-level ids. Only bare listing-grid clicks (no cmd yet) still
+          // need this lookup at all.
+          let movieFile = item;
+          if (!item.cmd) {
+            const res = await getMedia({
+              movieId: item.id,
+              category: item.category_id ? String(item.category_id) : (context.category || '*'),
+            });
+            if (!res.data?.length) throw new Error('No movie files returned.');
+            movieFile = res.data[0];
+          }
 
-          const movieFile = res.data[0];
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { id, cmd, ...filteredItem } = item;
-          const finalMovieItem = { ...movieFile, ...filteredItem };
+          // ContentMeta's own id for this title ("movie_{id}") — same
+          // convention Discover's own click flow (App.tsx openDiscoverItem)
+          // already stamps on, needed so "Because You Watched" can look this
+          // title back up later (see VideoContext.tsx's saveProgress). Without
+          // this, only Discover-originated plays carried a catalogId, so
+          // whenever the most recently watched title was played from the
+          // regular Movies grid instead, recommendations' title lookup missed
+          // and fell back to a blank "Because You Watched".
+          const finalMovieItem = { ...movieFile, ...filteredItem, catalogId: item.catalogId || `movie_${id}` };
 
           // movieFile is a resolved file/quality variant, same issue as the
           // episode case above — use the real movie item's title, not the
@@ -384,7 +418,11 @@ export function useAppNavigation(
 
       if (item.is_series == 1) {
         pushFrame();
-        setCurrentSeriesItem(item);
+        // Same catalogId stamping as the movie branch above ("series_{id}",
+        // Discover's own convention) — regular series browsing never set
+        // this before, so a series watched from here (not Discover) never
+        // resolved a title for "Because You Watched".
+        setCurrentSeriesItem({ ...item, catalogId: item.catalogId || `series_${item.id}` });
         setResumePlaybackState(undefined);
         fetchData({
           ...initialContext,
@@ -427,8 +465,8 @@ export function useAppNavigation(
         contentType === 'tv';
       if (isPlayable) {
         // Episodes are selected from the expandable episode row inside the series page
-        // (which already shows their details) — pressing Play there should go straight to
-        // the player, not through a separate detail step.
+        // (which already shows their details) — pressing Play there should go straight
+        // to the player, not through a separate detail step.
         if (item.is_episode) {
           await startPlayback(item);
           return;
@@ -450,6 +488,11 @@ export function useAppNavigation(
             screenshot_uri:
               item.screenshot_uri || currentSeriesItem?.screenshot_uri,
           };
+          // Without a pushed frame here, opening the detail modal never
+          // touched browser history — Back would skip right past it to
+          // whatever the last *real* navigation was, and there was nothing
+          // for Forward to ever restore.
+          pushFrame();
           onOpenDetail(enrichedItem);
           return;
         }
@@ -457,6 +500,7 @@ export function useAppNavigation(
         return;
       }
 
+      pushFrame();
       fetchData({
         ...initialContext,
         category: item.id,
@@ -478,62 +522,6 @@ export function useAppNavigation(
     ]
   );
 
-  const restorePreviousFrame = useCallback(() => {
-    if (streamUrl) {
-      setStreamUrl(null);
-      setRawStreamUrl(null);
-      setCurrentItem(null);
-      setResumePlaybackState(undefined);
-      // Closing the player is the natural point to refresh Continue Watching —
-      // playback just wrote fresh progress via saveProgress()'s periodic/unload
-      // saves, but nothing else ever triggers ContinueWatching.tsx to refetch
-      // (its own loadItems() only runs once on mount, keyed off this exact
-      // refreshKey — which, before this fix, was never incremented anywhere
-      // in the app). Without this, the CW row can show stale state (including
-      // a blank title/poster from before this exact viewing session) until
-      // an unrelated full page reload happens to remount it.
-      setCwRefreshKey?.((prev) => prev + 1);
-      return;
-    }
-
-    if (history.length > 0) {
-      const previousFrame = history[history.length - 1];
-      setHistory((prev) => prev.slice(0, -1));
-
-      setFocusedIndex(previousFrame.focusedIndex);
-      setCurrentSeriesItem(previousFrame.currentSeriesItem);
-      setContext(previousFrame.context);
-      setTotalItemsCount(previousFrame.totalItemsCount);
-
-      if (previousFrame.items.length > 0) {
-        // Real cached data (this frame was actually loaded before) — restore
-        // instantly, no refetch needed. Block fetchData briefly so the
-        // context-change effect below doesn't immediately stomp on it.
-        isRestoringFromHistory.current = true;
-        setItems(previousFrame.items);
-        setTimeout(() => {
-          isRestoringFromHistory.current = false;
-        }, 500);
-      } else {
-        // Placeholder frame pushed without ever being populated (e.g. Continue
-        // Watching jumps straight to playback and pushes an empty season/series
-        // frame for "back" to land on) — fetch it for real instead of leaving
-        // the page stuck on an empty list until some unrelated click refetches it.
-        setItems([]);
-        fetchData(previousFrame.context);
-      }
-    }
-  }, [
-    streamUrl,
-    fetchData,
-    history,
-    isRestoringFromHistory,
-    setItems,
-    setContext,
-    setTotalItemsCount,
-    setCwRefreshKey,
-  ]);
-
   const closePlayer = useCallback(() => {
     if (channelChangeTimer.current) {
       clearTimeout(channelChangeTimer.current);
@@ -543,12 +531,6 @@ export function useAppNavigation(
     }
     window.history.back();
   }, []);
-
-  const handleBack = useCallback(() => {
-    if (streamUrl || history.length > 0) {
-      window.history.back();
-    }
-  }, [streamUrl, history.length]);
 
   const playCastedMedia = useCallback(
     (
@@ -612,37 +594,6 @@ export function useAppNavigation(
     setFocusedIndex(null);
   }, [context.category, context.movieId, context.seasonId, context.search, contentType, isRestoringFromHistory]);
 
-  const restorePreviousFrameRef = useRef(restorePreviousFrame);
-  useEffect(() => {
-    restorePreviousFrameRef.current = restorePreviousFrame;
-  }, [restorePreviousFrame]);
-
-  const navDepth = history.length + (streamUrl ? 1 : 0);
-  const prevNavDepth = useRef(navDepth);
-
-  useEffect(() => {
-    if (navDepth > prevNavDepth.current) {
-      window.history.pushState({ depth: navDepth }, '');
-    }
-    prevNavDepth.current = navDepth;
-  }, [navDepth]);
-
-  useEffect(() => {
-    const onPopState = (e: PopStateEvent) => {
-      const state = e.state;
-      if (state && (state.modal || state.view)) {
-        return;
-      }
-      const stateDepth = state && typeof state.depth === 'number' ? state.depth : 0;
-      if (stateDepth === prevNavDepth.current) {
-        return;
-      }
-      restorePreviousFrameRef.current?.();
-    };
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, []);
-
   useEffect(() => {
     if (
       !playLastTvChannel ||
@@ -672,6 +623,7 @@ export function useAppNavigation(
     rawStreamUrl,
     currentItem,
     currentSeriesItem,
+    setCurrentSeriesItem,
     resumePlaybackState,
     previewChannel,
     focusedIndex,

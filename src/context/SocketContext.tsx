@@ -1,4 +1,4 @@
-import React, { useEffect, useState, type ReactNode } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
 import { URL_PATHS } from '@/api/config';
@@ -7,7 +7,15 @@ import { SocketContext } from '@/context/useSocket';
 import type { Device } from '@/context/SocketContextTypes';
 import { useAuth } from '@/context/AuthContext';
 
-const SOCKET_URL = URL_PATHS.HOST;
+// URL_PATHS.HOST can be the literal string '/' (same-origin, see api/config.ts's
+// getServerUrl()) — socket.io-client's URL parser doesn't handle a bare '/' the
+// way getBaseUrl() does for REST calls; it falls into a `loc.host + uri` branch
+// that produces a malformed non-URI, which then gets misparsed into a garbage
+// host. Resolve '/' to the actual page origin before handing it to io().
+function getSocketUrl(): string {
+  const host = URL_PATHS.HOST;
+  return host === '/' ? window.location.origin : host;
+}
 const getIsReceiver = () => {
   const isTizen = isTizenDevice();
   const searchParams = new URLSearchParams(window.location.search);
@@ -34,7 +42,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
     }
     const currentDeviceId = deviceId;
  
-    const newSocket = io(SOCKET_URL, {
+    const newSocket = io(getSocketUrl(), {
       transports: ['polling', 'websocket'],
       reconnection: true,
     });
@@ -118,7 +126,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
     });
   }, [socket, isConnected, user?.name, user?.email, isReceiver]);
 
-  const castTo = (
+  const castTo = useCallback((
     targetDeviceId: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content: any,
@@ -139,27 +147,34 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
         playbackInfo,
       },
     });
-  };
+  }, [socket]);
 
-  const refreshReceivers = () => {
+  const refreshReceivers = useCallback(() => {
     if (socket && isConnected) {
       socket.emit('get_receivers');
     }
-  };
+  }, [socket, isConnected]);
+
+  // Memoized so consumers only re-render when a value they actually read
+  // changes — this provider wraps the whole app and `activeUserCount` ticks
+  // on socket broadcasts, so an unmemoized literal would re-render every
+  // consumer (including ones only interested in e.g. `socket`) on every tick.
+  const value = useMemo(
+    () => ({
+      socket,
+      isConnected,
+      receivers,
+      isReceiver,
+      activeUserCount,
+      activeDevices,
+      castTo,
+      refreshReceivers,
+    }),
+    [socket, isConnected, receivers, isReceiver, activeUserCount, activeDevices, castTo, refreshReceivers]
+  );
 
   return (
-    <SocketContext.Provider
-      value={{
-        socket,
-        isConnected,
-        receivers,
-        isReceiver,
-        activeUserCount,
-        activeDevices,
-        castTo,
-        refreshReceivers,
-      }}
-    >
+    <SocketContext.Provider value={value}>
       {children}
     </SocketContext.Provider>
   );

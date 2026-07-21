@@ -16,6 +16,7 @@ export interface User {
     recentCategories?: Record<string, string[]>;
     pinnedCategories?: Record<string, string[]>;
     categoryOrder?: Record<string, string[]>;
+    recentSearches?: string[];
   };
 }
 

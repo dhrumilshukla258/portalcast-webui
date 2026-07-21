@@ -32,3 +32,4 @@ dist-ssr
 .env.development
 .env.production
 !.env.example
+/.claude

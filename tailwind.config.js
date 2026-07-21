@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        stalker: {
+        portalcast: {
           light: '#00C6FF',
           dark: '#0072FF',
         },

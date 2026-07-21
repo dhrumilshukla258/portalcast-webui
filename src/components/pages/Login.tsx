@@ -1,18 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { api } from '@/api/client';
-import { webPlatformAdapter } from '@/api/platform';
 import { toast } from 'react-toastify';
-import { Loader2, RefreshCw, KeyRound, Mail, ShieldAlert, User, Check } from 'lucide-react';
+import { Loader2, RefreshCw, KeyRound, Mail, ShieldAlert, User } from 'lucide-react';
 import { isTizenDevice } from '@/utils/helpers';
-
-interface DeviceCodeResponse {
-  deviceCode: string;
-  userCode: string;
-  verificationUrl: string;
-  expiresIn: number;
-}
+import { PasswordStrengthChecklist } from '@/components/molecules/PasswordStrengthChecklist';
+import { useLoginForm } from '@/hooks/useLoginForm';
+import { useTVDeviceFlow } from '@/hooks/useTVDeviceFlow';
 
 export default function Login() {
   const { isLoggedIn, loginWithGoogle, loginWithCredentials } = useAuth();
@@ -20,142 +14,40 @@ export default function Login() {
   const [searchParams] = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/';
 
-  // State for credentials login / signup
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [nameInput, setNameInput] = useState('');
-  const [emailInput, setEmailInput] = useState('');
-  const [passwordInput, setPasswordInput] = useState('');
-  const [credsLoading, setCredsLoading] = useState(false);
-  const [credsError, setCredsError] = useState<string | null>(null);
-  const [signupSuccess, setSignupSuccess] = useState<string | null>(null);
+  // State to toggle between Web Credentials and TV QR login flows
+  const [activeTab, setActiveTab] = useState<'web' | 'tv' | 'forgot' | 'reset'>(
+    isTizenDevice() ? 'tv' : 'web'
+  );
 
-  const handleCredentialsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCredsError(null);
-    setSignupSuccess(null);
+  const {
+    isSignUp,
+    nameInput,
+    setNameInput,
+    emailInput,
+    setEmailInput,
+    passwordInput,
+    setPasswordInput,
+    credsLoading,
+    credsError,
+    signupSuccess,
+    clearMessages,
+    handleCredentialsSubmit,
+    toggleMode,
+    handleForgotPasswordSubmit,
+    handleResetPasswordSubmit,
+    passChecks,
+  } = useLoginForm({
+    loginWithCredentials,
+    navigate,
+    redirectPath,
+    setActiveTab,
+    resetToken: searchParams.get('token'),
+  });
 
-    if (isSignUp) {
-      if (!nameInput.trim() || !emailInput.trim() || !passwordInput) {
-        toast.error('Full Name, email and password are required');
-        return;
-      }
-      const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
-      if (!passwordRegex.test(passwordInput)) {
-        toast.error('Password is not matching its criteria');
-        return;
-      }
-      setCredsLoading(true);
-      try {
-        const response = await api.post<{ success: boolean; message: string }>('/auth/signup', {
-          name: nameInput.trim(),
-          email: emailInput.trim(),
-          password: passwordInput,
-        });
-        toast.success(response.data.message || 'Signup successful!');
-        setSignupSuccess(response.data.message || 'Signup successful! Please wait for administrator approval.');
-        setNameInput('');
-        setPasswordInput('');
-      } catch (err) {
-        const error = err as Error;
-        let message = error.message;
-        if (message.includes('Request failed:')) {
-          message = 'Signup failed. Email might already be registered or inputs are invalid.';
-        }
-        setCredsError(message || 'Signup failed');
-      } finally {
-        setCredsLoading(false);
-      }
-    } else {
-      if (!emailInput.trim() || !passwordInput) {
-        toast.error('Email and password are required');
-        return;
-      }
-      setCredsLoading(true);
-      try {
-        await loginWithCredentials(emailInput.trim(), passwordInput);
-        toast.success('Successfully logged in!');
-        navigate(redirectPath);
-      } catch (err) {
-        const error = err as Error;
-        let message = error.message;
-        if (message.includes('403')) {
-          message = 'Your account is pending administrator approval.';
-        } else if (message.includes('401')) {
-          message = 'Invalid email or password.';
-        } else if (message.includes('400')) {
-          message = 'Please login using Google Sign-In or contact support.';
-        }
-        setCredsError(message || 'Invalid email or password');
-      } finally {
-        setCredsLoading(false);
-      }
-    }
-  };
-
-  const toggleMode = () => {
-    setIsSignUp(!isSignUp);
-    setCredsError(null);
-    setSignupSuccess(null);
-    setNameInput('');
-    setPasswordInput('');
-  };
-
-  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCredsError(null);
-    setSignupSuccess(null);
-    if (!emailInput.trim()) {
-      toast.error('Email is required');
-      return;
-    }
-    setCredsLoading(true);
-    try {
-      const res = await api.post<{ success: boolean; message: string }>('/auth/forgot-password', {
-        email: emailInput.trim(),
-      });
-      toast.success(res.data.message || 'Reset email sent successfully!');
-      setSignupSuccess(res.data.message || 'If an account exists, a reset link has been sent to your email.');
-      setEmailInput('');
-    } catch (err: any) {
-      setCredsError(err.message || 'Failed to request password reset link.');
-    } finally {
-      setCredsLoading(false);
-    }
-  };
-
-  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCredsError(null);
-    setSignupSuccess(null);
-
-    const token = searchParams.get('token');
-    if (!token) {
-      toast.error('Reset token is missing from URL.');
-      return;
-    }
-
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
-    if (!passwordRegex.test(passwordInput)) {
-      toast.error('Password is not matching its criteria');
-      return;
-    }
-
-    setCredsLoading(true);
-    try {
-      const res = await api.post<{ success: boolean; message: string }>('/auth/reset-password', {
-        token,
-        password: passwordInput,
-      });
-      toast.success(res.data.message || 'Password reset successfully!');
-      toast.info('You can now log in with your new password.');
-      setPasswordInput('');
-      setActiveTab('web');
-    } catch (err: any) {
-      setCredsError(err.message || 'Failed to reset password.');
-    } finally {
-      setCredsLoading(false);
-    }
-  };
+  const { deviceFlow, deviceStatus, startTVDeviceFlow, qrCodeUrl } = useTVDeviceFlow({
+    activeTab,
+    isLoggedIn,
+  });
 
   // Automatically forward if already logged in
   useEffect(() => {
@@ -163,11 +55,6 @@ export default function Login() {
       navigate(redirectPath);
     }
   }, [isLoggedIn, navigate, redirectPath]);
-
-  // State to toggle between Web Credentials and TV QR login flows
-  const [activeTab, setActiveTab] = useState<'web' | 'tv' | 'forgot' | 'reset'>(
-    isTizenDevice() ? 'tv' : 'web'
-  );
 
   // Check for reset token in URL on mount
   useEffect(() => {
@@ -219,11 +106,6 @@ export default function Login() {
   const googleBtnRef = useRef<HTMLDivElement | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // TV Device flow state
-  const [deviceFlow, setDeviceFlow] = useState<DeviceCodeResponse | null>(null);
-  const [deviceStatus, setDeviceStatus] = useState<'pending' | 'expired' | 'loading'>('loading');
-  const pollIntervalRef = useRef<number | null>(null);
-
   interface GoogleCredentialResponse {
     credential: string;
   }
@@ -244,7 +126,7 @@ export default function Login() {
       // Prioritize displaying the backend message if it exists
       if (backendMessage) {
         // You can change this to toast.info if you want it to look less like a critical error
-        toast.error(backendMessage); 
+        toast.error(backendMessage);
       } else {
         toast.error(defaultMessage);
       }
@@ -293,88 +175,10 @@ export default function Login() {
     return () => clearInterval(checkInterval);
   }, [activeTab, isLoggedIn, isSignUp, handleCredentialResponse]);
 
-  // Poll server for device authorization status
-  const startPolling = useCallback((deviceCode: string) => {
-    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-
-    pollIntervalRef.current = window.setInterval(async () => {
-      try {
-        const response = await api.post<{ status: 'pending' | 'authorized' | 'expired'; accessToken?: string; refreshToken?: string; user?: { id: number; email: string; name: string; role: string } }>('/auth/device/poll', {
-          deviceCode,
-        });
-
-        if (response.data) {
-          const { status, accessToken, refreshToken, user } = response.data;
-          if (status === 'authorized' && accessToken && refreshToken && user) {
-            clearInterval(pollIntervalRef.current!);
-            
-            // Set context auth state
-            webPlatformAdapter.storage.set('auth_token', accessToken);
-            webPlatformAdapter.storage.set('refresh_token', refreshToken);
-            webPlatformAdapter.storage.set('auth_user', JSON.stringify(user));
-            
-            toast.success(`Logged in as ${user.name}`);
-            window.location.reload(); // Reload triggers AuthProvider init
-          } else if (status === 'expired') {
-            clearInterval(pollIntervalRef.current!);
-            setDeviceStatus('expired');
-          }
-        }
-      } catch (err) {
-        console.error('Device poll error:', err);
-      }
-    }, 4000);
-  }, []);
-
-  // TV Login Device Flow initialization
-  const startTVDeviceFlow = useCallback(async () => {
-    setDeviceStatus('loading');
-    setDeviceFlow(null);
-    try {
-      const response = await api.post<DeviceCodeResponse>('/auth/device/code');
-      if (response.data) {
-        setDeviceFlow(response.data);
-        setDeviceStatus('pending');
-        startPolling(response.data.deviceCode);
-      }
-    } catch (error) {
-      console.error('Failed to start TV device flow:', error);
-      toast.error('Failed to generate TV login code.');
-      setDeviceStatus('expired');
-    }
-  }, [startPolling]);
-
-  useEffect(() => {
-    if (activeTab === 'tv' && !isLoggedIn) {
-      startTVDeviceFlow();
-    } else {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-      }
-    }
-
-    return () => {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-    };
-  }, [activeTab, isLoggedIn, startTVDeviceFlow]);
-
-  const qrCodeUrl = deviceFlow
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=255-255-255&bgcolor=15-23-42&data=${encodeURIComponent(
-        deviceFlow.verificationUrl
-      )}`
-    : '';
-
-  const passChecks = {
-    length: passwordInput.length >= 8,
-    capital: /[A-Z]/.test(passwordInput),
-    number: /\d/.test(passwordInput),
-    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordInput),
-  };
-
   return (
     <div className="min-h-screen app-bg flex flex-col justify-center items-center px-4 font-sans text-gray-200">
       <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center">
-        
+
         {/* Logo */}
         <div className="flex items-center mb-6">
           <img
@@ -434,8 +238,7 @@ export default function Login() {
                       value={nameInput}
                       onChange={(e) => {
                         setNameInput(e.target.value);
-                        setCredsError(null);
-                        setSignupSuccess(null);
+                        clearMessages();
                       }}
                       placeholder="John Doe"
                       className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-none transition-all duration-300"
@@ -454,8 +257,7 @@ export default function Login() {
                     value={emailInput}
                     onChange={(e) => {
                       setEmailInput(e.target.value);
-                      setCredsError(null);
-                      setSignupSuccess(null);
+                      clearMessages();
                     }}
                     placeholder="name@example.com"
                     className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-none transition-all duration-300"
@@ -473,8 +275,7 @@ export default function Login() {
                     value={passwordInput}
                     onChange={(e) => {
                       setPasswordInput(e.target.value);
-                      setCredsError(null);
-                      setSignupSuccess(null);
+                      clearMessages();
                     }}
                     placeholder="••••••••"
                     className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-none transition-all duration-300"
@@ -484,40 +285,7 @@ export default function Login() {
               </div>
 
               {isSignUp && passwordInput.length > 0 && (
-                <div className="space-y-1 bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800/80 text-xs">
-                  <div className="flex items-center space-x-2">
-                    {passChecks.length ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 border border-slate-600 rounded-full shrink-0" />
-                    )}
-                    <span className={passChecks.length ? "text-gray-300" : "text-gray-500"}>At least 8 characters</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {passChecks.capital ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 border border-slate-600 rounded-full shrink-0" />
-                    )}
-                    <span className={passChecks.capital ? "text-gray-300" : "text-gray-500"}>One capital letter</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {passChecks.number ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 border border-slate-600 rounded-full shrink-0" />
-                    )}
-                    <span className={passChecks.number ? "text-gray-300" : "text-gray-500"}>One number</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {passChecks.special ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 border border-slate-600 rounded-full shrink-0" />
-                    )}
-                    <span className={passChecks.special ? "text-gray-300" : "text-gray-500"}>One special character</span>
-                  </div>
-                </div>
+                <PasswordStrengthChecklist checks={passChecks} />
               )}
 
               {credsError && (
@@ -565,7 +333,7 @@ export default function Login() {
               <div className="text-center mt-2">
                 <button
                   type="button"
-                  onClick={() => { setActiveTab('forgot'); setCredsError(null); setSignupSuccess(null); }}
+                  onClick={() => { setActiveTab('forgot'); clearMessages(); }}
                   className="text-xs text-gray-400 hover:text-indigo-400 transition-colors duration-250 cursor-pointer"
                 >
                   Forgot password?
@@ -669,8 +437,7 @@ export default function Login() {
                     value={emailInput}
                     onChange={(e) => {
                       setEmailInput(e.target.value);
-                      setCredsError(null);
-                      setSignupSuccess(null);
+                      clearMessages();
                     }}
                     placeholder="name@example.com"
                     className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-none transition-all duration-300"
@@ -710,7 +477,7 @@ export default function Login() {
 
             <div className="mt-6 text-center text-sm">
               <button
-                onClick={() => { setActiveTab('web'); setCredsError(null); setSignupSuccess(null); }}
+                onClick={() => { setActiveTab('web'); clearMessages(); }}
                 className="text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline bg-transparent border-none p-0 inline focus:outline-none"
               >
                 Back to Login
@@ -736,8 +503,7 @@ export default function Login() {
                     value={passwordInput}
                     onChange={(e) => {
                       setPasswordInput(e.target.value);
-                      setCredsError(null);
-                      setSignupSuccess(null);
+                      clearMessages();
                     }}
                     placeholder="••••••••"
                     className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-none transition-all duration-300"
@@ -747,40 +513,7 @@ export default function Login() {
               </div>
 
               {passwordInput.length > 0 && (
-                <div className="space-y-1 bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800/80 text-xs">
-                  <div className="flex items-center space-x-2">
-                    {passChecks.length ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 border border-slate-600 rounded-full shrink-0" />
-                    )}
-                    <span className={passChecks.length ? "text-gray-300" : "text-gray-500"}>At least 8 characters</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {passChecks.capital ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 border border-slate-600 rounded-full shrink-0" />
-                    )}
-                    <span className={passChecks.capital ? "text-gray-300" : "text-gray-500"}>One capital letter</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {passChecks.number ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 border border-slate-600 rounded-full shrink-0" />
-                    )}
-                    <span className={passChecks.number ? "text-gray-300" : "text-gray-500"}>One number</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {passChecks.special ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 border border-slate-600 rounded-full shrink-0" />
-                    )}
-                    <span className={passChecks.special ? "text-gray-300" : "text-gray-500"}>One special character</span>
-                  </div>
-                </div>
+                <PasswordStrengthChecklist checks={passChecks} />
               )}
 
               {credsError && (

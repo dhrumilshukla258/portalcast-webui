@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useMemo,
 } from 'react';
 import { webPlatformAdapter } from '@/api/platform';
 import type { User } from '@/api/types/user';
@@ -96,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     initializeAuth();
   }, [token, refreshProfile]);
 
-  const loginWithGoogle = async (idToken: string) => {
+  const loginWithGoogle = useCallback(async (idToken: string) => {
     try {
       // clientType is resolved once at adapter-construction time via
       // isTizenDevice() (see @/api/platform) rather than the previous
@@ -123,9 +124,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error('Google Sign-In failed:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const loginWithCredentials = async (email: string, password: string) => {
+  const loginWithCredentials = useCallback(async (email: string, password: string) => {
     try {
       const clientType = webPlatformAdapter.clientType === 'tizen' ? 'tv' : 'web';
       const data = await apiLoginWithCredentials(email, password, clientType);
@@ -148,7 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error('Credentials login failed:', error);
       throw error;
     }
-  };
+  }, []);
 
   const logout = useCallback(() => {
     setToken(null);
@@ -162,7 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     window.location.hash = '/home';
   }, []);
 
-  const updatePreferences = async (newPrefs: Partial<User['preferences']>) => {
+  const updatePreferences = useCallback(async (newPrefs: Partial<User['preferences']>) => {
     if (!token || !user) return {};
     try {
       const data = await updateUserPreferences(newPrefs);
@@ -179,9 +180,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error('Failed to sync preferences:', error);
     }
     return user?.preferences || {};
-  };
+  }, [token, user]);
 
-  const syncProgress = async (
+  const syncProgress = useCallback(async (
     mediaId: string,
     progress: number,
     completed: boolean
@@ -192,7 +193,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       console.error('Failed to sync progress:', error);
     }
-  };
+  }, [token]);
 
 
 
@@ -207,23 +208,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, [logout]);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        token,
-        refreshToken,
-        user,
-        loading,
-        loginWithGoogle,
-        loginWithCredentials,
-        logout,
-        updatePreferences,
-        syncProgress,
-        isLoggedIn: !!token,
-        refreshProfile,
+  // Memoized so consumers only re-render when a value they actually read
+  // changes — AuthProvider wraps the whole app, so an unmemoized literal
+  // here would force every consumer to re-render on any state change in
+  // this provider, including ones only interested in e.g. `token`.
+  const value = useMemo<AuthContextType>(
+    () => ({
+      token,
+      refreshToken,
+      user,
+      loading,
+      loginWithGoogle,
+      loginWithCredentials,
+      logout,
+      updatePreferences,
+      syncProgress,
+      isLoggedIn: !!token,
+      refreshProfile,
+    }),
+    [
+      token,
+      refreshToken,
+      user,
+      loading,
+      loginWithGoogle,
+      loginWithCredentials,
+      logout,
+      updatePreferences,
+      syncProgress,
+      refreshProfile,
+    ]
+  );
 
-      }}
-    >
+  return (
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

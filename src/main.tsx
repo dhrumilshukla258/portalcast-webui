@@ -5,7 +5,7 @@ import App from '@/App';
 import { SocketProvider } from '@/context/SocketContext.tsx';
 import { AuthProvider } from '@/context/AuthContext.tsx';
 import { HashRouter } from 'react-router-dom';
-import ErrorBoundary from '@/components/organisms/ErrorBoundary';
+import ErrorBoundary from '@/components/organisms/layout/ErrorBoundary';
 import { webPlatformAdapter } from '@/api/platform';
 import { setPlatformAdapter } from '@/api/config';
 import { setClientPlatformAdapter } from '@/api/client';
