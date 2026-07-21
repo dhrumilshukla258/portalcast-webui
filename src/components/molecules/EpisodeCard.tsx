@@ -28,7 +28,7 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({ item, onClick, isCompleted = 
 
   return (
     <div
-      className="group relative flex w-full transform cursor-pointer items-center overflow-hidden rounded-xl border border-stalker-light/20 bg-[#0f1f3d] transition-all duration-300 hover:-translate-y-0.5 hover:border-stalker-light/50 hover:bg-[#0f1f3d] hover:shadow-lg hover:shadow-stalker-dark/30"
+      className="group relative flex w-full transform cursor-pointer items-center overflow-hidden rounded-xl border border-white/10 bg-black/65 transition-all duration-300 hover:-translate-y-0.5 hover:border-portalcast-light/50 hover:bg-black/75 hover:shadow-lg hover:shadow-black/40"
       onClick={() => onClick(item)}
       data-focusable="true"
       tabIndex={-1}
@@ -42,6 +42,8 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({ item, onClick, isCompleted = 
           <img
             src={imageUrl}
             alt={displayTitle}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-110"
             onError={() => setImageError(true)}
           />
@@ -54,7 +56,7 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({ item, onClick, isCompleted = 
         )}
       </div>
       <div className="overflow-hidden p-3 sm:p-4">
-        <h3 className="truncate text-sm font-semibold text-white transition-colors duration-300 group-hover:text-stalker-light sm:text-base">
+        <h3 className="truncate text-sm font-semibold text-white transition-colors duration-300 group-hover:text-portalcast-light sm:text-base">
           {displayTitle}
         </h3>
       </div>

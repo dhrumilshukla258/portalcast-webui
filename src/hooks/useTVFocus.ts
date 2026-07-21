@@ -63,6 +63,16 @@ export function useTVFocus({
   }, []);
 
   const getFirstContentIndex = useCallback((focusableElements: HTMLElement[]) => {
+    // A `data-default-focus="true"` element (e.g. a page's Play button) wins
+    // over literal DOM order — otherwise whatever happens to be first in the
+    // markup (like a Back button placed above the content for layout
+    // reasons) ends up permanently lit with the TV-focus glow on page load,
+    // even though it was never meant to be the landing target.
+    const defaultIdx = focusableElements.findIndex(
+      (el) => el.getAttribute('data-default-focus') === 'true'
+    );
+    if (defaultIdx !== -1) return defaultIdx;
+
     const header = document.querySelector('header');
     if (!header) return 0;
     const firstContentIdx = focusableElements.findIndex((el) => !header.contains(el));
@@ -70,9 +80,34 @@ export function useTVFocus({
   }, []);
 
   const savedGridIndex = useRef<number | null>(null);
+  // The index alone isn't a stable identity — if the focusable-element order
+  // shifts at all while a modal is open (a re-render, a row loading in),
+  // that same index can land on a completely different element on restore
+  // (e.g. a header nav button instead of the grid tile the user actually
+  // had focused). Keeping the element itself lets restore look it up by
+  // identity first, falling back to the raw index only if it's gone.
+  const savedGridEl = useRef<HTMLElement | null>(null);
   const latestFocusedIndex = useRef<number | null>(null);
   const lastFocusedIndexRef = useRef<number | null>(null);
   const shouldScroll = useRef(false);
+
+  // :focus-visible-equivalent for the custom .focused glow ring — it's
+  // meant to show a TV-remote user where they are, but the same focus
+  // restore (e.g. reopening the grid after backing out of a detail) also
+  // fires for a plain mouse click, which then leaves that prominent ring
+  // stuck on whatever tile was clicked — reads as a bug on desktop/web even
+  // though it's correct behavior for an actual remote. Track which input
+  // last drove things and only apply the visual ring for keyboard/remote,
+  // never for pointer.
+  const lastInputWasPointer = useRef(false);
+
+  useEffect(() => {
+    const onPointerDown = () => {
+      lastInputWasPointer.current = true;
+    };
+    window.addEventListener('pointerdown', onPointerDown, true);
+    return () => window.removeEventListener('pointerdown', onPointerDown, true);
+  }, []);
 
   useEffect(() => {
     latestFocusedIndex.current = focusedIndex;
@@ -81,6 +116,17 @@ export function useTVFocus({
   useEffect(() => {
     if (isDetailOpen || isConfirmingDelete || isCategoriesOpen) {
       savedGridIndex.current = latestFocusedIndex.current;
+      // document.activeElement, not a re-derived getFocusableElements()[index]
+      // lookup — by the time this effect runs, React has already committed
+      // whatever DOM change triggered isDetailOpen (e.g. Discover's overlay
+      // mounting on top), so re-querying the focusable array here and
+      // indexing into it can already be reading the POST-transition array,
+      // landing on the wrong element from the very first capture. The
+      // browser's actual focused element hasn't silently moved on its own,
+      // so it's the one reliable source of "what was focused right before
+      // this."
+      const active = document.activeElement as HTMLElement | null;
+      savedGridEl.current = active?.getAttribute('data-focusable') === 'true' ? active : null;
       const timer = setTimeout(() => {
         const focusable = getFocusableElements();
         const defaultIndex = focusable.findIndex(
@@ -93,8 +139,11 @@ export function useTVFocus({
     } else {
       if (savedGridIndex.current !== null) {
         shouldScroll.current = true;
-        setFocusedIndex(savedGridIndex.current);
+        const focusable = getFocusableElements();
+        const restoredIdx = savedGridEl.current ? focusable.indexOf(savedGridEl.current) : -1;
+        setFocusedIndex(restoredIdx !== -1 ? restoredIdx : savedGridIndex.current);
         savedGridIndex.current = null;
+        savedGridEl.current = null;
       }
     }
   }, [isDetailOpen, isConfirmingDelete, isCategoriesOpen, getFocusableElements, setFocusedIndex]);
@@ -178,6 +227,10 @@ export function useTVFocus({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (streamUrl) return;
+
+      if ([37, 38, 39, 40, 13].includes(e.keyCode)) {
+        lastInputWasPointer.current = false;
+      }
 
       if ([37, 38, 39, 40].includes(e.keyCode)) {
         shouldScroll.current = true;
@@ -483,7 +536,11 @@ export function useTVFocus({
 
       focusable.forEach((el, i) => {
         if (i === targetIndex) {
-          el.classList.add('focused');
+          if (lastInputWasPointer.current) {
+            el.classList.remove('focused');
+          } else {
+            el.classList.add('focused');
+          }
           if (shouldScroll.current) {
             el.focus();
             if (el.closest('header')) {

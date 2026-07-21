@@ -23,6 +23,53 @@ export default defineConfig({
         ],
         runtimeCaching: [
           {
+            // Poster/thumbnail images — stable, non-tokenized URLs (unlike
+            // stream/proxy URLs, which mint a fresh token per request/session).
+            // Matched before the blanket /api rule below since Workbox uses
+            // first-match-wins. CacheFirst since these paths are effectively
+            // immutable once uploaded — no need to re-check the server on
+            // every visit like the old StaleWhileRevalidate/1h setup did.
+            urlPattern: ({ url }) => url.pathname.startsWith('/api/images'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'poster-images',
+              expiration: {
+                maxEntries: 1000,
+                maxAgeSeconds: 60 * 60 * 24 * 60, // 60 days
+              },
+            },
+          },
+          {
+            // Any remaining image request, regardless of origin — covers
+            // Discover's TMDB-hosted artwork (AmbientBackdrop, MediaCard,
+            // MediaCardRow), which the poster-images rule above doesn't match
+            // since those are absolute cross-origin URLs, not portal-proxied
+            // `/api/images/...` paths. Workbox is first-match-wins, so this
+            // only catches what rule 1 didn't — no overlap. CacheFirst (not
+            // StaleWhileRevalidate) since these URLs are effectively
+            // immutable per-path; unlike the proxied posters there's no
+            // known Cache-Control to mirror, so once cached there's no need
+            // to ever re-request it in the background. `cacheableResponse`
+            // allows opaque (status 0) responses to be cached too, since
+            // cross-origin `<img>` requests go out without CORS and the SW
+            // can't read their real status. This is what actually stops a
+            // Discover row's images from re-fetching every time you switch
+            // tabs and scroll back — the poster-images rule alone never
+            // covered them.
+            urlPattern: ({ request }) => request.destination === 'image',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'external-images',
+              expiration: {
+                maxEntries: 500,
+                maxAgeSeconds: 60 * 60 * 24 * 60, // 60 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
             urlPattern: ({ url }) => {
               return (
                 url.pathname.startsWith('/api') ||

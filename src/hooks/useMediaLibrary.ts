@@ -13,6 +13,8 @@ import type { ProgressRecord } from '@/api/types/user';
 import type { MediaItem, ContextType, EPG_List, ChannelGroup } from '@/types';
 import type { PaginatedResponse } from '@/api/types/channels';
 import { isTizenDevice } from '@/utils/helpers';
+import { useLibraryBackgroundRefresh } from './useLibraryBackgroundRefresh';
+import { useInfiniteScroll } from './useInfiniteScroll';
 
 export const getInitialState = (): {
   initialType: 'movie' | 'series' | 'tv';
@@ -41,7 +43,49 @@ export const initialContext: ContextType = {
   sort: 'latest',
 };
 
-export function useMediaLibrary() {
+// Infinite-scroll append caps out here instead of growing without bound —
+// each "load more" page keeps getting appended to `items` for as long as the
+// user keeps scrolling a single category, and nothing ever trimmed it. A
+// true windowed/virtualized grid would be the complete fix, but this app's
+// Smart TV remote navigation (useTVFocus.ts) walks the actual DOM to find
+// focusable elements, so unmounting off-screen items would silently break
+// remote-control navigation for anything scrolled out of view. Capping the
+// retained list is the safe middle ground: it bounds memory for pathological
+// long-scroll sessions without touching what's actually mounted/focusable.
+// The cap is generous — far more items than a typical browse session loads —
+// so it only kicks in for genuinely long scrolling, and trims from the
+// front (oldest-loaded) so the just-loaded page a "load more" scroll is
+// chasing always stays.
+const MAX_RETAINED_ITEMS = 600;
+
+function appendPageCapped(prev: MediaItem[], uniqueNew: MediaItem[]): MediaItem[] {
+  const combined = [...prev, ...uniqueNew];
+  return combined.length > MAX_RETAINED_ITEMS
+    ? combined.slice(combined.length - MAX_RETAINED_ITEMS)
+    : combined;
+}
+
+// Was duplicated identically in the movie and series branches of fetchData's
+// pagination handling — same page-1-replaces-all-else-dedup-and-append logic
+// for both.
+function mergePageResults(
+  prev: MediaItem[],
+  page: number,
+  responseData: MediaItem[],
+  setTotalItemsCount: React.Dispatch<React.SetStateAction<number>>
+): MediaItem[] {
+  if (page === 1) return responseData;
+
+  const existingIds = new Set(prev.map((item) => item.id));
+  const uniqueNew = responseData.filter((item) => !existingIds.has(item.id));
+
+  if (uniqueNew.length === 0) {
+    setTimeout(() => setTotalItemsCount(prev.length), 0);
+  }
+  return appendPageCapped(prev || [], uniqueNew);
+}
+
+export function useMediaLibrary(isDetailOpen: boolean = false) {
   const { user, updatePreferences } = useAuth();
   const [context, setContext] = useState<ContextType>(initialContext);
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -65,6 +109,17 @@ export function useMediaLibrary() {
   const [loadingCategories, setLoadingCategories] = useState<boolean>(false);
   const [carouselSlides, setCarouselSlides] = useState<CarouselSlide[]>([]);
   const [providerKey, setProviderKey] = useState<string>('');
+
+  // Channels/groups don't need to be refetched every time the user switches
+  // to the TV tab — unlike movies/series (paginated, small first request),
+  // TV always pulls the *entire* catalog in one shot, so it's the slowest
+  // tab to (re)land on. Cache it for the session per provider so only the
+  // first visit pays that cost; switching away and back is instant.
+  const channelsCacheRef = useRef<{
+    providerKey: string;
+    channels: MediaItem[];
+    groups: ChannelGroup[];
+  } | null>(null);
 
   const fetchProviderKey = useCallback(async () => {
     try {
@@ -105,26 +160,20 @@ export function useMediaLibrary() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [recentChannels, setRecentChannels] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (user?.preferences && providerKey) {
-      setFavorites(user.preferences.favorites || []);
-      setRecentChannels(user.preferences.recentChannels || []);
-
-      const savedType = user.preferences.preferredContentType || 'movie';
-      const key = `${providerKey}_${savedType}`;
-      const lastCategory = user.preferences.lastSelectedCategory?.[key] || '*';
-      const lastCategoryTitle = user.preferences.lastSelectedCategoryTitle?.[key];
-      const newTitle = savedType === 'series' ? 'Series' : savedType === 'tv' ? 'TV' : 'Movies';
-
-      setContentType(savedType);
-      setContext((prev) => ({
-        ...prev,
-        contentType: savedType,
-        category: savedType === 'tv' ? null : lastCategory,
-        parentTitle: savedType === 'tv' ? 'TV' : (lastCategory === '*' ? newTitle : (lastCategoryTitle || newTitle)),
-      }));
-    }
-  }, [user, providerKey]);
+  // Restoring the user's last-browsed category/content-type used to be a
+  // separate effect from the one that actually fetches the initial content
+  // — it only set `contentType`/`context` state, it never called
+  // fetchData(). If that effect's resolution of `preferredContentType`
+  // differed from whatever the (also separate) initial-fetch effect had
+  // resolved moments earlier — e.g. the initial fetch fired before
+  // `user.preferences` was fully attached and fell back to 'movie', then
+  // this one corrected the label to the user's real 'tv' preference — the
+  // two would disagree: the header/nav would show "TV" while `items` still
+  // held whatever the fallback fetch loaded (movies), because nothing ever
+  // re-fetched to match the corrected label. See the merged effect below
+  // (search "Initial Load"), which now sets state AND fetches atomically —
+  // there's no window where they can show different content types anymore.
+  const restoredForRef = useRef<string | null>(null);
 
   const [progressRecords, setInProgressRecords] = useState<ProgressRecord[]>([]);
 
@@ -145,7 +194,6 @@ export function useMediaLibrary() {
 
   const isFetchingMore = useRef(false);
   const isRestoringFromHistory = useRef(false);
-  const initialLoadRef = useRef(false);
   // Guards against out-of-order network responses: if the user switches
   // category/page fast enough, an older request can resolve *after* a newer
   // one and clobber its state with stale data (e.g. a "4K Hindi" response
@@ -194,6 +242,15 @@ export function useMediaLibrary() {
       // flashing an empty/wrong view until the response landed.
       setContext(newContext);
 
+      // Safety net against a request that never resolves or rejects (a
+      // hung/unresponsive backend endpoint) — without this, `loading` would
+      // stay true forever and the UI would show a permanent spinner with no
+      // way out. This doesn't fix a slow/stuck backend, it just guarantees
+      // the failure becomes visible (an error + retry option) instead of an
+      // infinite spinner.
+      const timeoutController = new AbortController();
+      const timeoutId = setTimeout(() => timeoutController.abort(), 20000);
+
       try {
         let response: PaginatedResponse<MediaItem>;
 
@@ -207,22 +264,10 @@ export function useMediaLibrary() {
             seasonId: newContext.seasonId,
             sort: newContext.sort,
           };
-          response = await getMedia(params);
+          response = await getMedia(params, timeoutController.signal);
           if (isStale()) return;
           const responseData = response.data || [];
-          setItems((prev) => {
-            if (newContext.page === 1) return responseData;
-
-            const existingIds = new Set(prev.map((item) => item.id));
-            const uniqueNew = responseData.filter(
-              (item) => !existingIds.has(item.id)
-            );
-
-            if (uniqueNew.length === 0) {
-              setTimeout(() => setTotalItemsCount(prev.length), 0);
-            }
-            return [...(prev || []), ...uniqueNew];
-          });
+          setItems((prev) => mergePageResults(prev, newContext.page, responseData, setTotalItemsCount));
           if (responseData.length > 0 && response.total_items) {
             setTotalItemsCount(response.total_items);
           } else if (newContext.page === 1) {
@@ -237,14 +282,14 @@ export function useMediaLibrary() {
               page: newContext.page,
               pageAtaTime: 1,
               category: newContext.category || undefined,
-            });
+            }, timeoutController.signal);
           }
           // 2. SECOND Priority: Check if movieId exists (Load Seasons)
           else if (newContext.movieId) {
             response = await getSeries({
               movieId: newContext.movieId,
               category: newContext.category || undefined,
-            });
+            }, timeoutController.signal);
           }
           // 3. LAST Priority: Load main series list
           else {
@@ -254,36 +299,46 @@ export function useMediaLibrary() {
               pageAtaTime: 1,
               category: newContext.category,
               sort: newContext.sort,
-            });
+            }, timeoutController.signal);
           }
           if (isStale()) return;
           const responseData = response.data || [];
-          setItems((prev) => {
-            if (newContext.page === 1) return responseData;
-
-            const existingIds = new Set(prev.map((item) => item.id));
-            const uniqueNew = responseData.filter(
-              (item) => !existingIds.has(item.id)
-            );
-
-            if (uniqueNew.length === 0) {
-              setTimeout(() => setTotalItemsCount(prev.length), 0);
-            }
-            return [...(prev || []), ...uniqueNew];
-          });
+          setItems((prev) => mergePageResults(prev, newContext.page, responseData, setTotalItemsCount));
           if (responseData.length > 0 && response.total_items) {
             setTotalItemsCount(response.total_items);
           } else if (newContext.page === 1) {
             setTotalItemsCount(0);
           }
         } else {
-          const [channelResponse, groupResponse] = await Promise.all([
-            getChannels(),
-            getChannelGroups(),
-          ]);
+          const cached = channelsCacheRef.current;
+          let allChannels: MediaItem[];
+          let groupsForCache: ChannelGroup[];
+
+          if (cached && cached.providerKey === providerKey) {
+            allChannels = cached.channels;
+            groupsForCache = cached.groups;
+          } else {
+            const [channelResponse, groupResponse] = await Promise.all([
+              getChannels(),
+              getChannelGroups(),
+            ]);
+            if (isStale()) return;
+            allChannels = channelResponse.data || [];
+            const allGroups = groupResponse.data || [];
+            // Stalker/Xtream-style portals commonly include their own
+            // "all channels" genre in the groups list (id '*'/'0', titled
+            // "All"/"ALL"), on top of the synthetic "All Channels" pseudo-group
+            // we always prepend below — without filtering it out here, the
+            // sidebar showed two "all" entries, and the API's own one was
+            // always empty (real channels never carry that placeholder id as
+            // their tv_genre_id, so TvChannelList's filter matched nothing).
+            groupsForCache = allGroups.filter(
+              (g) => g.id !== '*' && g.id !== '0' && g.title?.trim().toLowerCase() !== 'all'
+            );
+            channelsCacheRef.current = { providerKey, channels: allChannels, groups: groupsForCache };
+          }
+
           if (isStale()) return;
-          const allChannels = channelResponse.data || [];
-          const allGroups = groupResponse.data || [];
           const filteredChannels = newContext.search
             ? allChannels.filter((c) =>
                 c.name?.toLowerCase().includes(newContext.search!.toLowerCase())
@@ -296,7 +351,7 @@ export function useMediaLibrary() {
             { id: 'recent', title: 'Recent Channels' },
             { id: 'fav', title: 'Favorites' },
             { id: 'all', title: 'All Channels' },
-            ...allGroups,
+            ...groupsForCache,
           ]);
         }
       } catch {
@@ -305,6 +360,7 @@ export function useMediaLibrary() {
           setPaginationError('Could not load more content.');
         else setError('Could not load content. Please try again later.');
       } finally {
+        clearTimeout(timeoutId);
         // A stale request finishing after a newer one must not clear the
         // newer request's own loading state.
         if (!isStale()) {
@@ -313,33 +369,47 @@ export function useMediaLibrary() {
         }
       }
     },
-    [contentType]
+    [contentType, providerKey]
   );
 
   useEffect(() => {
     fetchProviderKey();
   }, [fetchProviderKey]);
 
-  // 1. Initial Load of main content (runs once providerKey is ready)
+  // 1. Initial Load of main content (runs once providerKey AND real user
+  // preferences are both ready) — this is the single place that resolves
+  // "what content type/category should we open on" and immediately fetches
+  // it, so the displayed contentType/context and the actual loaded items
+  // can never disagree. Requires user?.preferences directly (not just
+  // "auth isn't loading") — checking the actual data needed, rather than a
+  // proxy signal for it, is what closes the race described above. Keyed off
+  // user id + providerKey (not the whole `user` object) so it re-fires on a
+  // genuine identity/provider change but not on every incidental
+  // preference save elsewhere in the app (updatePreferences replaces
+  // `user.preferences` wholesale on every write).
   useEffect(() => {
-    if (!providerKey) return;
-    if (initialLoadRef.current) return;
+    if (!providerKey || !user?.preferences) return;
+    const restoreKey = `${user.id ?? ''}_${providerKey}`;
+    if (restoredForRef.current === restoreKey) return;
+    restoredForRef.current = restoreKey;
 
-    const savedType = user?.preferences?.preferredContentType || 'movie';
+    setFavorites(user.preferences.favorites || []);
+    setRecentChannels(user.preferences.recentChannels || []);
+
+    const savedType = user.preferences.preferredContentType || 'movie';
     const key = `${providerKey}_${savedType}`;
-    const lastCategory = user?.preferences?.lastSelectedCategory?.[key] || '*';
-    const lastCategoryTitle = user?.preferences?.lastSelectedCategoryTitle?.[key];
+    const lastCategory = user.preferences.lastSelectedCategory?.[key] || '*';
+    const lastCategoryTitle = user.preferences.lastSelectedCategoryTitle?.[key];
     const newTitle = savedType === 'series' ? 'Series' : savedType === 'tv' ? 'TV' : 'Movies';
 
+    setContentType(savedType);
     const initialCtx = {
       ...initialContext,
       contentType: savedType,
       category: savedType === 'tv' ? null : lastCategory,
       parentTitle: savedType === 'tv' ? 'TV' : (lastCategory === '*' ? newTitle : (lastCategoryTitle || newTitle)),
     };
-
     fetchData(initialCtx, savedType);
-    initialLoadRef.current = true;
   }, [providerKey, user, fetchData]);
 
   // 2. Fetch ancillary items (carousel, categories, epg) when contentType or providerKey changes
@@ -356,6 +426,36 @@ export function useMediaLibrary() {
       }
     }
   }, [contentType, providerKey, fetchCarousel, fetchVodCategories, loadEpgData, isTizen, user?.preferences?.lastSelectedCategory?.['lastPlayedTvChannelId']]);
+
+  // Warms the channel-list cache in the background while the user is
+  // browsing Movies/Series, so the *first* switch to the TV tab each
+  // session — the one visit the client-side cache above can't otherwise
+  // speed up, since there's nothing to reuse yet — is already instant too.
+  // Delayed so it doesn't compete with the movies/series grid's own
+  // carousel/categories/EPG requests firing right after login.
+  useEffect(() => {
+    if (!providerKey || contentType === 'tv') return;
+    if (channelsCacheRef.current?.providerKey === providerKey) return;
+    const timer = setTimeout(() => {
+      if (channelsCacheRef.current?.providerKey === providerKey) return;
+      Promise.all([getChannels(), getChannelGroups()])
+        .then(([channelResponse, groupResponse]) => {
+          if (channelsCacheRef.current?.providerKey === providerKey) return;
+          const allChannels = channelResponse.data || [];
+          const allGroups = groupResponse.data || [];
+          const groupsForCache = allGroups.filter(
+            (g) => g.id !== '*' && g.id !== '0' && g.title?.trim().toLowerCase() !== 'all'
+          );
+          channelsCacheRef.current = { providerKey, channels: allChannels, groups: groupsForCache };
+        })
+        .catch(() => {
+          // Ignore — the normal TV-tab fetch path will just retry for real.
+        });
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [providerKey, contentType]);
+
+  useLibraryBackgroundRefresh({ context, items, loading, contentType, setItems });
 
   const handlePageChange = useCallback(
     (direction: number) => {
@@ -379,13 +479,14 @@ export function useMediaLibrary() {
   const toggleFavorite = useCallback(
     (item: MediaItem) => {
       if (!item?.id) return;
-      const newFavs = favorites.includes(item.id)
+      const wasFavorite = favorites.includes(item.id);
+      const newFavs = wasFavorite
         ? favorites.filter((id) => id !== item.id)
         : [...favorites, item.id];
 
       setFavorites(newFavs);
       updatePreferences({ favorites: newFavs });
-      if (favorites.includes(item.id)) {
+      if (wasFavorite) {
         toast.info(`Removed ${item.name || 'Channel'} from favorites`);
       } else {
         toast.success(`Added ${item.name || 'Channel'} to favorites`);
@@ -504,50 +605,16 @@ export function useMediaLibrary() {
     });
   }, [updatePreferences]);
 
-  useEffect(() => {
-    const isTizen = !!(window as Window & { tizen?: unknown }).tizen;
-    if (isTizen || contentType === 'tv' || loading || isFetchingMore.current)
-      return;
-
-    if (isRestoringFromHistory.current) {
-      return;
-    }
-    if (
-      (items?.length || 0) === 0 ||
-      (totalItemsCount > 0 && (items?.length || 0) >= totalItemsCount)
-    )
-      return;
-
-    const timer = setTimeout(() => {
-      // The page's own scroll (main.tsx/App.tsx) is fixed at 100vh — actual scrolling
-      // happens inside MainContentGrid's own content pane (#app-content-scroll). Check
-      // that container's fill state, not the document's, or this fires on every render.
-      const pane = document.getElementById('app-content-scroll');
-      if (!pane || pane.scrollHeight <= pane.clientHeight + 50) {
-        handlePageChange(1);
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [items, loading, contentType, totalItemsCount, handlePageChange]);
-
-  useEffect(() => {
-    const pane = document.getElementById('app-content-scroll');
-    if (!pane) return;
-
-    const handleScroll = () => {
-      const isTizen = !!(window as Window & { tizen?: unknown }).tizen;
-      if (isTizen || contentType === 'tv') return;
-
-      const buffer = 200;
-      const isNearBottom =
-        pane.scrollTop + pane.clientHeight >= pane.scrollHeight - buffer;
-      if (isNearBottom) {
-        handlePageChange(1);
-      }
-    };
-    pane.addEventListener('scroll', handleScroll);
-    return () => pane.removeEventListener('scroll', handleScroll);
-  }, [contentType, handlePageChange, items]);
+  useInfiniteScroll({
+    items,
+    loading,
+    contentType,
+    totalItemsCount,
+    handlePageChange,
+    isDetailOpen,
+    isRestoringFromHistory,
+    isFetchingMore,
+  });
 
   useEffect(() => {
     const handleConfigChange = async () => {
