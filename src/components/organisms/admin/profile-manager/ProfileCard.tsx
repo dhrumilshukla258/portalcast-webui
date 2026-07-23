@@ -40,16 +40,16 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2 text-xs">
-          <span className="rounded bg-gray-700/50 px-2 py-1 text-gray-300 backdrop-blur-sm">
+          <span className="rounded-sm bg-gray-700/50 px-2 py-1 text-gray-300 backdrop-blur-xs">
             Type:{' '}
             <span className="uppercase text-blue-400">
               {profile.config.providerType || 'stalker'}
             </span>
           </span>
-          <span className="rounded bg-gray-700/50 px-2 py-1 text-gray-300 backdrop-blur-sm">
+          <span className="rounded-sm bg-gray-700/50 px-2 py-1 text-gray-300 backdrop-blur-xs">
             Host: <span className="text-blue-400">{profile.config.hostname}</span>
           </span>
-          <span className="rounded bg-gray-700/50 px-2 py-1 text-gray-300 backdrop-blur-sm">
+          <span className="rounded-sm bg-gray-700/50 px-2 py-1 text-gray-300 backdrop-blur-xs">
             Groups:{' '}
             <span className="text-blue-400">{profile.config.groups.length}</span>
           </span>

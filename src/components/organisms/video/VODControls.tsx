@@ -97,20 +97,20 @@ export const VODControls = React.memo(() => {
             onDragEnd={() => setIsDragging(false)}
             onDragValueChange={(val) => setDragTime((val / 100) * duration)}
           >
-            <TimeSlider.Track className="absolute h-full w-full rounded-sm bg-white/30" />
+            <TimeSlider.Track className="absolute h-full w-full rounded-xs bg-white/30" />
             <TimeSlider.Progress
-              className="absolute h-full rounded-sm bg-white/50"
+              className="absolute h-full rounded-xs bg-white/50"
               style={{ width: 'var(--slider-progress)' }}
             />
             <TimeSlider.TrackFill
-              className="absolute h-full rounded-sm bg-blue-500"
+              className="absolute h-full rounded-xs bg-blue-500"
               style={{ width: 'var(--slider-fill)' }}
             />
 
             {/* Custom seek/drag preview tooltip */}
             {showTooltip && (
               <div
-                className="absolute bottom-full mb-3 -translate-x-1/2 rounded bg-blue-600 px-2.5 py-1 text-xs font-bold text-white shadow-md after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-4 after:border-transparent after:border-t-blue-600 pointer-events-none"
+                className="absolute bottom-full mb-3 -translate-x-1/2 rounded-sm bg-blue-600 px-2.5 py-1 text-xs font-bold text-white shadow-md after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-4 after:border-transparent after:border-t-blue-600 pointer-events-none"
                 style={{ left: 'var(--slider-fill)' }}
               >
                 {tooltipText}
@@ -182,7 +182,7 @@ export const VODControls = React.memo(() => {
             {!isTizen && (
               <div
                 // data-focusable="true"
-                className="flex items-center space-x-2 [&_svg]:!h-5 [&_svg]:!w-5 md:[&_svg]:!h-7 md:[&_svg]:!w-7"
+                className="flex items-center space-x-2 [&_svg]:h-5! [&_svg]:w-5! md:[&_svg]:h-7! md:[&_svg]:w-7!"
               >
                 {/* Ensure your VolumeControl internally handles its focus if needed */}
                 <VolumeControl />
@@ -301,7 +301,7 @@ export const VODControls = React.memo(() => {
                       setUseProxy(!useProxy);
                       setIsMoreMenuOpen(false);
                     }}
-                    className="flex items-center space-x-3 rounded px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
                   >
                     {!useProxy ? <ShieldX className="h-4 w-4 text-gray-400" /> : <ShieldCheck className="h-4 w-4 text-green-400" />}
                     <span>Proxy: {useProxy ? 'On' : 'Off'}</span>
@@ -315,7 +315,7 @@ export const VODControls = React.memo(() => {
                         onActiveSettingsMenuChange('cast');
                         setIsMoreMenuOpen(false);
                       }}
-                      className="flex items-center space-x-3 rounded px-3 py-2 transition-colors hover:bg-white/10"
+                      className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
                     >
                       <FaChromecast className="h-4 w-4 text-gray-400" />
                       <span>Cast</span>
@@ -328,7 +328,7 @@ export const VODControls = React.memo(() => {
                         setShowEpisodeList(true);
                         setIsMoreMenuOpen(false);
                       }}
-                      className="flex items-center space-x-3 rounded px-3 py-2 transition-colors hover:bg-white/10"
+                      className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
                     >
                       <ListVideo className="h-4 w-4 text-gray-400" />
                       <span>Episodes</span>
@@ -341,7 +341,7 @@ export const VODControls = React.memo(() => {
                       onActiveSettingsMenuChange('main');
                       setIsMoreMenuOpen(false);
                     }}
-                    className="flex items-center space-x-3 rounded px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
                   >
                     <SettingsIcon className="h-4 w-4 text-gray-400" />
                     <span>Settings</span>
@@ -351,7 +351,7 @@ export const VODControls = React.memo(() => {
                     onClick={() => {
                       onCycleFitMode();
                     }}
-                    className="flex items-center space-x-3 rounded px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
                   >
                     {fitMode === 'contain' && <Shrink className="h-4 w-4 text-gray-400" />}
                     {fitMode === 'cover' && <SquareDashedBottomCode className="h-4 w-4 text-gray-400" />}

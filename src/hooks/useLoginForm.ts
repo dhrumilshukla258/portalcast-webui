@@ -5,7 +5,7 @@ import { getPasswordChecks, PASSWORD_REGEX } from '@/utils/passwordChecks';
 
 interface UseLoginFormArgs {
   loginWithCredentials: (email: string, password: string) => Promise<void>;
-  navigate: (path: string) => void;
+  navigate: (path: string, options?: { replace?: boolean }) => void;
   redirectPath: string;
   setActiveTab: (tab: 'web' | 'tv' | 'forgot' | 'reset') => void;
   resetToken: string | null;
@@ -79,7 +79,7 @@ export function useLoginForm({
       try {
         await loginWithCredentials(emailInput.trim(), passwordInput);
         toast.success('Successfully logged in!');
-        navigate(redirectPath);
+        navigate(redirectPath, { replace: true });
       } catch (err) {
         const error = err as Error;
         let message = error.message;

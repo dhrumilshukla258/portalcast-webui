@@ -1,13 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { SlidersHorizontal, X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
-import type { DiscoverFacets, DiscoverBrowseParams } from '@/api/endpoints/discover';
+import type { DiscoverFacets } from '@/api/endpoints/discover';
 
 export type DiscoverFilterKey = 'genre' | 'country' | 'language' | 'theme';
 
+// Genre is multi-select (AND — a title must carry every selected genre), the
+// rest stay single-select. Single-genre facets run tens of thousands deep
+// (e.g. Drama alone), so narrowing by combining genres is what actually
+// makes the filter useful at that volume; country/language/theme don't have
+// the same volume problem and stay simple single-pick.
+export interface ActiveDiscoverFilters {
+  genre?: string[];
+  country?: string;
+  language?: string;
+  theme?: string;
+}
+
 interface DiscoverFiltersProps {
   facets: DiscoverFacets | null;
-  activeFilters: Pick<DiscoverBrowseParams, DiscoverFilterKey>;
-  onFilterChange: (key: DiscoverFilterKey, value: string | undefined) => void;
+  activeFilters: ActiveDiscoverFilters;
+  onFilterChange: (key: 'country' | 'language' | 'theme', value: string | undefined) => void;
+  onGenresChange: (values: string[]) => void;
 }
 
 const DIMENSION_LABELS: Record<DiscoverFilterKey, string> = {
@@ -27,6 +40,18 @@ const DIMENSION_ORDER: DiscoverFilterKey[] = ['language', 'genre', 'country', 't
 const LANGUAGE_NAME_OVERRIDES: Record<string, string> = {
   cn: 'Chinese', // TMDB non-standard alias for zh
   xx: 'No Language',
+  // Real ISO 639-1 codes that Intl.DisplayNames still fails to resolve on at
+  // least one real runtime (confirmed via the deployed TV app) — likely a
+  // reduced/small-icu ICU data build lacking full CLDR coverage for less
+  // common languages, common on embedded/TV WebKit. Explicit overrides avoid
+  // depending on runtime ICU completeness for these specific codes.
+  ab: 'Abkhazian',
+  cr: 'Cree',
+  dz: 'Dzongkha',
+  os: 'Ossetian',
+  bo: 'Tibetan',
+  ik: 'Inupiaq',
+  ks: 'Kashmiri',
 };
 
 let languageDisplayNames: Intl.DisplayNames | undefined;
@@ -62,81 +87,123 @@ function valuesFor(facets: DiscoverFacets, dimension: DiscoverFilterKey) {
   }
 }
 
+function summaryFor(dimension: DiscoverFilterKey, activeFilters: ActiveDiscoverFilters): string {
+  if (dimension === 'genre') {
+    const genres = activeFilters.genre || [];
+    if (genres.length === 0) return 'Any';
+    if (genres.length <= 2) return genres.join(', ');
+    return `${genres.length} selected`;
+  }
+  const value = activeFilters[dimension];
+  return value ? displayLabel(dimension, value) : 'Any';
+}
+
 // Top-level list: one row per dimension (Language/Genre/Country/Theme),
 // showing its current selection — tapping drills into ValueList for that
 // dimension instead of showing every value for every dimension at once.
 const CategoryList: React.FC<{
   facets: DiscoverFacets;
-  activeFilters: Pick<DiscoverBrowseParams, DiscoverFilterKey>;
+  activeFilters: ActiveDiscoverFilters;
   onOpenDimension: (dimension: DiscoverFilterKey) => void;
 }> = ({ facets, activeFilters, onOpenDimension }) => (
   <div className="space-y-2">
-    {DIMENSION_ORDER.filter((dim) => valuesFor(facets, dim).length > 0).map((dimension) => {
-      const activeValue = activeFilters[dimension];
-      return (
-        <button
-          key={dimension}
-          data-focusable="true"
-          onClick={() => onOpenDimension(dimension)}
-          className="flex w-full items-center justify-between rounded-full border border-gray-800/80 bg-gray-900/40 px-4 py-3.5 text-left transition-all hover:border-gray-700 hover:bg-gray-800/50 focus:border-transparent focus:bg-gradient-to-r focus:from-sky-400/20 focus:to-blue-500/20 focus:outline-none [&.focused]:!border-transparent [&.focused]:bg-gradient-to-r [&.focused]:from-sky-400/20 [&.focused]:to-blue-500/20"
-        >
-          <div>
-            <div className="text-sm font-bold text-white">{DIMENSION_LABELS[dimension]}</div>
-            <div className="mt-0.5 text-xs font-semibold text-sky-400">
-              {activeValue ? displayLabel(dimension, activeValue) : 'Any'}
-            </div>
+    {DIMENSION_ORDER.filter((dim) => valuesFor(facets, dim).length > 0).map((dimension) => (
+      <button
+        key={dimension}
+        data-focusable="true"
+        onClick={() => onOpenDimension(dimension)}
+        className="flex w-full items-center justify-between rounded-full border border-gray-800/80 bg-gray-900/40 px-4 py-3.5 text-left transition-all hover:border-gray-700 hover:bg-gray-800/50 focus:border-transparent focus:bg-linear-to-r focus:from-sky-400/20 focus:to-blue-500/20 focus:outline-hidden [&.focused]:border-transparent! [&.focused]:bg-linear-to-r [&.focused]:from-sky-400/20 [&.focused]:to-blue-500/20"
+      >
+        <div>
+          <div className="text-sm font-bold text-white">{DIMENSION_LABELS[dimension]}</div>
+          <div className="mt-0.5 truncate text-xs font-semibold text-sky-400">
+            {summaryFor(dimension, activeFilters)}
           </div>
-          <ChevronRight className="h-4 w-4 text-gray-500" />
-        </button>
-      );
-    })}
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-gray-500" />
+      </button>
+    ))}
   </div>
 );
 
 // Drill-down screen for a single dimension — every value as a full-width
 // row (not a wrapped chip grid), easier to scan for dimensions with many
 // values (e.g. Genre, Country) and consistent regardless of how long names get.
+// Genre is multi-select (checking a box adds/removes it from the active set,
+// "Any Genre" clears all of them); every other dimension is single-select
+// (picking a value replaces whatever was active, "Any X" clears it).
 const ValueList: React.FC<{
   dimension: DiscoverFilterKey;
   values: { value: string; count: number }[];
   activeValue?: string;
-  onSelect: (value: string | undefined) => void;
-}> = ({ dimension, values, activeValue, onSelect }) => (
-  <div className="space-y-1" data-focus-group={`discover-${dimension}`}>
-    <button
-      data-focusable="true"
-      onClick={() => onSelect(undefined)}
-      className={`flex w-full items-center justify-between rounded-full px-4 py-3 text-left text-sm font-bold transition-all focus:outline-none ${
-        !activeValue ? 'bg-gradient-to-r from-sky-400/20 to-blue-500/20 text-sky-400' : 'text-gray-300 hover:bg-white/5'
-      }`}
-    >
-      <span>Any {DIMENSION_LABELS[dimension]}</span>
-      {!activeValue && <Check className="h-4 w-4" />}
-    </button>
-    {values.map(({ value, count }) => {
-      const isActive = activeValue === value;
-      return (
-        <button
-          key={value}
-          data-focusable="true"
-          data-selected={isActive ? 'true' : 'false'}
-          onClick={() => onSelect(isActive ? undefined : value)}
-          className={`flex w-full items-center justify-between rounded-full px-4 py-3 text-left text-sm font-bold transition-all focus:outline-none [&.focused]:bg-gradient-to-r [&.focused]:from-sky-400/20 [&.focused]:to-blue-500/20 [&.focused]:text-sky-400 ${
-            isActive ? 'bg-gradient-to-r from-sky-400/20 to-blue-500/20 text-sky-400' : 'text-gray-300 hover:bg-white/5'
-          }`}
-        >
-          <span className="truncate">{displayLabel(dimension, value)}</span>
-          <span className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-xs font-semibold text-gray-500">{count}</span>
-            {isActive && <Check className="h-4 w-4" />}
-          </span>
-        </button>
-      );
-    })}
-  </div>
-);
+  activeValues?: string[];
+  onSelect?: (value: string | undefined) => void;
+  onToggle?: (value: string) => void;
+}> = ({ dimension, values, activeValue, activeValues, onSelect, onToggle }) => {
+  const multi = dimension === 'genre';
+  const isActiveValue = (value: string) => (multi ? !!activeValues?.includes(value) : activeValue === value);
+  const anyActive = multi ? (activeValues?.length ?? 0) > 0 : !!activeValue;
 
-export const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange }) => {
+  // Scrolls the first currently-selected value into view as soon as this
+  // list mounts (opening a dimension that already has a selection, e.g.
+  // Language set to something far down an alphabetical list) — without this
+  // the panel always opened scrolled to the top, so confirming/changing an
+  // existing selection meant scrolling to find it every time. Only runs on
+  // mount (empty deps), not on every selection change — after a click within
+  // this same open panel, the list is already showing what the user just
+  // clicked.
+  const activeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ block: 'center' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  let scrolledToRef = false;
+
+  return (
+    <div className="space-y-1" data-focus-group={`discover-${dimension}`}>
+      <button
+        data-focusable="true"
+        onClick={() => (multi ? onToggle?.('') : onSelect?.(undefined))}
+        // Multi-select's "Any" doesn't map to a single onToggle('') call —
+        // handled by the caller passing a dedicated clear-all onToggle('')
+        // sentinel would be fragile, so genre's Any button is wired directly
+        // in DiscoverFilters below instead of through this generic handler.
+        className={`flex w-full items-center justify-between rounded-full px-4 py-3 text-left text-sm font-bold transition-all focus:outline-hidden ${
+          !anyActive ? 'bg-linear-to-r from-sky-400/20 to-blue-500/20 text-sky-400' : 'text-gray-300 hover:bg-white/5'
+        }`}
+      >
+        <span>Any {DIMENSION_LABELS[dimension]}</span>
+        {!anyActive && <Check className="h-4 w-4" />}
+      </button>
+      {values.map(({ value, count }) => {
+        const isActive = isActiveValue(value);
+        const assignRef = isActive && !scrolledToRef;
+        if (assignRef) scrolledToRef = true;
+        return (
+          <button
+            key={value}
+            ref={assignRef ? activeRef : undefined}
+            data-focusable="true"
+            data-selected={isActive ? 'true' : 'false'}
+            onClick={() => (multi ? onToggle?.(value) : onSelect?.(isActive ? undefined : value))}
+            className={`flex w-full items-center justify-between rounded-full px-4 py-3 text-left text-sm font-bold transition-all focus:outline-hidden [&.focused]:bg-linear-to-r [&.focused]:from-sky-400/20 [&.focused]:to-blue-500/20 [&.focused]:text-sky-400 ${
+              isActive ? 'bg-linear-to-r from-sky-400/20 to-blue-500/20 text-sky-400' : 'text-gray-300 hover:bg-white/5'
+            }`}
+          >
+            <span className="truncate">{displayLabel(dimension, value)}</span>
+            <span className="flex items-center gap-2 shrink-0">
+              <span className="text-xs font-semibold text-gray-500">{count}</span>
+              {isActive && <Check className="h-4 w-4" />}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+export const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   // null = top-level category list; set = drilled into that dimension's values.
   const [activeDimension, setActiveDimension] = useState<DiscoverFilterKey | null>(null);
@@ -179,25 +246,35 @@ export const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({ facets, active
     facets.genres.length > 0 || facets.countries.length > 0 || facets.languages.length > 0 || facets.themes.length > 0;
   if (!anyFacets) return null;
 
-  const activeCount = Object.values(activeFilters).filter(Boolean).length;
+  const activeCount =
+    (activeFilters.genre?.length || 0) +
+    (activeFilters.country ? 1 : 0) +
+    (activeFilters.language ? 1 : 0) +
+    (activeFilters.theme ? 1 : 0);
 
   const clearAll = () => {
-    (Object.keys(activeFilters) as DiscoverFilterKey[]).forEach((key) => {
-      if (activeFilters[key]) onFilterChange(key, undefined);
-    });
+    if (activeFilters.genre?.length) onGenresChange([]);
+    if (activeFilters.country) onFilterChange('country', undefined);
+    if (activeFilters.language) onFilterChange('language', undefined);
+    if (activeFilters.theme) onFilterChange('theme', undefined);
+  };
+
+  const toggleGenre = (value: string) => {
+    const current = activeFilters.genre || [];
+    onGenresChange(current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
   };
 
   return (
-    <div ref={containerRef} className="relative flex-shrink-0">
+    <div ref={containerRef} className="relative shrink-0">
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         data-focusable="true"
-        className="flex h-10 items-center gap-2 rounded-full border border-white/10 bg-[#0b1120]/85 px-4 text-sm font-bold text-gray-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light"
+        className="flex h-10 items-center gap-2 rounded-full border border-white/10 bg-[#0b1120]/85 px-4 text-sm font-bold text-gray-300 transition-all hover:border-white/20 hover:text-white focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light"
       >
         <SlidersHorizontal className="h-4 w-4" />
         <span>Filters</span>
         {activeCount > 0 && (
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-sky-400 to-blue-500 text-[11px] font-extrabold text-white">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-linear-to-r from-sky-400 to-blue-500 text-[11px] font-extrabold text-white">
             {activeCount}
           </span>
         )}
@@ -238,7 +315,14 @@ export const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({ facets, active
           </div>
 
           <div className="px-4 py-3">
-            {activeDimension ? (
+            {activeDimension === 'genre' ? (
+              <ValueList
+                dimension="genre"
+                values={valuesFor(facets, 'genre')}
+                activeValues={activeFilters.genre || []}
+                onToggle={(value) => (value === '' ? onGenresChange([]) : toggleGenre(value))}
+              />
+            ) : activeDimension ? (
               <ValueList
                 dimension={activeDimension}
                 values={valuesFor(facets, activeDimension)}

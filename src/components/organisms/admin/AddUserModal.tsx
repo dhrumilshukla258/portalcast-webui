@@ -30,7 +30,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
   onSubmit,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
       <div className="w-full max-w-md bg-gray-900 border border-gray-850 rounded-3xl p-6 shadow-2xl space-y-6">
         <h4 className="text-lg font-bold text-white text-left">Add Authorized User</h4>
         <form onSubmit={onSubmit} className="space-y-4">
@@ -41,7 +41,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="user@example.com"
-              className="w-full bg-gray-950 border border-gray-800 hover:border-gray-700 focus:border-blue-500 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-gray-950 border border-gray-800 hover:border-gray-700 focus:border-blue-500 rounded-xl px-4 py-3 text-sm text-white focus:outline-hidden focus:ring-1 focus:ring-blue-500"
               required
             />
           </div>
@@ -53,7 +53,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="John Doe"
-              className="w-full bg-gray-950 border border-gray-800 hover:border-gray-700 focus:border-blue-500 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-gray-950 border border-gray-800 hover:border-gray-700 focus:border-blue-500 rounded-xl px-4 py-3 text-sm text-white focus:outline-hidden focus:ring-1 focus:ring-blue-500"
               required
             />
           </div>
@@ -65,7 +65,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 6 characters"
-              className="w-full bg-gray-950 border border-gray-800 hover:border-gray-700 focus:border-blue-500 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-gray-950 border border-gray-800 hover:border-gray-700 focus:border-blue-500 rounded-xl px-4 py-3 text-sm text-white focus:outline-hidden focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -75,7 +75,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as 'admin' | 'user')}
-                className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-hidden focus:border-blue-500"
               >
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
@@ -87,7 +87,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
               <select
                 value={isActive ? 'true' : 'false'}
                 onChange={(e) => setIsActive(e.target.value === 'true')}
-                className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-hidden focus:border-blue-500"
               >
                 <option value="true">Active</option>
                 <option value="false">Disabled</option>

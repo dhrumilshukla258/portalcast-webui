@@ -109,7 +109,7 @@ export const TVControls = React.memo(() => {
               <img
                 src={channelImgSrc}
                 alt={activeChannel?.name || 'Channel Logo'}
-                className="mr-1.5 h-4 w-6 flex-shrink-0 rounded-sm bg-black object-contain p-px md:mr-3 md:h-10 md:w-12"
+                className="mr-1.5 h-4 w-6 shrink-0 rounded-xs bg-black object-contain p-px md:mr-3 md:h-10 md:w-12"
               />
             )}
             <span className="text-base font-bold md:text-2xl">
@@ -119,17 +119,17 @@ export const TVControls = React.memo(() => {
               {activeChannel?.name}
             </span>
           </div>
-          <div className="ml-1.5 flex-shrink-0 text-xs text-gray-200 md:ml-4 md:text-lg">
+          <div className="ml-1.5 shrink-0 text-xs text-gray-200 md:ml-4 md:text-lg">
             {liveTime}
           </div>
         </div>
 
         <div className="ml-8 md:ml-16">
-          <div className="flex items-center justify-between rounded-sm bg-red-700 bg-opacity-80 p-0.5 px-1.5 md:p-1.5 md:px-3">
+          <div className="flex items-center justify-between rounded-xs bg-red-700 bg-opacity-80 p-0.5 px-1.5 md:p-1.5 md:px-3">
             <span className="truncate text-[10px] font-semibold md:text-base">
               {currentProgName}
             </span>
-            <span className="ml-1.5 flex-shrink-0 text-[8px] md:text-sm">
+            <span className="ml-1.5 shrink-0 text-[8px] md:text-sm">
               {currentProgTime}
             </span>
           </div>
@@ -248,7 +248,7 @@ export const TVControls = React.memo(() => {
 
             {!isTizen && (
               <>
-                <div className="[&_svg]:!h-4 [&_svg]:!w-4 md:[&_svg]:!h-6 md:[&_svg]:!w-6">
+                <div className="[&_svg]:h-4! [&_svg]:w-4! md:[&_svg]:h-6! md:[&_svg]:w-6!">
                   <VolumeControl />
                 </div>
                 <button
@@ -281,7 +281,7 @@ export const TVControls = React.memo(() => {
                       setUseProxy(!useProxy);
                       setIsMoreMenuOpen(false);
                     }}
-                    className="flex items-center space-x-3 rounded px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
                   >
                     {!useProxy ? <ShieldX className="h-4 w-4 text-gray-400" /> : <ShieldCheck className="h-4 w-4 text-green-400" />}
                     <span>Proxy: {useProxy ? 'On' : 'Off'}</span>
@@ -291,7 +291,7 @@ export const TVControls = React.memo(() => {
                     onClick={() => {
                       onCycleFitMode();
                     }}
-                    className="flex items-center space-x-3 rounded px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
                   >
                     {fitMode === 'contain' && <Shrink className="h-4 w-4 text-gray-400" />}
                     {fitMode === 'cover' && <SquareDashedBottomCode className="h-4 w-4 text-gray-400" />}
@@ -307,7 +307,7 @@ export const TVControls = React.memo(() => {
                         onActiveSettingsMenuChange('cast');
                         setIsMoreMenuOpen(false);
                       }}
-                      className="flex items-center space-x-3 rounded px-3 py-2 transition-colors hover:bg-white/10"
+                      className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
                     >
                       <FaChromecast className="h-4 w-4 text-gray-400" />
                       <span>Cast</span>
@@ -320,7 +320,7 @@ export const TVControls = React.memo(() => {
                       onActiveSettingsMenuChange('main');
                       setIsMoreMenuOpen(false);
                     }}
-                    className="flex items-center space-x-3 rounded px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
                   >
                     <SettingsIcon className="h-4 w-4 text-gray-400" />
                     <span>Settings</span>

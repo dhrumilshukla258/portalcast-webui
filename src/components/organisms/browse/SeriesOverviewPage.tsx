@@ -232,7 +232,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-500/20 to-transparent">
+                        <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-blue-500/20 to-transparent">
                           <span className="select-none text-xs font-black text-white/50">
                             S{seasonLabelFor(season, index).replace('Season ', '')}
                           </span>

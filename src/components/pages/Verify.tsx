@@ -62,6 +62,19 @@ export default function Verify() {
     }
   }, [isLoggedIn, codeParam, success, loading, error, handleAuthorize]);
 
+  // This page is reachable both from a logged-out phone scanning a QR (where
+  // staying here makes sense — there's nothing else for that session to do)
+  // and, via the header's "Authorize a Device" link, from a user already
+  // browsing the app. For the latter, stopping dead on this confirmation
+  // screen after success reads as a dead end rather than a completed action —
+  // return them to the app automatically instead of requiring the manual
+  // "Go to Web Portal" click.
+  useEffect(() => {
+    if (!success) return;
+    const timer = setTimeout(() => navigate('/', { replace: true }), 1800);
+    return () => clearTimeout(timer);
+  }, [success, navigate]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen app-bg flex justify-center items-center font-sans text-gray-200">
@@ -100,7 +113,7 @@ export default function Verify() {
               You can close this tab now. The TV screen will update automatically.
             </p>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/', { replace: true })}
               className="w-full mt-4 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-gray-300 font-bold transition-all duration-300 border border-slate-750"
             >
               Go to Web Portal
@@ -129,7 +142,7 @@ export default function Verify() {
                   onChange={(e) => setUserCode(e.target.value)}
                   placeholder="e.g. AB-CDE"
                   maxLength={10}
-                  className="w-full bg-slate-950 border border-slate-800 hover:border-indigo-500/30 focus:border-indigo-500 rounded-2xl py-4 text-center text-2xl font-mono font-extrabold tracking-widest text-indigo-400 focus:outline-none transition-all duration-300"
+                  className="w-full bg-slate-950 border border-slate-800 hover:border-indigo-500/30 focus:border-indigo-500 rounded-2xl py-4 text-center text-2xl font-mono font-extrabold tracking-widest text-indigo-400 focus:outline-hidden transition-all duration-300"
                 />
               </div>
 
@@ -143,7 +156,7 @@ export default function Verify() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50"
+                className="w-full py-4 rounded-2xl bg-linear-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50"
               >
                 {loading ? (
                   <>

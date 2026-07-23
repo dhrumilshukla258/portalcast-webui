@@ -3,8 +3,11 @@ import { URL_PATHS } from '@/api/config';
 import type { MediaItem } from '@/types';
 
 interface AmbientBackdropProps {
-  // Pool of items to pull backdrop_path from — already scoped to whatever's
-  // currently showing (a category's items, Discover's facets/rows, etc).
+  // Pool of items to pull backdrop_path from. App.tsx maintains this as one
+  // continuously-accumulating pool merged in from every section (Discover,
+  // MainContentGrid) rather than swapping it out per section — see that
+  // merge logic's own comment for why (a swapped-out pool caused visible
+  // backdrop jumps on section/filter changes and on Discover remounting).
   items: MediaItem[];
   // How long each backdrop stays up before crossfading to the next one.
   rotateMs?: number;
@@ -15,6 +18,11 @@ interface AmbientBackdropProps {
   // zero eligible images and the grid falls back to a plain black page.
   // Blurred full-bleed, the resolution difference isn't visible.
   allowLowRes?: boolean;
+  // True while a movie/series detail page is open — that page renders its
+  // own per-item backdrop banner (see MediaInfoHeader), so the page-level
+  // backdrop behind it is blurred instead of competing with it at full
+  // sharpness.
+  blurred?: boolean;
 }
 
 // Full-bleed, blurred TMDB backdrop cycling behind a page's content —
@@ -22,7 +30,7 @@ interface AmbientBackdropProps {
 // than scrolling away with the content. Shared by MainContentGrid (Movies/
 // Series) and DiscoverView so all three sections get identical ambiance
 // instead of three slightly-different reimplementations.
-export const AmbientBackdrop: React.FC<AmbientBackdropProps> = ({ items, rotateMs = 45000, allowLowRes = false }) => {
+export const AmbientBackdrop: React.FC<AmbientBackdropProps> = ({ items, rotateMs = 45000, allowLowRes = false, blurred = false }) => {
   const [error, setError] = React.useState(false);
 
   const rawUrls = React.useMemo(() => {
@@ -43,8 +51,23 @@ export const AmbientBackdrop: React.FC<AmbientBackdropProps> = ({ items, rotateM
 
   const [index, setIndex] = React.useState(0);
 
+  // Keep showing the same image across a pool change (a genre row finishing
+  // its fetch, a filter swapping in a new result set, switching sections and
+  // merging in another view's pool) rather than snapping to index 0 — only
+  // reset when the currently-shown url has actually dropped out of the pool.
+  const prevUrlsRef = React.useRef<string[]>([]);
   React.useEffect(() => {
-    setIndex(0);
+    const prevUrl = prevUrlsRef.current[index];
+    prevUrlsRef.current = urls;
+    const preservedIndex = prevUrl ? urls.indexOf(prevUrl) : -1;
+    // Falling back to 0 here (rather than clamping near where we were) is
+    // what made pool-cap eviction (see App.tsx's BACKDROP_POOL_CAP comment)
+    // read as the backdrop switching rapidly while browsing: every merge
+    // that evicted the currently-shown image snapped straight back to
+    // index 0, which itself is likely to get evicted next merge too — a
+    // clamp instead just settles wherever the pool currently ends.
+    setIndex(preservedIndex !== -1 ? preservedIndex : Math.min(index, Math.max(urls.length - 1, 0)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urls]);
 
   React.useEffect(() => {
@@ -89,17 +112,23 @@ export const AmbientBackdrop: React.FC<AmbientBackdropProps> = ({ items, rotateM
 
   return (
     <>
-      {/* No blur on the image itself — the ambient backdrop on the main
-          browsing pages is meant to read as a dimmed, vivid image (opacity +
-          the dark gradient below do that), not a soft blurred wash. */}
+      {/* No blur on the image itself while just browsing — the ambient
+          backdrop on the main browsing pages is meant to read as a dimmed,
+          vivid image (opacity + the dark gradient below do that), not a soft
+          blurred wash. `blurred` opts into that wash specifically for when a
+          detail page (with its own sharp per-item backdrop banner up front)
+          is open, so this one recedes instead of competing with it. Blur is
+          transitioned the same duration as the opacity crossfade so turning
+          it on/off (opening/closing a detail page) reads as one smooth
+          change instead of a hard snap. */}
       {outgoingUrl && (
         <img
           src={outgoingUrl}
           alt=""
           aria-hidden="true"
-          className={`pointer-events-none fixed inset-0 -z-10 h-full w-full object-cover brightness-110 transition-opacity duration-[1500ms] ease-in-out ${
+          className={`pointer-events-none fixed inset-0 -z-10 h-full w-full object-cover brightness-110 transition-[opacity,filter] duration-1500 ease-in-out ${
             settled ? 'opacity-0' : 'opacity-70'
-          }`}
+          } ${blurred ? 'blur-2xl' : 'blur-none'}`}
         />
       )}
       {displayedUrl && (
@@ -107,14 +136,14 @@ export const AmbientBackdrop: React.FC<AmbientBackdropProps> = ({ items, rotateM
           src={displayedUrl}
           alt=""
           aria-hidden="true"
-          className={`pointer-events-none fixed inset-0 -z-10 h-full w-full object-cover brightness-110 transition-opacity duration-[1500ms] ease-in-out ${
+          className={`pointer-events-none fixed inset-0 -z-10 h-full w-full object-cover brightness-110 transition-[opacity,filter] duration-1500 ease-in-out ${
             settled ? 'opacity-70' : 'opacity-0'
-          }`}
+          } ${blurred ? 'blur-2xl' : 'blur-none'}`}
           onError={() => setError(true)}
           onTransitionEnd={() => setOutgoingUrl(null)}
         />
       )}
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-[#030305]/5 via-[#030305]/35 to-[#030305]/80" />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-linear-to-b from-[#030305]/5 via-[#030305]/35 to-[#030305]/80" />
     </>
   );
 };

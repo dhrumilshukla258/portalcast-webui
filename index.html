@@ -7,7 +7,11 @@
     <title>Portalcast</title>
     <meta name="theme-color" content="#111827" />
     <link rel="apple-touch-icon" sizes="192x192" href="/pwa-192x192.png" />
-    <script src="$WEBAPIS/webapis/webapis.js"></script>
+    <script>
+      if (window.tizen) {
+        document.write('<script src="$WEBAPIS/webapis/webapis.js"><\/script>');
+      }
+    </script>
     <link
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet"

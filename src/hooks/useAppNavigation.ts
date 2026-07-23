@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '@/context/AuthContext';
 import { getMedia } from '@/api/endpoints/movies';
 import { getMovieUrl } from '@/api/endpoints/movies';
+import { getSeries } from '@/api/endpoints/series';
 import { getUserProgress } from '@/api/endpoints/user';
 import { URL_PATHS } from '@/api/config';
 import type { MediaItem, ContextType } from '@/types';
@@ -41,7 +42,8 @@ export function useAppNavigation(
   onSetShowDiscover?: (value: boolean) => void,
   variantPickerItem: MediaItem | null = null,
   variantPickerOptions: MediaItem[] = [],
-  onSetVariantPicker?: (item: MediaItem | null, options: MediaItem[]) => void
+  onSetVariantPicker?: (item: MediaItem | null, options: MediaItem[]) => void,
+  onSetContentType?: (type: 'movie' | 'series' | 'tv') => void
 ) {
   const { user, updatePreferences } = useAuth();
   const isTizen = isTizenDevice();
@@ -57,6 +59,23 @@ export function useAppNavigation(
   >(undefined);
   const [previewChannel, setPreviewChannel] = useState<MediaItem | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+
+  // Dedicated episode list for "Next/Prev Episode" — NOT the shared `items`
+  // grid state. `episodes={items}` used to be reactive to `items`, but
+  // `items` is also mutated by completely unrelated fetchData() calls (e.g.
+  // anything that loads a season list for the same series) that can fire
+  // after playback starts and silently overwrite it with the wrong data —
+  // confirmed via real reproduction: even a direct Series → Episode click
+  // ended up with a 1-item "seasons" list instead of the season's episodes.
+  // Fetched directly here (bypassing fetchData/items entirely) and frozen
+  // for the duration of this playback session, so nothing else can clobber it.
+  const [episodeSnapshot, setEpisodeSnapshot] = useState<
+    MediaItem[] | undefined
+  >(undefined);
+
+  useEffect(() => {
+    if (!streamUrl) setEpisodeSnapshot(undefined);
+  }, [streamUrl]);
 
   const channelChangeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -77,6 +96,7 @@ export function useAppNavigation(
     variantPickerItem,
     variantPickerOptions,
     streamUrl,
+    contentType,
     setFocusedIndex,
     setCurrentSeriesItem,
     setContext,
@@ -86,6 +106,7 @@ export function useAppNavigation(
     onOpenDetail,
     onSetShowDiscover,
     onSetVariantPicker,
+    onSetContentType,
     fetchData,
     setStreamUrl,
     setRawStreamUrl,
@@ -107,7 +128,7 @@ export function useAppNavigation(
   );
 
   const playContinueWatching = useCallback(
-    async (item: MediaItem, displayTitle: string) => {
+    async (item: MediaItem) => {
       let savedResumeTime: number | undefined;
       try {
         const records = await getUserProgress();
@@ -180,25 +201,22 @@ export function useAppNavigation(
           showDiscover,
           variantPickerItem,
           variantPickerOptions,
+          contentType,
         };
         setHistory((prev) => [...prev, homeState]);
         isFromContinueWatching.current = true;
 
-        // Loaded in the background (not pushed to history) purely so "next
-        // episode" autoplay has a real episode list to work from while this
-        // session plays — restorePreviousFrame below fully overwrites
-        // context/items with homeState's snapshot on Back, so this never
-        // lingers as visible state once the user leaves.
+        // Fetched directly (not via fetchData/items) into the dedicated
+        // episodeSnapshot so Next/Prev Episode has the real season list —
+        // see episodeSnapshot's own comment for why this can't go through
+        // the shared fetchData/items path (a background page context, not
+        // pushed to history, still shares `items` with everything else the
+        // app does, and something else calling fetchData afterward silently
+        // overwrote it before this fix).
         const cwCategory = item.category_id ? String(item.category_id) : ((item as any).cw_category_id ? String((item as any).cw_category_id) : '*');
-        const episodeContext: ContextType = {
-          ...initialContext,
-          category: cwCategory,
-          movieId: mainSeriesId,
-          seasonId: activeSeasonId,
-          parentTitle: displayTitle,
-          contentType: 'series',
-        };
-        fetchData(episodeContext, 'series');
+        getSeries({ movieId: mainSeriesId, seasonId: activeSeasonId, category: cwCategory })
+          .then((seasonRes) => setEpisodeSnapshot(seasonRes.data || []))
+          .catch((e) => console.error('Failed to load episode list for Next/Prev Episode:', e));
       }
 
       setCurrentItem({
@@ -211,6 +229,12 @@ export function useAppNavigation(
         // the one remaining play path that left this unset, so its
         // "Because You Watched" title still came back blank.
         catalogId: item.catalogId || (isEpisodeCWT ? undefined : `movie_${item.id}`),
+        // useEpisodeLookup matches episodes against `_episodeCardId`, not the
+        // Continue Watching item's `cw_episode_card_id`. Without this, resuming
+        // from Continue Watching always misses in the episode list lookup
+        // (falls back to the CW item's own id), so autoplay/"next episode"
+        // can't resolve an adjacent episode until the user manually picks one.
+        _episodeCardId: (item as any)._episodeCardId || (item as any).cw_episode_card_id || item.id,
       } as MediaItem);
 
       const urlParams: Record<string, any> = { id: playbackId };
@@ -312,6 +336,18 @@ export function useAppNavigation(
             { title: displayTitle, category: displayCategory ? String(displayCategory) : undefined }
           );
 
+          // Fetched directly (not via fetchData/items — see episodeSnapshot's
+          // own comment above) so Next/Prev Episode has the real season list
+          // regardless of whatever the shared browse grid state does after
+          // playback starts.
+          const seasonMovieId = item.series_id || context.movieId;
+          const seasonId = item.season_id || context.seasonId;
+          if (seasonMovieId && seasonId) {
+            getSeries({ movieId: seasonMovieId, seasonId, category: '*' })
+              .then((seasonRes) => setEpisodeSnapshot(seasonRes.data || []))
+              .catch((e) => console.error('Failed to load episode list for Next/Prev Episode:', e));
+          }
+
           openPlayer(enrichedItem as any, raw, proxied, getResumeTime());
         } catch (err) {
           console.error(err);
@@ -405,7 +441,7 @@ export function useAppNavigation(
 
       if (item.is_continue_watching) {
         try {
-          await playContinueWatching(item, displayTitle);
+          await playContinueWatching(item);
         } catch (err) {
           console.error(err);
           toast.error('Link expired or server busy.');
@@ -636,5 +672,6 @@ export function useAppNavigation(
     playCastedMedia,
     pushFrame,
     startPlayback,
+    episodeSnapshot,
   };
 }

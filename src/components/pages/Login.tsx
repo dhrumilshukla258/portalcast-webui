@@ -13,10 +13,17 @@ export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/';
+  // Arriving here via /verify's not-logged-in bounce means the visitor
+  // already has a device code to type in on /verify — they need real
+  // credentials, not a second TV pairing code. Without this, picking the QR
+  // tab here starts an unrelated new code that, once approved from another
+  // device, reloads this same /login?redirect=/verify URL and bounces
+  // straight back to /verify instead of into the app.
+  const isVerifyRedirect = redirectPath.startsWith('/verify');
 
   // State to toggle between Web Credentials and TV QR login flows
   const [activeTab, setActiveTab] = useState<'web' | 'tv' | 'forgot' | 'reset'>(
-    isTizenDevice() ? 'tv' : 'web'
+    isVerifyRedirect ? 'web' : isTizenDevice() ? 'tv' : 'web'
   );
 
   const {
@@ -49,10 +56,15 @@ export default function Login() {
     isLoggedIn,
   });
 
-  // Automatically forward if already logged in
+  // Automatically forward if already logged in.
+  // `replace: true` is required here — a plain push means every mount of
+  // this effect (e.g. landing back on /login via the browser Back button)
+  // pushes ANOTHER forward history entry, so Back always re-lands on /login
+  // and immediately re-bounces forward again, trapping the user in a loop
+  // that never reaches whatever page came before Login.
   useEffect(() => {
     if (isLoggedIn) {
-      navigate(redirectPath);
+      navigate(redirectPath, { replace: true });
     }
   }, [isLoggedIn, navigate, redirectPath]);
 
@@ -116,16 +128,21 @@ export default function Login() {
     try {
       await loginWithGoogle(response.credential);
       toast.success('Successfully logged in!');
-      navigate(redirectPath);
+      navigate(redirectPath, { replace: true });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       // Extract the exact error message sent from the backend response
       const backendMessage = err.response?.data?.error;
       const defaultMessage = err.message || 'Authentication failed. Make sure your email is pre-registered.';
 
-      // Prioritize displaying the backend message if it exists
-      if (backendMessage) {
-        // You can change this to toast.info if you want it to look less like a critical error
+      // A brand-new, not-yet-registered email is auto-created as a pending
+      // account and the backend responds with a distinct "request submitted"
+      // message (see server src/routes/account/auth.ts) rather than a hard
+      // failure. Surface that as an informational confirmation instead of
+      // the generic red error toast used for real auth failures.
+      if (backendMessage && /request for access has been submitted/i.test(backendMessage)) {
+        toast.info(backendMessage, { autoClose: 8000 });
+      } else if (backendMessage) {
         toast.error(backendMessage);
       } else {
         toast.error(defaultMessage);
@@ -135,9 +152,11 @@ export default function Login() {
     }
   }, [loginWithGoogle, navigate, redirectPath]);
 
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
   // Setup Google Sign-in button
   useEffect(() => {
-    if (activeTab !== 'web' || isLoggedIn || isSignUp) return;
+    if (activeTab !== 'web' || isLoggedIn || isSignUp || !googleClientId) return;
 
     const win = window as typeof window & {
       google?: {
@@ -154,7 +173,7 @@ export default function Login() {
       if (win.google?.accounts?.id) {
         clearInterval(checkInterval);
         win.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          client_id: googleClientId,
           callback: handleCredentialResponse,
         });
 
@@ -189,14 +208,16 @@ export default function Login() {
           />
         </div>
 
-        {/* Tab Switcher */}
-        {(activeTab === 'web' || activeTab === 'tv') && (
+        {/* Tab Switcher — QR/TV option hidden when arriving via /verify's
+            login bounce, since generating a second code there would only
+            loop back to /verify instead of into the app (see isVerifyRedirect above) */}
+        {(activeTab === 'web' || activeTab === 'tv') && !isVerifyRedirect && (
           <div className="flex w-full bg-slate-950 p-1.5 rounded-2xl border border-slate-800/80 mb-6">
             <button
               onClick={() => setActiveTab('web')}
               className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 cursor-pointer ${
                 activeTab === 'web'
-                  ? 'bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/10'
+                  ? 'bg-linear-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/10'
                   : 'text-gray-400 hover:text-gray-255'
               }`}
             >
@@ -206,7 +227,7 @@ export default function Login() {
               onClick={() => setActiveTab('tv')}
               className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 cursor-pointer ${
                 activeTab === 'tv'
-                  ? 'bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/10'
+                  ? 'bg-linear-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/10'
                   : 'text-gray-400 hover:text-gray-255'
               }`}
             >
@@ -241,7 +262,7 @@ export default function Login() {
                         clearMessages();
                       }}
                       placeholder="John Doe"
-                      className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-none transition-all duration-300"
+                      className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-hidden transition-all duration-300"
                       required
                     />
                   </div>
@@ -260,7 +281,7 @@ export default function Login() {
                       clearMessages();
                     }}
                     placeholder="name@example.com"
-                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-none transition-all duration-300"
+                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-hidden transition-all duration-300"
                     required
                   />
                 </div>
@@ -278,7 +299,7 @@ export default function Login() {
                       clearMessages();
                     }}
                     placeholder="••••••••"
-                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-none transition-all duration-300"
+                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-hidden transition-all duration-300"
                     required
                   />
                 </div>
@@ -304,7 +325,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={credsLoading}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
+                className="w-full py-3.5 rounded-2xl bg-linear-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
               >
                 {credsLoading ? (
                   <>
@@ -323,7 +344,7 @@ export default function Login() {
               </span>
               <button
                 onClick={toggleMode}
-                className="text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline ml-1 bg-transparent border-none p-0 inline focus:outline-none"
+                className="text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline ml-1 bg-transparent border-none p-0 inline focus:outline-hidden"
               >
                 {isSignUp ? 'Log In' : 'Sign Up'}
               </button>
@@ -341,12 +362,12 @@ export default function Login() {
               </div>
             )}
 
-            {!isSignUp && (
+            {!isSignUp && googleClientId && (
               <>
                 <div className="relative flex py-5 items-center w-full">
-                  <div className="flex-grow border-t border-slate-800/80"></div>
-                  <span className="flex-shrink mx-4 text-gray-500 text-xs font-semibold uppercase tracking-wider">or sign in with</span>
-                  <div className="flex-grow border-t border-slate-800/80"></div>
+                  <div className="grow border-t border-slate-800/80"></div>
+                  <span className="shrink mx-4 text-gray-500 text-xs font-semibold uppercase tracking-wider">or sign in with</span>
+                  <div className="grow border-t border-slate-800/80"></div>
                 </div>
 
                 {googleLoading ? (
@@ -440,7 +461,7 @@ export default function Login() {
                       clearMessages();
                     }}
                     placeholder="name@example.com"
-                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-none transition-all duration-300"
+                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-hidden transition-all duration-300"
                     required
                   />
                 </div>
@@ -462,7 +483,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={credsLoading}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer text-sm"
+                className="w-full py-3.5 rounded-2xl bg-linear-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer text-sm"
               >
                 {credsLoading ? (
                   <>
@@ -478,7 +499,7 @@ export default function Login() {
             <div className="mt-6 text-center text-sm">
               <button
                 onClick={() => { setActiveTab('web'); clearMessages(); }}
-                className="text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline bg-transparent border-none p-0 inline focus:outline-none"
+                className="text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline bg-transparent border-none p-0 inline focus:outline-hidden"
               >
                 Back to Login
               </button>
@@ -506,7 +527,7 @@ export default function Login() {
                       clearMessages();
                     }}
                     placeholder="••••••••"
-                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-none transition-all duration-300"
+                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-hidden transition-all duration-300"
                     required
                   />
                 </div>
@@ -526,7 +547,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={credsLoading}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer text-sm"
+                className="w-full py-3.5 rounded-2xl bg-linear-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer text-sm"
               >
                 {credsLoading ? (
                   <>

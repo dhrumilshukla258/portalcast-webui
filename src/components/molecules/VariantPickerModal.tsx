@@ -23,7 +23,7 @@ const VariantPickerModal: React.FC<VariantPickerModalProps> = ({ isOpen, title, 
 
   return (
     <div
-      className="animate-fade-in fixed inset-0 z-[100] flex items-center justify-center bg-black/90"
+      className="animate-fade-in fixed inset-0 z-100 flex items-center justify-center bg-black/90"
       onClick={onClose}
     >
       <div
@@ -39,7 +39,7 @@ const VariantPickerModal: React.FC<VariantPickerModalProps> = ({ isOpen, title, 
         </h3>
         <p className="mb-5 text-sm text-gray-400">This title is available in multiple versions — pick one:</p>
 
-        <div className="grid max-h-[34rem] grid-cols-3 gap-3 overflow-y-auto custom-scrollbar">
+        <div className="grid max-h-136 grid-cols-3 gap-3 overflow-y-auto custom-scrollbar">
           {variants.map((variant, index) => {
             const imageUrl = variant.screenshot_uri
               ? variant.screenshot_uri.startsWith('http')
@@ -52,9 +52,9 @@ const VariantPickerModal: React.FC<VariantPickerModalProps> = ({ isOpen, title, 
                 ref={index === 0 ? firstButtonRef : undefined}
                 onClick={() => onSelect(variant)}
                 data-focusable="true"
-                className="group flex flex-col items-center gap-2 rounded-xl border border-gray-700/50 bg-gray-800/40 p-2 text-center transition-all hover:border-blue-500/60 hover:bg-gray-800/70 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="group flex flex-col items-center gap-2 rounded-xl border border-gray-700/50 bg-gray-800/40 p-2 text-center transition-all hover:border-blue-500/60 hover:bg-gray-800/70 focus:border-blue-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               >
-                <div className="flex aspect-[2/3] w-full items-center justify-center overflow-hidden rounded-lg bg-black/30">
+                <div className="flex aspect-2/3 w-full items-center justify-center overflow-hidden rounded-lg bg-black/30">
                   {imageUrl ? (
                     <img src={imageUrl} alt={variant.variantLabel} className="h-full w-full object-cover" />
                   ) : (
@@ -73,7 +73,7 @@ const VariantPickerModal: React.FC<VariantPickerModalProps> = ({ isOpen, title, 
           <button
             onClick={onClose}
             data-focusable="true"
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-400 transition-colors hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-400 transition-colors hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white focus:outline-hidden focus:ring-2 focus:ring-gray-500"
           >
             Cancel
           </button>

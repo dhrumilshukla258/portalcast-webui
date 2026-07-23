@@ -106,7 +106,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
           // overflow-y to auto otherwise, and a hovered/focused pill's
           // scale-105 can then eat wheel-down scroll into an invisible
           // vertical sliver instead of bubbling to the page).
-          className="hide-scrollbar flex-grow flex gap-2 overflow-x-auto overflow-y-hidden px-3 py-2 scroll-smooth"
+          className="hide-scrollbar grow flex gap-2 overflow-x-auto overflow-y-hidden px-3 py-2 scroll-smooth"
         >
           {outsideCategories.map((cat, idx) => {
             const isActive = selectedCategory === cat.id;
@@ -117,11 +117,11 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
                 data-focusable="true"
                 data-selected={isActive ? 'true' : 'false'}
                 onClick={() => handleSelect(cat.id, cat.title)}
-                className={`flex h-8 shrink-0 items-center justify-center rounded-full px-4 text-center outline-none text-xs sm:text-sm ${
+                className={`flex h-8 shrink-0 items-center justify-center rounded-full px-4 text-center outline-hidden text-xs sm:text-sm ${
                   isActive
-                    ? 'border-transparent bg-gradient-to-r from-sky-400 via-blue-500 to-blue-600 text-white font-extrabold shadow-lg shadow-blue-500/30'
+                    ? 'border-transparent bg-linear-to-r from-sky-400 via-blue-500 to-blue-600 text-white font-extrabold shadow-lg shadow-blue-500/30'
                     : 'border-gray-800/80 bg-gray-900/30 text-gray-400 font-bold hover:border-gray-750 hover:text-gray-200'
-                } focus:scale-105 focus:border-transparent focus:text-white focus:bg-gradient-to-r focus:from-sky-400 focus:to-blue-500 focus:shadow-[0_0_20px_rgba(56,189,248,0.4)] [&.focused]:scale-105 [&.focused]:!border-transparent [&.focused]:text-white [&.focused]:bg-gradient-to-r [&.focused]:from-sky-400 [&.focused]:to-blue-500 [&.focused]:shadow-[0_0_20px_rgba(56,189,248,0.4)]`}
+                } focus:scale-105 focus:border-transparent focus:text-white focus:bg-linear-to-r focus:from-sky-400 focus:to-blue-500 focus:shadow-[0_0_20px_rgba(56,189,248,0.4)] [&.focused]:scale-105 [&.focused]:border-transparent! [&.focused]:text-white [&.focused]:bg-linear-to-r [&.focused]:from-sky-400 [&.focused]:to-blue-500 [&.focused]:shadow-[0_0_20px_rgba(56,189,248,0.4)]`}
               >
                 <span className="font-bold whitespace-nowrap">
                   {cat.title}

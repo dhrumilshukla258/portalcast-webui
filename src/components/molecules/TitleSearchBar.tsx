@@ -52,7 +52,7 @@ export const TitleSearchBar: React.FC<TitleSearchBarProps> = ({
     // panel at z-40; without this, that panel painted on top of this bar
     // (and its recent-searches dropdown) whenever the TV section was active,
     // since neither Movies nor Series have anything at a competing z-index.
-    <div className="sticky top-0 z-[45] mb-4 flex items-center rounded-2xl bg-black/80 px-2 py-2">
+    <div className="sticky top-0 z-45 mb-4 flex items-center rounded-2xl bg-black/80 px-2 py-2">
       <form
         onSubmit={(e) => {
           handleSearch(e);
@@ -68,7 +68,7 @@ export const TitleSearchBar: React.FC<TitleSearchBarProps> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={placeholder}
-            className={`w-full rounded-full border border-white/10 bg-[#0b1120]/85 px-4 py-2 ${searchTerm ? 'pr-16' : 'pr-10'} text-sm text-gray-200 placeholder-gray-500 shadow-sm transition-all duration-300 focus:bg-white/5 focus:outline-none focus:ring-1 focus:ring-portalcast-light sm:text-base`}
+            className={`w-full rounded-full border border-white/10 bg-[#0b1120]/85 px-4 py-2 ${searchTerm ? 'pr-16' : 'pr-10'} text-sm text-gray-200 placeholder-gray-500 shadow-xs transition-all duration-300 focus:bg-white/5 focus:outline-hidden focus:ring-1 focus:ring-portalcast-light sm:text-base`}
             data-focusable="true"
             readOnly={isTizen ? !isSearchActive : !isSearchTyping}
             onClick={() => {
@@ -89,7 +89,7 @@ export const TitleSearchBar: React.FC<TitleSearchBarProps> = ({
             }}
           />
           {showRecentSearches && !searchTerm && recentSearches.length > 0 && (
-            <div className="absolute left-0 right-0 top-full z-[45] mt-2 overflow-hidden rounded-xl border border-white/10 bg-black/85 shadow-xl">
+            <div className="absolute left-0 right-0 top-full z-45 mt-2 overflow-hidden rounded-xl border border-white/10 bg-black/85 shadow-xl">
               <div className="flex items-center justify-between px-3 pt-2 text-[10px] font-bold uppercase tracking-wider text-gray-500">
                 Recent Searches
               </div>
@@ -107,7 +107,7 @@ export const TitleSearchBar: React.FC<TitleSearchBarProps> = ({
                       setShowRecentSearches(false);
                     }}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 flex-shrink-0 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 shrink-0 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span className="truncate">{term}</span>
@@ -119,7 +119,7 @@ export const TitleSearchBar: React.FC<TitleSearchBarProps> = ({
                       e.stopPropagation();
                       onRemoveRecentSearch?.(term);
                     }}
-                    className="ml-2 flex-shrink-0 text-gray-500 opacity-0 transition-opacity hover:text-white group-hover:opacity-100"
+                    className="ml-2 shrink-0 text-gray-500 opacity-0 transition-opacity hover:text-white group-hover:opacity-100"
                     aria-label={`Remove "${term}" from recent searches`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

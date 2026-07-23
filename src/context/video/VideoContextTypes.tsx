@@ -96,6 +96,7 @@ export interface VideoContextType {
 
   // --- Vidstack Native Event Handlers ---
   handleCanPlay: () => void;
+  handleVolumeChange: (e?: any) => void;
   handleTimeUpdate: (e?: any) => void;
   handleError: (e: any) => void;
   handleEnded: () => void;

@@ -43,7 +43,7 @@ const CategoryPinOverlay: React.FC<CategoryPinOverlayProps> = ({
               <button
                 onClick={handleClearAllPins}
                 data-focusable="true"
-                className="px-3 py-1.5 text-xs rounded-lg bg-red-950/40 border border-red-900/50 text-red-400 hover:bg-red-900/30 hover:text-red-200 transition-all cursor-pointer outline-none focus:border-red-500 [&.focused]:border-red-500"
+                className="px-3 py-1.5 text-xs rounded-lg bg-red-950/40 border border-red-900/50 text-red-400 hover:bg-red-900/30 hover:text-red-200 transition-all cursor-pointer outline-hidden focus:border-red-500 [&.focused]:border-red-500"
               >
                 Clear All Pins
               </button>
@@ -51,7 +51,7 @@ const CategoryPinOverlay: React.FC<CategoryPinOverlayProps> = ({
             <button
               onClick={onClose}
               data-focusable="true"
-              className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-755 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer outline-none focus:bg-gray-700 [&.focused]:bg-gray-700"
+              className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-755 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer outline-hidden focus:bg-gray-700 [&.focused]:bg-gray-700"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -69,7 +69,7 @@ const CategoryPinOverlay: React.FC<CategoryPinOverlayProps> = ({
             placeholder="Search categories..."
             data-focusable="true"
             data-default-focus="true"
-            className="w-full bg-gray-950 border border-gray-800 hover:border-gray-750 focus:border-blue-500 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500 outline-none [&.focused]:border-blue-500 [&.focused]:ring-1 [&.focused]:ring-blue-500"
+            className="w-full bg-gray-950 border border-gray-800 hover:border-gray-750 focus:border-blue-500 rounded-xl px-4 py-3 text-sm text-white focus:outline-hidden focus:ring-1 focus:ring-blue-500 outline-hidden [&.focused]:border-blue-500 [&.focused]:ring-1 [&.focused]:ring-blue-500"
             autoFocus
           />
           {searchQuery && (
@@ -83,7 +83,7 @@ const CategoryPinOverlay: React.FC<CategoryPinOverlayProps> = ({
         </div>
 
         {/* Categories Grid (Scrollable) */}
-        <div className="flex-grow overflow-y-auto custom-scrollbar pr-1 max-h-[50vh]">
+        <div className="grow overflow-y-auto custom-scrollbar pr-1 max-h-[50vh]">
           {filteredCategories.length === 0 ? (
             <div className="text-center py-12 text-gray-500 italic">
               No matching categories found.
@@ -107,7 +107,7 @@ const CategoryPinOverlay: React.FC<CategoryPinOverlayProps> = ({
                     <button
                       data-focusable="true"
                       onClick={() => handleSelect(cat.id, cat.title)}
-                      className={`flex-grow text-left p-2.5 rounded-lg text-xs sm:text-sm font-bold truncate transition-all cursor-pointer outline-none focus:scale-[1.02] focus:bg-gray-800/40 [&.focused]:scale-[1.02] [&.focused]:bg-gray-800/40`}
+                      className={`grow text-left p-2.5 rounded-lg text-xs sm:text-sm font-bold truncate transition-all cursor-pointer outline-hidden focus:scale-[1.02] focus:bg-gray-800/40 [&.focused]:scale-[1.02] [&.focused]:bg-gray-800/40`}
                     >
                       <span className="truncate">{cat.title}</span>
                     </button>
@@ -117,7 +117,7 @@ const CategoryPinOverlay: React.FC<CategoryPinOverlayProps> = ({
                         data-focusable="true"
                         onClick={(e) => handleTogglePin(e, cat.id)}
                         title={isPinned ? 'Unpin Category' : 'Pin Category'}
-                        className={`p-2 rounded-lg border transition-all shrink-0 ml-1 outline-none ${
+                        className={`p-2 rounded-lg border transition-all shrink-0 ml-1 outline-hidden ${
                           isPinned
                             ? 'bg-sky-500/20 border-sky-400/50 text-sky-300 hover:bg-sky-500/30'
                             : 'bg-gray-900 border-gray-800 hover:border-gray-700 text-gray-500 hover:text-gray-300'

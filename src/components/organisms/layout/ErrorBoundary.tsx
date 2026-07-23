@@ -59,13 +59,13 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
             <button
               onClick={this.handleReload}
-              className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+              className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
             >
               <RefreshCw className="mr-4 h-5 w-5" />
               Reload Application
             </button>
             {this.state.error && (
-              <div className="mt-8 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded border border-gray-700 bg-gray-900 p-4 text-left font-mono text-xs text-red-400">
+              <div className="mt-8 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-sm border border-gray-700 bg-gray-900 p-4 text-left font-mono text-xs text-red-400">
                 {this.state.error.stack || this.state.error.toString()}
               </div>
             )}

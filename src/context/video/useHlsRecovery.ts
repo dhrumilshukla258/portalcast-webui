@@ -37,7 +37,6 @@ export function useHlsRecovery(
   const onProviderChange = useCallback(
     (provider: MediaProviderAdapter | null) => {
       if (provider && isHLSProvider(provider)) {
-        console.log('[VideoPlayer] HLS provider loaded');
         provider.config = {
           enableSoftwareAES: true,
           enableWorker: true,
@@ -57,11 +56,8 @@ export function useHlsRecovery(
         (provider as any).onInstance?.((hlsInstance: any) => {
           hlsInstanceRef.current = hlsInstance;
           if (!hlsInstance) return;
-          console.log('[VideoPlayer] HLS instance changed, binding error listener');
           mediaErrorRecoveryAttempted.current = false;
           hlsInstance.on('hlsError', (_event: any, data: any) => {
-            console.log('[VideoPlayer] HLS event error details:', data);
-
             // Non-fatal errors (a single dropped fragment, a level load
             // hiccup, etc.) are already being retried internally by hls.js
             // per the fragLoadingMaxRetry/levelLoadingMaxRetry config above —
@@ -79,7 +75,6 @@ export function useHlsRecovery(
 
             if (isNetwork404) {
               if (contentType === 'tv') {
-                console.log('[VideoPlayer] HLS fatal 404 error detected, setting error state');
                 setStreamError('Channel is not available 404 status');
                 setIsRecovering(false);
               }
@@ -93,21 +88,19 @@ export function useHlsRecovery(
             // token) and is visibly disruptive, so it should be the last
             // resort, not the first response to a fatal error.
             if (data.type === 'networkError') {
-              console.log('[VideoPlayer] Fatal network error, calling hls.startLoad()');
               try {
                 hlsInstance.startLoad();
                 return;
               } catch (e) {
-                console.log('[VideoPlayer] startLoad() failed, falling back to remount', e);
+                console.error('[VideoPlayer] startLoad() failed, falling back to remount', e);
               }
             } else if (data.type === 'mediaError' && !mediaErrorRecoveryAttempted.current) {
-              console.log('[VideoPlayer] Fatal media error, calling hls.recoverMediaError()');
               mediaErrorRecoveryAttempted.current = true;
               try {
                 hlsInstance.recoverMediaError();
                 return;
               } catch (e) {
-                console.log('[VideoPlayer] recoverMediaError() failed, falling back to remount', e);
+                console.error('[VideoPlayer] recoverMediaError() failed, falling back to remount', e);
               }
             }
           });
@@ -121,7 +114,6 @@ export function useHlsRecovery(
     async (event: any) => {
       if (isRetrying.current) return;
       const error = event?.detail || event?.error || playerRef.current?.error || playerRef.current?.state?.error;
-      console.log('[VideoPlayer] handleError details:', { error, event });
 
       let is404 = false;
       if (
@@ -143,11 +135,10 @@ export function useHlsRecovery(
       if (!is404 && contentType === 'tv' && !mediaErrorRecoveryAttempted.current && hlsInstanceRef.current) {
         mediaErrorRecoveryAttempted.current = true;
         try {
-          console.log('[VideoPlayer] Attempting in-place hls.startLoad() recovery before remount');
           hlsInstanceRef.current.startLoad();
           return;
         } catch (e) {
-          console.log('[VideoPlayer] startLoad() recovery failed, continuing to remount path', e);
+          console.error('[VideoPlayer] startLoad() recovery failed, continuing to remount path', e);
         }
       }
 
@@ -174,7 +165,6 @@ export function useHlsRecovery(
 
       if (is404) {
         if (contentType === 'tv') {
-          console.log('[VideoPlayer] 404 status confirmed. Showing error overlay.');
           setStreamError('Channel is not available 404 status');
           setIsRecovering(false);
           return;

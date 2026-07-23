@@ -3,8 +3,8 @@ import { Check } from 'lucide-react';
 import MediaCard from '@/components/molecules/MediaCard';
 import MediaCardRow from '@/components/organisms/browse/MediaCardRow';
 import RecommendedRow from '@/components/organisms/browse/RecommendedRow';
-import DiscoverFilters, { type DiscoverFilterKey } from '@/components/organisms/discover/DiscoverFilters';
-import { getDiscoverBrowse, type DiscoverBrowseParams } from '@/api/endpoints/discover';
+import DiscoverFilters, { type ActiveDiscoverFilters } from '@/components/organisms/discover/DiscoverFilters';
+import { getDiscoverBrowse } from '@/api/endpoints/discover';
 import { useDiscover } from '@/hooks/useDiscover';
 import type { MediaItem } from '@/types';
 
@@ -30,8 +30,10 @@ interface DiscoverViewProps {
   onActiveTypeChange?: (type: 'movie' | 'series' | undefined) => void;
   // Reports this view's ambient-backdrop item pool up to App.tsx, which owns
   // the single shared AmbientBackdrop instance — see that component's own
-  // comment for why one shared instance instead of one-per-view matters
-  // (crossfade continuity across Discover/Movies/Series switches).
+  // comment for why one shared instance instead of one-per-view matters.
+  // App.tsx only ever merges these reports into its running pool, never
+  // replaces it — the backdrop is meant to be one continuous rotation no
+  // section, filter, or remount ever resets (see the merge comment there).
   onBackdropItemsChange?: (items: MediaItem[]) => void;
 }
 
@@ -54,7 +56,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     genreRows,
     fetchGenreRows,
     loadMoreGenreRow,
-    clearGenreRows,
+    beginGenreRefresh,
   } = useDiscover();
 
   // Movie/Series toggle — separate from activeFilters (genre/country/language/
@@ -70,20 +72,23 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   const [showSeries, setShowSeries] = useState(true);
   const activeType = showMovies === showSeries ? undefined : showMovies ? 'movie' : 'series';
 
-  const [activeFilters, setActiveFilters] = useState<Pick<DiscoverBrowseParams, DiscoverFilterKey>>({});
+  const [activeFilters, setActiveFilters] = useState<ActiveDiscoverFilters>({});
   const [loadingFiltered, setLoadingFiltered] = useState(false);
 
-  const hasActiveFilter = Object.values(activeFilters).some(Boolean);
+  const hasActiveFilter =
+    (activeFilters.genre?.length ?? 0) > 0 || !!activeFilters.country || !!activeFilters.language || !!activeFilters.theme;
 
   // Results are cached per filter-combo (+ type), not just held as a single
   // "current" array — so switching Action -> Comedy -> back to Action
   // re-renders the already-fetched Action pages instantly from memory
   // instead of re-hitting the server for pages it already has. Session-only
   // (component state, not persisted) — a stale entry just means one extra
-  // fetch next session, not wrong data shown.
+  // fetch next session, not wrong data shown. Genre list is sorted+joined so
+  // selecting Comedy then Drama hits the same cache entry as Drama then
+  // Comedy (same combo, different click order).
   const filterCacheKeyOf = useCallback(
-    (filters: Pick<DiscoverBrowseParams, DiscoverFilterKey>) =>
-      `${activeType ?? 'all'}:${filters.genre || ''}:${filters.country || ''}:${filters.language || ''}:${filters.theme || ''}`,
+    (filters: ActiveDiscoverFilters) =>
+      `${activeType ?? 'all'}:${[...(filters.genre || [])].sort().join('+')}:${filters.country || ''}:${filters.language || ''}:${filters.theme || ''}`,
     [activeType]
   );
   const [filteredCache, setFilteredCache] = useState<
@@ -121,13 +126,14 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
 
   useEffect(() => {
     if (!facets || facets.genres.length === 0) return;
-    clearGenreRows();
-    fetchGenreRows(facets.genres.slice(0, TOP_GENRE_COUNT).map((g) => g.value), activeType);
+    const targetGenres = facets.genres.slice(0, TOP_GENRE_COUNT).map((g) => g.value);
+    beginGenreRefresh(targetGenres);
+    fetchGenreRows(targetGenres, activeType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [facets, fetchGenreRows]);
 
   const runFilteredBrowse = useCallback(
-    async (filters: Pick<DiscoverBrowseParams, DiscoverFilterKey>, page: number, opts?: { force?: boolean }) => {
+    async (filters: ActiveDiscoverFilters, page: number, opts?: { force?: boolean }) => {
       const cacheKey = filterCacheKeyOf(filters);
       // Page 1 of a filter-combo already sitting in the cache (e.g. the user
       // switched back to a genre they already browsed) renders instantly
@@ -138,7 +144,18 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
       const requestId = ++filteredRequestRef.current;
       setLoadingFiltered(true);
       try {
-        const response = await getDiscoverBrowse({ ...filters, type: activeType, page });
+        // genre is an array client-side (multi-select) but the API takes one
+        // comma-separated value, same convention as the AND-intersection the
+        // server already does across genre/country/theme (see
+        // routes/discover/index.ts's tagFilters).
+        const response = await getDiscoverBrowse({
+          genre: filters.genre?.length ? filters.genre.join(',') : undefined,
+          country: filters.country,
+          language: filters.language,
+          theme: filters.theme,
+          type: activeType,
+          page,
+        });
         if (filteredRequestRef.current !== requestId) return; // a newer request already superseded this one
         // Touch this key as most-recently-used, then evict the LRU entry if
         // adding a brand-new key pushed us past the cap.
@@ -165,11 +182,12 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     [activeType, filterCacheKeyOf, filteredCache]
   );
 
-  const handleFilterChange = useCallback(
-    (key: DiscoverFilterKey, value: string | undefined) => {
-      const next = { ...activeFilters, [key]: value };
+  // Shared by both handlers below — same "did this leave any filter still
+  // active" branch (fetch vs. just invalidate any in-flight stale request).
+  const applyNextFilters = useCallback(
+    (next: ActiveDiscoverFilters) => {
       setActiveFilters(next);
-      const anyActive = Object.values(next).some(Boolean);
+      const anyActive = (next.genre?.length ?? 0) > 0 || !!next.country || !!next.language || !!next.theme;
       if (anyActive) {
         runFilteredBrowse(next, 1);
       } else {
@@ -182,7 +200,21 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
         filteredRequestRef.current++;
       }
     },
-    [activeFilters, runFilteredBrowse]
+    [runFilteredBrowse]
+  );
+
+  const handleFilterChange = useCallback(
+    (key: 'country' | 'language' | 'theme', value: string | undefined) => {
+      applyNextFilters({ ...activeFilters, [key]: value });
+    },
+    [activeFilters, applyNextFilters]
+  );
+
+  const handleGenresChange = useCallback(
+    (values: string[]) => {
+      applyNextFilters({ ...activeFilters, genre: values });
+    },
+    [activeFilters, applyNextFilters]
   );
 
   const handleLoadMore = useCallback(() => {
@@ -233,32 +265,122 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     ];
   }, [hasActiveFilter, filteredItems, recommendations, whatsNew.items, genreRows]);
 
-  // Deferred to a rAF instead of reporting synchronously on every
-  // `backdropItems` change: each of the ~9 genre rows resolves its own fetch
-  // independently and updates genreRows separately, so a fresh Discover
-  // mount can recompute backdropItems ~9 times back-to-back — and when those
-  // fetches resolve from server cache in ~0-1ms each, all 9 calls into the
-  // parent's setDiscoverBackdropItems happen before the browser ever gets a
-  // chance to paint. React counts that as nested updates that never settle
-  // and throws "Maximum update depth exceeded" (error #185), same as the
-  // auto-load-more cascade this mirrors in MediaCardRow. Coalescing to one
-  // report per frame fixes it without changing what's actually reported.
-  const backdropReportRaf = useRef<number | null>(null);
+  // Debounced instead of reporting synchronously on every `backdropItems`
+  // change: each of the ~9 genre rows resolves its own fetch independently
+  // and updates genreRows separately, so a fresh Discover mount recomputes
+  // backdropItems ~9+ times in quick succession as each one lands. A single
+  // rAF only coalesces updates landing within the same frame — genre rows
+  // typically resolve a few ms to a few hundred ms apart (separate network
+  // responses), each one still slipping through as its own report and
+  // re-triggering AmbientBackdrop's reveal crossfade, which read as the
+  // backdrop flickering through several images right after opening Discover.
+  // A short timeout window collapses that whole initial burst into one
+  // report instead. (A too-short window here reintroduces the original
+  // "Maximum update depth exceeded" #185 crash this used to guard against —
+  // keep it above a single frame.)
+  const backdropReportTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (backdropReportRaf.current !== null) cancelAnimationFrame(backdropReportRaf.current);
-    backdropReportRaf.current = requestAnimationFrame(() => {
-      backdropReportRaf.current = null;
+    if (backdropReportTimer.current !== null) clearTimeout(backdropReportTimer.current);
+    backdropReportTimer.current = setTimeout(() => {
+      backdropReportTimer.current = null;
       onBackdropItemsChange?.(backdropItems);
-    });
+    }, 400);
     return () => {
-      if (backdropReportRaf.current !== null) cancelAnimationFrame(backdropReportRaf.current);
+      if (backdropReportTimer.current !== null) clearTimeout(backdropReportTimer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backdropItems]);
 
+  // Keyed on activeType + hasActiveFilter so switching Movies/Series or
+  // clearing a filter re-triggers content-transition's fade+scale instead of
+  // rows instantly swapping content in place — same fade MainContentGrid
+  // already uses when switching the Movies/Series section itself.
+  const contentKey = `${activeType ?? 'all'}_${hasActiveFilter}`;
+  const contentNode = hasActiveFilter ? (
+    <>
+      {/* A genuinely new filter combo (nothing cached for it yet) shows a
+          skeleton grid instead of switching straight from "Action's real
+          tiles" to "zero tiles, spinner below" — same empty-then-pop the
+          genre rows had before beginGenreRefresh, just here it's a filter
+          pick (Action -> Comedy) rather than a Movies/Series toggle. Real
+          tiles fade in over it once this combo's page 1 resolves (see
+          row-content-fade-in). A combo already in filteredCache (revisiting
+          a genre browsed earlier this session) skips straight to real
+          tiles — nothing to skeleton, they're already there. */}
+      {filteredItems.length > 0 && (
+        <div className="row-content-fade-in grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 md:gap-6 lg:grid-cols-6 xl:grid-cols-7">
+          {filteredItems.map((item, index) => (
+            <MediaCard key={`${item.id}-${index}`} item={item} onClick={onClick} isLoading={loadingItemId === item.id} />
+          ))}
+        </div>
+      )}
+      {loadingFiltered && filteredItems.length === 0 && (
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 md:gap-6 lg:grid-cols-6 xl:grid-cols-7">
+          {Array.from({ length: 14 }).map((_, i) => (
+            <div key={i} className="aspect-2/3 animate-pulse rounded-xl bg-white/5" />
+          ))}
+        </div>
+      )}
+      {!loadingFiltered && filteredItems.length === 0 && (
+        <p className="mt-10 text-center text-gray-400">No titles match these filters.</p>
+      )}
+      {/* Loading indicator only for a "load more" fetch (items already on
+          screen) — the next page loads automatically on scroll (see the
+          scroll listener effect above), same as the regular Movies/Series
+          grid, no manual "Load More" click needed. */}
+      {loadingFiltered && filteredItems.length > 0 && (
+        <div className="flex w-full justify-center py-8">
+          <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-t-2 border-blue-500"></div>
+        </div>
+      )}
+    </>
+  ) : (
+    <>
+      <RecommendedRow
+        onClick={onClick}
+        items={recommendations.slice(0, RECOMMENDED_ROW_LIMIT)}
+        loading={loadingRecommendations}
+        basedOnTitle={recommendationsBasedOn}
+        loadingItemId={loadingItemId}
+      />
+      <MediaCardRow
+        title="What's New"
+        onClick={onClick}
+        items={whatsNew.items}
+        loading={loadingWhatsNew}
+        loadingItemId={loadingItemId}
+        hasMore={whatsNew.hasMore}
+        loadingMore={whatsNew.loadingMore}
+        onLoadMore={() => loadMoreWhatsNew(activeType)}
+      />
+      {/* Each genre row renders as soon as its own fetch resolves (see
+          fetchGenreRows) — rows appear progressively instead of all
+          waiting on the slowest one. Grows via scroll/arrow instead of
+          being capped to one page (see MediaCardRow's onLoadMore).
+          `loading={row.loading}` is what puts a row into its skeleton state
+          the instant a Movies/Series switch invalidates it (see
+          beginGenreRefresh) — the row stays mounted throughout, it's just
+          showing a placeholder until this genre's fetch for the new type
+          resolves. */}
+      {Object.entries(genreRows).map(([genre, row]) => (
+        <MediaCardRow
+          key={genre}
+          title={genre}
+          onClick={onClick}
+          items={row.items}
+          loading={!!row.loading}
+          loadingItemId={loadingItemId}
+          hasMore={row.hasMore}
+          loadingMore={row.loadingMore}
+          onLoadMore={() => loadMoreGenreRow(genre, activeType)}
+        />
+      ))}
+    </>
+  );
+
   return (
     <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 flex-1 overflow-y-auto content-transition px-2 sm:px-0">
-      {/* No backdrop-blur anywhere in this bar (or its buttons) on purpose —
+      {/* No backdrop-blur-sm anywhere in this bar (or its buttons) on purpose —
           AmbientBackdrop now blurs its image at the source (filter:blur() on
           the <img> itself, a one-time cost), so a foreground panel doesn't
           need its own backdrop-filter to look right against it. This also
@@ -266,7 +388,12 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           caused the sticky-bar flicker — there's no backdrop-filter left
           here to nest. */}
       <div className="sticky top-0 z-30 mb-4 flex items-center gap-2 rounded-2xl bg-black/80 px-2 py-2">
-        <DiscoverFilters facets={facets} activeFilters={activeFilters} onFilterChange={handleFilterChange} />
+        <DiscoverFilters
+          facets={facets}
+          activeFilters={activeFilters}
+          onFilterChange={handleFilterChange}
+          onGenresChange={handleGenresChange}
+        />
         {(['movie', 'series'] as const).map((t) => {
           const isActive = t === 'movie' ? showMovies : showSeries;
           return (
@@ -286,9 +413,9 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
                   setShowSeries((v) => !v);
                 }
               }}
-              className={`flex h-10 flex-shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-bold capitalize transition-all focus:outline-none focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light ${
+              className={`flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-bold capitalize transition-all focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light ${
                 isActive
-                  ? 'border-transparent bg-gradient-to-r from-sky-400 to-blue-500 text-white'
+                  ? 'border-transparent bg-linear-to-r from-sky-400 to-blue-500 text-white'
                   : 'border-white/10 bg-[#0b1120]/85 text-gray-300 hover:border-white/20 hover:text-white'
               }`}
             >
@@ -299,69 +426,8 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
         })}
       </div>
 
-      {/* Keyed on activeType (plus hasActiveFilter, since that swaps to an
-          entirely different layout) so switching Movies/Series or clearing a
-          filter re-triggers content-transition's fade+scale instead of the
-          rows just instantly swapping content in place — same animation
-          MainContentGrid already uses for page navigation. */}
-      <div key={`${activeType ?? 'all'}_${hasActiveFilter}`} className="content-transition">
-      {hasActiveFilter ? (
-        <>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 md:gap-6 lg:grid-cols-6 xl:grid-cols-7">
-            {filteredItems.map((item, index) => (
-              <MediaCard key={`${item.id}-${index}`} item={item} onClick={onClick} isLoading={loadingItemId === item.id} />
-            ))}
-          </div>
-          {!loadingFiltered && filteredItems.length === 0 && (
-            <p className="mt-10 text-center text-gray-400">No titles match these filters.</p>
-          )}
-          {/* Loading indicator only — the next page loads automatically on
-              scroll (see the scroll listener effect above), same as the
-              regular Movies/Series grid, no manual "Load More" click needed. */}
-          {loadingFiltered && (
-            <div className="flex w-full justify-center py-8">
-              <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-t-2 border-blue-500"></div>
-            </div>
-          )}
-        </>
-      ) : (
-        <>
-          <RecommendedRow
-            onClick={onClick}
-            items={recommendations.slice(0, RECOMMENDED_ROW_LIMIT)}
-            loading={loadingRecommendations}
-            basedOnTitle={recommendationsBasedOn}
-            loadingItemId={loadingItemId}
-          />
-          <MediaCardRow
-            title="What's New"
-            onClick={onClick}
-            items={whatsNew.items}
-            loading={loadingWhatsNew}
-            loadingItemId={loadingItemId}
-            hasMore={whatsNew.hasMore}
-            loadingMore={whatsNew.loadingMore}
-            onLoadMore={() => loadMoreWhatsNew(activeType)}
-          />
-          {/* Each genre row renders as soon as its own fetch resolves (see
-              fetchGenreRows) — rows appear progressively instead of all
-              waiting on the slowest one. Grows via scroll/arrow instead of
-              being capped to one page (see MediaCardRow's onLoadMore). */}
-          {Object.entries(genreRows).map(([genre, row]) => (
-            <MediaCardRow
-              key={genre}
-              title={genre}
-              onClick={onClick}
-              items={row.items}
-              loading={false}
-              loadingItemId={loadingItemId}
-              hasMore={row.hasMore}
-              loadingMore={row.loadingMore}
-              onLoadMore={() => loadMoreGenreRow(genre, activeType)}
-            />
-          ))}
-        </>
-      )}
+      <div key={contentKey} className="content-transition">
+        {contentNode}
       </div>
     </div>
   );

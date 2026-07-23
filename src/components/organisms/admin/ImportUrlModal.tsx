@@ -19,7 +19,7 @@ const ImportUrlModal: React.FC<ImportUrlModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-xs">
       <div className="animate-in zoom-in-95 w-full max-w-lg rounded-3xl border border-gray-800 bg-[#0f111a] p-6 shadow-2xl duration-200">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-black text-white">
@@ -30,7 +30,7 @@ const ImportUrlModal: React.FC<ImportUrlModalProps> = ({
           </button>
         </div>
         <textarea
-          className="custom-scrollbar h-48 w-full rounded-xl border border-gray-800 bg-gray-950 p-4 font-mono text-xs text-gray-300 outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          className="custom-scrollbar h-48 w-full rounded-xl border border-gray-800 bg-gray-950 p-4 font-mono text-xs text-gray-300 outline-hidden transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           placeholder="Paste content with http://..., mac-..., username=..., password=..."
           value={importText}
           onChange={(e) => onChangeText(e.target.value)}

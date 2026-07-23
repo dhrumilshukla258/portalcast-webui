@@ -13,6 +13,15 @@ export interface DiscoverRowState {
   page: number;
   hasMore: boolean;
   loadingMore: boolean;
+  // True while this row's content is being replaced outright (a Movies/
+  // Series toggle, a genre-list refresh) — distinct from loadingMore, which
+  // is a "load more" fetch that keeps existing items on screen while it
+  // runs. Lets a row show a skeleton in place of stale content instead of
+  // either leaving the old type's items up or unmounting the row (see
+  // MediaCardRow/beginGenreRefresh below), matching how Netflix/Prime swap
+  // row content: clear to a placeholder immediately, fade in the real thing
+  // once it's ready, rather than crossfading old content into new.
+  loading?: boolean;
 }
 
 const EMPTY_ROW: DiscoverRowState = { items: [], page: 1, hasMore: false, loadingMore: false };
@@ -136,6 +145,7 @@ export function useDiscover() {
               page: 1,
               hasMore: response.data.length < response.total_items,
               loadingMore: false,
+              loading: false,
             },
           }));
         })
@@ -145,6 +155,25 @@ export function useDiscover() {
         .finally(runNext);
     };
     for (let w = 0; w < Math.min(GENRE_FETCH_CONCURRENCY, genres.length); w++) runNext();
+  }, []);
+
+  // Marks every target genre's row as "loading" up front (see
+  // DiscoverRowState.loading) instead of leaving stale-type items on screen
+  // or unmounting the row — MediaCardRow shows a skeleton for these until
+  // fetchGenreRows' per-genre resolution replaces each one with real
+  // content. Replaces the whole genreRows object (not a per-key merge) so a
+  // genre that no longer applies to the new type is dropped outright, same
+  // as the old clearGenreRows did, but every row that's about to be
+  // refetched flips to "loading" in this same pass instead of only doing so
+  // per-genre as each fetch happens to kick off.
+  const beginGenreRefresh = useCallback((genres: string[]) => {
+    setGenreRows(() => {
+      const next: Record<string, DiscoverRowState> = {};
+      for (const genre of genres) {
+        next[genre] = { items: [], page: 1, hasMore: false, loadingMore: false, loading: true };
+      }
+      return next;
+    });
   }, []);
 
   const loadMoreGenreRow = useCallback((genre: string, type?: 'movie' | 'series') => {
@@ -185,6 +214,6 @@ export function useDiscover() {
     genreRows,
     fetchGenreRows,
     loadMoreGenreRow,
-    clearGenreRows: useCallback(() => setGenreRows({}), []),
+    beginGenreRefresh,
   };
 }

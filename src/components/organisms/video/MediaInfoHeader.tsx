@@ -43,22 +43,49 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
       : `${baseUrl}/api/images${item.screenshot_uri}`;
   }, [item.screenshot_uri, baseUrl]);
 
+  // Per-item backdrop banner — the panel's own imagery rather than relying
+  // solely on the page-level AmbientBackdrop showing through its
+  // translucency, which reads as generic/disconnected from whichever title
+  // is actually open. HD path preferred since this renders large; falls
+  // back to the standard-res one rather than showing nothing.
+  const backdropUrl = useMemo(() => {
+    const path = item.backdrop_hd_path || item.backdrop_path;
+    if (!path) return null;
+    return path.startsWith('http') ? path : `${baseUrl}/api/images${path}`;
+  }, [item.backdrop_hd_path, item.backdrop_path, baseUrl]);
+
   return (
     // This card IS the modal/panel and is meant to read as a distinct
     // surface — that's different from the earlier bug, which was a SECOND,
     // separate translucent rectangle (App.tsx's overlay wrapper) sitting
-    // behind this one. No per-item backdrop banner though — that part of
-    // the original fix stands; the page-level AmbientBackdrop still
-    // provides the imagery this card's translucency shows through.
+    // behind this one. The backdrop banner below sits INSIDE this panel,
+    // under a gradient that fades to the panel's own bg-black/70 toward the
+    // bottom so the meta/poster content stays readable — it doesn't
+    // reintroduce that second-rectangle bug since there's still only one
+    // surface here.
     <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/70 shadow-2xl">
-      <div className="flex flex-col gap-6 p-4 pt-6 sm:p-6 md:flex-row md:gap-8">
+      {backdropUrl && (
+        <>
+          <img
+            src={backdropUrl}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 z-0 h-64 w-full object-cover sm:h-80"
+          />
+          <div className="absolute inset-x-0 top-0 z-0 h-64 bg-linear-to-t from-black/70 via-black/40 to-black/10 sm:h-80" />
+          <div className="absolute inset-x-0 top-0 z-0 h-64 bg-linear-to-b from-black/10 via-transparent to-black/70 sm:h-80" />
+        </>
+      )}
+      <div className={`relative z-1 flex flex-col gap-6 p-4 sm:p-6 md:flex-row md:gap-8 ${backdropUrl ? 'pt-40 sm:pt-56' : 'pt-6'}`}>
         {/* Poster Column */}
-        <div className="flex w-full flex-shrink-0 flex-col items-center justify-start md:w-48 lg:w-56">
-          <div className="relative aspect-[2/3] w-44 overflow-hidden rounded-2xl border border-white/10 bg-black/30 shadow-2xl md:w-full">
+        <div className="flex w-full shrink-0 flex-col items-center justify-start md:w-48 lg:w-56">
+          <div className="relative aspect-2/3 w-44 overflow-hidden rounded-2xl border border-white/10 bg-black/30 shadow-2xl md:w-full">
             {imageUrl ? (
               <img src={imageUrl} alt={displayTitle} className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/10 to-transparent">
+              <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-white/10 to-transparent">
                 <span className="select-none text-4xl font-extrabold text-white/20">
                   {displayTitle.substring(0, 2).toUpperCase()}
                 </span>

@@ -10,9 +10,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react" />
-  <img src="https://img.shields.io/badge/Vite-5-purple?style=for-the-badge&logo=vite" />
-  <img src="https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript" />
+  <img src="https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react" />
+  <img src="https://img.shields.io/badge/Vite-7-purple?style=for-the-badge&logo=vite" />
+  <img src="https://img.shields.io/badge/TypeScript-6-blue?style=for-the-badge&logo=typescript" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
 </p>
 
@@ -77,6 +77,7 @@
 | 🎨 **Modern UI** | Polished, glassmorphic design with smooth animations, ambient backdrops, and responsive layout |
 | 🔐 **Secure Stream Proxy** | Hides upstream credentials using a dedicated proxy server |
 | 📝 **Favorites & History** | Manage your favorite channels and track watch history, with Continue Watching across movies and series |
+| 🔄 **Real-time Multi-Device Sync** | Favorites, recent channels, and last-selected category/TV channel sync instantly across every device you're logged into — no need to refresh or switch tabs |
 | 🛠️ **Admin Dashboard** | Stats, user management, content overrides, homepage carousel, provider config, and live server log streaming — all from `/admin` |
 
 ## 🚀 Quick Start

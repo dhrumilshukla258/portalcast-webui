@@ -20,6 +20,14 @@ export interface NavFrame {
   // active before the picker ever opened, instead of reopening it first.
   variantPickerItem: MediaItem | null;
   variantPickerOptions: MediaItem[];
+  // Discover opening a detail page switches the shared contentType (via
+  // handleContentTypeChangeRaw, so MainContentGrid renders the right
+  // detail-page shape) without ever putting it back — nothing else in this
+  // stack captured/restored it, so backing out of that detail page left
+  // contentType stuck on whatever it was switched to, even once showDiscover/
+  // detailItem/currentSeriesItem were all correctly restored. See
+  // onSetContentType below.
+  contentType: 'movie' | 'series' | 'tv';
 }
 
 interface UseNavigationHistoryArgs {
@@ -33,6 +41,7 @@ interface UseNavigationHistoryArgs {
   variantPickerItem: MediaItem | null;
   variantPickerOptions: MediaItem[];
   streamUrl: string | null;
+  contentType: 'movie' | 'series' | 'tv';
 
   setFocusedIndex: (value: number | null) => void;
   setCurrentSeriesItem: (value: MediaItem | null) => void;
@@ -43,6 +52,10 @@ interface UseNavigationHistoryArgs {
   onOpenDetail?: (item: MediaItem | null) => void;
   onSetShowDiscover?: (value: boolean) => void;
   onSetVariantPicker?: (item: MediaItem | null, options: MediaItem[]) => void;
+  // Raw setter, not handleContentTypeChange — restoring a frame must not
+  // trigger that function's side effects (preference save, category/carousel
+  // refetch, toast) as if the user had deliberately switched tabs.
+  onSetContentType?: (type: 'movie' | 'series' | 'tv') => void;
   fetchData: (context: ContextType, typeOverride?: 'movie' | 'series' | 'tv') => void;
 
   setStreamUrl: (value: string | null) => void;
@@ -71,6 +84,7 @@ export function useNavigationHistory({
   variantPickerItem,
   variantPickerOptions,
   streamUrl,
+  contentType,
   setFocusedIndex,
   setCurrentSeriesItem,
   setContext,
@@ -80,6 +94,7 @@ export function useNavigationHistory({
   onOpenDetail,
   onSetShowDiscover,
   onSetVariantPicker,
+  onSetContentType,
   fetchData,
   setStreamUrl,
   setRawStreamUrl,
@@ -112,8 +127,9 @@ export function useNavigationHistory({
       showDiscover,
       variantPickerItem,
       variantPickerOptions,
+      contentType,
     }),
-    [context, items, focusedIndex, currentSeriesItem, totalItemsCount, detailItem, showDiscover, variantPickerItem, variantPickerOptions]
+    [context, items, focusedIndex, currentSeriesItem, totalItemsCount, detailItem, showDiscover, variantPickerItem, variantPickerOptions, contentType]
   );
 
   const pushFrame = useCallback(() => {
@@ -134,6 +150,7 @@ export function useNavigationHistory({
       onOpenDetail?.(frame.detailItem);
       onSetShowDiscover?.(frame.showDiscover);
       onSetVariantPicker?.(frame.variantPickerItem, frame.variantPickerOptions);
+      onSetContentType?.(frame.contentType);
 
       if (frame.items.length > 0) {
         // Real cached data (this frame was actually loaded before) — restore
@@ -155,10 +172,14 @@ export function useNavigationHistory({
         // DiscoverView's own backdrop/type-reporting effects, which is what
         // was tipping React into "Maximum update depth exceeded" (error #185).
         setItems([]);
-        fetchData(frame.context);
+        // Explicit typeOverride (not relying on fetchData's own closured
+        // contentType) for the same reason onSetContentType exists above —
+        // fetchData's contentType closure may not have caught up to the
+        // frame.contentType restore that just happened in this same tick.
+        fetchData(frame.context, frame.contentType);
       }
     },
-    [setFocusedIndex, setCurrentSeriesItem, setContext, setTotalItemsCount, onOpenDetail, onSetShowDiscover, onSetVariantPicker, isRestoringFromHistory, setItems, fetchData]
+    [setFocusedIndex, setCurrentSeriesItem, setContext, setTotalItemsCount, onOpenDetail, onSetShowDiscover, onSetVariantPicker, onSetContentType, isRestoringFromHistory, setItems, fetchData]
   );
 
   const popHistoryFrame = useCallback(() => {

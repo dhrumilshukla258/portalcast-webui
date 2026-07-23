@@ -60,7 +60,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({
             value={itemSearch}
             onChange={(e) => setItemSearch(e.target.value)}
             placeholder="Search items..."
-            className="w-48 rounded-lg border border-gray-800 bg-gray-950 py-1.5 pl-8 pr-2 text-xs text-white outline-none focus:border-blue-500"
+            className="w-48 rounded-lg border border-gray-800 bg-gray-950 py-1.5 pl-8 pr-2 text-xs text-white outline-hidden focus:border-blue-500"
           />
         </div>
       </div>
@@ -85,7 +85,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({
             return (
               <div key={item.id} className="border-b border-gray-800/60">
                 <div className={`flex items-center gap-2 px-3 py-2.5 ${item.hidden ? 'opacity-50' : ''}`}>
-                  <div className={`h-2 w-2 flex-shrink-0 rounded-full ${item.hidden ? 'bg-red-500' : 'bg-green-500'}`} />
+                  <div className={`h-2 w-2 shrink-0 rounded-full ${item.hidden ? 'bg-red-500' : 'bg-green-500'}`} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm text-gray-200">{displayName}</div>
                     {showOriginal && <div className="truncate text-[11px] text-gray-500">{item.name}</div>}
@@ -95,17 +95,17 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-shrink-0 items-center gap-1">
-                    <button title="Move up" disabled={isFilteringItems || idx === 0} onClick={() => moveItem(item.id, -1)} className="rounded p-1 text-gray-500 hover:bg-gray-700 hover:text-gray-200 disabled:opacity-20">
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button title="Move up" disabled={isFilteringItems || idx === 0} onClick={() => moveItem(item.id, -1)} className="rounded-sm p-1 text-gray-500 hover:bg-gray-700 hover:text-gray-200 disabled:opacity-20">
                       <ArrowUp size={12} />
                     </button>
-                    <button title="Move down" disabled={isFilteringItems || idx === filteredItems.length - 1} onClick={() => moveItem(item.id, 1)} className="rounded p-1 text-gray-500 hover:bg-gray-700 hover:text-gray-200 disabled:opacity-20">
+                    <button title="Move down" disabled={isFilteringItems || idx === filteredItems.length - 1} onClick={() => moveItem(item.id, 1)} className="rounded-sm p-1 text-gray-500 hover:bg-gray-700 hover:text-gray-200 disabled:opacity-20">
                       <ArrowDown size={12} />
                     </button>
-                    <button title={item.hidden ? 'Show' : 'Hide'} onClick={() => toggleItemHidden(item)} className="rounded p-1 text-gray-500 hover:bg-gray-700 hover:text-gray-200">
+                    <button title={item.hidden ? 'Show' : 'Hide'} onClick={() => toggleItemHidden(item)} className="rounded-sm p-1 text-gray-500 hover:bg-gray-700 hover:text-gray-200">
                       {item.hidden ? <Eye size={12} /> : <EyeOff size={12} />}
                     </button>
-                    <button title="Edit" onClick={() => startItemEdit(item)} className="rounded p-1 text-gray-500 hover:bg-gray-700 hover:text-gray-200">
+                    <button title="Edit" onClick={() => startItemEdit(item)} className="rounded-sm p-1 text-gray-500 hover:bg-gray-700 hover:text-gray-200">
                       <Edit2 size={12} />
                     </button>
                   </div>
@@ -118,13 +118,13 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({
                       onChange={(e) => setItemNameDraft(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && saveItemEdit(item)}
                       placeholder="Display name (blank = original)"
-                      className="min-w-[160px] flex-1 rounded-lg border border-gray-800 bg-gray-950 px-2 py-1 text-xs text-white outline-none focus:border-blue-500"
+                      className="min-w-[160px] flex-1 rounded-lg border border-gray-800 bg-gray-950 px-2 py-1 text-xs text-white outline-hidden focus:border-blue-500"
                     />
                     {(type === 'movie' || type === 'series') && (
                       <select
                         value={itemCatDraft}
                         onChange={(e) => setItemCatDraft(e.target.value)}
-                        className="rounded-lg border border-gray-800 bg-gray-950 px-2 py-1 text-xs text-white outline-none focus:border-blue-500"
+                        className="rounded-lg border border-gray-800 bg-gray-950 px-2 py-1 text-xs text-white outline-hidden focus:border-blue-500"
                       >
                         <option value="">— Keep in current category —</option>
                         {categories.map((c) => (

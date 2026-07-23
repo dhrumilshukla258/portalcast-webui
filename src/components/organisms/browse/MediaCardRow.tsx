@@ -115,8 +115,36 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
     }
   };
 
-  if (loading || items.length === 0) {
+  // Nothing to show and nothing coming — genuinely hide the row (e.g. a
+  // genre with zero titles for the active type). `loading` is checked
+  // separately below so a row mid-refresh still renders (as a skeleton)
+  // even though its items were just cleared to [] for that refresh.
+  if (!loading && items.length === 0) {
     return null;
+  }
+
+  // Skeleton in place of stale content while this row's data is being
+  // replaced (a Movies/Series toggle, a genre-list refresh) — matches how
+  // Netflix/Prime handle a row's content changing outright: clear to a
+  // placeholder immediately, fade the real thing in once it's ready,
+  // instead of crossfading old content into new or leaving stale content up
+  // until the new fetch overwrites it mid-frame.
+  if (loading) {
+    return (
+      <div className="content-transition group/row relative mb-8 px-2 sm:px-0">
+        <h2 className="mb-4 text-center text-xl font-bold text-white sm:text-left sm:text-2xl">
+          {title}
+        </h2>
+        <div className="flex gap-2 overflow-hidden sm:gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="aspect-2/3 w-[31%] shrink-0 animate-pulse rounded-xl bg-white/5 sm:w-[23%] md:w-[18.5%] lg:w-[15.3%] xl:w-[13%]"
+            />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -129,7 +157,7 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
         <button
           onClick={() => scrollBy(-1)}
           aria-label="Scroll left"
-          className="absolute bottom-0 left-0 top-6 z-10 hidden w-10 items-center justify-center bg-gradient-to-r from-black/60 to-transparent text-white opacity-70 transition-opacity hover:!opacity-100 sm:flex"
+          className="absolute bottom-0 left-0 top-6 z-10 hidden w-10 items-center justify-center bg-linear-to-r from-black/60 to-transparent text-white opacity-70 transition-opacity hover:opacity-100! sm:flex"
         >
           <ChevronLeft className="h-8 w-8" />
         </button>
@@ -146,19 +174,19 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
         // (invisible) vertical scroll range — wheel-down gets consumed
         // scrolling that sliver internally instead of bubbling to the page,
         // while wheel-up still bubbles fine since scrollTop's already 0.
-        className="hide-scrollbar flex gap-2 overflow-x-auto overflow-y-hidden scroll-smooth pb-1 sm:gap-4"
+        className="hide-scrollbar row-content-fade-in flex gap-2 overflow-x-auto overflow-y-hidden scroll-smooth pb-1 sm:gap-4"
       >
         {/* Percentage widths matching MainContentGrid/the filtered Discover
             grid's own grid-cols-3/4/5/6/7 columns at each breakpoint (see
             those grids' className) — fixed px widths here previously meant
             these row tiles rendered a different size than the grid ones. */}
         {items.map((item, index) => (
-          <div key={`${item.id}-${index}`} className="w-[31%] flex-shrink-0 sm:w-[23%] md:w-[18.5%] lg:w-[15.3%] xl:w-[13%]">
+          <div key={`${item.id}-${index}`} className="w-[31%] shrink-0 sm:w-[23%] md:w-[18.5%] lg:w-[15.3%] xl:w-[13%]">
             <MediaCard item={item} onClick={onClick} isLoading={loadingItemId === item.id} />
           </div>
         ))}
         {loadingMore && (
-          <div className="flex w-[31%] flex-shrink-0 items-center justify-center sm:w-[23%] md:w-[18.5%] lg:w-[15.3%] xl:w-[13%]">
+          <div className="flex w-[31%] shrink-0 items-center justify-center sm:w-[23%] md:w-[18.5%] lg:w-[15.3%] xl:w-[13%]">
             <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-blue-500" />
           </div>
         )}
@@ -168,7 +196,7 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
         <button
           onClick={() => scrollBy(1)}
           aria-label="Scroll right"
-          className="absolute bottom-0 right-0 top-6 z-10 hidden w-10 items-center justify-center bg-gradient-to-l from-black/60 to-transparent text-white opacity-70 transition-opacity hover:!opacity-100 sm:flex"
+          className="absolute bottom-0 right-0 top-6 z-10 hidden w-10 items-center justify-center bg-linear-to-l from-black/60 to-transparent text-white opacity-70 transition-opacity hover:opacity-100! sm:flex"
         >
           <ChevronRight className="h-8 w-8" />
         </button>

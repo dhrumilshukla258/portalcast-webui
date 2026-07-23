@@ -86,7 +86,7 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
         {!isMobile && showCloseButton && (
           <button
             onClick={onBack}
-            className="absolute right-6 top-4 z-30 rounded-full p-2 text-gray-400 outline-none transition-transform hover:scale-110 hover:text-white focus:scale-110 focus:bg-white/10 focus:text-white"
+            className="absolute right-6 top-4 z-30 rounded-full p-2 text-gray-400 outline-hidden transition-transform hover:scale-110 hover:text-white focus:scale-110 focus:bg-white/10 focus:text-white"
             aria-label="Close"
             data-focusable="true"
           >
@@ -111,7 +111,7 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
         <div
           ref={groupListRef}
           style={!isMobile ? { width: groupsWidth } : undefined}
-          className={`custom-scrollbar no-scrollbar-mobile z-20 flex h-full w-full flex-shrink-0 flex-col overflow-y-auto border-r border-white/5 bg-gray-900/60 p-3 shadow-[4px_0_24px_rgba(0,0,0,0.2)] ${
+          className={`custom-scrollbar no-scrollbar-mobile z-20 flex h-full w-full shrink-0 flex-col overflow-y-auto border-r border-white/5 bg-gray-900/60 p-3 shadow-[4px_0_24px_rgba(0,0,0,0.2)] ${
             isMobile && showChannelsList
               ? 'hidden'
               : 'animate-in slide-in-from-left block duration-300'
@@ -166,7 +166,7 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
                         : 'text-gray-400 hover:bg-white/10 hover:text-gray-100'
                   }`}
                 >
-                  <span className="truncate drop-shadow-sm">{group.title}</span>
+                  <span className="truncate drop-shadow-xs">{group.title}</span>
                   {(isGroupFocused || isGroupSelected) && (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
