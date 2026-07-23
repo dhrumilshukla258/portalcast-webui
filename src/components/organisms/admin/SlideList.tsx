@@ -29,24 +29,24 @@ const SlideList: React.FC<SlideListProps> = ({ slides, onMove, onEdit, onDelete 
           />
           <div className="flex-1 text-left">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded bg-gray-800 px-2 py-0.5 text-[10px] font-black text-gray-400">Order: {slide.order}</span>
+              <span className="rounded-sm bg-gray-800 px-2 py-0.5 text-[10px] font-black text-gray-400">Order: {slide.order}</span>
               {slide.imageUrl && (
-                <span className="rounded bg-blue-950/40 border border-blue-900/50 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                <span className="rounded-sm bg-blue-950/40 border border-blue-900/50 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
                   Desktop
                 </span>
               )}
               {slide.tabletImageUrl && (
-                <span className="rounded bg-indigo-950/40 border border-indigo-900/50 px-2 py-0.5 text-[10px] font-semibold text-indigo-400">
+                <span className="rounded-sm bg-indigo-950/40 border border-indigo-900/50 px-2 py-0.5 text-[10px] font-semibold text-indigo-400">
                   Tablet
                 </span>
               )}
               {slide.mobileImageUrl && (
-                <span className="rounded bg-purple-950/40 border border-purple-900/50 px-2 py-0.5 text-[10px] font-semibold text-purple-400">
+                <span className="rounded-sm bg-purple-950/40 border border-purple-900/50 px-2 py-0.5 text-[10px] font-semibold text-purple-400">
                   Mobile
                 </span>
               )}
               {slide.actionType !== 'none' && (
-                <span className="rounded bg-gray-800 border border-gray-700 px-2 py-0.5 text-[10px] font-black text-gray-300 uppercase">
+                <span className="rounded-sm bg-gray-800 border border-gray-700 px-2 py-0.5 text-[10px] font-black text-gray-300 uppercase">
                   {slide.actionType === 'play' ? 'Play' : 'Details'}: {slide.mediaType} ({slide.mediaId})
                 </span>
               )}

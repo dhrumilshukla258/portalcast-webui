@@ -283,13 +283,44 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
     if (!player) return;
     resetRecoveryState();
 
-    if (initialPlaybackState) {
-      if (initialPlaybackState.volume !== undefined)
-        player.volume = initialPlaybackState.volume;
-      if (initialPlaybackState.muted !== undefined)
-        player.muted = initialPlaybackState.muted;
-    }
-  }, [initialPlaybackState, resetRecoveryState]);
+    const savedVolume =
+      initialPlaybackState?.volume ?? user?.preferences?.volume;
+    const savedMuted = initialPlaybackState?.muted ?? user?.preferences?.muted;
+    if (savedVolume !== undefined) player.volume = savedVolume;
+    if (savedMuted !== undefined) player.muted = savedMuted;
+  }, [initialPlaybackState, resetRecoveryState, user]);
+
+  // Persist volume/mute changes per-user so they carry over to the next
+  // title played, mirroring the videoFitMode preference sync below. Debounced
+  // since dragging the volume slider fires this on every step.
+  const volumeSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const handleVolumeChange = useCallback(
+    (e: any) => {
+      const { volume, muted } = e?.detail ?? {};
+      if (volume === undefined) return;
+      if (!user) return;
+      if (
+        user.preferences?.volume === volume &&
+        user.preferences?.muted === muted
+      )
+        return;
+      if (volumeSyncTimeoutRef.current)
+        clearTimeout(volumeSyncTimeoutRef.current);
+      volumeSyncTimeoutRef.current = setTimeout(() => {
+        updatePreferences({ volume, muted });
+      }, 500);
+    },
+    [user, updatePreferences]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (volumeSyncTimeoutRef.current)
+        clearTimeout(volumeSyncTimeoutRef.current);
+    };
+  }, []);
 
   const handleProxyToggle = useCallback(
     (newProxyState: boolean) => {
@@ -409,6 +440,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       handleCast,
       onProviderChange,
       handleCanPlay,
+      handleVolumeChange,
       handleTimeUpdate,
       handleError,
       handleEnded,
@@ -486,6 +518,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
       handleCast,
       onProviderChange,
       handleCanPlay,
+      handleVolumeChange,
       handleTimeUpdate,
       handleError,
       handleEnded,

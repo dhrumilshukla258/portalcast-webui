@@ -10,6 +10,7 @@ import {
   refreshSeriesGroups,
   clearServerCache,
 } from '@/api/endpoints/admin';
+import { clearUserProgress } from '@/api/endpoints/user';
 
 export type Config = {
   hostname: string;
@@ -252,14 +253,15 @@ export function useConfigTabActions() {
       message:
         'Are you sure you want to clear all watched and in-progress statuses?',
       isDestructive: true,
-      onConfirm: () => {
+      onConfirm: async () => {
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
-        Object.keys(localStorage).forEach((key) => {
-          if (key.startsWith('video-completed-')) {
-            localStorage.removeItem(key);
-          }
-        });
-        toast.success('All watched statuses have been cleared.');
+        try {
+          await clearUserProgress();
+          toast.success('All watched statuses have been cleared.');
+        } catch (err) {
+          console.error('Failed to clear history:', err);
+          toast.error('Failed to clear history.');
+        }
       },
     });
   };

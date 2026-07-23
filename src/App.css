@@ -102,6 +102,22 @@
   transform-origin: top center;
 }
 
+/* A row's real content fading in over its own skeleton placeholder, once
+   that row's data has actually loaded (see MediaCardRow) — opacity only, no
+   scale/translate, since this plays inside an already-settled row rather
+   than the row itself appearing. */
+@keyframes row-content-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.row-content-fade-in {
+  animation: row-content-fade-in 400ms ease-out;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;

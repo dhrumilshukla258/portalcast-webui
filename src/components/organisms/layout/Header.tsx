@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowDownAZ, SortDesc, SortAsc, LogOut, Shield, Trash2, Captions } from 'lucide-react';
+import { ArrowDownAZ, SortDesc, SortAsc, LogOut, Shield, Trash2, Captions, Tv } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '@/context/useSocket';
@@ -92,7 +92,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
         <span className="text-slate-600 hidden sm:inline text-lg select-none pointer-events-none">|</span>
         <h1
           key={currentTitle}
-          className="animate-in fade-in slide-in-from-top-1 duration-300 hidden text-sm font-extrabold tracking-wider text-white sm:block sm:text-base md:text-lg lg:text-xl uppercase bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent drop-shadow-sm self-center truncate max-w-[180px] sm:max-w-xs md:max-w-sm"
+          className="animate-in fade-in slide-in-from-top-1 duration-300 hidden text-sm font-extrabold tracking-wider text-white sm:block sm:text-base md:text-lg lg:text-xl uppercase bg-linear-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent drop-shadow-xs self-center truncate max-w-[180px] sm:max-w-xs md:max-w-sm"
         >
           {currentTitle}
         </h1>
@@ -110,7 +110,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
               onClick={onSelectDiscover}
               className={`flex flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
                 isDiscoverActive
-                  ? 'bg-gradient-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
+                  ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                   : 'text-gray-400 hover:bg-white/10 hover:text-white'
               }`}
               data-focusable="true"
@@ -130,7 +130,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
             onClick={() => handleContentTypeChange('movie')}
             className={`flex flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
               !isDiscoverActive && contentType === 'movie'
-                ? 'bg-gradient-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
+                ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
             }`}
             data-focusable="true"
@@ -149,7 +149,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
             onClick={() => handleContentTypeChange('series')}
             className={`flex flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
               !isDiscoverActive && contentType === 'series'
-                ? 'bg-gradient-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
+                ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
             }`}
             data-focusable="true"
@@ -168,7 +168,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
             onClick={() => handleContentTypeChange('tv')}
             className={`flex flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
               !isDiscoverActive && contentType === 'tv'
-                ? 'bg-gradient-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
+                ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
             }`}
             data-focusable="true"
@@ -191,7 +191,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           {/* Sort Button */}
           <button
             onClick={cycleSort}
-            className="flex flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#0b1120]/85 p-2.5 text-gray-300 shadow-sm transition-all duration-300 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-1 focus:ring-portalcast-light active:scale-95"
+            className="flex shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#0b1120]/85 p-2.5 text-gray-300 shadow-xs transition-all duration-300 hover:bg-white/10 hover:text-white focus:outline-hidden focus:ring-1 focus:ring-portalcast-light active:scale-95"
             data-focusable="true"
             data-control="sort"
             title={`Sort: ${sort === 'alphabetic' ? 'A-Z' : sort === 'oldest' ? 'Oldest' : 'Latest'}`}
@@ -203,10 +203,10 @@ export const Header: React.FC<HeaderProps> = React.memo(
 
           {/* User Profile Dropdown */}
           {user && (
-            <div className="relative flex-shrink-0" ref={dropdownRef}>
+            <div className="relative shrink-0" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex h-[38px] w-[38px] items-center justify-center rounded-full overflow-hidden bg-indigo-600 text-white font-extrabold text-sm shadow-md transition-all duration-300 hover:bg-indigo-500 focus:outline-none focus:ring-1 focus:ring-portalcast-light select-none cursor-pointer"
+                className="flex h-[38px] w-[38px] items-center justify-center rounded-full overflow-hidden bg-indigo-600 text-white font-extrabold text-sm shadow-md transition-all duration-300 hover:bg-indigo-500 focus:outline-hidden focus:ring-1 focus:ring-portalcast-light select-none cursor-pointer"
                 data-focusable="true"
                 data-control="profile"
                 tabIndex={-1}
@@ -246,6 +246,15 @@ export const Header: React.FC<HeaderProps> = React.memo(
                       <span>Subtitle Account</span>
                     </button>
                     <button
+                      onClick={() => { setDropdownOpen(false); navigate('/verify'); }}
+                      className="flex w-full items-center space-x-2 rounded-xl px-3 py-2.5 text-left text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white transition-colors duration-250 cursor-pointer"
+                      data-focusable="true"
+                      tabIndex={-1}
+                    >
+                      <Tv className="h-4 w-4 text-gray-400" />
+                      <span>Authorize a Device</span>
+                    </button>
+                    <button
                       onClick={() => { setDropdownOpen(false); handleClearWatched(); }}
                       className="flex w-full items-center space-x-2 rounded-xl px-3 py-2.5 text-left text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white transition-colors duration-250 cursor-pointer"
                       data-focusable="true"
@@ -270,7 +279,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           )}
 
           {/* Compact Device Count Badge */}
-          <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 select-none bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-full flex-shrink-0" title={`${activeUserCount || 1} device${(activeUserCount || 1) !== 1 ? 's' : ''} online`}>
+          <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 select-none bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-full shrink-0" title={`${activeUserCount || 1} device${(activeUserCount || 1) !== 1 ? 's' : ''} online`}>
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>

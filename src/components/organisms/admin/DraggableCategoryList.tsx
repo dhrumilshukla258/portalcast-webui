@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { GripVertical } from 'lucide-react';
 import type { ChannelGroup } from '@/types';
 
 interface DraggableCategoryListProps {
@@ -11,6 +12,19 @@ interface DraggableCategoryListProps {
 // Pointer-based reorderable list: the dragged row follows the cursor 1:1 (no lag while
 // held, so it actually feels grabbed), while the rows it passes over slide out of the way
 // with a short eased transition — the "lerp" settle feel native HTML5 drag-and-drop lacks.
+//
+// Touch devices drag from a dedicated grip handle only; desktop (mouse) drags from
+// anywhere on the row via a press-and-hold. These need different affordances because the
+// ambiguity they're each solving is different: on a touch device, "is this touch the start
+// of a scroll swipe or a drag" can't be resolved by a hold-timer alone — a genuine but
+// slow-starting scroll swipe can sit still long enough to fire the timer and get hijacked
+// into a drag, which made the whole list feel unscrollable on touch. A dedicated handle
+// removes that ambiguity outright (touching the handle is unambiguously a drag, touching
+// elsewhere is unambiguously a tap/scroll). On desktop there's no such conflict — wheel
+// scroll and mouse-drag are different input events entirely — so whole-row press-and-hold
+// stays the nicer affordance there (no need to precision-target a small handle with a
+// mouse), and showing an always-visible grip icon on every row would just be visual noise
+// nobody on desktop needs.
 export const DraggableCategoryList: React.FC<DraggableCategoryListProps> = ({
   items,
   selectedCategory,
@@ -21,15 +35,24 @@ export const DraggableCategoryList: React.FC<DraggableCategoryListProps> = ({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragY, setDragY] = useState(0);
 
+  // `(hover: none) and (pointer: coarse)` is the standard way to detect "primarily a touch
+  // device" — plain `'ontouchstart' in window` also matches touch-enabled laptops that are
+  // really mouse-driven, which would wrongly hide the handle-free whole-row drag those
+  // devices actually want.
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(hover: none) and (pointer: coarse)');
+    setIsTouchDevice(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsTouchDevice(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
   const rowRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const dragState = useRef({ startY: 0, index: 0, rowHeight: 0 });
 
-  // Touch/mobile: a bare pointerdown no longer grabs the row immediately — that required
-  // touch-action:none on every row, which killed native vertical scrolling of the whole
-  // list the instant a finger landed on a row (a scroll swipe got hijacked as a drag).
-  // Instead we arm a short press-and-hold timer; a normal scroll swipe moves the finger
-  // enough, fast enough, to get cancelled below before the timer fires, so it falls through
-  // to native scrolling. Only a genuine hold engages drag mode.
+  // Desktop only: a bare pointerdown doesn't grab the row immediately — a short press-hold
+  // first, so a plain click-to-select isn't misread as the start of a drag.
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingDrag = useRef<{ e: React.PointerEvent; id: string; index: number; startX: number; startY: number } | null>(null);
 
@@ -75,8 +98,15 @@ export const DraggableCategoryList: React.FC<DraggableCategoryListProps> = ({
     setDragY(0);
   };
 
-  const handlePointerDown = (e: React.PointerEvent, id: string, index: number) => {
+  // Touch handle: unambiguous, starts the drag immediately.
+  const handleHandlePointerDown = (e: React.PointerEvent, id: string, index: number) => {
     if (id === '*') return;
+    beginDrag(e, id, index);
+  };
+
+  // Desktop row: ambiguous with a click, so arm a hold-timer instead of starting immediately.
+  const handleRowPointerDown = (e: React.PointerEvent, id: string, index: number) => {
+    if (id === '*' || isTouchDevice) return;
     clearPressTimer();
     pendingDrag.current = { e, id, index, startX: e.clientX, startY: e.clientY };
     pressTimer.current = setTimeout(() => {
@@ -87,8 +117,8 @@ export const DraggableCategoryList: React.FC<DraggableCategoryListProps> = ({
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!draggingIdRef.current) {
-      // Not dragging yet — if a press-hold is armed, cancel it once the finger has moved
-      // far enough to look like a scroll swipe rather than a hold-in-place.
+      // Desktop only — if a press-hold is armed, cancel it once the pointer has moved far
+      // enough to look like something other than a hold-in-place.
       if (pendingDrag.current) {
         const dx = e.clientX - pendingDrag.current.startX;
         const dy = e.clientY - pendingDrag.current.startY;
@@ -130,9 +160,9 @@ export const DraggableCategoryList: React.FC<DraggableCategoryListProps> = ({
     onReorder(orderRef.current.filter((c) => c.id !== '*').map((c) => c.id));
   };
 
-  // Safety net: if the pointerup/cancel never reaches the row itself (fast drags, touch
-  // scroll interference, releasing outside the window), draggingId would otherwise get
-  // stuck forever and silently block clicks (onClick is gated by !isDragging).
+  // Safety net: if the pointerup/cancel never reaches the row/handle itself (fast drags,
+  // touch scroll interference, releasing outside the window), draggingId would otherwise
+  // get stuck forever and silently block clicks (onClick is gated by !isDragging).
   useEffect(() => {
     if (!draggingId) return;
     const onWindowPointerUp = () => endDrag();
@@ -170,20 +200,40 @@ export const DraggableCategoryList: React.FC<DraggableCategoryListProps> = ({
               data-focusable="true"
               data-selected={isActive ? 'true' : 'false'}
               onClick={() => !isDragging && onSelect(cat.id, cat.title)}
-              onPointerDown={(e) => handlePointerDown(e, cat.id, index)}
-              onPointerMove={handlePointerMove}
-              onPointerUp={endDrag}
-              onPointerCancel={endDrag}
-              title={isDraggable ? 'Drag to reorder' : undefined}
-              className={`flex w-full shrink-0 ${isDragging ? 'touch-none' : 'touch-pan-y'} items-center rounded-lg px-3 py-2 text-left text-xs font-semibold sm:text-sm ${
+              onPointerDown={isTouchDevice ? undefined : (e) => handleRowPointerDown(e, cat.id, index)}
+              onPointerMove={isTouchDevice ? undefined : handlePointerMove}
+              onPointerUp={isTouchDevice ? undefined : endDrag}
+              onPointerCancel={isTouchDevice ? undefined : endDrag}
+              title={isDraggable && !isTouchDevice ? 'Drag to reorder' : undefined}
+              className={`flex w-full shrink-0 select-none items-center rounded-lg py-2 text-left text-xs font-semibold sm:text-sm ${
+                isTouchDevice ? 'pl-3 pr-1' : 'px-3'
+              } ${!isTouchDevice && isDragging ? 'touch-none' : !isTouchDevice ? 'touch-pan-y' : ''} ${
                 isActive
-                  ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-blue-900/30'
+                  ? 'bg-linear-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-blue-900/30'
                   : 'text-gray-400 hover:bg-white/10 hover:text-gray-100'
               } ${isDragging ? 'shadow-xl shadow-black/40 ring-1 ring-sky-400/50' : ''} ${
-                isDraggable ? 'cursor-grab active:cursor-grabbing' : ''
+                isDraggable && !isTouchDevice ? 'cursor-grab active:cursor-grabbing' : ''
               } focus:bg-blue-600 focus:text-white [&.focused]:bg-blue-600 [&.focused]:text-white`}
             >
-              <span className="truncate">{cat.title}</span>
+              <span className="flex-1 truncate">{cat.title}</span>
+              {/* Touch only — desktop drags from anywhere on the row via
+                  press-and-hold instead (see the component's own comment for
+                  why these need different affordances). */}
+              {isTouchDevice && isDraggable && (
+                <span
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    handleHandlePointerDown(e, cat.id, index);
+                  }}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={endDrag}
+                  onPointerCancel={endDrag}
+                  aria-label="Drag to reorder"
+                  className="touch-none flex h-full shrink-0 cursor-grab items-center px-2.5 text-gray-500 active:cursor-grabbing"
+                >
+                  <GripVertical className="h-4 w-4" />
+                </span>
+              )}
             </button>
           </div>
         );

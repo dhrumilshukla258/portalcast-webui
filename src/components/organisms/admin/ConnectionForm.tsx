@@ -70,7 +70,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                 name="hostname"
                 value={config.hostname}
                 onChange={handleInputChange}
-                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 placeholder="portal.example.com"
               />
             </div>
@@ -83,7 +83,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                   name="port"
                   value={config.port}
                   onChange={handleInputChange}
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden focus:border-blue-500"
                 />
               </div>
               <div>
@@ -94,7 +94,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                   name="contextPath"
                   value={config.contextPath}
                   onChange={handleInputChange}
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden focus:border-blue-500"
                   placeholder="/c/"
                 />
               </div>
@@ -108,7 +108,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                 name="proxy"
                 checked={config.proxy}
                 onChange={handleInputChange}
-                className="h-4 w-4 rounded border-gray-700 bg-gray-800 text-blue-600"
+                className="h-4 w-4 rounded-sm border-gray-700 bg-gray-800 text-blue-600"
               />
               <span className="text-sm font-bold text-gray-300">
                 HTTP Proxy
@@ -120,7 +120,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                 name="playCensored"
                 checked={config.playCensored}
                 onChange={handleInputChange}
-                className="h-4 w-4 rounded border-gray-700 bg-gray-800 text-red-600"
+                className="h-4 w-4 rounded-sm border-gray-700 bg-gray-800 text-red-600"
               />
               <span className="text-sm font-bold text-gray-300">
                 Adult Content
@@ -148,7 +148,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                 name="username"
                 value={config.username}
                 onChange={handleInputChange}
-                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-none transition-all focus:border-blue-500"
+                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500"
               />
             </div>
             <div>
@@ -160,7 +160,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                 type="text"
                 value={config.password}
                 onChange={handleInputChange}
-                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-none transition-all focus:border-blue-500"
+                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500"
               />
             </div>
           </div>
@@ -175,7 +175,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                 value={config.mac}
                 onChange={handleInputChange}
                 placeholder="00:1A:79:..."
-                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 font-mono text-sm outline-none transition-all focus:border-blue-500"
+                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 font-mono text-sm outline-hidden transition-all focus:border-blue-500"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -188,7 +188,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                   value={config.stbType}
                   onChange={handleInputChange}
                   placeholder="MAG250"
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-none transition-all focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500"
                 />
               </div>
               <div>
@@ -199,7 +199,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                   name="serialNumber"
                   value={config.serialNumber}
                   onChange={handleInputChange}
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-none transition-all focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500"
                 />
               </div>
             </div>
@@ -212,7 +212,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                   name="deviceId1"
                   value={config.deviceId1}
                   onChange={handleInputChange}
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-xs outline-none transition-all focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-xs outline-hidden transition-all focus:border-blue-500"
                 />
               </div>
               <div>
@@ -223,7 +223,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                   name="deviceId2"
                   value={config.deviceId2}
                   onChange={handleInputChange}
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-xs outline-none transition-all focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-xs outline-hidden transition-all focus:border-blue-500"
                 />
               </div>
             </div>

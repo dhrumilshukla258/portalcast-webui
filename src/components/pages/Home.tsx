@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Play, Shield, Tv, Sparkles, ChevronRight, Bug, Rocket, AlertCircle } from 'lucide-react';
+import { Play, Shield, Tv, Sparkles, ChevronRight, Bug, Rocket } from 'lucide-react';
 import { isTizenDevice } from '@/utils/helpers';
 
 export default function Home() {
@@ -56,7 +56,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-grow flex items-center py-16 px-6 max-w-6xl mx-auto w-full">
+      <main className="grow flex items-center py-16 px-6 max-w-6xl mx-auto w-full">
         <div className="grid md:grid-cols-12 gap-12 items-center w-full">
           <div className="md:col-span-7 space-y-8 text-left">
             <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-400">
@@ -66,7 +66,7 @@ export default function Home() {
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
               A Premium Hub for{' '}
-              <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-indigo-400 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
                 Portalcast Streams
               </span>
             </h1>
@@ -78,7 +78,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <button
                 onClick={handleLaunch}
-                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold text-base transition-all duration-300 shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:scale-[1.03] flex items-center justify-center space-x-3 cursor-pointer"
+                className="px-8 py-4 rounded-2xl bg-linear-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold text-base transition-all duration-300 shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:scale-[1.03] flex items-center justify-center space-x-3 cursor-pointer"
               >
                 <Play className="w-5 h-5 fill-current" />
                 <span>{isLoggedIn ? 'Launch TV Portal' : 'Start Watching Now'}</span>
@@ -88,16 +88,17 @@ export default function Home() {
                 <button
                   onClick={() => navigate('/verify')}
                   className="px-8 py-4 rounded-2xl bg-gray-900/60 hover:bg-gray-800/80 text-gray-200 font-semibold text-base transition-all duration-300 border border-gray-850 hover:scale-[1.02] flex items-center justify-center space-x-2 cursor-pointer"
+                  title="For entering a pairing code shown on a TV — not for logging this device in via a code"
                 >
-                  <span>Authorize TV Device</span>
+                  <span>Have a TV Pairing Code?</span>
                 </button>
               )}
             </div>
           </div>
 
           <div className="md:col-span-5 relative hidden md:block">
-            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-indigo-500 to-violet-600 opacity-20 blur-2xl"></div>
-            <div className="relative border border-gray-800 bg-gray-900/60 backdrop-blur-md rounded-3xl p-6 shadow-2xl overflow-hidden aspect-[4/3] flex flex-col justify-between">
+            <div className="absolute -inset-1 rounded-3xl bg-linear-to-r from-indigo-500 to-violet-600 opacity-20 blur-2xl"></div>
+            <div className="relative border border-gray-800 bg-gray-900/60 backdrop-blur-md rounded-3xl p-6 shadow-2xl overflow-hidden aspect-4/3 flex flex-col justify-between">
               <div className="flex items-center justify-between border-b border-gray-850 pb-4">
                 <div className="flex space-x-2">
                   <div className="w-3.5 h-3.5 rounded-full bg-red-500/80"></div>
@@ -107,7 +108,7 @@ export default function Home() {
                 <div className="w-16 h-3 rounded-full bg-gray-800"></div>
               </div>
 
-              <div className="flex-grow flex items-center justify-center">
+              <div className="grow flex items-center justify-center">
                 <div className="text-center space-y-3">
                   <div className="w-16 h-16 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
                     <Tv className="w-8 h-8" />
@@ -175,40 +176,9 @@ export default function Home() {
             </div>
             
             <div className="space-y-3.5">
-              <div className="flex items-start space-x-3 bg-slate-900/30 border border-gray-850/60 p-4 rounded-xl">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                <p className="text-sm text-gray-400 leading-normal">
-                  <strong className="text-gray-200">Continue Watching Delay:</strong> Progress tiles may occasionally ghost or cache incorrectly under edge network loops.
-                </p>
-              </div>
-
-              <div className="flex items-start space-x-3 bg-slate-900/30 border border-gray-850/60 p-4 rounded-xl">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                <p className="text-sm text-gray-400 leading-normal">
-                  <strong className="text-gray-200">History Reset Flow:</strong> Clear Data trigger does not completely scrub the interactive Continue Watching active cache files.
-                </p>
-              </div>
-
-              <div className="flex items-start space-x-3 bg-slate-900/30 border border-gray-850/60 p-4 rounded-xl">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                <p className="text-sm text-gray-400 leading-normal">
-                  <strong className="text-gray-200">Category Sorting & Desync:</strong> Last viewed category configurations are pulled from local storage and may not accurately match state changes across multi-device logins.
-                </p>
-              </div>
-
-              <div className="flex items-start space-x-3 bg-slate-900/30 border border-gray-850/60 p-4 rounded-xl">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                <p className="text-sm text-gray-400 leading-normal">
-                  <strong className="text-gray-200">Google Registration Warning:</strong> New non-pre-registered email log-ins show up with generic error styling rather than an explicit access submission confirmation state.
-                </p>
-              </div>
-
-              <div className="flex items-start space-x-3 bg-slate-900/30 border border-gray-850/60 p-4 rounded-xl">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                <p className="text-sm text-gray-400 leading-normal">
-                  <strong className="text-gray-200">Autoplay Hook initialization:</strong> Next episode auto-progression loop fails on content launched from Continue Watching unless the first chapter is selected manually.
-                </p>
-              </div>
+              <p className="text-sm text-gray-400 leading-normal italic">
+                No known issues at this time. Recently resolved: Continue Watching cache staleness, incomplete history reset, cross-device category desync, Google sign-in messaging for pending accounts, and autoplay from Continue Watching.
+              </p>
             </div>
           </div>
 
@@ -223,31 +193,25 @@ export default function Home() {
 
             <div className="space-y-4">
               <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
-                <div className="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]"></div>
-                <h4 className="text-sm font-semibold text-gray-200">Advanced Multi-Device Sync</h4>
-                <p className="text-xs text-gray-400 leading-relaxed">Migrating local storage arrays into cloud configurations for instantaneous state replication.</p>
-              </div>
-
-              <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
-                <div className="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
+                <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
                 <h4 className="text-sm font-semibold text-gray-200">Expanded TV Browser Support</h4>
                 <p className="text-xs text-gray-400 leading-relaxed">Optimizing responsive controls and layouts for generic internal web applications on smart televisions.</p>
               </div>
 
               <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
-                <div className="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
+                <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
                 <h4 className="text-sm font-semibold text-gray-200">User Feature Request Pipeline</h4>
                 <p className="text-xs text-gray-400 leading-relaxed">Direct community implementation board allowing viewers to submit and upvote client modifications.</p>
               </div>
 
               <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
-                <div className="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
+                <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
                 <h4 className="text-sm font-semibold text-gray-200">Centralized Bug Report Collection</h4>
                 <p className="text-xs text-gray-400 leading-relaxed">Automated exception logging to capture interface issues and improve application stability.</p>
               </div>
 
               <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
-                <div className="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
+                <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
                 <h4 className="text-sm font-semibold text-gray-200">Push Notification Engine</h4>
                 <p className="text-xs text-gray-400 leading-relaxed">Real-time inside-app banners and notifications regarding admin approvals, maintenance logs, or fresh updates.</p>
               </div>

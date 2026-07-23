@@ -74,7 +74,7 @@ const SlideEditor: React.FC<SlideEditorProps> = ({
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+            className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white outline-hidden focus:border-blue-500"
             placeholder="Slide Title"
           />
         </div>
@@ -97,7 +97,7 @@ const SlideEditor: React.FC<SlideEditorProps> = ({
                 type="text"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
-                className="w-full rounded-xl border border-gray-800 bg-gray-950 px-3 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                className="w-full rounded-xl border border-gray-800 bg-gray-950 px-3 py-2.5 text-xs text-white outline-hidden focus:border-blue-500"
                 placeholder="https://... or upload"
               />
               <div className="relative">
@@ -143,7 +143,7 @@ const SlideEditor: React.FC<SlideEditorProps> = ({
                 type="text"
                 value={tabletImageUrl}
                 onChange={(e) => setTabletImageUrl(e.target.value)}
-                className="w-full rounded-xl border border-gray-800 bg-gray-950 px-3 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                className="w-full rounded-xl border border-gray-800 bg-gray-950 px-3 py-2.5 text-xs text-white outline-hidden focus:border-blue-500"
                 placeholder="https://... or upload"
               />
               <div className="relative">
@@ -189,7 +189,7 @@ const SlideEditor: React.FC<SlideEditorProps> = ({
                 type="text"
                 value={mobileImageUrl}
                 onChange={(e) => setMobileImageUrl(e.target.value)}
-                className="w-full rounded-xl border border-gray-800 bg-gray-950 px-3 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                className="w-full rounded-xl border border-gray-800 bg-gray-950 px-3 py-2.5 text-xs text-white outline-hidden focus:border-blue-500"
                 placeholder="https://... or upload"
               />
               <div className="relative">
@@ -230,7 +230,7 @@ const SlideEditor: React.FC<SlideEditorProps> = ({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+            className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white outline-hidden focus:border-blue-500"
             placeholder="Brief slide description..."
           />
         </div>
@@ -239,7 +239,7 @@ const SlideEditor: React.FC<SlideEditorProps> = ({
           <select
             value={actionType}
             onChange={(e) => setActionType(e.target.value as 'none' | 'play' | 'details')}
-            className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+            className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white outline-hidden focus:border-blue-500"
           >
             <option value="none">No Action</option>
             <option value="play">Play Directly</option>
@@ -253,7 +253,7 @@ const SlideEditor: React.FC<SlideEditorProps> = ({
               <select
                 value={mediaType}
                 onChange={(e) => setMediaType(e.target.value as 'movie' | 'series' | 'tv')}
-                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white outline-hidden focus:border-blue-500"
               >
                 <option value="movie">Movie</option>
                 <option value="series">Series</option>
@@ -266,7 +266,7 @@ const SlideEditor: React.FC<SlideEditorProps> = ({
                 type="text"
                 value={mediaId}
                 onChange={(e) => setMediaId(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white outline-hidden focus:border-blue-500"
                 placeholder="Enter database ID or name"
               />
             </div>
@@ -278,7 +278,7 @@ const SlideEditor: React.FC<SlideEditorProps> = ({
             type="number"
             value={order}
             onChange={(e) => setOrder(Number(e.target.value))}
-            className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+            className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white outline-hidden focus:border-blue-500"
           />
         </div>
       </div>

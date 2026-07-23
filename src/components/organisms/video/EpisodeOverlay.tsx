@@ -105,7 +105,7 @@ const EpisodeOverlay = forwardRef<EpisodeOverlayRef, EpisodeOverlayProps>(
         {showCloseButton && (
           <button
             onClick={onBack}
-            className="absolute right-6 top-4 z-50 rounded-full p-2 text-gray-400 outline-none transition-transform hover:scale-110 hover:text-white focus:scale-110 focus:bg-white/10 focus:text-white"
+            className="absolute right-6 top-4 z-50 rounded-full p-2 text-gray-400 outline-hidden transition-transform hover:scale-110 hover:text-white focus:scale-110 focus:bg-white/10 focus:text-white"
             aria-label="Close"
             data-focusable="true"
           >
@@ -151,7 +151,7 @@ const EpisodeOverlay = forwardRef<EpisodeOverlayRef, EpisodeOverlayProps>(
                 onClick={() => onEpisodeSelect(ep)}
                 className={`group flex cursor-pointer flex-col rounded-xl border p-3 text-left transition-all duration-200 ${
                   isItemFocused
-                    ? 'scale-[1.01] bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 border-transparent'
+                    ? 'scale-[1.01] bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 border-transparent'
                     : isItemPlaying
                       ? 'bg-blue-950/40 text-blue-400 border-blue-500/40'
                       : 'bg-white/5 text-gray-300 border-white/5 hover:bg-white/10 hover:text-white'

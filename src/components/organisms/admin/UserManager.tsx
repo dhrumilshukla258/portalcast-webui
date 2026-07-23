@@ -60,7 +60,7 @@ export default function UserManager() {
             placeholder="Search users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-grow md:w-64 bg-gray-950 border border-gray-800 hover:border-gray-700 focus:border-blue-500 rounded-xl px-4 py-2.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none transition-all duration-300"
+            className="grow md:w-64 bg-gray-950 border border-gray-800 hover:border-gray-700 focus:border-blue-500 rounded-xl px-4 py-2.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-hidden transition-all duration-300"
           />
           <button
             onClick={() => setShowAddModal(true)}

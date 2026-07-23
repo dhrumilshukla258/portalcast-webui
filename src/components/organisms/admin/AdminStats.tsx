@@ -106,14 +106,14 @@ const AdminStats: React.FC = () => {
                 const pct = (count / max) * 100;
                 return (
                   <div key={cat} className="flex items-center gap-3">
-                    <span className="w-14 flex-shrink-0 text-xs font-bold text-gray-400">{categoryLabel[cat]}</span>
-                    <div className="h-4 flex-1 overflow-hidden rounded bg-gray-950">
+                    <span className="w-14 shrink-0 text-xs font-bold text-gray-400">{categoryLabel[cat]}</span>
+                    <div className="h-4 flex-1 overflow-hidden rounded-sm bg-gray-950">
                       <div
-                        className="h-full rounded transition-all"
+                        className="h-full rounded-sm transition-all"
                         style={{ width: `${pct}%`, backgroundColor: categoryColor[cat] }}
                       />
                     </div>
-                    <span className="w-14 flex-shrink-0 text-right font-mono text-xs text-gray-300">
+                    <span className="w-14 shrink-0 text-right font-mono text-xs text-gray-300">
                       {count.toLocaleString()}
                     </span>
                   </div>
@@ -149,7 +149,7 @@ const AdminStats: React.FC = () => {
                         <tr key={`${event.timestamp}-${i}`} className="border-b border-gray-800/60 last:border-0">
                           <td className="py-1.5 pl-3 pr-2">
                             <span
-                              className="inline-flex items-center gap-1.5 rounded px-1.5 py-0.5 font-bold uppercase"
+                              className="inline-flex items-center gap-1.5 rounded-sm px-1.5 py-0.5 font-bold uppercase"
                               style={{ color: categoryColor[event.category], backgroundColor: `${categoryColor[event.category]}1a` }}
                             >
                               {categoryLabel[event.category]}
@@ -197,7 +197,7 @@ const AdminStats: React.FC = () => {
               onChange={(e) => setRefreshSecondsInput(e.target.value)}
               onBlur={(e) => applyRefreshSeconds(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && applyRefreshSeconds((e.target as HTMLInputElement).value)}
-              className="w-14 rounded-lg border border-gray-800 bg-gray-950 px-2 py-1 text-center text-xs text-white outline-none focus:border-blue-500"
+              className="w-14 rounded-lg border border-gray-800 bg-gray-950 px-2 py-1 text-center text-xs text-white outline-hidden focus:border-blue-500"
             />
             sec
           </label>
@@ -239,7 +239,7 @@ const AdminStats: React.FC = () => {
                     return (
                       <tr key={s.key} className="border-b border-gray-800/60">
                         <td className="py-2 pr-4">
-                          <span className={`rounded px-2 py-0.5 text-[10px] font-black uppercase ${kindColor[kind]}`}>
+                          <span className={`rounded-sm px-2 py-0.5 text-[10px] font-black uppercase ${kindColor[kind]}`}>
                             {kindLabel[kind]}
                           </span>
                         </td>
@@ -318,7 +318,7 @@ const AdminStats: React.FC = () => {
                     <td className="py-2 pr-4 text-gray-200">{u.name}</td>
                     <td className="py-2 pr-4 text-gray-400">{u.email}</td>
                     <td className="py-2 pr-4">
-                      <span className={`rounded px-2 py-0.5 text-[10px] font-black uppercase ${u.role === 'admin' ? 'bg-purple-900/30 text-purple-400' : 'bg-gray-800 text-gray-400'}`}>
+                      <span className={`rounded-sm px-2 py-0.5 text-[10px] font-black uppercase ${u.role === 'admin' ? 'bg-purple-900/30 text-purple-400' : 'bg-gray-800 text-gray-400'}`}>
                         {u.role}
                       </span>
                     </td>

@@ -28,7 +28,7 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
   onCreate,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs">
       <div className="w-full max-w-md rounded-2xl border border-gray-700/50 bg-gray-900/80 p-6 shadow-2xl backdrop-blur-md">
         <h2 className="mb-4 text-xl font-bold text-white">Create Profile</h2>
         <div className="space-y-4">
@@ -39,7 +39,7 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
             <input
               type="text"
               data-focusable="true"
-              className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-white placeholder-gray-500 backdrop-blur-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-white placeholder-gray-500 backdrop-blur-xs focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
               placeholder="e.g., Bedroom STB"
               value={newProfileName}
               onChange={(e) => setNewProfileName(e.target.value)}
@@ -52,7 +52,7 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
             </label>
             <textarea
               data-focusable="true"
-              className="w-full resize-none rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-white placeholder-gray-500 backdrop-blur-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full resize-none rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-white placeholder-gray-500 backdrop-blur-xs focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
               rows={3}
               value={newProfileDescription}
               onChange={(e) => setNewProfileDescription(e.target.value)}
@@ -104,7 +104,7 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
                 <input
                   type="text"
                   data-focusable="true"
-                  className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-sm text-white focus:border-blue-500 focus:outline-hidden"
                   value={newProfileUsername}
                   onChange={(e) => setNewProfileUsername(e.target.value)}
                 />
@@ -116,7 +116,7 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
                 <input
                   type="text"
                   data-focusable="true"
-                  className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-sm text-white focus:border-blue-500 focus:outline-hidden"
                   value={newProfilePassword}
                   onChange={(e) => setNewProfilePassword(e.target.value)}
                 />

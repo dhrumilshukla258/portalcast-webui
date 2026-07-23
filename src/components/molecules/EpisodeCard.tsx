@@ -48,7 +48,7 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({ item, onClick, isCompleted = 
             onError={() => setImageError(true)}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/10 to-transparent">
+          <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-white/10 to-transparent">
             <span className="select-none text-lg font-bold text-white/30 sm:text-xl">
               {initials}
             </span>

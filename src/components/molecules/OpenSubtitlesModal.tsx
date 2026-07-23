@@ -71,7 +71,7 @@ const OpenSubtitlesModal: React.FC<OpenSubtitlesModalProps> = ({ isOpen, onClose
   };
 
   return (
-    <div className="animate-fade-in fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div className="animate-fade-in fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-xs">
       <div
         className="animate-scale-in w-full max-w-md scale-100 rounded-2xl border border-gray-700/50 bg-gray-900/90 p-6 shadow-2xl backdrop-blur-md"
         role="dialog"
@@ -102,7 +102,7 @@ const OpenSubtitlesModal: React.FC<OpenSubtitlesModalProps> = ({ isOpen, onClose
               onChange={(e) => setUsername(e.target.value)}
               placeholder="OpenSubtitles username"
               data-focusable="true"
-              className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-white placeholder-gray-500 backdrop-blur-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-white placeholder-gray-500 backdrop-blur-xs focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
             />
             <input
               type="password"
@@ -110,7 +110,7 @@ const OpenSubtitlesModal: React.FC<OpenSubtitlesModalProps> = ({ isOpen, onClose
               onChange={(e) => setPassword(e.target.value)}
               placeholder="OpenSubtitles password"
               data-focusable="true"
-              className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-white placeholder-gray-500 backdrop-blur-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-white placeholder-gray-500 backdrop-blur-xs focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
             />
           </div>
         )}
@@ -119,7 +119,7 @@ const OpenSubtitlesModal: React.FC<OpenSubtitlesModalProps> = ({ isOpen, onClose
           <button
             onClick={onClose}
             data-focusable="true"
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-400 transition-colors hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-400 transition-colors hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white focus:outline-hidden focus:ring-2 focus:ring-gray-500"
           >
             Close
           </button>
@@ -128,7 +128,7 @@ const OpenSubtitlesModal: React.FC<OpenSubtitlesModalProps> = ({ isOpen, onClose
               onClick={handleUnlink}
               disabled={loading}
               data-focusable="true"
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-red-900/20 transition-all hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 active:scale-95 disabled:opacity-50"
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-red-900/20 transition-all hover:bg-red-500 focus:outline-hidden focus:ring-2 focus:ring-red-500 active:scale-95 disabled:opacity-50"
             >
               Unlink
             </button>
@@ -137,7 +137,7 @@ const OpenSubtitlesModal: React.FC<OpenSubtitlesModalProps> = ({ isOpen, onClose
               onClick={handleLink}
               disabled={loading}
               data-focusable="true"
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition-all hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 active:scale-95 disabled:opacity-50"
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition-all hover:bg-blue-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500 active:scale-95 disabled:opacity-50"
             >
               Link Account
             </button>

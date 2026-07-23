@@ -79,7 +79,7 @@ export const SettingsMenu = React.memo(() => {
             data-focusable="true"
             data-control="settings-item"
             onClick={() => handleMenuChange('quality')} // 👈 Updated
-            className="flex items-center justify-between rounded px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+            className="flex items-center justify-between rounded-sm px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
           >
             <span>Quality</span>
             <div className="flex items-center text-gray-400">
@@ -97,7 +97,7 @@ export const SettingsMenu = React.memo(() => {
               data-focusable="true"
               data-control="settings-item"
               onClick={() => handleMenuChange('audio')} // 👈 Updated
-              className="flex items-center justify-between rounded px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+              className="flex items-center justify-between rounded-sm px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
             >
               <span>Audio</span>
               <div className="flex items-center text-gray-400">
@@ -110,7 +110,7 @@ export const SettingsMenu = React.memo(() => {
             data-focusable="true"
             data-control="settings-item"
             onClick={() => handleMenuChange('subtitles')} // 👈 Updated
-            className="flex items-center justify-between rounded px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+            className="flex items-center justify-between rounded-sm px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
           >
             <span>Captions</span>
             <div className="flex items-center text-gray-400">
@@ -125,7 +125,7 @@ export const SettingsMenu = React.memo(() => {
             data-focusable="true"
             data-control="settings-close"
             onClick={() => setIsSettingsMenuOpen(false)}
-            className="mt-1 flex items-center justify-between rounded border-t border-gray-700/60 px-3 pt-2 pb-1 text-red-400 transition-colors hover:bg-white/10 focus:bg-white/10 focus:outline-none"
+            className="mt-1 flex items-center justify-between rounded-sm border-t border-gray-700/60 px-3 pt-2 pb-1 text-red-400 transition-colors hover:bg-white/10 focus:bg-white/10 focus:outline-hidden"
           >
             <span>Close Menu</span>
             <X className="h-4 w-4" />
@@ -140,7 +140,7 @@ export const SettingsMenu = React.memo(() => {
             data-focusable="true"
             data-control="settings-back"
             onClick={() => handleMenuChange('main')} // 👈 Back ponalum focus reset aagum
-            className="mb-2 flex items-center rounded border-b border-gray-700 px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+            className="mb-2 flex items-center rounded-sm border-b border-gray-700 px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
           >
             <ChevronLeftIcon className="mr-1 h-4 w-4" />
             <span>Back</span>
@@ -155,7 +155,7 @@ export const SettingsMenu = React.memo(() => {
                 setIsSettingsMenuOpen(false);
                 setFocusedIndex(0);
               }}
-              className={`flex items-center justify-between rounded px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none ${qualities.selectedValue === value ? 'text-blue-400' : ''}`}
+              className={`flex items-center justify-between rounded-sm px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden ${qualities.selectedValue === value ? 'text-blue-400' : ''}`}
             >
               <span>{label}</span>
               {qualities.selectedValue === value && (
@@ -173,7 +173,7 @@ export const SettingsMenu = React.memo(() => {
             data-focusable="true"
             data-control="settings-back"
             onClick={() => handleMenuChange('main')}
-            className="mb-2 flex items-center rounded border-b border-gray-700 px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+            className="mb-2 flex items-center rounded-sm border-b border-gray-700 px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
           >
             <ChevronLeftIcon className="mr-1 h-4 w-4" />
             <span>Back</span>
@@ -188,7 +188,7 @@ export const SettingsMenu = React.memo(() => {
                 setIsSettingsMenuOpen(false);
                 setFocusedIndex(0);
               }}
-              className={`flex items-center justify-between rounded px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none ${audioOptions.selectedValue === value ? 'text-blue-400' : ''}`}
+              className={`flex items-center justify-between rounded-sm px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden ${audioOptions.selectedValue === value ? 'text-blue-400' : ''}`}
             >
               <span>{label || 'Default'}</span>
               {audioOptions.selectedValue === value && (
@@ -206,7 +206,7 @@ export const SettingsMenu = React.memo(() => {
             data-focusable="true"
             data-control="settings-back"
             onClick={() => handleMenuChange('main')} // 👈 Back
-            className="mb-2 flex items-center rounded border-b border-gray-700 px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+            className="mb-2 flex items-center rounded-sm border-b border-gray-700 px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
           >
             <ChevronLeftIcon className="mr-1 h-4 w-4" />
             <span>Back</span>
@@ -221,7 +221,7 @@ export const SettingsMenu = React.memo(() => {
                 setIsSettingsMenuOpen(false);
                 setFocusedIndex(0);
               }}
-              className={`flex items-center justify-between rounded px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none ${captionOptions.selectedValue === value ? 'text-blue-400' : ''}`}
+              className={`flex items-center justify-between rounded-sm px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden ${captionOptions.selectedValue === value ? 'text-blue-400' : ''}`}
             >
               <span>{label}</span>
               {captionOptions.selectedValue === value && (
@@ -237,7 +237,7 @@ export const SettingsMenu = React.memo(() => {
               clearSubtitleSearch?.();
               handleMenuChange('add-subtitle');
             }}
-            className="mt-1 flex items-center justify-between rounded border-t border-gray-700 px-3 py-2 text-blue-400 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+            className="mt-1 flex items-center justify-between rounded-sm border-t border-gray-700 px-3 py-2 text-blue-400 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
           >
             <span>+ Add Subtitle</span>
             <ChevronRightIcon className="h-4 w-4" />
@@ -255,7 +255,7 @@ export const SettingsMenu = React.memo(() => {
               clearSubtitleSearch?.();
               handleMenuChange('subtitles');
             }}
-            className="mb-2 flex items-center rounded border-b border-gray-700 px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+            className="mb-2 flex items-center rounded-sm border-b border-gray-700 px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
           >
             <ChevronLeftIcon className="mr-1 h-4 w-4" />
             <span>Back</span>
@@ -283,7 +283,7 @@ export const SettingsMenu = React.memo(() => {
                 data-control="settings-item"
                 onClick={() => searchOnlineSubtitles?.()}
                 disabled={subtitleSearchLoading}
-                className="flex items-center justify-between rounded px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none disabled:opacity-50"
+                className="flex items-center justify-between rounded-sm px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden disabled:opacity-50"
               >
                 <span>{subtitleSearchLoading ? 'Searching…' : 'Search Online'}</span>
               </button>
@@ -291,7 +291,7 @@ export const SettingsMenu = React.memo(() => {
                 data-focusable="true"
                 data-control="settings-item"
                 onClick={() => localSubtitleInputRef.current?.click()}
-                className="flex items-center justify-between rounded px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+                className="flex items-center justify-between rounded-sm px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
               >
                 <span>From Device</span>
               </button>
@@ -309,7 +309,7 @@ export const SettingsMenu = React.memo(() => {
                     addOnlineSubtitle?.(result);
                     handleMenuChange('subtitles');
                   }}
-                  className="flex flex-col items-start rounded px-3 py-2 text-left transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+                  className="flex flex-col items-start rounded-sm px-3 py-2 text-left transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
                 >
                   <span className="truncate text-sm">{result.releaseName}</span>
                   <span className="text-xs uppercase text-gray-400">{result.language}</span>
@@ -330,7 +330,7 @@ export const SettingsMenu = React.memo(() => {
               setIsSettingsMenuOpen(false);
               setFocusedIndex(0);
             }}
-            className="flex w-full items-center justify-between rounded px-3 py-2 text-left transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none border-b border-gray-700/40 mb-1 pb-2"
+            className="flex w-full items-center justify-between rounded-sm px-3 py-2 text-left transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden border-b border-gray-700/40 mb-1 pb-2"
           >
             <div className="flex items-center space-x-2">
               <FaChromecast className="h-4 w-4 text-blue-400" />
@@ -350,7 +350,7 @@ export const SettingsMenu = React.memo(() => {
                   setIsSettingsMenuOpen(false);
                   setFocusedIndex(0);
                 }}
-                className="flex items-center justify-between rounded px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-none"
+                className="flex items-center justify-between rounded-sm px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
               >
                 <span>{receiver.name}</span>
               </button>

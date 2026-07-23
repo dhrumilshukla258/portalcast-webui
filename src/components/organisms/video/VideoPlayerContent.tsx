@@ -60,6 +60,7 @@ const VideoPlayerContent: React.FC = () => {
 
     onProviderChange,
     handleCanPlay,
+    handleVolumeChange,
     handleTimeUpdate,
     handleError,
     handleEnded,
@@ -101,7 +102,6 @@ const VideoPlayerContent: React.FC = () => {
 
     const handlePause = () => {
       if (player.state?.waiting || player.waiting) {
-        console.log("[TV Recovery] Player paused while buffering, forcing play...");
         setTimeout(() => {
           player.play().catch((err: any) => {
             console.error("[TV Recovery] Forced play failed:", err);
@@ -121,7 +121,6 @@ const VideoPlayerContent: React.FC = () => {
       const now = Date.now();
       if (now - lastStallNudge < 3000) return;
       lastStallNudge = now;
-      console.log("[TV Recovery] Stalled event detected, attempting play nudge...");
       if (player.paused) {
         player.play().catch(() => {});
       }
@@ -151,7 +150,7 @@ const VideoPlayerContent: React.FC = () => {
 
   return (
     <div
-      className="h-[100dvh] w-full bg-black"
+      className="h-dvh w-full bg-black"
       data-focusable="true"
       tabIndex={-1}
       style={{ '--video-fit-mode': fitMode } as React.CSSProperties}
@@ -185,6 +184,7 @@ const VideoPlayerContent: React.FC = () => {
           ref={playerRef}
           onProviderChange={onProviderChange}
           onCanPlay={handleCanPlay}
+          onVolumeChange={handleVolumeChange}
           onTimeUpdate={handleTimeUpdate}
           onError={handleError}
           onEnded={handleEnded}
@@ -225,7 +225,7 @@ const VideoPlayerContent: React.FC = () => {
           />
 
           <Captions
-            className={`media-captions pointer-events-none absolute left-0 right-0 z-10 select-none break-words text-center transition-[bottom] duration-300 ease-in-out ${
+            className={`media-captions pointer-events-none absolute left-0 right-0 z-10 select-none wrap-break-word text-center transition-[bottom] duration-300 ease-in-out ${
               controlsVisible
                 ? 'bottom-32 md:bottom-40'
                 : 'bottom-10 md:bottom-12'
@@ -297,7 +297,7 @@ const VideoPlayerContent: React.FC = () => {
                 <div className="absolute inset-0 m-auto h-2 w-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>
               </div>
               <div className="flex flex-col items-center space-y-2 text-center">
-                <div className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-2xl font-bold tracking-wider text-transparent">
+                <div className="bg-linear-to-r from-blue-400 to-indigo-400 bg-clip-text text-2xl font-bold tracking-wider text-transparent">
                   Connecting...
                 </div>
                 <div className="text-sm font-medium tracking-wide transition-colors duration-300">
@@ -342,7 +342,7 @@ const VideoPlayerContent: React.FC = () => {
           )}
 
           {showExitToast && (
-            <div className="pointer-events-none absolute bottom-20 left-1/2 z-[100] -translate-x-1/2 rounded-full border border-gray-700 bg-black/90 px-6 py-3 text-white shadow-xl backdrop-blur-md transition-all duration-300">
+            <div className="pointer-events-none absolute bottom-20 left-1/2 z-100 -translate-x-1/2 rounded-full border border-gray-700 bg-black/90 px-6 py-3 text-white shadow-xl backdrop-blur-md transition-all duration-300">
               <span className="text-sm font-medium tracking-wide">
                 Press BACK again to exit
               </span>
@@ -350,7 +350,7 @@ const VideoPlayerContent: React.FC = () => {
           )}
 
           {showNextEpisodeButton && (
-            <div className="absolute bottom-24 right-8 z-[90] flex items-center gap-3">
+            <div className="absolute bottom-24 right-8 z-90 flex items-center gap-3">
               <button
                 data-focusable="true"
                 data-control="next-episode"
@@ -358,7 +358,7 @@ const VideoPlayerContent: React.FC = () => {
                   setShowNextEpisodeButton(false);
                   playNextEpisode?.();
                 }}
-                className="flex items-center gap-2 px-5 py-3 rounded-lg border border-white/10 bg-black/80 text-white font-semibold shadow-lg backdrop-blur-md hover:bg-white/20 transition-all duration-200 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-blue-600 focus:border-blue-400"
+                className="flex items-center gap-2 px-5 py-3 rounded-lg border border-white/10 bg-black/80 text-white font-semibold shadow-lg backdrop-blur-md hover:bg-white/20 transition-all duration-200 outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-blue-600 focus:border-blue-400"
               >
                 <span>Next Episode</span>
                 <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
@@ -371,7 +371,7 @@ const VideoPlayerContent: React.FC = () => {
           <div
             ref={speedBannerRef}
             style={{ display: 'none' }}
-            className="absolute top-10 left-1/2 -translate-x-1/2 z-[100] pointer-events-none flex items-center gap-2 px-4 py-2 rounded-full border border-yellow-500/30 bg-black/80 shadow-lg backdrop-blur-sm"
+            className="absolute top-10 left-1/2 -translate-x-1/2 z-100 pointer-events-none flex items-center gap-2 px-4 py-2 rounded-full border border-yellow-500/30 bg-black/80 shadow-lg backdrop-blur-xs"
           >
             <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
             <span className="text-yellow-500 text-xs font-bold tracking-wider uppercase">2x Speed Active</span>

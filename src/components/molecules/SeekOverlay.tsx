@@ -6,8 +6,6 @@ interface SeekOverlayProps {
 }
 
 export const SeekOverlay = React.memo<SeekOverlayProps>(({ seekOverlay }) => {
-  console.log(seekOverlay);
-
   if (!seekOverlay) return null;
 
   return (

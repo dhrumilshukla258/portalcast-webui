@@ -97,6 +97,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     initializeAuth();
   }, [token, refreshProfile]);
 
+  // Preferences (category order/last-selected, etc.) are cached to
+  // localStorage per-device and only re-synced from the server on
+  // initial load. Without this, switching back to a tab/app after
+  // reordering categories on another device keeps showing this
+  // device's stale cached preferences indefinitely.
+  useEffect(() => {
+    if (!token) return;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        refreshProfile();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
+  }, [token, refreshProfile]);
+
   const loginWithGoogle = useCallback(async (idToken: string) => {
     try {
       // clientType is resolved once at adapter-construction time via

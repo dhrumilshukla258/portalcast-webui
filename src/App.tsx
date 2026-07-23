@@ -69,6 +69,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     favorites,
     recentChannels,
     handleContentTypeChange: handleContentTypeChangeRaw,
+    setContentType,
     handleSearch,
     cycleSort,
     handlePageChange,
@@ -125,6 +126,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     startPlayback,
     focusedIndex,
     setFocusedIndex,
+    episodeSnapshot,
   } = useAppNavigation(
     context,
     items,
@@ -149,23 +151,40 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     useCallback((item: MediaItem | null, options: MediaItem[]) => {
       setVariantPickerItem(item);
       setVariantPickerOptions(options as DiscoverVariant[]);
-    }, [])
+    }, []),
+    setContentType
   );
 
   // One shared AmbientBackdrop instance instead of one per view (Discover,
-  // MainContentGrid) — each view reports its own item pool up via
-  // onBackdropItemsChange. Deliberately a single COMBINED pool, not a
-  // per-view switch — switching pools based on which section is active
-  // still meant the backdrop visibly changed the instant you navigated
-  // (even with a smooth crossfade, it was still a different image every
-  // time). Merging both into one continuous rotation means the backdrop
-  // genuinely doesn't care which section you're looking at.
-  const [discoverBackdropItems, setDiscoverBackdropItems] = useState<MediaItem[]>([]);
-  const [gridBackdropItems, setGridBackdropItems] = useState<MediaItem[]>([]);
-  const activeBackdropItems = React.useMemo(
-    () => [...discoverBackdropItems, ...gridBackdropItems],
-    [discoverBackdropItems, gridBackdropItems]
-  );
+  // MainContentGrid) — every section reports its on-screen items into this
+  // single pool via mergeBackdropItems, and the backdrop just keeps
+  // rotating through it regardless of which section is actually active.
+  //
+  // Reports only ever ADD to the pool, never replace it — a plain "set to
+  // whatever this section just reported" meant a Movies/Series toggle, a
+  // Discover filter change, or DiscoverView simply remounting (it unmounts
+  // when you leave Discover and loses all fetched state, so every
+  // re-entry starts by reporting an almost-empty pool while it refetches)
+  // could each wipe out whatever backdrop was currently showing before the
+  // pool grew back, causing a visible jump. Deduped by id. Capped, but
+  // additions are simply dropped once the cap is hit rather than evicting
+  // the oldest entries — evicting used to be able to evict whichever item
+  // AmbientBackdrop was currently showing, forcing a jarring reset (see its
+  // preservedIndex comment). Once full, the backdrop just keeps looping the
+  // same first N items rather than the pool trying to keep growing forever.
+  const BACKDROP_POOL_CAP = 500;
+  const [backdropItemPool, setBackdropItemPool] = useState<MediaItem[]>([]);
+  const mergeBackdropItems = useCallback((items: MediaItem[]) => {
+    setBackdropItemPool((prev) => {
+      if (prev.length >= BACKDROP_POOL_CAP) return prev;
+      const seen = new Set(prev.map((i) => i.id));
+      const additions = items.filter((i) => !seen.has(i.id));
+      if (additions.length === 0) return prev;
+      const merged = [...prev, ...additions];
+      return merged.length > BACKDROP_POOL_CAP ? merged.slice(0, BACKDROP_POOL_CAP) : merged;
+    });
+  }, []);
+  const activeBackdropItems = backdropItemPool;
 
   const onClearWatched = useCallback(
     () => handleClearWatched(setConfirmModal),
@@ -344,11 +363,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
           item={currentItem}
           seriesItem={currentSeriesItem}
           channels={contentType === 'tv' ? items : undefined}
-          episodes={
-            currentItem?.is_episode || currentItem?.series_number !== undefined
-              ? items
-              : undefined
-          }
+          episodes={episodeSnapshot}
           channelInfo={contentType === 'tv' ? currentItem : null}
           previewChannelInfo={contentType === 'tv' ? previewChannel : null}
           onNextChannel={handleNextChannel}
@@ -396,7 +411,16 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
             />
 
             <main className="relative min-h-0 flex-1">
-              <AmbientBackdrop items={activeBackdropItems} allowLowRes />
+              <AmbientBackdrop
+                items={activeBackdropItems}
+                allowLowRes
+                // Same "detail page is open" condition MainContentGrid's own
+                // overlay/tint rendering already uses (line ~489 below) —
+                // the detail page shows its own sharp per-item backdrop
+                // banner up front, so this page-level one recedes instead of
+                // competing with it.
+                blurred={!!detailItem || (!!currentSeriesItem && contentType === 'series')}
+              />
               {/* Moved out of Header into its own sub-bar here — mirrors how
                   DiscoverView's Filters/Movies/Series bar sits below the main
                   nav row, so Movies/Series/TV get an equivalent section bar
@@ -436,7 +460,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                     loadingRecommendations={loadingRecommendations}
                     loadingItemId={discoverLoadingItemId}
                     onActiveTypeChange={setDiscoverActiveType}
-                    onBackdropItemsChange={setDiscoverBackdropItems}
+                    onBackdropItemsChange={mergeBackdropItems}
                   />
                 </React.Suspense>
               )}
@@ -455,7 +479,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                   against the full-viewport AmbientBackdrop around it — fixed
                   inset-0 on JUST the tint layer matches AmbientBackdrop's own
                   coverage exactly, so there's no seam. Solid near-opaque
-                  tint, not backdrop-blur — this is obscuring Discover's own
+                  tint, not backdrop-blur-sm — this is obscuring Discover's own
                   sharp poster cards behind it (not the ambient image), and a
                   plain opacity layer does that without the GPU cost/flicker
                   risk of a full-viewport blur filter. Split from the actual
@@ -507,7 +531,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                 onCloseDetail={handleBack}
                 onPlayDetailItem={startPlayback}
                 hideCategorySidebar={showDiscover}
-                onBackdropItemsChange={setGridBackdropItems}
+                onBackdropItemsChange={mergeBackdropItems}
               />
               </div>
               )}

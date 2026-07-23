@@ -32,7 +32,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
   const [activeDevices, setActiveDevices] = useState<Device[]>([]);
 
   const isReceiver = getIsReceiver();
-  const { user } = useAuth();
+  const { user, token, refreshProfile } = useAuth();
 
   useEffect(() => {
     let deviceId = localStorage.getItem('device_id');
@@ -108,6 +108,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       newSocket.off('active_devices_updated');
       newSocket.off('active_devices_list');
       newSocket.off('config_changed');
+      newSocket.off('preferences_changed');
       newSocket.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -125,6 +126,23 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       type: isReceiver ? 'receiver' : 'controller',
     });
   }, [socket, isConnected, user?.name, user?.email, isReceiver]);
+
+  // Joins this user's server-side room (see join_user_room in
+  // SocketService.ts) so a preferences save on another of this user's
+  // devices pushes here instantly instead of waiting for the next
+  // focus/visibility refetch in AuthContext.
+  useEffect(() => {
+    if (!socket || !isConnected || !token) return;
+    socket.emit('join_user_room', { token });
+
+    const handlePreferencesChanged = () => {
+      refreshProfile();
+    };
+    socket.on('preferences_changed', handlePreferencesChanged);
+    return () => {
+      socket.off('preferences_changed', handlePreferencesChanged);
+    };
+  }, [socket, isConnected, token, refreshProfile]);
 
   const castTo = useCallback((
     targetDeviceId: string,

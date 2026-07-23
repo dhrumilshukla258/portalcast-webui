@@ -133,18 +133,28 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
   }, []);
 
   const fetchVodCategories = useCallback(async (type: 'movie' | 'series') => {
+    // Same stale-response guard as fetchData's fetchRequestRef (see its own
+    // comment) — without it, a Movies fetch and a lingering Series fetch
+    // (e.g. still in flight from just before switching sections) can land
+    // out of order, and the later-arriving Series response silently
+    // overwrites vodCategories back to Series' category ids while
+    // contentType is already 'movie'. Clicking a category during that
+    // window then sends a Series category id under contentType='movie',
+    // which the server can't match to a real movie category.
+    const requestId = ++categoriesRequestRef.current;
     setLoadingCategories(true);
     try {
       const response =
         type === 'movie'
           ? await getMovieCategories()
           : await getSeriesCategories();
+      if (categoriesRequestRef.current !== requestId) return;
       const allItem: ChannelGroup = { id: '*', title: 'ALL' };
       setVodCategories([allItem, ...response.data]);
     } catch (err) {
       console.error('Failed to load categories', err);
     } finally {
-      setLoadingCategories(false);
+      if (categoriesRequestRef.current === requestId) setLoadingCategories(false);
     }
   }, []);
 
@@ -202,6 +212,8 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
   // call whose id is still the latest by the time its response lands is
   // allowed to commit state.
   const fetchRequestRef = useRef(0);
+  // Guards fetchVodCategories the same way — see its own comment.
+  const categoriesRequestRef = useRef(0);
 
   const loadEpgData = useCallback(async () => {
     try {
@@ -218,7 +230,6 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
       typeOverride?: 'movie' | 'series' | 'tv'
     ) => {
       if (isRestoringFromHistory.current) {
-        console.log('Restoring from history... Fetch blocked, Bro!');
         return;
       }
       const requestId = ++fetchRequestRef.current;
@@ -581,6 +592,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
           setConfirmModal((prev) => ({ ...prev, isOpen: false }));
           try {
             await clearUserProgress();
+            setInProgressRecords([]);
             toast.success(
               'All watched and in-progress statuses have been cleared.'
             );
@@ -688,6 +700,13 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
     handlePageChange,
     toggleFavorite,
     handleContentTypeChange,
+    // Raw setter, distinct from handleContentTypeChange — the nav-history
+    // frame restore (see useNavigationHistory's NavFrame.contentType) needs
+    // to silently put contentType back to whatever it was before a
+    // Discover-opened detail page switched it, without handleContentTypeChange's
+    // side effects (preference save, category/carousel refetch, toast) firing
+    // as if the user had deliberately picked a different tab.
+    setContentType,
     cycleSort,
     handleSearch,
     handleClearWatched,

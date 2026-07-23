@@ -165,8 +165,8 @@ export const WelcomeCarousel: React.FC<WelcomeCarouselProps> = ({
                     key={idx}
                     className={`h-2 rounded-full transition-all duration-300 ${
                       idx === activeIndex
-                        ? 'w-6 bg-blue-500 shadow-sm'
-                        : 'w-2 bg-gray-400/80 shadow-sm'
+                        ? 'w-6 bg-blue-500 shadow-xs'
+                        : 'w-2 bg-gray-400/80 shadow-xs'
                     }`}
                   />
                 ))}

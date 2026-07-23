@@ -28,6 +28,7 @@ interface ProgressEntry {
   is_series?: number;
   cmd?: string;
   series_number?: number;
+  catalogId?: string;
   currentTime: number;
   duration: number;
   progressPercent: number;
@@ -60,10 +61,26 @@ const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRe
         if (completedMediaIds.has(displayId.toString())) continue;
 
         const isSeries = (entry.is_series ?? 0) === 1;
+        // entry.mediaId is the EPISODE's own playback-file id (see saveProgress
+        // in useProgressTracking.ts — it's the raw `mediaId` the video element
+        // is playing), not the series' own id — using it as series_id below
+        // meant playContinueWatching's follow-up "fetch this series' episode
+        // list" call always asked for a series matching an episode's id,
+        // which never exists, so the episode list came back empty and
+        // autoplay/next-episode silently did nothing on every resume,
+        // regardless of which series or episode. entry.catalogId carries the
+        // real portal series id (stamped as `series_{realId}` whenever a
+        // series is opened normally — see setCurrentSeriesItem in
+        // useAppNavigation.ts — and persisted into every progress save from
+        // then on), so prefer stripping that instead; entry.mediaId stays as
+        // a fallback for any older saved record from before catalogId existed.
+        const seriesIdFromCatalog = entry.catalogId?.startsWith('series_')
+          ? entry.catalogId.slice('series_'.length)
+          : undefined;
 
         items.push({
           id: displayId.toString(),
-          series_id: isSeries ? entry.mediaId : undefined,
+          series_id: isSeries ? (seriesIdFromCatalog || entry.mediaId) : undefined,
           season_id: isSeries ? (entry as any).seasonId || undefined : undefined,
 
           title: isSeries
@@ -92,6 +109,7 @@ const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRe
           cmd: entry.cmd,
           series_number: entry.series_number,
           progressPercent: entry.progressPercent,
+          catalogId: entry.catalogId,
 
           playbackFileId: (entry as any).playbackFileId || entry.itemId || entry.mediaId,
 

@@ -85,7 +85,7 @@ const ConfigTab: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="flex flex-[2] justify-center rounded-xl bg-blue-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-blue-600/40 transition-all hover:-translate-y-0.5 hover:bg-blue-500 active:translate-y-0 sm:flex-none sm:px-8"
+              className="flex flex-2 justify-center rounded-xl bg-blue-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-blue-600/40 transition-all hover:-translate-y-0.5 hover:bg-blue-500 active:translate-y-0 sm:flex-none sm:px-8"
             >
               Save Config
             </button>

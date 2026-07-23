@@ -45,7 +45,7 @@ const LogsTab: React.FC = () => {
 
   return (
     <div className="animate-in fade-in zoom-in-95 space-y-4 duration-300">
-      <div className="flex items-center justify-between rounded-2xl border border-gray-800 bg-gray-900/40 p-4 backdrop-blur-sm">
+      <div className="flex items-center justify-between rounded-2xl border border-gray-800 bg-gray-900/40 p-4 backdrop-blur-xs">
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
           <h3 className="font-bold text-white">Live System Logs</h3>
@@ -57,7 +57,7 @@ const LogsTab: React.FC = () => {
               type="checkbox"
               checked={autoScroll}
               onChange={(e) => setAutoScroll(e.target.checked)}
-              className="rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-offset-0"
+              className="rounded-sm border-gray-700 bg-gray-800 text-blue-600 focus:ring-offset-0"
             />
           </label>
           <button

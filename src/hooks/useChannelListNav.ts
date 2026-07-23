@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { MediaItem, ChannelGroup } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 interface UseChannelListNavArgs {
   channels: MediaItem[];
@@ -27,6 +28,8 @@ export function useChannelListNav({
   onChannelSelect,
   onBack,
 }: UseChannelListNavArgs) {
+  const { user, updatePreferences } = useAuth();
+
   const findInitialIndexes = useCallback(() => {
     if (!currentItemId) {
       // The video player replaces this whole component tree while a
@@ -37,9 +40,17 @@ export function useChannelListNav({
       // category/channel the user had actually selected. currentItemId is
       // always null from the caller (MainContentGrid), so this path is
       // the only one that ever runs in practice.
+      //
+      // Preferences (synced across devices) are checked first; localStorage
+      // is only a same-device fallback for logged-out/offline cases and for
+      // the instant read on first mount before the profile fetch resolves.
       try {
-        const savedGroupId = localStorage.getItem(`tvSelectedGroupId_${providerKey}`);
-        const savedChannelId = localStorage.getItem(`tvSelectedChannelId_${providerKey}`);
+        const savedGroupId =
+          user?.preferences?.lastSelectedTvGroup?.[providerKey] ||
+          localStorage.getItem(`tvSelectedGroupId_${providerKey}`);
+        const savedChannelId =
+          user?.preferences?.lastSelectedTvChannel?.[providerKey] ||
+          localStorage.getItem(`tvSelectedChannelId_${providerKey}`);
         const groupIdx = savedGroupId
           ? channelGroups.findIndex((g) => String(g.id) === savedGroupId)
           : -1;
@@ -98,7 +109,7 @@ export function useChannelListNav({
       groupIdx: targetGroupIdx,
       channelIdx: Math.max(0, targetChannelIdx),
     };
-  }, [currentItemId, channels, channelGroups, providerKey]);
+  }, [currentItemId, channels, channelGroups, providerKey, user?.preferences]);
 
   const initialIndexes = findInitialIndexes();
 
@@ -175,11 +186,19 @@ export function useChannelListNav({
       } catch {
         // localStorage unavailable — selection just won't survive a remount
       }
+      if (user) {
+        updatePreferences({
+          lastSelectedTvGroup: {
+            ...(user.preferences?.lastSelectedTvGroup || {}),
+            [providerKey]: String(group.id),
+          },
+        });
+      }
       if (isMobile) {
         setShowChannelsList(true);
       }
     },
-    [isMobile, providerKey]
+    [isMobile, providerKey, user, updatePreferences]
   );
 
   // Persists which channel was picked so it survives the unmount/remount
@@ -200,11 +219,19 @@ export function useChannelListNav({
       } catch {
         // localStorage unavailable — selection just won't survive a remount
       }
+      if (user) {
+        updatePreferences({
+          lastSelectedTvChannel: {
+            ...(user.preferences?.lastSelectedTvChannel || {}),
+            [providerKey]: String(channel.id),
+          },
+        });
+      }
       setFocusedChannelIndex(index);
       setFocusedColumn('channels');
       onChannelSelect(channel);
     },
-    [onChannelSelect, providerKey]
+    [onChannelSelect, providerKey, user, updatePreferences]
   );
 
   const handleKeyDown = useCallback(

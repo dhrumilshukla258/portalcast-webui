@@ -25,7 +25,7 @@ const TvChannelListCard: React.FC<TvChannelListCardProps> = ({
     <div
       className={`group my-0.5 flex cursor-pointer items-center rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 ${
         isFocused
-          ? 'z-10 scale-[1.01] border border-portalcast-light/50 bg-gradient-to-r from-portalcast-light to-portalcast-dark shadow-md shadow-portalcast-dark/30'
+          ? 'z-10 scale-[1.01] border border-portalcast-light/50 bg-linear-to-r from-portalcast-light to-portalcast-dark shadow-md shadow-portalcast-dark/30'
           : 'border border-transparent bg-transparent hover:scale-[1.01] hover:bg-white/10'
       }`}
       onClick={() => onClick(item)}
@@ -38,13 +38,13 @@ const TvChannelListCard: React.FC<TvChannelListCardProps> = ({
         {item.number || ''}
       </span>
       <div
-        className={`mr-2 flex h-8 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded transition-colors sm:mr-3 sm:h-10 sm:w-14 ${isFocused ? 'bg-white/20' : 'bg-gray-800/80'}`}
+        className={`mr-2 flex h-8 w-11 shrink-0 items-center justify-center overflow-hidden rounded-sm transition-colors sm:mr-3 sm:h-10 sm:w-14 ${isFocused ? 'bg-white/20' : 'bg-gray-800/80'}`}
       >
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={displayTitle}
-            className="h-full w-full object-contain drop-shadow-sm"
+            className="h-full w-full object-contain drop-shadow-xs"
           />
         ) : (
           <span className="text-[8px] font-bold tracking-wider text-gray-500 sm:text-[10px]">

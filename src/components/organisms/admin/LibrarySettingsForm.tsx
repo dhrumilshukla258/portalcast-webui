@@ -83,7 +83,7 @@ const LibrarySettingsForm: React.FC<LibrarySettingsFormProps> = ({
 
         <select
           multiple
-          className="scrollbar-hide h-56 w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 text-sm outline-none focus:border-blue-500"
+          className="scrollbar-hide h-56 w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 text-sm outline-hidden focus:border-blue-500"
           value={config.groups}
           onChange={handleGroupsChange}
         >

@@ -11,12 +11,16 @@ export interface User {
     favorites?: string[];
     recentChannels?: string[];
     videoFitMode?: string;
+    volume?: number;
+    muted?: boolean;
     lastSelectedCategory?: Record<string, string>;
     lastSelectedCategoryTitle?: Record<string, string>;
     recentCategories?: Record<string, string[]>;
     pinnedCategories?: Record<string, string[]>;
     categoryOrder?: Record<string, string[]>;
     recentSearches?: string[];
+    lastSelectedTvGroup?: Record<string, string>;
+    lastSelectedTvChannel?: Record<string, string>;
   };
 }
 
