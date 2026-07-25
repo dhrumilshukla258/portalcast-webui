@@ -1,4 +1,4 @@
-import { BASE_URL } from '@/api/config';
+import { getBaseUrl } from '@/api/config';
 import { authFetch } from '@/api/client';
 import type {
   SubtitleProbeResponse,
@@ -19,7 +19,7 @@ export const probeStreamSubtitles = async (
 ): Promise<SubtitleProbeResponse | null> => {
   const b64url = btoa(rawStreamUrl);
   const response = await authFetch(
-    `${BASE_URL}/media/info?url=${b64url}&t=${streamToken}`
+    `${getBaseUrl()}/media/info?url=${b64url}&t=${streamToken}`
   );
   if (!response.ok) return null;
   return response.json();
@@ -33,7 +33,7 @@ export const searchOnlineSubtitles = async (
   params: URLSearchParams
 ): Promise<OnlineSubtitleSearchResponse> => {
   const response = await authFetch(
-    `${BASE_URL}/v2/subtitles/search?${params.toString()}`
+    `${getBaseUrl()}/v2/subtitles/search?${params.toString()}`
   );
   return response.json();
 };
