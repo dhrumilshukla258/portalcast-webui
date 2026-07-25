@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { BASE_URL } from '@/api/config';
+import { getBaseUrl } from '@/api/config';
 import { probeStreamSubtitles, searchOnlineSubtitles as apiSearchOnlineSubtitles } from '@/api/endpoints/subtitles';
 
 // Owns subtitle track discovery (embedded-track probing for progressive VOD,
@@ -55,7 +55,7 @@ export function useSubtitles(
         if (!data) return;
         if (data.subtitles && Array.isArray(data.subtitles)) {
           const mapped = data.subtitles.map((sub: any, idx: number) => {
-            const hostPart = BASE_URL.replace("/api", "");
+            const hostPart = getBaseUrl().replace("/api", "");
             return {
               src: `${hostPart}/api/media/subtitle?url=${b64url}&track=${sub.index}&t=${streamToken}`,
               label: sub.title || sub.language || `Track ${idx + 1}`,
@@ -98,7 +98,7 @@ export function useSubtitles(
   }, [item, seriesItem]);
 
   const addOnlineSubtitle = useCallback((result: { fileId: number; language: string; releaseName: string }) => {
-    const hostPart = BASE_URL.replace('/api', '');
+    const hostPart = getBaseUrl().replace('/api', '');
     const track = {
       src: `${hostPart}/api/v2/subtitles/download?fileId=${result.fileId}`,
       label: `${result.language?.toUpperCase() || 'Subtitle'} — ${result.releaseName}`,

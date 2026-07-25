@@ -1,4 +1,4 @@
-import { BASE_URL, URL_PATHS } from '@/api/config';
+import { getBaseUrl, URL_PATHS } from '@/api/config';
 import { webPlatformAdapter, type PlatformAdapter } from '@/api/platform';
 
 // The active platform adapter used for token storage. Defaults to the web
@@ -22,7 +22,7 @@ async function performTokenRefresh(): Promise<string | null> {
   if (!refreshToken) return null;
 
   try {
-    const response = await fetch(`${BASE_URL}/auth/refresh`, {
+    const response = await fetch(`${getBaseUrl()}/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ async function request<T = unknown>(
   body?: unknown,
   config?: RequestConfig
 ): Promise<ApiResponse<T>> {
-  const fullUrl = `${BASE_URL}${path}`;
+  const fullUrl = `${getBaseUrl()}${path}`;
   const url =
     URL_PATHS.HOST === '' || URL_PATHS.HOST === '/'
       ? new URL(fullUrl, window.location.origin)

@@ -50,8 +50,3 @@ export function getBaseUrl(): string {
   const host = getServerUrl();
   return host === '/' ? '/api' : `${host}/api`;
 }
-
-// Static snapshot for call sites that previously imported the `BASE_URL`
-// constant. Since `VITE_API_HOST` is a build-time env var and runtime
-// overrides are new, this remains correct for all pre-existing usages.
-export const BASE_URL = getBaseUrl();

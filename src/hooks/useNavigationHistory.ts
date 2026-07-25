@@ -115,6 +115,19 @@ export function useNavigationHistory({
   // intermediate frame representing a page the user never manually visited
   // — see restorePreviousFrame and playContinueWatching (useAppNavigation.ts).
   const isFromContinueWatching = useRef(false);
+  // Tracks the pending "clear isRestoringFromHistory" timeout below so a
+  // second applyFrame (e.g. rapid repeated Back/Forward) can cancel the
+  // first one instead of letting it fire mid-restore and prematurely
+  // un-block fetchData's context-change effect.
+  const restoreTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (restoreTimeoutRef.current) {
+        clearTimeout(restoreTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const currentFrame = useCallback(
     (): NavFrame => ({
@@ -158,8 +171,12 @@ export function useNavigationHistory({
         // context-change effect below doesn't immediately stomp on it.
         isRestoringFromHistory.current = true;
         setItems(frame.items);
-        setTimeout(() => {
+        if (restoreTimeoutRef.current) {
+          clearTimeout(restoreTimeoutRef.current);
+        }
+        restoreTimeoutRef.current = setTimeout(() => {
           isRestoringFromHistory.current = false;
+          restoreTimeoutRef.current = null;
         }, 500);
       } else if (!frame.showDiscover) {
         // Placeholder frame pushed without ever being populated — fetch it for
