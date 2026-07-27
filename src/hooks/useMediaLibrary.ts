@@ -230,7 +230,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
       typeOverride?: 'movie' | 'series' | 'tv'
     ) => {
       if (isRestoringFromHistory.current) {
-        return;
+        return true;
       }
       const requestId = ++fetchRequestRef.current;
       const isStale = () => fetchRequestRef.current !== requestId;
@@ -276,7 +276,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
             sort: newContext.sort,
           };
           response = await getMedia(params, timeoutController.signal);
-          if (isStale()) return;
+          if (isStale()) return true;
           const responseData = response.data || [];
           setItems((prev) => mergePageResults(prev, newContext.page, responseData, setTotalItemsCount));
           if (responseData.length > 0 && response.total_items) {
@@ -312,7 +312,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
               sort: newContext.sort,
             }, timeoutController.signal);
           }
-          if (isStale()) return;
+          if (isStale()) return true;
           const responseData = response.data || [];
           setItems((prev) => mergePageResults(prev, newContext.page, responseData, setTotalItemsCount));
           if (responseData.length > 0 && response.total_items) {
@@ -333,7 +333,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
               getChannels(),
               getChannelGroups(),
             ]);
-            if (isStale()) return;
+            if (isStale()) return true;
             allChannels = channelResponse.data || [];
             const allGroups = groupResponse.data || [];
             // Stalker/Xtream-style portals commonly include their own
@@ -349,7 +349,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
             channelsCacheRef.current = { providerKey, channels: allChannels, groups: groupsForCache };
           }
 
-          if (isStale()) return;
+          if (isStale()) return true;
           const filteredChannels = newContext.search
             ? allChannels.filter((c) =>
                 c.name?.toLowerCase().includes(newContext.search!.toLowerCase())
@@ -365,11 +365,13 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
             ...groupsForCache,
           ]);
         }
+        return true;
       } catch {
-        if (isStale()) return;
+        if (isStale()) return true;
         if (newContext.page > 1)
           setPaginationError('Could not load more content.');
         else setError('Could not load content. Please try again later.');
+        return false;
       } finally {
         clearTimeout(timeoutId);
         // A stale request finishing after a newer one must not clear the
@@ -387,30 +389,39 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
     fetchProviderKey();
   }, [fetchProviderKey]);
 
-  // 1. Initial Load of main content (runs once providerKey AND real user
-  // preferences are both ready) — this is the single place that resolves
-  // "what content type/category should we open on" and immediately fetches
-  // it, so the displayed contentType/context and the actual loaded items
-  // can never disagree. Requires user?.preferences directly (not just
-  // "auth isn't loading") — checking the actual data needed, rather than a
-  // proxy signal for it, is what closes the race described above. Keyed off
-  // user id + providerKey (not the whole `user` object) so it re-fires on a
-  // genuine identity/provider change but not on every incidental
-  // preference save elsewhere in the app (updatePreferences replaces
-  // `user.preferences` wholesale on every write).
+  // 1. Initial Load of main content (runs once providerKey is ready and a
+  // user is known) — this is the single place that resolves "what content
+  // type/category should we open on" and immediately fetches it, so the
+  // displayed contentType/context and the actual loaded items can never
+  // disagree. Used to also require user?.preferences to be truthy, on the
+  // assumption that was just a "profile fetch hasn't landed yet" proxy — but
+  // the backend only creates a preferences record the first time something
+  // actually saves one (e.g. handleContentTypeChange's updatePreferences
+  // call). An account that has never saved a preference has preferences
+  // null/undefined *permanently*, not just briefly, so gating on it left
+  // such accounts (typically newer/regular users, vs. admin accounts that
+  // have already saved real preferences) with this effect never firing at
+  // all — stuck until an unrelated tab switch created the record as a side
+  // effect. Missing preferences now just falls back to defaults instead of
+  // blocking. Keyed off user id + providerKey (not the whole `user` object)
+  // so it re-fires on a genuine identity/provider change but not on every
+  // incidental preference save elsewhere in the app (updatePreferences
+  // replaces `user.preferences` wholesale on every write).
   useEffect(() => {
-    if (!providerKey || !user?.preferences) return;
+    if (!providerKey || !user) return;
     const restoreKey = `${user.id ?? ''}_${providerKey}`;
     if (restoredForRef.current === restoreKey) return;
-    restoredForRef.current = restoreKey;
 
-    setFavorites(user.preferences.favorites || []);
-    setRecentChannels(user.preferences.recentChannels || []);
+    let cancelled = false;
+    const prefs = user.preferences || {};
 
-    const savedType = user.preferences.preferredContentType || 'movie';
+    setFavorites(prefs.favorites || []);
+    setRecentChannels(prefs.recentChannels || []);
+
+    const savedType = prefs.preferredContentType || 'movie';
     const key = `${providerKey}_${savedType}`;
-    const lastCategory = user.preferences.lastSelectedCategory?.[key] || '*';
-    const lastCategoryTitle = user.preferences.lastSelectedCategoryTitle?.[key];
+    const lastCategory = prefs.lastSelectedCategory?.[key] || '*';
+    const lastCategoryTitle = prefs.lastSelectedCategoryTitle?.[key];
     const newTitle = savedType === 'series' ? 'Series' : savedType === 'tv' ? 'TV' : 'Movies';
 
     setContentType(savedType);
@@ -420,7 +431,32 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
       category: savedType === 'tv' ? null : lastCategory,
       parentTitle: savedType === 'tv' ? 'TV' : (lastCategory === '*' ? newTitle : (lastCategoryTitle || newTitle)),
     };
-    fetchData(initialCtx, savedType);
+
+    // Only latch restoredForRef once the fetch actually lands — this used to
+    // be marked "done" before fetchData even started, so a single failed or
+    // out-of-order first attempt (e.g. a request racing the token/provider
+    // still settling right after login) left the page stuck empty for the
+    // rest of the session, since nothing else ever re-triggered this effect.
+    // Regular users hit this far more than admins simply because their
+    // session goes through more async setup before this can land cleanly,
+    // not because of any role-specific gating. On failure, retry once after
+    // a short delay instead of requiring the user to switch tabs to recover.
+    fetchData(initialCtx, savedType).then((success) => {
+      if (cancelled) return;
+      if (success) {
+        restoredForRef.current = restoreKey;
+      } else {
+        setTimeout(() => {
+          if (!cancelled) fetchData(initialCtx, savedType).then((retrySuccess) => {
+            if (!cancelled && retrySuccess) restoredForRef.current = restoreKey;
+          });
+        }, 1500);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [providerKey, user, fetchData]);
 
   // 2. Fetch ancillary items (carousel, categories, epg) when contentType or providerKey changes
