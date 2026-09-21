@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/context/AuthContext';
-import { api } from '@/api/client';
+import { getProviderKey } from '@/api/endpoints/provider';
 import { getChannels, getChannelGroups } from '@/api/endpoints/channels';
 import { getMedia, getMovieCategories } from '@/api/endpoints/movies';
 import { getSeries, getSeriesCategories } from '@/api/endpoints/series';
@@ -121,14 +121,15 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
     groups: ChannelGroup[];
   } | null>(null);
 
+  // Uses the non-admin /v2/provider-key, not /config: /config is admin-only
+  // server-side, so for regular users this used to 403, providerKey stayed
+  // empty, and the initial-load effect below never fired (blank grid until a
+  // tab switch called fetchData directly).
   const fetchProviderKey = useCallback(async () => {
     try {
-      const response = await api.get<{ hostname?: string; providerType?: string }>('/config');
-      const host = response.data.hostname || 'default_host';
-      const type = response.data.providerType || 'stalker';
-      setProviderKey(`${type}_${host}`);
+      setProviderKey(await getProviderKey());
     } catch (err) {
-      console.error('Failed to load active provider config:', err);
+      console.error('Failed to load active provider key:', err);
     }
   }, []);
 
@@ -457,7 +458,12 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
     return () => {
       cancelled = true;
     };
-  }, [providerKey, user, fetchData]);
+    // Keyed on user.id, not the `user` object (see the comment above): every
+    // refreshProfile() replaces the object, and that used to cancel this
+    // effect's in-flight first fetch. `user` is only read for its initial
+    // preferences here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [providerKey, user?.id, fetchData]);
 
   // 2. Fetch ancillary items (carousel, categories, epg) when contentType or providerKey changes
   useEffect(() => {
@@ -672,10 +678,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
       // Re-fetch provider config to get new providerKey
       let freshProviderKey = providerKey;
       try {
-        const response = await api.get<{ hostname?: string; providerType?: string }>('/config');
-        const host = response.data.hostname || 'default_host';
-        const type = response.data.providerType || 'stalker';
-        freshProviderKey = `${type}_${host}`;
+        freshProviderKey = await getProviderKey();
         setProviderKey(freshProviderKey);
       } catch (err) {
         console.error('Failed to reload active provider config:', err);
