@@ -14,6 +14,14 @@ Covers `vite.config.ts`, `deploy.sh`, `scripts/sync-dist.mjs`, and how `VITE_API
 
 ---
 
+## Windows + Git Bash: never set `VITE_API_HOST=/` inline — it gets rewritten into a file path
+
+Running `VITE_API_HOST="/" npm run build` (or `deploy.sh`'s equivalent) from **Git Bash on Windows** makes MSYS path conversion rewrite the lone `/` into Git's install root, so `F:/Program Files/Git/` is baked into the bundle. Every API and socket call then targets `file:///F:/Program Files/Git//api/...` / `http://f/socket.io`, and the whole app hangs on "loading" / "Failed to fetch" — login included. Nothing fails at build time, and the bundle looks normal apart from that one string. Build from PowerShell/cmd, or don't set it inline and let `.env.production` (`VITE_API_HOST=/`) supply it. `scripts/sync-dist.mjs` now refuses to sync a bundle containing that path, so `public/` is left untouched instead of being wiped and replaced with a broken build.
+
+Also: on Windows, `sync-dist.mjs`'s `rmSync` of `portalcast-server/public/` fails with `EPERM` (leaving `public/` half-deleted) if a server process is running from that folder or a shell has its cwd inside it. Stop the local server first, then re-run `node scripts/sync-dist.mjs` (the `dist/` from the build is still good).
+
+---
+
 ## `deploy.sh`'s two modes differ in exactly one env var: `VITE_API_HOST`
 
 Both modes run the identical `npm run build -- --mode production`; the only thing that changes is what `VITE_API_HOST` is set to before the build, which is baked into the bundle at build time (Vite inlines `import.meta.env.*` — it is not read at runtime).
