@@ -49,4 +49,5 @@ The subtitle search/probe (`src/api/endpoints/subtitles.ts`) and the stream reac
 - `src/api/platform.ts` — `PlatformAdapter`/`TokenStorage`, `webPlatformAdapter`, `isTizenDevice()`-driven `clientType`
 - `src/api/index.ts` — public SDK surface re-exporting `client`/`config`/`platform` + all `endpoints/`
 - `src/api/endpoints/*.ts` — one file per backend domain (channels, movies, series, epg, carousel, downloads, auth, subtitles, admin, profiles, user, discover); thin wrappers over `api.*` plus any endpoint-specific response reshaping
+- `src/api/endpoints/provider.ts` — `getProviderKey()` → `GET /v2/provider-key`: the non-admin way to identify the active provider (any logged-in user). `getConfig()` in `admin.ts` hits the admin-only `/config` (full config incl. credentials) and 403s for regular users — don't use it outside the admin panel
 - `src/api/types/*.ts` — response/request type definitions, one file per domain matching `endpoints/`
