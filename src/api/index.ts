@@ -16,6 +16,7 @@ export * from '@/api/endpoints/auth';
 export * from '@/api/endpoints/subtitles';
 export * from '@/api/endpoints/admin';
 export * from '@/api/endpoints/profiles';
+export * from '@/api/endpoints/provider';
 
 export type { PaginatedResponse } from '@/api/types/channels';
 export type { CarouselSlide } from '@/api/types/carousel';
