@@ -3,7 +3,7 @@ import { Check } from 'lucide-react';
 import MediaCard from '@/components/molecules/MediaCard';
 import MediaCardRow from '@/components/organisms/browse/MediaCardRow';
 import RecommendedRow from '@/components/organisms/browse/RecommendedRow';
-import DiscoverFilters, { type ActiveDiscoverFilters } from '@/components/organisms/discover/DiscoverFilters';
+import DiscoverFilters, { ActiveFilterTags, hasAnyActiveFilter, type ActiveDiscoverFilters } from '@/components/organisms/discover/DiscoverFilters';
 import { getDiscoverBrowse } from '@/api/endpoints/discover';
 import { useDiscover } from '@/hooks/useDiscover';
 import type { MediaItem } from '@/types';
@@ -75,8 +75,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   const [activeFilters, setActiveFilters] = useState<ActiveDiscoverFilters>({});
   const [loadingFiltered, setLoadingFiltered] = useState(false);
 
-  const hasActiveFilter =
-    (activeFilters.genre?.length ?? 0) > 0 || !!activeFilters.country || !!activeFilters.language || !!activeFilters.theme;
+  const hasActiveFilter = hasAnyActiveFilter(activeFilters);
 
   // Results are cached per filter-combo (+ type), not just held as a single
   // "current" array — so switching Action -> Comedy -> back to Action
@@ -387,43 +386,55 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           eliminates Chromium's nested-backdrop-filter compositing bug that
           caused the sticky-bar flicker — there's no backdrop-filter left
           here to nest. */}
-      <div className="sticky top-0 z-30 mb-4 flex items-center gap-2 rounded-2xl bg-black/80 px-2 py-2">
-        <DiscoverFilters
-          facets={facets}
-          activeFilters={activeFilters}
-          onFilterChange={handleFilterChange}
-          onGenresChange={handleGenresChange}
-        />
-        {(['movie', 'series'] as const).map((t) => {
-          const isActive = t === 'movie' ? showMovies : showSeries;
-          return (
-            <button
-              key={t}
-              data-focusable="true"
-              onClick={() => {
-                // Unselecting both doesn't have a sensible meaning here (it
-                // isn't "show neither" anywhere in this UI) — block turning
-                // off the last remaining one instead of silently falling
-                // back to "show everything" behind the user's back.
-                if (t === 'movie') {
-                  if (showMovies && !showSeries) return;
-                  setShowMovies((v) => !v);
-                } else {
-                  if (showSeries && !showMovies) return;
-                  setShowSeries((v) => !v);
-                }
-              }}
-              className={`flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-bold capitalize transition-all focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light ${
-                isActive
-                  ? 'border-transparent bg-linear-to-r from-sky-400 to-blue-500 text-white'
-                  : 'border-white/10 bg-[#0b1120]/85 text-gray-300 hover:border-white/20 hover:text-white'
-              }`}
-            >
-              {isActive && <Check size={14} />}
-              {t === 'movie' ? 'Movies' : 'Series'}
-            </button>
-          );
-        })}
+      <div className="sticky top-0 z-30 mb-4 rounded-2xl bg-black/80 px-2 py-2">
+        <div className="flex items-center gap-2">
+          <DiscoverFilters
+            facets={facets}
+            activeFilters={activeFilters}
+            onFilterChange={handleFilterChange}
+            onGenresChange={handleGenresChange}
+          />
+          {(['movie', 'series'] as const).map((t) => {
+            const isActive = t === 'movie' ? showMovies : showSeries;
+            return (
+              <button
+                key={t}
+                data-focusable="true"
+                onClick={() => {
+                  // Unselecting both doesn't have a sensible meaning here (it
+                  // isn't "show neither" anywhere in this UI) — block turning
+                  // off the last remaining one instead of silently falling
+                  // back to "show everything" behind the user's back.
+                  if (t === 'movie') {
+                    if (showMovies && !showSeries) return;
+                    setShowMovies((v) => !v);
+                  } else {
+                    if (showSeries && !showMovies) return;
+                    setShowSeries((v) => !v);
+                  }
+                }}
+                className={`flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-bold capitalize transition-all focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light ${
+                  isActive
+                    ? 'border-transparent bg-linear-to-r from-sky-400 to-blue-500 text-white'
+                    : 'border-white/10 bg-[#0b1120]/85 text-gray-300 hover:border-white/20 hover:text-white'
+                }`}
+              >
+                {isActive && <Check size={14} />}
+                {t === 'movie' ? 'Movies' : 'Series'}
+              </button>
+            );
+          })}
+        </div>
+        {/* Second row, only rendered once a genre/country/language/theme filter
+            is active — kept inside this same sticky container (not a separate
+            block after it) so the active-selection tags stay pinned next to
+            the Filters/Movies/Series row on scroll instead of disappearing
+            while the count badge on the Filters button stays visible. */}
+        {hasActiveFilter && (
+          <div className="mt-2 border-t border-white/5 pt-2">
+            <ActiveFilterTags activeFilters={activeFilters} onFilterChange={handleFilterChange} onGenresChange={handleGenresChange} />
+          </div>
+        )}
       </div>
 
       <div key={contentKey} className="content-transition">

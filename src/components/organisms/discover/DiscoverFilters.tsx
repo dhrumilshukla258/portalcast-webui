@@ -16,6 +16,15 @@ export interface ActiveDiscoverFilters {
   theme?: string;
 }
 
+export function hasAnyActiveFilter(activeFilters: ActiveDiscoverFilters): boolean {
+  return (
+    (activeFilters.genre?.length ?? 0) > 0 ||
+    !!activeFilters.country ||
+    !!activeFilters.language ||
+    !!activeFilters.theme
+  );
+}
+
 interface DiscoverFiltersProps {
   facets: DiscoverFacets | null;
   activeFilters: ActiveDiscoverFilters;
@@ -199,6 +208,52 @@ const ValueList: React.FC<{
           </button>
         );
       })}
+    </div>
+  );
+};
+
+// Removable chip per active value (each genre gets its own, country/language/
+// theme get at most one each) — the Filters button's own badge only shows a
+// count and its dropdown summary truncates to "N selected", neither of which
+// says *what's* active without opening the panel. Sits next to the Movies/
+// Series pills in DiscoverView's sticky bar so every active selection —
+// type, genre, country/language/theme — reads the same way at a glance.
+export const ActiveFilterTags: React.FC<{
+  activeFilters: ActiveDiscoverFilters;
+  onFilterChange: (key: 'country' | 'language' | 'theme', value: string | undefined) => void;
+  onGenresChange: (values: string[]) => void;
+}> = ({ activeFilters, onFilterChange, onGenresChange }) => {
+  const tags: { key: string; label: string; onRemove: () => void }[] = [];
+
+  for (const genre of activeFilters.genre || []) {
+    tags.push({
+      key: `genre:${genre}`,
+      label: genre,
+      onRemove: () => onGenresChange((activeFilters.genre || []).filter((g) => g !== genre)),
+    });
+  }
+  (['language', 'country', 'theme'] as const).forEach((dimension) => {
+    const value = activeFilters[dimension];
+    if (!value) return;
+    tags.push({ key: `${dimension}:${value}`, label: displayLabel(dimension, value), onRemove: () => onFilterChange(dimension, undefined) });
+  });
+
+  if (!hasAnyActiveFilter(activeFilters)) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2" data-focus-group="discover-active-filters">
+      {tags.map((tag) => (
+        <button
+          key={tag.key}
+          data-focusable="true"
+          onClick={tag.onRemove}
+          aria-label={`Remove ${tag.label} filter`}
+          className="flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-sky-400/30 bg-sky-400/10 py-1 pl-3 pr-2 text-xs font-bold text-sky-300 transition-all hover:border-sky-400/50 hover:bg-sky-400/20 focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light"
+        >
+          <span className="max-w-40 truncate">{tag.label}</span>
+          <X className="h-3.5 w-3.5 shrink-0" />
+        </button>
+      ))}
     </div>
   );
 };

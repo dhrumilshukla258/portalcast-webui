@@ -50,9 +50,17 @@ export function useProgressTracking({
 
   const episodeLookup = useEpisodeLookup(episodes, item);
 
+  // Deliberately NOT keyed on reloadTrigger: useHlsRecovery bumps
+  // retryCount and reloadTrigger together in the same retry step, so
+  // refiring this on every reloadTrigger change would call
+  // resetRecoveryState() and zero retryCount right back out from under
+  // the retry it's counting — breaking the cap and backoff entirely.
+  // A manual remount that isn't a retry (e.g. handleProxyToggle) resets
+  // hasRestoredProgress itself before bumping reloadTrigger.
   useEffect(() => {
     resetRecoveryState();
     hasCompletedPlayback.current = false;
+    hasRestoredProgress.current = false;
   }, [streamUrl, rawStreamUrl, resetRecoveryState]);
 
   const completePlayback = useCallback(async () => {
