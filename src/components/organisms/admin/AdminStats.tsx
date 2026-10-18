@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RefreshCw, Users, UserCheck, UserCog, Clock, Wifi, Film, Tv2, PlayCircle, Radio, Server, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Users, UserCheck, UserCog, Clock, Wifi, Tv2, Radio, Server, AlertTriangle } from 'lucide-react';
 import { StatCard } from '@/components/molecules/StatCard';
 import { PortalTimelineChart } from '@/components/molecules/PortalTimelineChart';
 import {
@@ -22,14 +22,12 @@ const AdminStats: React.FC = () => {
     socket,
     stats,
     loading,
-    generatingStrm,
     streams,
     portalMetrics,
     liveEvents,
     refreshSecondsInput,
     setRefreshSecondsInput,
     applyRefreshSeconds,
-    handleGenerateStrm,
     MIN_REFRESH_SECONDS,
   } = useAdminStats();
   const [streamFilter, setStreamFilter] = useState<'all' | 'live' | 'movie' | 'series'>('all');
@@ -58,7 +56,6 @@ const AdminStats: React.FC = () => {
           accent="text-green-500"
         />
         <StatCard icon={Radio} label="Streams active" value={streams.length} accent="text-red-500" />
-        <StatCard icon={Film} label="STRM Movies" value={stats?.strm.movies ?? '—'} />
       </div>
 
       <div className="rounded-2xl border border-gray-800 bg-gray-900/30 p-6">
@@ -249,11 +246,7 @@ const AdminStats: React.FC = () => {
                         <td className="py-2 pr-4 text-xs text-gray-400">{s.category ?? '—'}</td>
                         <td className="py-2 pr-4 text-xs text-gray-200">
                           {s.user ? (
-                            s.user.startsWith('xtream:') ? (
-                              <span className="text-purple-400">{s.user.slice(7)} <span className="text-gray-600">(Xtream)</span></span>
-                            ) : (
-                              s.user
-                            )
+                            s.user
                           ) : (
                             <span className="italic text-gray-600">Unknown</span>
                           )}
@@ -270,29 +263,6 @@ const AdminStats: React.FC = () => {
         })()}
       </div>
 
-      <div className="rounded-2xl border border-gray-800 bg-gray-900/30 p-6">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <h3 className="flex items-center gap-2 text-lg font-bold text-white">
-              <PlayCircle className="text-blue-500" size={20} />
-              STRM File Generation
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Generate .strm files for Jellyfin/Plex from the current VOD/series catalog ({stats?.strm.movies ?? 0} movies,{' '}
-              {stats?.strm.episodes ?? 0} episodes on disk).
-            </p>
-          </div>
-          <button
-            onClick={handleGenerateStrm}
-            disabled={generatingStrm}
-            className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-colors hover:bg-blue-500 disabled:opacity-50"
-            data-focusable="true"
-          >
-            <RefreshCw size={16} className={generatingStrm ? 'animate-spin' : ''} />
-            {generatingStrm ? 'Starting...' : 'Generate STRM Files'}
-          </button>
-        </div>
-      </div>
 
       <div className="rounded-2xl border border-gray-800 bg-gray-900/30 p-6">
         <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">

@@ -24,7 +24,7 @@ All admin-tab components live under `src/components/organisms/admin/` (moved out
 
 | Tab | Component | Purpose |
 |-----|-----------|---------|
-| Stats | `AdminStats.tsx` | User counts, recent logins, live "who's streaming what", STRM generate button |
+| Stats | `AdminStats.tsx` | User counts, recent logins, live "who's streaming what" (STRM generation was removed with the server's Xtream emulation layer, 2026-10-18) |
 | Profiles | `ProfileManager.tsx` | Portal profile CRUD (pre-existing) |
 | Users | `UserManager.tsx` | User approval/role management (pre-existing) |
 | Content | `ContentManager.tsx` | Genre/item override CRUD — React port of the legacy `/contentmanager` standalone page |

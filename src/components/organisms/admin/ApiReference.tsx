@@ -32,7 +32,7 @@ const GROUPS: Group[] = [
       { method: 'POST', path: '/api/admin/users', purpose: 'Create a user' },
       { method: 'PUT', path: '/api/admin/users/{id}', purpose: 'Update name/role/active/password' },
       { method: 'DELETE', path: '/api/admin/users/{id}', purpose: 'Delete a user' },
-      { method: 'GET', path: '/api/admin/stats', purpose: 'User counts, recent logins, connected devices, STRM totals' },
+      { method: 'GET', path: '/api/admin/stats', purpose: 'User counts, recent logins, connected devices' },
       { method: 'GET', path: '/api/admin/streams', purpose: 'Live list of active proxy/live/VOD stream sessions' },
     ],
   },
@@ -61,19 +61,12 @@ const GROUPS: Group[] = [
     ],
   },
   {
-    title: 'STRM Generation',
-    endpoints: [
-      { method: 'POST', path: '/api/admin/strm/generate', purpose: 'Generate .strm files for movies/series (background job)' },
-    ],
-  },
-  {
-    title: 'Content Delivery (v2 / Xtream)',
+    title: 'Content Delivery (v2)',
     endpoints: [
       { method: 'GET', path: '/api/v2/channels', purpose: 'Live channel listing' },
       { method: 'GET', path: '/api/v2/movies', purpose: 'Movie listing' },
       { method: 'GET', path: '/api/v2/series', purpose: 'Series listing' },
-      { method: 'GET', path: '/player_api.php', purpose: 'Xtream Codes API emulation (used by TiviMate etc.)' },
-      { method: 'GET', path: '/xmltv.php', purpose: 'XMLTV EPG feed' },
+      { method: 'GET', path: '/api/v2/epg', purpose: 'EPG for all channels' },
     ],
   },
 ];
@@ -89,7 +82,7 @@ const ApiReference: React.FC = () => {
   return (
     <div className="space-y-6">
       <p className="text-sm text-gray-500">
-        Quick reference for the server's REST endpoints. All routes below (except Auth and Xtream/EPG player paths)
+        Quick reference for the server's REST endpoints. All routes below (except Auth and stream URLs, which carry their own token)
         require a Bearer JWT — admin routes additionally require the admin role.
       </p>
       {GROUPS.map((group) => (

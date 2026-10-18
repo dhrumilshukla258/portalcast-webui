@@ -27,10 +27,6 @@ export interface Stats {
   recentLogins: RecentLogin[];
   connectedDevices: number;
   activeStreams: number;
-  strm: {
-    movies: number;
-    episodes: number;
-  };
 }
 
 export type PortalCategory = 'live' | 'movie' | 'series' | 'epg' | 'auth' | 'other';
@@ -151,7 +147,6 @@ export function useAdminStats() {
   const { token } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [generatingStrm, setGeneratingStrm] = useState(false);
   const [streams, setStreams] = useState<StreamSession[]>([]);
   const [, forceTick] = useState(0);
   const [refreshInterval, setRefreshInterval] = useState<number>(() => {
@@ -272,29 +267,11 @@ export function useAdminStats() {
     localStorage.setItem('admin_stream_refresh_ms', String(ms));
   };
 
-  const handleGenerateStrm = async () => {
-    setGeneratingStrm(true);
-    try {
-      const res = await api.post<{ success?: boolean; message?: string; error?: string }>('/admin/strm/generate');
-      if (res.data.error) {
-        toast.error(res.data.error);
-      } else {
-        toast.success(res.data.message || 'STRM generation started');
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to start STRM generation';
-      toast.error(message);
-    } finally {
-      setGeneratingStrm(false);
-    }
-  };
-
   return {
     activeUserCount,
     socket,
     stats,
     loading,
-    generatingStrm,
     streams,
     portalMetrics,
     liveEvents,
@@ -302,7 +279,6 @@ export function useAdminStats() {
     refreshSecondsInput,
     setRefreshSecondsInput,
     applyRefreshSeconds,
-    handleGenerateStrm,
     MIN_REFRESH_SECONDS,
   };
 }
