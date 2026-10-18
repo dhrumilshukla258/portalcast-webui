@@ -86,14 +86,14 @@
 
 - Node.js (v18+)
 - npm or yarn
-- A running [portalcast-server](https://github.com/) instance to connect to (this repo is the frontend only)
+- A running [portalcast-server](https://github.com/dhrumilshukla258/portalcast-server) instance to connect to (this repo is the frontend only)
 
 ### Installation
 
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/yourusername/portalcast-webui.git
+   git clone https://github.com/dhrumilshukla258/portalcast-webui.git
    cd portalcast-webui
    ```
 
