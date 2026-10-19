@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { cachedGet } from '@/api/responseCache';
 import { api } from '@/api/client';
 import { API_PATHS } from '@/api/endpoints/channels';
 import type { MediaItem, ChannelGroup, PaginatedResponse } from '@/api/types/channels';
@@ -7,12 +8,10 @@ export const getMedia = async (
   params: Record<string, any>,
   signal?: AbortSignal
 ): Promise<PaginatedResponse<MediaItem>> => {
-  const response = (
-    await api.get<PaginatedResponse<MediaItem>>(API_PATHS.MOVIES, {
-      params,
-      signal,
-    })
-  ).data;
+  // A movieId/episodeId lookup resolves a playable file (fresh stream link): never cached.
+  const response = params?.movieId || params?.episodeId
+    ? (await api.get<PaginatedResponse<MediaItem>>(API_PATHS.MOVIES, { params, signal })).data
+    : await cachedGet<PaginatedResponse<MediaItem>>(API_PATHS.MOVIES, { params, signal });
   if (!response) {
     throw new Error('No response data received from media API.');
   }
@@ -24,10 +23,10 @@ export const getMovieCategories = async (
   signal?: AbortSignal
 ): Promise<PaginatedResponse<ChannelGroup>> => {
   const response = (
-    await api.get<any>(API_PATHS.MOVIE_GROUPS, {
+    await cachedGet<any>(API_PATHS.MOVIE_GROUPS, {
       signal,
     })
-  ).data;
+  );
   if (!response) {
     throw new Error('No response data received from movie groups API.');
   }

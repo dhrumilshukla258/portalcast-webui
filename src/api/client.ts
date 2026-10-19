@@ -176,11 +176,25 @@ async function request<T = unknown>(
   return { data };
 }
 
+// Listeners told about content-changing requests (anything but GET, excluding per-user
+// writes like progress/preferences and auth calls) — used by responseCache.ts to drop
+// cached catalog pages after admin edits.
+type MutationListener = (method: string, path: string) => void;
+const mutationListeners = new Set<MutationListener>();
+export function onApiMutation(listener: MutationListener): () => void {
+  mutationListeners.add(listener);
+  return () => mutationListeners.delete(listener);
+}
+function notifyMutation(method: string, path: string): void {
+  if (path.startsWith('/user/') || path.startsWith('/auth/')) return;
+  mutationListeners.forEach((l) => l(method, path));
+}
+
 export const api = {
   get: <T = unknown>(path: string, config?: RequestConfig) => request<T>('GET', path, undefined, config),
-  post: <T = unknown>(path: string, body?: unknown, config?: RequestConfig) => request<T>('POST', path, body, config),
-  put: <T = unknown>(path: string, body?: unknown, config?: RequestConfig) => request<T>('PUT', path, body, config),
-  delete: <T = unknown>(path: string, config?: RequestConfig) => request<T>('DELETE', path, undefined, config),
+  post: <T = unknown>(path: string, body?: unknown, config?: RequestConfig) => { notifyMutation('POST', path); return request<T>('POST', path, body, config); },
+  put: <T = unknown>(path: string, body?: unknown, config?: RequestConfig) => { notifyMutation('PUT', path); return request<T>('PUT', path, body, config); },
+  delete: <T = unknown>(path: string, config?: RequestConfig) => { notifyMutation('DELETE', path); return request<T>('DELETE', path, undefined, config); },
 };
 
 /**

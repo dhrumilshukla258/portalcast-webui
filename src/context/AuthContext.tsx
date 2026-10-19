@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useMemo,
 } from 'react';
+import { clearResponseCache } from '@/api/responseCache';
 import { webPlatformAdapter } from '@/api/platform';
 import type { User } from '@/api/types/user';
 import {
@@ -179,6 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     authStorage.remove('auth_token');
     authStorage.remove('refresh_token');
     authStorage.remove('auth_user');
+    clearResponseCache();
 
     window.location.hash = '/home';
   }, []);

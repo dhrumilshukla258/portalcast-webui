@@ -1,4 +1,4 @@
-import { api } from '@/api/client';
+import { cachedGet } from '@/api/responseCache';
 import type { MediaItem, PaginatedResponse } from '@/api/types/channels';
 
 export const DISCOVER_PATHS = {
@@ -35,11 +35,11 @@ export const getFacets = async (
   signal?: AbortSignal
 ): Promise<DiscoverFacets> => {
   const response = (
-    await api.get<DiscoverFacets>(DISCOVER_PATHS.FACETS, {
+    await cachedGet<DiscoverFacets>(DISCOVER_PATHS.FACETS, {
       params: type ? { type } : undefined,
       signal,
     })
-  ).data;
+  );
   if (!response) {
     throw new Error('No response data received from discover facets API.');
   }
@@ -51,11 +51,11 @@ export const getDiscoverBrowse = async (
   signal?: AbortSignal
 ): Promise<PaginatedResponse<MediaItem>> => {
   const response = (
-    await api.get<PaginatedResponse<MediaItem>>(DISCOVER_PATHS.BROWSE, {
-      params,
+    await cachedGet<PaginatedResponse<MediaItem>>(DISCOVER_PATHS.BROWSE, {
+      params: params as Record<string, unknown>,
       signal,
     })
-  ).data;
+  );
   if (!response) {
     throw new Error('No response data received from discover browse API.');
   }
@@ -72,11 +72,11 @@ export const getRecommendations = async (
   signal?: AbortSignal
 ): Promise<RecommendationsResult> => {
   const response = (
-    await api.get<{ data: MediaItem[]; basedOnTitle?: string | null }>(DISCOVER_PATHS.RECOMMENDATIONS, {
+    await cachedGet<{ data: MediaItem[]; basedOnTitle?: string | null }>(DISCOVER_PATHS.RECOMMENDATIONS, {
       params: type ? { type } : undefined,
       signal,
     })
-  ).data;
+  );
   return { items: response?.data || [], basedOnTitle: response?.basedOnTitle ?? null };
 };
 
@@ -93,10 +93,10 @@ export interface DiscoverVariant extends MediaItem {
 // a detail page directly.
 export const getDiscoverVariants = async (id: string, signal?: AbortSignal): Promise<DiscoverVariant[]> => {
   const response = (
-    await api.get<{ variants: DiscoverVariant[] }>(DISCOVER_PATHS.VARIANTS, {
+    await cachedGet<{ variants: DiscoverVariant[] }>(DISCOVER_PATHS.VARIANTS, {
       params: { id },
       signal,
     })
-  ).data;
+  );
   return response?.variants || [];
 };
