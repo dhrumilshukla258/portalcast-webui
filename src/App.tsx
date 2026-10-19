@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '@/App.css';
@@ -31,7 +31,7 @@ import { useMediaLibrary, initialContext } from '@/hooks/useMediaLibrary';
 import { useDiscover } from '@/hooks/useDiscover';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
 import { useDiscoverNavigation } from '@/hooks/useDiscoverNavigation';
-import { useSearchController } from '@/hooks/useSearchController';
+import { useSearchController, cleanRecentSearches } from '@/hooks/useSearchController';
 import { useTVFocus } from '@/hooks/useTVFocus';
 import { useCastReceiver } from '@/hooks/useCastReceiver';
 import { isTizenDevice } from './utils/helpers';
@@ -41,7 +41,8 @@ import { type DiscoverVariant } from '@/api/endpoints/discover';
 function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   const isTizen = isTizenDevice();
   const { user, updatePreferences } = useAuth();
-  const recentSearches = user?.preferences?.recentSearches || [];
+  // Cleaned for display too, so fragments saved by older builds disappear at once.
+  const recentSearches = useMemo(() => cleanRecentSearches(user?.preferences?.recentSearches || []), [user?.preferences?.recentSearches]);
   const [detailItem, setDetailItem] = useState<MediaItem | null>(null);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [showDiscover, setShowDiscover] = useState(false);

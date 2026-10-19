@@ -1,6 +1,27 @@
 import { useCallback, useEffect } from 'react';
 import type { MediaItem } from '@/types';
 
+const MIN_RECENT_LENGTH = 2;
+const MAX_RECENT = 6;
+
+/**
+ * Newest-first recent searches without fragments: drops entries shorter than 2 characters,
+ * case-insensitive duplicates, and entries that are a prefix of another entry (leftovers of
+ * the old save-while-typing behaviour, e.g. "Chhe" next to "Chhel"). Capped at 6.
+ */
+export function cleanRecentSearches(list: string[]): string[] {
+  const out: string[] = [];
+  for (const raw of list) {
+    const term = raw.trim();
+    const lower = term.toLowerCase();
+    if (term.length < MIN_RECENT_LENGTH) continue;
+    if (out.some((kept) => kept.toLowerCase() === lower)) continue;
+    if (list.some((other) => other.trim().length > term.length && other.trim().toLowerCase().startsWith(lower))) continue;
+    out.push(term);
+  }
+  return out.slice(0, MAX_RECENT);
+}
+
 interface UseSearchControllerArgs {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
@@ -30,9 +51,11 @@ export function useSearchController({
   updatePreferences,
   isTizen,
 }: UseSearchControllerArgs) {
-  const onSearchSubmit = useCallback(
-    (e?: React.FormEvent) => {
-      if (e) e.preventDefault();
+  // Runs the search. Only an explicit submit (Enter / the search button) remembers the
+  // query: the debounced auto-search below used to save one entry per typing pause, which
+  // filled recent searches with fragments ("C", "Ch", "Chhe", "Chhel").
+  const runSearch = useCallback(
+    (remember: boolean) => {
       if (searchTerm !== contextSearch) {
         pushFrame();
       }
@@ -40,12 +63,19 @@ export function useSearchController({
       handleSearch(searchTerm);
 
       const trimmed = searchTerm.trim();
-      if (trimmed) {
-        const deduped = [trimmed, ...recentSearches.filter((s) => s.toLowerCase() !== trimmed.toLowerCase())].slice(0, 6);
-        updatePreferences({ recentSearches: deduped });
+      if (remember && trimmed.length >= MIN_RECENT_LENGTH) {
+        updatePreferences({ recentSearches: cleanRecentSearches([trimmed, ...recentSearches]) });
       }
     },
     [searchTerm, contextSearch, pushFrame, handleSearch, setDetailItem, recentSearches, updatePreferences]
+  );
+
+  const onSearchSubmit = useCallback(
+    (e?: React.FormEvent) => {
+      if (e) e.preventDefault();
+      runSearch(true);
+    },
+    [runSearch]
   );
 
   const onSelectRecentSearch = useCallback(
@@ -75,9 +105,9 @@ export function useSearchController({
   // a submit there too would refetch on every single button press.
   useEffect(() => {
     if (isTizen || searchTerm === (contextSearch || '')) return;
-    const timer = setTimeout(() => onSearchSubmit(), 450);
+    const timer = setTimeout(() => runSearch(false), 450);
     return () => clearTimeout(timer);
-  }, [searchTerm, isTizen, contextSearch, onSearchSubmit]);
+  }, [searchTerm, isTizen, contextSearch, runSearch]);
 
   // Keep the search box in sync when `context.search` changes for a reason
   // OTHER than the user typing — e.g. pressing Back restores a pre-search
