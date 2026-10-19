@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useMemo,
 } from 'react';
+import { logout as serverLogout } from '@/api/endpoints/auth';
 import { clearResponseCache } from '@/api/responseCache';
 import { webPlatformAdapter } from '@/api/platform';
 import type { User } from '@/api/types/user';
@@ -179,6 +180,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     authStorage.remove('auth_token');
     authStorage.remove('refresh_token');
+    // Revoke the session on the server too (ignored by older servers); never block sign-out on it.
+    const rt = authStorage.get('refresh_token');
+    if (rt) void serverLogout(rt).catch(() => undefined);
     authStorage.remove('auth_user');
     clearResponseCache();
 

@@ -110,3 +110,24 @@ export interface StreamFailureTestResult {
   error?: string;
   item: StreamFailure;
 }
+
+// ---- Admin > Security (servers from 2026-10-19) ----
+export interface SecurityEventRow {
+  id: number;
+  kind: string;
+  ip: string;
+  userId: number | null;
+  path: string | null;
+  detail: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
+export interface SecuritySummary {
+  hours: number;
+  total: number;
+  byKind: Record<string, number>;
+  topIps: { ip: string; count: number }[];
+  bans: { ip: string; until: string; reason: string }[];
+  autoBan: { enabled: boolean; afterFailures: number; windowMinutes: number; banMinutes: number; trustedProxiesConfigured: boolean };
+}

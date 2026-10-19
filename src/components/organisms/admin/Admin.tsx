@@ -9,8 +9,7 @@ import {
   BarChart3,
   FolderTree,
   Code2,
-  AlertTriangle,
-} from 'lucide-react';
+  AlertTriangle, ShieldAlert } from 'lucide-react';
 import ProfileManager from '@/components/organisms/admin/ProfileManager';
 import { useAuth } from '@/context/AuthContext';
 import UserManager from '@/components/organisms/admin/UserManager';
@@ -21,6 +20,7 @@ import CarouselConfigManager from '@/components/organisms/admin/CarouselConfigMa
 import ConfigTab from '@/components/organisms/admin/ConfigTab';
 import LogsTab from '@/components/organisms/admin/LogsTab';
 import BrokenStreams from '@/components/organisms/admin/BrokenStreams';
+import SecurityTab from '@/components/organisms/admin/SecurityTab';
 
 type AdminTab =
   | 'profiles'
@@ -31,6 +31,7 @@ type AdminTab =
   | 'stats'
   | 'content'
   | 'broken'
+  | 'security'
   | 'api';
 
 interface AdminProps {
@@ -67,6 +68,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
                 { id: 'users', label: 'Users', icon: Users },
                 { id: 'content', label: 'Content', icon: FolderTree },
                 { id: 'broken', label: 'Broken streams', icon: AlertTriangle },
+                { id: 'security', label: 'Security', icon: ShieldAlert },
                 { id: 'carousel', label: 'Carousel', icon: Layout },
                 { id: 'config', label: 'Config', icon: Settings },
                 { id: 'logs', label: 'Logs', icon: Terminal },
@@ -137,6 +139,12 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
           {activeTab === 'broken' && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <BrokenStreams />
+            </div>
+          )}
+
+          {activeTab === 'security' && (
+            <div className="space-y-6">
+              <SecurityTab />
             </div>
           )}
 

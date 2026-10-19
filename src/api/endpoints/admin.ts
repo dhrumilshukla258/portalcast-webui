@@ -14,6 +14,8 @@ import type {
   StreamFailureList,
   StreamFailureStatus,
   StreamFailureTestResult,
+  SecurityEventRow,
+  SecuritySummary,
 } from '@/api/types/admin';
 
 // --- Server config ---
@@ -152,3 +154,18 @@ export const unhideStreamFailure = async (id: number): Promise<StreamFailure> =>
 
 export const dismissStreamFailure = async (id: number): Promise<StreamFailure> =>
   (await api.delete<{ success: boolean; item: StreamFailure }>(`/admin/stream-failures/${id}`)).data.item;
+
+// ---- Security ----
+export const getSecuritySummary = async (hours = 24): Promise<SecuritySummary> =>
+  (await api.get<SecuritySummary>('/admin/security/summary', { params: { hours } })).data!;
+
+export const getSecurityEvents = async (params: { kind?: string; ip?: string; hours?: number; limit?: number }): Promise<SecurityEventRow[]> =>
+  (await api.get<{ items: SecurityEventRow[] }>('/admin/security/events', { params })).data?.items ?? [];
+
+export const banIp = async (ip: string, minutes = 60): Promise<void> => {
+  await api.post('/admin/security/bans', { ip, minutes });
+};
+
+export const unbanIp = async (ip: string): Promise<void> => {
+  await api.delete(`/admin/security/bans/${encodeURIComponent(ip)}`);
+};

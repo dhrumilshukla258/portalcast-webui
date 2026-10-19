@@ -41,3 +41,8 @@ export const syncUserProgress = async (
 ): Promise<void> => {
   await api.put('/user/progress', { mediaId, progress, completed });
 };
+
+/** Revokes this refresh token's session on the server. */
+export const logout = async (refreshToken: string): Promise<void> => {
+  await api.post('/auth/logout', { refreshToken });
+};
