@@ -85,11 +85,11 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'Portalcast',
-        short_name: 'Portalcast',
+        name: 'PortalCast',
+        short_name: 'PortalCast',
         start_url: '.',
         display: 'standalone',
-        background_color: '#111827',
+        background_color: '#0B1020',
         theme_color: '#111827',
         icons: [
           {

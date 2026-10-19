@@ -30,7 +30,7 @@ export default function Home() {
           <img
             src="/portalcast-logo.svg"
             className="w-24 sm:w-28 md:w-36 cursor-pointer"
-            alt="Portalcast Logo"
+            alt="PortalCast"
             onClick={() => navigate('/')}
           />
         </div>

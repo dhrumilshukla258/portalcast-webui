@@ -92,7 +92,7 @@ export default function Verify() {
           <img
             src="/portalcast-logo.svg"
             className="w-28 sm:w-32 cursor-pointer"
-            alt="Portalcast Logo"
+            alt="PortalCast"
             onClick={() => navigate('/')}
           />
         </div>
