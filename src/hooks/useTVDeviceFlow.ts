@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import QRCode from 'qrcode';
 import { api } from '@/api/client';
 import { webPlatformAdapter } from '@/api/platform';
 
@@ -88,11 +89,18 @@ export function useTVDeviceFlow({ activeTab, isLoggedIn }: UseTVDeviceFlowArgs) 
     };
   }, [activeTab, isLoggedIn, startTVDeviceFlow]);
 
-  const qrCodeUrl = deviceFlow
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=255-255-255&bgcolor=15-23-42&data=${encodeURIComponent(
-        deviceFlow.verificationUrl
-      )}`
-    : '';
+  // Rendered locally: the verification link carries the server address and a live
+  // pairing code, so it must never be sent to a third-party QR service.
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const verificationUrl = deviceFlow?.verificationUrl;
+  useEffect(() => {
+    if (!verificationUrl) { setQrCodeUrl(''); return; }
+    let cancelled = false;
+    QRCode.toDataURL(verificationUrl, { width: 200, margin: 1, color: { dark: '#ffffffff', light: '#0f172aff' } })
+      .then((url) => { if (!cancelled) setQrCodeUrl(url); })
+      .catch(() => { if (!cancelled) setQrCodeUrl(''); });
+    return () => { cancelled = true; };
+  }, [verificationUrl]);
 
   return { deviceFlow, deviceStatus, startTVDeviceFlow, qrCodeUrl };
 }
