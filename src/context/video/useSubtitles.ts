@@ -97,13 +97,17 @@ export function useSubtitles(
     }
   }, [item, seriesItem]);
 
-  const addOnlineSubtitle = useCallback((result: { fileId: number; language: string; releaseName: string }) => {
+  const addOnlineSubtitle = useCallback((result: { fileId: number; downloadId?: string; language: string; releaseName: string }) => {
     const hostPart = getBaseUrl().replace('/api', '');
+    // New servers read `id` (OpenSubtitles or SubDL); older ones only `fileId`.
+    const id = result.downloadId || `os:${result.fileId}`;
+    const query = new URLSearchParams({ id });
+    if (result.fileId) query.set('fileId', String(result.fileId));
     const track = {
-      src: `${hostPart}/api/v2/subtitles/download?fileId=${result.fileId}`,
+      src: `${hostPart}/api/v2/subtitles/download?${query.toString()}`,
       label: `${result.language?.toUpperCase() || 'Subtitle'} — ${result.releaseName}`,
       srclang: result.language || 'und',
-      id: `os_${result.fileId}`,
+      id: `sub_${id}`,
     };
     setSubtitles((prev) => [...prev.filter((t) => t.id !== track.id), track]);
     setOnlineSubtitleResults([]);

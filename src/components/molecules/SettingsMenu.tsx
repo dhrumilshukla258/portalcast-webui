@@ -333,7 +333,7 @@ export const SettingsMenu = React.memo(() => {
             <div className="flex flex-col gap-0.5">
               {onlineSubtitleResults.map((result: any) => (
                 <button
-                  key={result.fileId}
+                  key={result.downloadId || result.fileId}
                   data-focusable="true"
                   data-control="settings-item"
                   onClick={() => {
@@ -343,7 +343,9 @@ export const SettingsMenu = React.memo(() => {
                   className="flex flex-col items-start rounded-sm px-3 py-2 text-left transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
                 >
                   <span className="truncate text-sm">{result.releaseName}</span>
-                  <span className="text-xs uppercase text-gray-400">{result.language}</span>
+                  <span className="text-xs uppercase text-gray-400">
+                    {result.language} · {result.source === 'subdl' ? 'SubDL' : 'OpenSubtitles'}
+                  </span>
                 </button>
               ))}
             </div>

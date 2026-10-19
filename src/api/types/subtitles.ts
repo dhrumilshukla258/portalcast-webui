@@ -20,9 +20,12 @@ export interface MappedSubtitleTrack {
   id: number | string;
 }
 
-// TODO: verify actual server shape
 export interface OnlineSubtitleResult {
+  /** OpenSubtitles file id (0 for other sources); older servers only know this. */
   fileId: number;
+  /** "os:<fileId>" | "subdl:<path>" (servers from 2026-10-19). */
+  downloadId?: string;
+  source?: 'opensubtitles' | 'subdl';
   language: string;
   releaseName: string;
   [key: string]: any;
