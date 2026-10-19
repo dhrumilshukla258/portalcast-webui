@@ -72,16 +72,33 @@ export const clearUserProgress = async (): Promise<{ success: boolean }> => {
 export interface OpenSubtitlesLinkStatus {
   linked: boolean;
   username: string | null;
+  /** Servers from 2026-10-19: whose API keys are used (keys themselves are never returned). */
+  hasOwnApiKey?: boolean;
+  serverHasApiKey?: boolean;
+  subdl?: { hasOwnApiKey: boolean; serverHasApiKey: boolean };
 }
 
 export const getOpenSubtitlesStatus = async (): Promise<OpenSubtitlesLinkStatus> =>
   (await api.get<OpenSubtitlesLinkStatus>('/user/opensubtitles')).data;
 
+/** Username+password and/or the user's own API key; the server verifies before saving. */
 export const linkOpenSubtitles = async (
   username: string,
-  password: string
+  password: string,
+  apiKey?: string
 ): Promise<void> => {
-  await api.put('/user/opensubtitles', { username, password });
+  await api.put('/user/opensubtitles', {
+    ...(username ? { username, password } : {}),
+    ...(apiKey ? { apiKey } : {}),
+  });
+};
+
+export const setSubdlKey = async (apiKey: string): Promise<void> => {
+  await api.put('/user/subdl', { apiKey });
+};
+
+export const removeSubdlKey = async (): Promise<void> => {
+  await api.delete('/user/subdl');
 };
 
 export const unlinkOpenSubtitles = async (): Promise<void> => {
