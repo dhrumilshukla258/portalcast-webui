@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { api } from '@/api/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-toastify';
@@ -152,7 +153,24 @@ export default function Login() {
     }
   }, [loginWithGoogle, navigate, redirectPath]);
 
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  // Google client id: baked in at build time if VITE_GOOGLE_CLIENT_ID was set, otherwise
+  // fetched from the server (it is set there as GOOGLE_CLIENT_ID; the id is public by nature).
+  const [googleClientId, setGoogleClientId] = useState<string | undefined>(
+    import.meta.env.VITE_GOOGLE_CLIENT_ID || undefined
+  );
+  useEffect(() => {
+    if (googleClientId) return;
+    let cancelled = false;
+    api
+      .get<{ clientId: string | null }>('/auth/google/client-id')
+      .then((r) => {
+        if (!cancelled && r.data?.clientId) setGoogleClientId(r.data.clientId);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [googleClientId]);
 
   // Setup Google Sign-in button
   useEffect(() => {
@@ -192,7 +210,7 @@ export default function Login() {
     // Poll for the Google SDK script load
     const checkInterval = setInterval(initGoogle, 100);
     return () => clearInterval(checkInterval);
-  }, [activeTab, isLoggedIn, isSignUp, handleCredentialResponse]);
+  }, [activeTab, isLoggedIn, isSignUp, handleCredentialResponse, googleClientId]);
 
   return (
     <div className="min-h-screen app-bg flex flex-col justify-center items-center px-4 font-sans text-gray-200">
