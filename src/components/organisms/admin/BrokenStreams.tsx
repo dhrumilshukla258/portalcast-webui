@@ -130,7 +130,12 @@ const BrokenStreams: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-2 pr-4 font-mono text-xs text-gray-300">
-                        {row.threshold ? `${row.failureCount}/${row.threshold}` : row.failureCount}
+                        {row.failureCount}
+                        {row.threshold && row.strikes != null && (
+                          <span className="block text-xs text-slate-400" title="Only &quot;file not found&quot; failures count toward auto-hide">
+                            {row.strikes}/{row.threshold} toward hide
+                          </span>
+                        )}
                       </td>
                       <td className="max-w-[16rem] py-2 pr-4 text-xs text-gray-400">
                         <span className="font-mono text-red-400">{row.lastStatus ?? 'net'}</span>{' '}

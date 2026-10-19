@@ -83,6 +83,8 @@ export interface StreamFailure {
   title: string | null;
   category: string | null;
   failureCount: number;
+  /** Failures that count toward auto-hide (upstream said "not found"). Older servers omit it. */
+  strikes?: number;
   /** Attempts before auto-hide (movies only); null when this row never auto-hides. */
   threshold: number | null;
   lastStatus: number | null;
