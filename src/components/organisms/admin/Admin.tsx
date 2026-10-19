@@ -9,6 +9,7 @@ import {
   BarChart3,
   FolderTree,
   Code2,
+  AlertTriangle,
 } from 'lucide-react';
 import ProfileManager from '@/components/organisms/admin/ProfileManager';
 import { useAuth } from '@/context/AuthContext';
@@ -19,6 +20,18 @@ import ApiReference from '@/components/organisms/admin/ApiReference';
 import CarouselConfigManager from '@/components/organisms/admin/CarouselConfigManager';
 import ConfigTab from '@/components/organisms/admin/ConfigTab';
 import LogsTab from '@/components/organisms/admin/LogsTab';
+import BrokenStreams from '@/components/organisms/admin/BrokenStreams';
+
+type AdminTab =
+  | 'profiles'
+  | 'users'
+  | 'config'
+  | 'logs'
+  | 'carousel'
+  | 'stats'
+  | 'content'
+  | 'broken'
+  | 'api';
 
 interface AdminProps {
   onBack?: () => void;
@@ -26,9 +39,7 @@ interface AdminProps {
 
 const Admin: React.FC<AdminProps> = ({ onBack }) => {
   const { logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<
-    'profiles' | 'users' | 'config' | 'logs' | 'carousel' | 'stats' | 'content' | 'api'
-  >('stats');
+  const [activeTab, setActiveTab] = useState<AdminTab>('stats');
 
   const handleLogout = () => {
     logout();
@@ -55,6 +66,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
                 { id: 'profiles', label: 'Profiles', icon: Globe },
                 { id: 'users', label: 'Users', icon: Users },
                 { id: 'content', label: 'Content', icon: FolderTree },
+                { id: 'broken', label: 'Broken streams', icon: AlertTriangle },
                 { id: 'carousel', label: 'Carousel', icon: Layout },
                 { id: 'config', label: 'Config', icon: Settings },
                 { id: 'logs', label: 'Logs', icon: Terminal },
@@ -62,19 +74,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
               ].map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() =>
-                    setActiveTab(
-                      tab.id as
-                        | 'profiles'
-                        | 'users'
-                        | 'config'
-                        | 'logs'
-                        | 'carousel'
-                        | 'stats'
-                        | 'content'
-                        | 'api'
-                    )
-                  }
+                  onClick={() => setActiveTab(tab.id as AdminTab)}
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-bold transition-all duration-200 sm:flex-none sm:gap-2 sm:px-4 sm:text-sm ${
                     activeTab === tab.id
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
@@ -131,6 +131,12 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
           {activeTab === 'content' && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <ContentManager />
+            </div>
+          )}
+
+          {activeTab === 'broken' && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <BrokenStreams />
             </div>
           )}
 

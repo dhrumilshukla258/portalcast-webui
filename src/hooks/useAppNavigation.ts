@@ -333,7 +333,8 @@ export function useAppNavigation(
           const { raw, proxied } = await resolveStreamUrl(
             episodeFile,
             item.series_number,
-            { title: displayTitle, category: displayCategory ? String(displayCategory) : undefined }
+            { title: displayTitle, category: displayCategory ? String(displayCategory) : undefined },
+            { itemId: item.id, itemType: 'episode' }
           );
 
           // Fetched directly (not via fetchData/items — see episodeSnapshot's
@@ -402,10 +403,22 @@ export function useAppNavigation(
           // variant's own name (often just a quality/language descriptor).
           const movieTitle = item.title || item.name;
           const movieCategory = item.genres_str || item.category_id;
-          const { raw, proxied } = await resolveStreamUrl(movieFile, undefined, {
-            title: movieTitle,
-            category: movieCategory ? String(movieCategory) : undefined,
-          });
+          // The catalog (list) id for broken-stream tracking: an already-
+          // resolved item's own id is a FILE id, so prefer its catalogId.
+          const listItemId = item.catalogId
+            ? String(item.catalogId).replace(/^movie_/, '')
+            : item.cmd
+              ? undefined
+              : item.id;
+          const { raw, proxied } = await resolveStreamUrl(
+            movieFile,
+            undefined,
+            {
+              title: movieTitle,
+              category: movieCategory ? String(movieCategory) : undefined,
+            },
+            { itemId: listItemId, itemType: 'movie' }
+          );
           openPlayer(finalMovieItem, raw, proxied, getResumeTime());
         } catch (err) {
           console.error(err);

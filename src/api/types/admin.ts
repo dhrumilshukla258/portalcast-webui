@@ -69,3 +69,42 @@ export interface UpdateItemPayload {
   target_category_id: string | null;
   original_category_id: string | null;
 }
+
+// --- Broken streams (/api/admin/stream-failures) ---
+
+export type StreamFailureStatus = 'active' | 'hidden' | 'all';
+export type StreamFailureItemType = 'movie' | 'episode' | 'live';
+
+export interface StreamFailure {
+  id: number;
+  profileId: number;
+  itemType: StreamFailureItemType;
+  itemId: string;
+  title: string | null;
+  category: string | null;
+  failureCount: number;
+  /** Attempts before auto-hide (movies only); null when this row never auto-hides. */
+  threshold: number | null;
+  lastStatus: number | null;
+  lastError: string | null;
+  /** Host only — the server never exposes the full upstream URL. */
+  upstreamHost: string | null;
+  hideable: boolean;
+  autoHidden: boolean;
+  autoHiddenAt: string | null;
+  dismissed: boolean;
+  firstFailedAt: string | null;
+  lastFailedAt: string | null;
+}
+
+export interface StreamFailureList {
+  status: StreamFailureStatus;
+  items: StreamFailure[];
+}
+
+export interface StreamFailureTestResult {
+  ok: boolean;
+  status: number | null;
+  error?: string;
+  item: StreamFailure;
+}

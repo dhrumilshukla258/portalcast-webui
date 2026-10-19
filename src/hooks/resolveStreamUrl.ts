@@ -19,7 +19,12 @@ import type { MediaItem } from '@/types';
 export async function resolveStreamUrl(
   item: MediaItem,
   seriesNumber?: number,
-  displayOverride?: { title?: string; category?: string }
+  displayOverride?: { title?: string; category?: string },
+  // Broken-stream tracking (server docs/skill-stream-failures.md): the LIST
+  // item id the user browsed (not the resolved file's id) + its type, so a
+  // movie that keeps failing gets hidden under the right key. Optional — the
+  // server falls back to the file id when absent.
+  identity?: { itemId?: string | number; itemType?: 'movie' | 'episode' }
 ): Promise<{ raw: string; proxied: string }> {
   const urlParams: Record<string, any> = { id: item.id };
 
@@ -37,6 +42,11 @@ export async function resolveStreamUrl(
   if (displayTitle) urlParams.title = displayTitle;
   const displayCategory = displayOverride?.category || item.genres_str || item.tv_genre_id || item.category_id;
   if (displayCategory) urlParams.category = String(displayCategory);
+
+  if (identity?.itemId !== undefined && identity.itemId !== '') {
+    urlParams.itemId = String(identity.itemId);
+    if (identity.itemType) urlParams.itemType = identity.itemType;
+  }
 
   const linkData = (await getMovieUrl(urlParams)) as Record<string, any>;
   const raw = linkData?.js?.cmd || linkData?.cmd;

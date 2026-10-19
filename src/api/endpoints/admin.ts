@@ -10,6 +10,10 @@ import type {
   ReorderPayload,
   UpdateCategoryPayload,
   UpdateItemPayload,
+  StreamFailure,
+  StreamFailureList,
+  StreamFailureStatus,
+  StreamFailureTestResult,
 } from '@/api/types/admin';
 
 // --- Server config ---
@@ -131,3 +135,20 @@ export const reorderGenreItems = async (
 ): Promise<void> => {
   await api.put(`/admin/items/${type}/${categoryId}/reorder`, payload);
 };
+
+// --- Broken streams ---
+
+export const getStreamFailures = async (
+  status: StreamFailureStatus,
+  signal?: AbortSignal
+): Promise<StreamFailureList> =>
+  (await api.get<StreamFailureList>('/admin/stream-failures', { params: { status }, signal })).data;
+
+export const testStreamFailure = async (id: number): Promise<StreamFailureTestResult> =>
+  (await api.post<StreamFailureTestResult>(`/admin/stream-failures/${id}/test`)).data;
+
+export const unhideStreamFailure = async (id: number): Promise<StreamFailure> =>
+  (await api.post<{ success: boolean; item: StreamFailure }>(`/admin/stream-failures/${id}/unhide`)).data.item;
+
+export const dismissStreamFailure = async (id: number): Promise<StreamFailure> =>
+  (await api.delete<{ success: boolean; item: StreamFailure }>(`/admin/stream-failures/${id}`)).data.item;

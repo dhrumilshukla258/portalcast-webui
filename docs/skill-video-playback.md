@@ -50,6 +50,10 @@ const movieTitle = item.title || item.name;
 
 Same pattern applies to the **download filename** on the backend side — see portalcast-server's download handler, which had the identical bug (using the upstream portal's own `Content-Disposition` filename instead of a computed one) in four separate code branches.
 
+### 4th param: `identity` — broken-stream tracking
+
+`resolveStreamUrl(item, seriesNumber, displayOverride, identity?)` — `identity: { itemId, itemType: 'movie' | 'episode' }` is sent as `itemId`/`itemType` on `/api/v2/movie-link` so the server's broken-stream tracker (portalcast-server `skill-stream-failures.md`) keys failures — and the 3-strikes movie auto-hide — on the **list** item id, not the resolved file id. Movies: `item.catalogId` minus `movie_` (Discover/already-resolved items, whose `.id` is a file id), else the grid item's own `id`; omit it when neither is known (the server falls back). Episodes: the episode card's `id`.
+
 ---
 
 ## Navigation flicker: two distinct race conditions, same symptom

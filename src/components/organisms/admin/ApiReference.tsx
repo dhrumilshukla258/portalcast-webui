@@ -52,6 +52,15 @@ const GROUPS: Group[] = [
     ],
   },
   {
+    title: 'Broken Streams',
+    endpoints: [
+      { method: 'GET', path: '/api/admin/stream-failures?status={active|hidden|all}', purpose: 'Failed-playback rows, newest first' },
+      { method: 'POST', path: '/api/admin/stream-failures/{id}/test', purpose: 'Re-resolve the link server-side and fetch the first bytes → {ok, status, error}' },
+      { method: 'POST', path: '/api/admin/stream-failures/{id}/unhide', purpose: 'Undo an automatic hide (movies hidden after 3 failed attempts)' },
+      { method: 'DELETE', path: '/api/admin/stream-failures/{id}', purpose: 'Dismiss a row (a new failure re-opens it)' },
+    ],
+  },
+  {
     title: 'Config & Cache',
     endpoints: [
       { method: 'GET', path: '/api/config', purpose: 'Read active provider config' },
@@ -66,6 +75,7 @@ const GROUPS: Group[] = [
       { method: 'GET', path: '/api/v2/channels', purpose: 'Live channel listing' },
       { method: 'GET', path: '/api/v2/movies', purpose: 'Movie listing' },
       { method: 'GET', path: '/api/v2/series', purpose: 'Series listing' },
+      { method: 'GET', path: '/api/v2/movie-link', purpose: 'Resolve a movie/episode file to a tokenized stream URL (optional itemId + itemType = list id for broken-stream tracking)' },
       { method: 'GET', path: '/api/v2/epg', purpose: 'EPG for all channels' },
     ],
   },

@@ -28,6 +28,7 @@ All admin-tab components live under `src/components/organisms/admin/` (moved out
 | Profiles | `ProfileManager.tsx` | Portal profile CRUD (pre-existing) |
 | Users | `UserManager.tsx` | User approval/role management (pre-existing) |
 | Content | `ContentManager.tsx` | Genre/item override CRUD — React port of the legacy `/contentmanager` standalone page |
+| Broken streams | `BrokenStreams.tsx` (+ `hooks/useStreamFailures.ts`) | Titles that failed to play — filter Active / Auto-hidden / All; per-row Test now (inline result), Unhide (auto-hidden only), Dismiss. Backend: `/api/admin/stream-failures` (portalcast-server `skill-stream-failures.md`) — movies auto-hide after 3 failed attempts in 24 h, episodes/live are record-only |
 | Carousel | `CarouselConfigManager.tsx` | Homepage carousel slides |
 | Config | `ConfigTab.tsx` | Provider connection settings |
 | Logs | `LogsTab.tsx` | Live server log tail via Socket.IO `server_log` event |
