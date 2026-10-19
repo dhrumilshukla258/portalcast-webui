@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { nextEpisodeWindowSeconds } from '@/utils/videoQuality';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { toast } from 'react-toastify';
 import { saveUserProgress, getUserProgress } from '@/api/endpoints/user';
@@ -142,7 +143,8 @@ export function useProgressTracking({
       });
     }
 
-    if (dur > 0 && contentType === 'series' && (dur - time <= 300)) {
+    // Last 5% of the episode, 30–90 s (was a flat 5 min: a quarter of a sitcom).
+    if (dur > 0 && contentType === 'series' && (dur - time <= nextEpisodeWindowSeconds(dur))) {
       setShowNextEpisodeButton((prev) => (prev ? prev : true));
     } else {
       setShowNextEpisodeButton((prev) => (prev ? false : prev));

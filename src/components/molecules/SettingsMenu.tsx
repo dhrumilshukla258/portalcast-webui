@@ -1,5 +1,6 @@
 import React from 'react';
 import { useVideoContext } from '@/context/video';
+import { formatDelay, getSubtitleDelay, setSubtitleDelay, subscribeSubtitleDelay } from '@/utils/subtitleDelay';
 import {
   useVideoQualityOptions,
   useAudioOptions,
@@ -32,6 +33,7 @@ export const SettingsMenu = React.memo(() => {
   const qualities = useVideoQualityOptions({ auto: true, sort: 'ascending' });
   const audioOptions = useAudioOptions();
   const captionOptions = useCaptionOptions();
+  const subtitleDelay = React.useSyncExternalStore(subscribeSubtitleDelay, getSubtitleDelay);
 
   // Close menu on click outside
   React.useEffect(() => {
@@ -229,6 +231,35 @@ export const SettingsMenu = React.memo(() => {
               )}
             </button>
           ))}
+
+          {/* Per-title subtitle timing (utils/subtitleDelay.ts), saved on this device */}
+          <div className="mt-1 border-t border-gray-700 px-3 pt-2 text-xs text-gray-300">
+            Timing: {formatDelay(subtitleDelay)}
+          </div>
+          <div className="flex items-center gap-1 px-2 pb-1 pt-1">
+            {[
+              { label: '− 0.25 s', delta: -250 },
+              { label: '+ 0.25 s', delta: 250 },
+            ].map(({ label, delta }) => (
+              <button
+                key={label}
+                data-focusable="true"
+                data-control="settings-item"
+                onClick={() => setSubtitleDelay(subtitleDelay + delta)}
+                className="flex-1 rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
+              >
+                {label}
+              </button>
+            ))}
+            <button
+              data-focusable="true"
+              data-control="settings-item"
+              onClick={() => setSubtitleDelay(0)}
+              className="flex-1 rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
+            >
+              Reset
+            </button>
+          </div>
 
           <button
             data-focusable="true"

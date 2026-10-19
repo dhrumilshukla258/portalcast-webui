@@ -23,6 +23,8 @@ import { TopBar } from '@/components/organisms/layout/TopBar';
 import { TVControls } from '@/components/organisms/video/TVControls';
 import { VODControls } from '@/components/organisms/video/VODControls';
 import { useVideoContext } from '@/context/video';
+import { useVideoQuality } from '@/hooks/useVideoQuality';
+import { bindSubtitleDelay, applySubtitleDelay } from '@/utils/subtitleDelay';
 import { useTVRemoteNavigation } from '@/components/organisms/video/hooks/useTVRemoteNavigation';
 import { useTouchGestures } from '@/components/organisms/video/hooks/useTouchGestures';
 
@@ -80,6 +82,32 @@ const VideoPlayerContent: React.FC = () => {
   } = useVideoContext();
 
   const remote = useMediaRemote(playerRef);
+
+  // Identity of the playing title, as the server keys catalog items (movie stream id /
+  // episode id); live is shown but never reported.
+  const qualityItemType: 'movie' | 'episode' | null =
+    contentType === 'movie' ? 'movie' : contentType === 'series' ? 'episode' : null;
+  const qualityItemId: string | null =
+    contentType === 'movie'
+      ? String(item?.catalogId ?? item?.stream_id ?? item?.id ?? itemId ?? '').replace(/^movie_/, '') || null
+      : contentType === 'series'
+        ? String(item?.id ?? itemId ?? '') || null
+        : null;
+  const videoStats = useVideoQuality(playerContainerRef, { itemType: qualityItemType, itemId: qualityItemId }, `${reloadTrigger}-${streamUrl}`);
+
+  // Per-title subtitle timing (utils/subtitleDelay.ts): bind the title and its text tracks,
+  // and re-apply while cues load (applying is idempotent).
+  useEffect(() => {
+    const titleKey = qualityItemType && qualityItemId ? `${qualityItemType}:${qualityItemId}` : null;
+    const tracks = () => {
+      const list: any = (playerRef.current as any)?.textTracks;
+      if (!list) return [];
+      return typeof list.toArray === 'function' ? list.toArray() : Array.from(list as ArrayLike<unknown>);
+    };
+    bindSubtitleDelay(titleKey, tracks as any);
+    const t = window.setInterval(applySubtitleDelay, 1500);
+    return () => { window.clearInterval(t); bindSubtitleDelay(null, null); };
+  }, [qualityItemType, qualityItemId, playerRef, reloadTrigger]);
   const tvChannelListRef = useRef<TvChannelListRef>(null);
   const episodeOverlayRef = useRef<EpisodeOverlayRef>(null);
   const speedBannerRef = useRef<HTMLDivElement>(null);
@@ -238,6 +266,11 @@ const VideoPlayerContent: React.FC = () => {
             onDoubleClick={(e) => e.stopPropagation()}
           >
             <TopBar onBack={onBack} />
+            {videoStats && (
+              <div className="absolute right-4 top-16 rounded-md bg-black/60 px-3 py-1 text-xs font-semibold tracking-wide text-white md:right-6 md:top-20 md:text-sm">
+                {videoStats}
+              </div>
+            )}
 
             {contentType === 'tv' ? (
               <TVControls />
