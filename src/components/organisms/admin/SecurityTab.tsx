@@ -21,11 +21,13 @@ const KIND_LABEL: Record<string, string> = {
   image_proxy_blocked: 'Image proxy aimed at a private address',
   upload_rejected: 'Upload was not an image',
   reset_token_invalid: 'Bad password-reset token',
+  suspicious_request: 'Hostile request shape (traversal, injection, scanner)',
+  unknown_api_path: 'Probed a route that does not exist',
   ip_banned: 'Address banned',
   ip_unbanned: 'Ban lifted',
 };
 
-const SEVERE = new Set(['refresh_reuse', 'image_proxy_blocked', 'forbidden', 'ip_banned']);
+const SEVERE = new Set(['refresh_reuse', 'image_proxy_blocked', 'forbidden', 'ip_banned', 'suspicious_request']);
 
 /** Admin > Security: suspicious client activity, automatic bans, manual bans. */
 const SecurityTab: React.FC = () => {
