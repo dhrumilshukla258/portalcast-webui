@@ -9,6 +9,7 @@ export const API_PATHS = {
   CHANNELS: '/v2/channels',
   CHANNEL_LINK: '/v2/channel-link',
   EPG: '/v2/epg',
+  EPG_WINDOW: '/v2/epg/window',
   CHANNEL_GROUPS: '/v2/groups',
   EXPIRY: '/v2/expiry',
   CAROUSEL: '/carousel',

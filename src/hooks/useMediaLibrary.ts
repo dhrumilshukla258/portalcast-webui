@@ -6,7 +6,7 @@ import { getProviderKey } from '@/api/endpoints/provider';
 import { getChannels, getChannelGroups } from '@/api/endpoints/channels';
 import { getMedia, getMovieCategories } from '@/api/endpoints/movies';
 import { getSeries, getSeriesCategories } from '@/api/endpoints/series';
-import { getEPG } from '@/api/endpoints/epg';
+import { getEPG, getEPGWindow } from '@/api/endpoints/epg';
 import { getCarouselSlides, type CarouselSlide } from '@/api/endpoints/carousel';
 import { clearUserProgress, getUserProgress } from '@/api/endpoints/user';
 import type { ProgressRecord } from '@/api/types/user';
@@ -15,6 +15,9 @@ import type { PaginatedResponse } from '@/api/types/channels';
 import { isTizenDevice } from '@/utils/helpers';
 import { useLibraryBackgroundRefresh } from './useLibraryBackgroundRefresh';
 import { useInfiniteScroll } from './useInfiniteScroll';
+
+const EPG_WINDOW_HOURS = 6;
+const EPG_REFRESH_MS = 30 * 60 * 1000;
 
 export const getInitialState = (): {
   initialType: 'movie' | 'series' | 'tv';
@@ -216,14 +219,37 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
   // Guards fetchVodCategories the same way — see its own comment.
   const categoriesRequestRef = useRef(0);
 
-  const loadEpgData = useCallback(async () => {
+  // EPG: the server's /v2/epg/window (programmes overlapping the next 6 h, a few hundred KB)
+  // instead of the whole guide (/v2/epg, ~50 MB of JSON on a 10k-channel portal). Revalidated
+  // with If-None-Match, so tab switches and the 30-min refresh below are usually a 304. Older
+  // servers without the endpoint (404) fall back to the whole guide for the session.
+  const epgEtagRef = useRef<string | null>(null);
+  const epgWindowUnsupportedRef = useRef(false);
+  const loadEpgData = useCallback(async (opts?: { silent?: boolean }) => {
     try {
+      if (!epgWindowUnsupportedRef.current) {
+        const res = await getEPGWindow(EPG_WINDOW_HOURS, epgEtagRef.current);
+        if (res.status === 'ok') {
+          epgEtagRef.current = res.etag;
+          setEpgData(res.body.data ?? {});
+          return;
+        }
+        if (res.status === 'not-modified') return;
+        epgWindowUnsupportedRef.current = true;
+      }
       const response = await getEPG();
       if (response.data?.data) setEpgData(response.data.data);
     } catch {
-      toast.warn('Could not load program guide.');
+      if (!opts?.silent) toast.warn('Could not load program guide.');
     }
   }, []);
+
+  // Keep the guide current while on the Live tab (the window only reaches ~6 h ahead).
+  useEffect(() => {
+    if (contentType !== 'tv' || !providerKey) return;
+    const timer = setInterval(() => loadEpgData({ silent: true }), EPG_REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [contentType, providerKey, loadEpgData]);
 
   const fetchData = useCallback(
     async (

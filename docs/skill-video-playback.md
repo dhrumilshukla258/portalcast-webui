@@ -98,6 +98,14 @@ Reported symptom: "default page not loading correctly when logging in" — lande
 
 ---
 
+## EPG data: the 6-hour window, not the whole guide
+
+`useMediaLibrary.ts`'s `loadEpgData()` fetches `GET /api/v2/epg/window?hours=6` (`getEPGWindow()` in `src/api/endpoints/epg.ts`), not `/api/v2/epg`. On the owner's 10k-channel portal the whole guide is ~46 MB of JSON (6.8 MB gzipped) that the browser had to download and `JSON.parse` on every Live-tab visit, although the player only ever shows now/next (`useEpgSync.ts`). The window is ~1.6 MB gzipped and contains only programmes overlapping the server's hour-aligned `[windowStart, windowEnd)`; channels with nothing in that range are absent from `data`, so readers must keep the `epgData[id] || []` fallback.
+
+- **Revalidation:** the response's `ETag` is kept in a ref and sent back as `If-None-Match`; a 304 keeps the current `epgData` (no state update, no re-render). Tab switches and the 30-minute refresh timer (only while `contentType === 'tv'`) are therefore usually 304s; the server only changes the body once per hour or after an EPG refresh.
+- **Older servers:** a 404 (server without the endpoint) flips `epgWindowUnsupportedRef` and falls back to `getEPG()` for the rest of the session.
+- `getEPGWindow()` goes through `authFetch` (not `api.get`) because it needs the raw status/headers for 304/404/ETag.
+
 ## Key Files
 
 - `src/hooks/useAppNavigation.ts` — `startPlayback`, `playContinueWatching`, `handleItemClick`. History-frame stack (`pushFrame`/`popHistoryFrame`/`redoNextFrame`/`restorePreviousFrame`/`handleBack`) now lives in `src/hooks/useNavigationHistory.ts`; `resolveStreamUrl` is its own module at `src/hooks/resolveStreamUrl.ts`.
