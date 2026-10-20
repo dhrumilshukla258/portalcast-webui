@@ -29,10 +29,12 @@ All admin-tab components live under `src/components/organisms/admin/` (moved out
 | Users | `UserManager.tsx` | User approval/role management (pre-existing) |
 | Content | `ContentManager.tsx` | Genre/item override CRUD — React port of the legacy `/contentmanager` standalone page |
 | Broken streams | `BrokenStreams.tsx` (+ `hooks/useStreamFailures.ts`) | Titles that failed to play — filter Active / Auto-hidden / All; per-row Test now (inline result), Unhide (auto-hidden only), Dismiss. Backend: `/api/admin/stream-failures` (portalcast-server `skill-stream-failures.md`) — movies auto-hide after 3 failed attempts in 24 h, episodes/live are record-only |
-| Carousel | `CarouselConfigManager.tsx` | Homepage carousel slides |
-| Config | `ConfigTab.tsx` | Provider connection settings |
+| Provider | `ConfigTab.tsx` | Provider connection settings (tab id `config`; was labelled Config) |
+| Settings | `SettingsTab.tsx` | Every server setting (server `docs/skill-settings.md`): grouped, source badge (saved here / environment / default), save and reset per setting, secrets masked, test email, background jobs with Run now, read-only Docker settings |
 | Logs | `LogsTab.tsx` | Live server log tail via Socket.IO `server_log` event |
 | API | `ApiReference.tsx` | Static, read-only list of backend endpoints grouped by area — documentation only, no requests made |
+
+The tab bar sits on its own full-width row under the title (it scrolls sideways on narrow screens) so it never overlaps the Back/Logout buttons. The carousel editor was removed on 2026-10-20; slides already saved still show on Home (`WelcomeCarousel.tsx`, `GET /api/carousel`).
 
 Carousel/Config/Logs used to live inline at the bottom of `Admin.tsx` (that's what older versions of this doc, and old commit history, describe) — they've since been pulled out into their own standalone files under `src/components/organisms/admin/`, same pattern as `ContentManager.tsx`/`AdminStats.tsx` always used. `Admin.tsx` itself is now purely the tab shell + nav; if you're looking for the Carousel form, Config form, or the log-tail UI, they aren't in `Admin.tsx` anymore.
 
@@ -85,7 +87,7 @@ If you're hunting for a handler and it's not in the tab's own `.tsx` file, check
 - `src/components/organisms/admin/AdminStats.tsx` + `src/hooks/useAdminStats.ts` + `src/components/molecules/StatCard.tsx`/`PortalTimelineChart.tsx`
 - `src/components/organisms/admin/ContentManager.tsx` + `src/hooks/useContentManager.ts` + `admin/content-manager/CategoriesPanel.tsx`/`ItemsPanel.tsx`
 - `src/components/organisms/admin/ProfileManager.tsx` + `src/hooks/useProfileManager.ts` + `admin/profile-manager/ProfileCard.tsx`/`CreateProfileModal.tsx`
-- `src/components/organisms/admin/CarouselConfigManager.tsx` + `src/hooks/useCarouselForm.ts` + `SlideEditor.tsx`/`SlideList.tsx` — carousel slide CRUD, deferred multi-variant (desktop/tablet/mobile) image upload
+- `src/components/organisms/admin/SettingsTab.tsx` — server settings and background jobs (`api/endpoints/admin.ts`: `getSettings`, `saveSetting`, `resetSetting`, `sendTestEmail`, `getJobs`, `runJob`)
 - `src/components/organisms/admin/ConfigTab.tsx` + `src/hooks/useConfigTabActions.ts` + `ConnectionForm.tsx`/`LibrarySettingsForm.tsx`/`ImportUrlModal.tsx` — provider connection settings, group sync, cache/history clearing
 - `src/components/organisms/admin/LogsTab.tsx` — live log tail, requires JWT in the `start_logging` socket payload
 - `src/components/organisms/admin/UserManager.tsx` + `src/hooks/useUserManager.ts` + `ActiveSessionsPanel.tsx`/`AddUserModal.tsx`/`EditUserModal.tsx`
