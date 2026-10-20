@@ -34,11 +34,9 @@ Season tabs default to `seasons[0]` once `seasons` loads (`useEffect` on `[seaso
 
 ---
 
-## Known issue, unfixed: absolute `screenshot_uri` values bypass the image proxy
+## Images: absolute `screenshot_uri` values (fixed server-side, 2026-10-19)
 
-Every image-rendering site in the app (`MediaCard.tsx`, `TvChannelListCard.tsx`, `EpisodeCard.tsx`, `EpisodeAccordionRow.tsx`, `MediaInfoHeader.tsx`, `SeriesOverviewPage.tsx`'s season tiles, `TVControls.tsx`, `SeasonEpisodesPage.tsx`, `VariantPickerModal.tsx` — ~10 components, same pattern in each) does `item.screenshot_uri.startsWith('http') ? item.screenshot_uri : \`${baseUrl}/api/images${item.screenshot_uri}\``. When the backend hands back an already-absolute URL (some providers' `screenshot_uri` is a full `http://...` path, not a relative one), the app uses it **directly** — no proxying, no rewriting. For providers whose screenshots live on plain HTTP (not HTTPS) hosts, this is visibly a real upstream provider domain and URL structure, inspectable by anyone via view-source/inspect-element — confirmed via a real report: `http://portal.example.com/stalker_portal/screenshots/...` URLs showing up directly in the DOM, plus browser "Mixed Content" warnings (HTTP images on an HTTPS page) in the console. This is a real, if minor, information-disclosure surface (upstream domain/pathing exposed to the client), not fixed as of this writing — deliberately left alone since it's a cross-cutting change (~10 files) with a real tradeoff (proxying every absolute image URL adds a request hop + server bandwidth for every poster/screenshot in the app), not a one-line patch. If tackled, the natural fix point is server-side (normalize `screenshot_uri` to always be relative/proxied for every provider, not just some) rather than patching all ~10 frontend call sites individually.
-
----
+Image sites do `item.screenshot_uri.startsWith('http') ? item.screenshot_uri : \`${baseUrl}/api/images${item.screenshot_uri}\``. An absolute value used to be the provider's own poster URL, exposing its host in the DOM (and mixed-content warnings). The server now rewrites every upstream image into its signed image proxy (`/api/images/proxy?u=…&s=…`) or a relative `/api/images/...` path, and strips `stream_icon`/`cover`/`direct_source` from catalog items, so an absolute value is either that proxy or `image.tmdb.org`. Keep it that way: never put a provider URL in a client-facing field.
 
 ## `MediaCard.tsx` — fallback/edge-case surface
 
@@ -84,6 +82,18 @@ Both `MovieDetailPage` and `SeriesOverviewPage` render through this one componen
 `MainContentGrid.tsx` itself was also split (it had grown past 450 lines): the JSX-only pieces now live in `organisms/browse/main-content-grid/` — `MediaGrid.tsx` (the actual card grid — TV/episode/movie card branching), `GridFooter.tsx` (empty-state + pagination retry), `CategorySidebar.tsx` (desktop sidebar + resize handle), and `MobileCategoryDrawer.tsx`. `MainContentGrid.tsx` remains the orchestrator — it still owns all the state/effects described in this doc (`contentScrollRef`, `viewKey`, `enrichedItems`, the sub-page branching booleans); only the render output was extracted into these four presentational components, wired via straightforward props with no behavior change.
 
 ---
+
+## Global Search (`components/organisms/search/SearchView.tsx`, 2026-10-20)
+
+The header's first tab. One query (debounced 400 ms, 2+ characters) runs `getMedia`/`getSeries` with `category: '*'` and matches live channels from `getChannels()` locally; All / Movies / Series / Live TV tabs; recent searches in user preferences (only an explicit choice is remembered). Results group a title's versions by the server's `title_key` and show its `clean_name`; one version opens directly, several open `VariantPickerModal`. It renders on the same layer as Discover (`overlayPage` in `App.tsx`), so titles open over it and Back returns to the results. The per-section search bar (`TitleSearchBar`) was removed, as on the TV app.
+
+## Episode rows (`EpisodeAccordionRow.tsx`, 2026-10-20)
+
+Netflix-style rows, the same as the TV app: number, a 16:9 still when there is one, the title with its number prefix and air date taken out (`utils/episodeInfo.ts`, same rules as the TV's `EpisodeInfo.kt`), a line with *Continue watching* / air date / runtime / *Watched*, and a two-line description; text-only when there is no still or description. `SeriesOverviewPage` opens on the season being watched, loads pages until the resumed episode is there (`utils/resumeEpisode.ts`), marks it, scrolls to it and focuses it.
+
+## Continue Watching removal
+
+The × on a card opens a confirm dialog (Cancel focused) before `handleDismiss` runs, as on the TV (hold Center).
 
 ## Key Files
 

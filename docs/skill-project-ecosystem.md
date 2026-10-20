@@ -14,6 +14,12 @@ be built against.
 - Was explicitly tried on a Hisense Android TV via browser and found
   unintuitive for remote-control/d-pad navigation — not reused by
   `portalcast-tv-android`, which is a purpose-built 10-foot UI instead.
+- Features are kept the same on both clients (Search, Discover selectors and
+  channel badges, episode rows and names, Continue Watching) though the UI is
+  not shared: change one, mirror the other. Episode-name rules live in
+  `src/utils/episodeInfo.ts` here and `ui/series/EpisodeInfo.kt` there.
+- A `cmd` may be sealed by the server (`sealed:…`): pass it back to
+  movie-link/download-link as is, never play it.
 
 See `../../docs/project_ecosystem.md` (shared across all portalcast-* repos)
 for the full multi-repo product ecosystem, planned future clients, and

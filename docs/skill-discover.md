@@ -69,15 +69,11 @@ This is **not** the classic "effect depends on an unstable inline closure" versi
 
 ---
 
-## `ActiveFilterTags` — removable chips for the active genre/country/language/theme selection
+## Filters: a row of selectors (`DiscoverFilters.tsx`, 2026-10-20)
 
-`DiscoverFilters.tsx` exports two components: `DiscoverFilters` (the "Filters" dropdown button itself) and `ActiveFilterTags` (added alongside it). The dropdown's own badge only shows a count and its summary line truncates to `"N selected"` — neither says *what's* active without opening the panel. `ActiveFilterTags` renders one removable chip per active value (one per selected genre, since genre is multi-select, plus at most one each for country/language/theme) with an `X` to clear just that value; clicking a chip calls the same `onFilterChange`/`onGenresChange` handlers `DiscoverFilters` itself uses.
+Same as the TV app: under the Movies/Series toggles, a row of selectors — Genre ▾ Language ▾ Country ▾ Channel / Platform ▾ Mood ▾ — each opening its own near-solid list under itself; a selector shows its value, a **Clear** button resets all. Genre stays multi-pick (AND); the rest are single. *Channel / Platform* (`network`) comes from the server's `networks` facet, sent for Series only, so it appears only when Series is selected. TMDB's `cn` reads as Cantonese. The old Filters panel and `ActiveFilterTags` chips are gone.
 
-`DiscoverView.tsx` renders it as a second row **inside** the same sticky filter-bar container (not a separate block below it) — `<div className="sticky ...">` now wraps a flex row (Filters button + Movies/Series pills) and, conditionally on `hasActiveFilter`, a second `flex flex-wrap` row underneath holding `ActiveFilterTags`. Keeping both rows in one sticky container means the active-selection chips stay pinned on scroll alongside the Filters button's count badge, rather than scrolling away as an independent element while the badge stays visible — those two signals (badge count, actual chips) would otherwise visibly disagree once the user scrolls down a filtered grid.
-
-The chip row is marked `data-focus-group="discover-active-filters"` and each chip `data-focusable="true"`, per `skill-tv-remote-navigation.md`'s "any new browsing region needs these" rule — it's conditionally rendered (mounts/unmounts with `hasActiveFilter`), so `getFocusableElements()`'s fresh-per-keypress DOM query picks it up/drops it automatically with no extra wiring.
-
----
+Cards show `network` as a `ChannelBadge` (logo, else the name) and use the server's cleaned `name` and `description`.
 
 ## `AmbientBackdrop.tsx` — shared by Discover and the main grid
 
@@ -90,9 +86,9 @@ Full-bleed blurred TMDB backdrop, `position: fixed` behind content. Only titles 
 - `src/api/endpoints/discover.ts` — `getFacets`, `getDiscoverBrowse`, `getRecommendations`, `getDiscoverVariants`
 - `src/hooks/useDiscover.ts` — facets/browse/recommendations/genre-row state
 - `src/components/organisms/discover/DiscoverView.tsx` — top-level Discover screen, filtered-grid vs. row-layout switch. `App.tsx` mounts this via `React.lazy` + `Suspense` (only loaded once the user opens Discover, not on initial app load) — if you add a new required prop, make sure it's still available synchronously wherever `showDiscover` flips true, since there's no loading-state prop threading beyond the `Suspense` fallback. Its `onBackdropItemsChange` report is rAF-coalesced (not called synchronously per `backdropItems` change) — see the error #185 section above
-- `src/components/organisms/discover/DiscoverFilters.tsx`, `CategorySelector.tsx` — genre/country/language/theme filter dropdown (`DiscoverFilters`) + removable active-selection chips (`ActiveFilterTags`, see above), VOD category sidebar (`CategorySelector`'s own state/handlers now live in `src/hooks/useCategorySelector.ts`, with the pin-management overlay split into `discover/category-selector/CategoryPinOverlay.tsx`)
+- `src/components/organisms/discover/DiscoverFilters.tsx`, `CategorySelector.tsx` — the selector row (`DiscoverFilters`, see above), VOD category sidebar (`CategorySelector`'s own state/handlers now live in `src/hooks/useCategorySelector.ts`, with the pin-management overlay split into `discover/category-selector/CategoryPinOverlay.tsx`)
 - `src/components/organisms/browse/RecommendedRow.tsx`, `MediaCardRow.tsx` — row rendering, infinite scroll. `MediaCardRow.tsx`'s `updateScrollButtons`/auto-load-more must stay decoupled from the caller's `onLoadMore` closure identity (via the `updateScrollButtonsRef` indirection) and deferred by a macrotask (`setTimeout(..., 0)`) — see the error #185 section above before "simplifying" either back to a direct `useCallback` dependency or a synchronous call
 - `src/hooks/useNavigationHistory.ts` — `applyFrame`'s empty-placeholder refetch branch must exclude Discover frames (`!frame.showDiscover`), since Discover never populates the grid's own `items`/`context` — see `skill-video-playback.md`'s Navigation flicker section, race #4
 - `src/components/molecules/AmbientBackdrop.tsx`, `src/components/molecules/VariantPickerModal.tsx`
 - `src/hooks/useDiscoverNavigation.ts` — `openDiscoverItem`, `handleDiscoverItemClick`, `onSelectVariant`, `handleCarouselAction` (the actual translation/resolution layer, wired into `App.tsx` via `pushFrame`/`fetchData`/`setCurrentSeriesItem`/the picker+detail setters passed in as args)
-- `src/hooks/useSearchController.ts` — search debounce/submit + the context-search sync-back effect (kept as one pair — splitting either half reintroduces a stale-resubmit loop, see the hook's own comment)
+- `src/hooks/useSearchController.ts` — `cleanRecentSearches()` (used by the global Search page, see skill-browsing-grid.md)

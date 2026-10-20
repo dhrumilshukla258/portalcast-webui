@@ -1,187 +1,74 @@
 <p align="center">
-  <img src="public/portalcast-logo.svg" alt="Portalcast Logo" width="200" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/svg/portalcast-logo.svg">
+    <img src="brand/svg/portalcast-logo-on-light.svg" alt="PortalCast" width="320">
+  </picture>
 </p>
 
-<h1 align="center">Portalcast</h1>
+<p align="center"><b>PortalCast Web</b> is the browser app for PortalCast: Discover, movies, series and live TV, on desktop, phone and Smart TV browsers.</p>
 
 <p align="center">
-  A modern, feature-rich OTT/IPTV Player built with React, Vite, and TypeScript.<br/>
-  Designed for performance, aesthetics, and broad device support including Tizen and WebOS.
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react" />
-  <img src="https://img.shields.io/badge/Vite-7-purple?style=for-the-badge&logo=vite" />
-  <img src="https://img.shields.io/badge/TypeScript-6-blue?style=for-the-badge&logo=typescript" />
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React 19">
+  <img src="https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite 7">
+  <img src="https://img.shields.io/badge/TypeScript-6-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 6">
+  <img src="https://img.shields.io/badge/license-MIT-22C55E?style=flat-square" alt="MIT">
 </p>
 
 <p align="center">
-  <a href="#-screenshots">Screenshots</a> ·
-  <a href="#-features">Features</a> ·
-  <a href="#-quick-start">Quick Start</a> ·
-  <a href="#-deployment">Deployment</a> ·
-  <a href="#-contributing">Contributing</a>
+  <a href="https://github.com/dhrumilshukla258/portalcast-server">Server</a> ·
+  <b>Web app</b> ·
+  <a href="https://github.com/dhrumilshukla258/portalcast-tv-android">Android TV app</a>
 </p>
 
 ---
 
-## 📸 Screenshots
-
 <table>
   <tr>
-    <td width="50%">
-      <img src="docs/screenshots/movies.png" alt="Movies browse grid with category sidebar" />
-      <p align="center"><sub>Movies browse grid</sub></p>
-    </td>
-    <td width="50%">
-      <img src="docs/screenshots/discover.png" alt="Discover tab with genre rows" />
-      <p align="center"><sub>Discover — genre rows &amp; filters</sub></p>
-    </td>
+    <td width="50%"><img src="docs/screenshots/discover.png" alt="Discover"><p align="center"><sub>Discover</sub></p></td>
+    <td width="50%"><img src="docs/screenshots/series-details.png" alt="Series page"><p align="center"><sub>Series</sub></p></td>
   </tr>
   <tr>
-    <td width="50%">
-      <img src="docs/screenshots/movies-details.png" alt="Movie detail page" />
-      <p align="center"><sub>Movie details</sub></p>
-    </td>
-    <td width="50%">
-      <img src="docs/screenshots/series-details.png" alt="Series detail page with season/episode list" />
-      <p align="center"><sub>Series details &amp; episode list</sub></p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <img src="docs/screenshots/discover-group.png" alt="Variant picker modal for a multi-version title" />
-      <p align="center"><sub>Multi-version picker (language/quality variants)</sub></p>
-    </td>
-    <td width="50%">
-      <img src="docs/screenshots/admin.png" alt="Admin dashboard stats tab" />
-      <p align="center"><sub>Admin Dashboard</sub></p>
-    </td>
+    <td width="50%"><img src="docs/screenshots/movies.png" alt="Movies"><p align="center"><sub>Movies</sub></p></td>
+    <td width="50%"><img src="docs/screenshots/admin.png" alt="Admin dashboard"><p align="center"><sub>Admin</sub></p></td>
   </tr>
 </table>
 
-<sub>Poster art, titles, cast, channel/category names, and admin stats are blurred in these screenshots — the UI chrome (nav, layout, buttons, colors) is left sharp so the design is still visible.</sub>
+<sub>Artwork and titles are blurred in the screenshots.</sub>
 
-> Don't see images above? Drop screenshots into `docs/screenshots/` — see [docs/screenshots/README.md](docs/screenshots/README.md) for the exact filenames expected.
+## Features
 
-## ✨ Features
+- **Search** across every movie, series and live channel at once; versions of a title are one result.
+- **Discover** with a rotating backdrop, recommendations, and Genre / Language / Country / Channel / Mood selectors; channel and platform badges on cards.
+- **Series** with TMDB episode stills and descriptions, air dates, and the page opening on the episode you are watching.
+- **Player** with live TV and EPG, subtitles (online search, embedded tracks, your own file) with per-title timing, real resolution and frame rate, next-episode prompt.
+- **Continue Watching** synced with the TV app; favourites and recent channels sync live across devices.
+- **Admin** — users, profiles, content manager, broken streams, security log, live viewers and server logs.
+- Runs in any modern browser and Samsung/LG TV browsers; installable as a PWA.
 
-| | |
-|---|---|
-| 📺 **Live TV & VOD** | Seamless playback of live channels and video-on-demand content, with EPG (program guide) sync and automatic HLS error recovery |
-| 🧭 **Discover** | A TMDB-enriched recommendation surface layered on top of your portal's own catalog — "Because You Watched" recommendations, progressively-loading genre rows, filterable browsing by genre/country/language/theme, and a variant picker for titles with multiple dubbed/subtitled versions |
-| 📱 **Cross-Platform** | Optimized for customized web browsers, Samsung Tizen, and LG WebOS. Installable as a PWA with offline app-shell caching |
-| 📡 **Casting Support** | Built-in casting capability to stream content to other devices |
-| 💬 **Subtitles** | Embedded-track detection for progressive video, online subtitle search, and manual `.srt`/`.vtt` upload |
-| 🎨 **Modern UI** | Polished, glassmorphic design with smooth animations, ambient backdrops, and responsive layout |
-| 🔐 **Secure Stream Proxy** | Hides upstream credentials using a dedicated proxy server |
-| 📝 **Favorites & History** | Manage your favorite channels and track watch history, with Continue Watching across movies and series |
-| 🔄 **Real-time Multi-Device Sync** | Favorites, recent channels, and last-selected category/TV channel sync instantly across every device you're logged into — no need to refresh or switch tabs |
-| 🛠️ **Admin Dashboard** | Stats, user management, content overrides, homepage carousel, provider config, and live server log streaming — all from `/admin` |
+## Get started
 
-## 🚀 Quick Start
+This app needs a running [PortalCast Server](https://github.com/dhrumilshukla258/portalcast-server); the server ships with a recent build of it in `public/`, so most people never build this repo.
 
-### Prerequisites
-
-- Node.js (v18+)
-- npm or yarn
-- A running [portalcast-server](https://github.com/dhrumilshukla258/portalcast-server) instance to connect to (this repo is the frontend only)
-
-### Installation
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/dhrumilshukla258/portalcast-webui.git
-   cd portalcast-webui
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment**
-
-   Copy the example environment file and point it at your backend:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Edit `.env`:
-
-   ```ini
-   # Set this to your Portalcast server IP
-   VITE_API_HOST=http://YOUR_SERVER_IP:3000
-
-   # Deployment targets
-   TIZEN_DIR=/path/to/tizen/project/public
-   SERVER_DIR=../portalcast-server/public
-   ```
-
-4. **Run the dev server**
-
-   ```bash
-   npm run dev
-   ```
-
-5. **Build for production**
-
-   ```bash
-   npm run build
-   ```
-
-   This compiles TypeScript and bundles the app into `dist/`. Building for a backend hosted elsewhere? Prepend the env var: `VITE_API_HOST=http://YOUR_SERVER_IP:3000 npm run build`.
-
-## 🛠️ Deployment
-
-A consolidated `deploy.sh` script handles builds for different environments. Both modes run the same production build — only `VITE_API_HOST` changes, baked in at build time.
-
-<details>
-<summary><b>Option 1 — Deploy to Server (default)</b></summary>
-
-Builds the app using relative API paths and deploys to the configured `SERVER_DIR`. Best when the app is served from the *same* origin as the API.
+To develop or ship your own build:
 
 ```bash
-./deploy.sh
+npm install
+cp .env.example .env    # set VITE_API_HOST only if the server is on another origin
+npm run dev             # http://localhost:5173
+npm run build           # builds dist/ and copies it to ../portalcast-server/public
 ```
 
-</details>
+Set `PORTALCAST_SERVER_PUBLIC_DIR` to copy somewhere else. `./deploy.sh --tizen` builds for a Samsung Tizen app instead (fixed server address from `.env`).
 
-<details>
-<summary><b>Option 2 — Deploy to Tizen TV</b></summary>
+## Docs
 
-Builds the app with a hardcoded server IP (from your `.env`) and deploys to the configured `TIZEN_DIR`. Best for Tizen Studio or side-loading.
+- `docs/skill-*.md` — one page per area (Discover, browsing, video playback, API client, auth, admin, TV-remote navigation, build and deploy)
+- [brand/](brand/README.md) — the PortalCast logo kit used by every client
 
-```bash
-./deploy.sh --tizen
-```
+## Disclaimer
 
-</details>
+PortalCast is software only. It does not provide, host or distribute any content; you connect it to a provider you are entitled to use.
 
-Either mode:
+## License
 
-1. Reads your configuration.
-2. Builds the Vite project.
-3. Deploys the `dist/` artifacts to your configured `DEPLOY_DIR` (default: `../portalcast-server/public`).
-
-## ⚠️ Disclaimer
-
-This application is a **media player only**. It does not provide, host, or distribute any video content, playlists, or streams. Users must provide their own content from legal and authorized sources (e.g., their own Stalker Middlewares or Xtream Codes subscriptions). The developers are not responsible for how this application is used.
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
+MIT — see [LICENSE](LICENSE).
