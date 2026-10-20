@@ -8,7 +8,7 @@ import {
   BarChart3,
   FolderTree,
   Code2,
-  AlertTriangle, ShieldAlert, SlidersHorizontal } from 'lucide-react';
+  AlertTriangle, ShieldAlert, SlidersHorizontal, HardDrive } from 'lucide-react';
 import ProfileManager from '@/components/organisms/admin/ProfileManager';
 import { useAuth } from '@/context/AuthContext';
 import UserManager from '@/components/organisms/admin/UserManager';
@@ -20,6 +20,7 @@ import LogsTab from '@/components/organisms/admin/LogsTab';
 import BrokenStreams from '@/components/organisms/admin/BrokenStreams';
 import SecurityTab from '@/components/organisms/admin/SecurityTab';
 import SettingsTab from '@/components/organisms/admin/SettingsTab';
+import LibrariesTab from '@/components/organisms/admin/LibrariesTab';
 
 type AdminTab =
   | 'profiles'
@@ -31,6 +32,7 @@ type AdminTab =
   | 'broken'
   | 'security'
   | 'settings'
+  | 'libraries'
   | 'api';
 
 interface AdminProps {
@@ -95,6 +97,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
                 { id: 'users', label: 'Users', icon: Users },
                 { id: 'profiles', label: 'Profiles', icon: Globe },
                 { id: 'config', label: 'Provider', icon: Settings },
+                { id: 'libraries', label: 'Libraries', icon: HardDrive },
                 { id: 'content', label: 'Content', icon: FolderTree },
                 { id: 'broken', label: 'Broken streams', icon: AlertTriangle },
                 { id: 'security', label: 'Security', icon: ShieldAlert },
@@ -168,6 +171,12 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
           {activeTab === 'logs' && <LogsTab />}
 
           {activeTab === 'config' && <ConfigTab />}
+
+          {activeTab === 'libraries' && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <LibrariesTab />
+            </div>
+          )}
 
           {activeTab === 'settings' && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">

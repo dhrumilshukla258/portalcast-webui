@@ -170,3 +170,48 @@ export interface BackgroundJob {
   lastError: string | null;
   nextDue: string;
 }
+
+// ---- Local libraries (Admin > Libraries) ----
+export interface LocalLibrary {
+  id: number;
+  name: string;
+  kind: string;
+  folders: string[];
+  enabled: boolean;
+  lastScanAt: string | null;
+  lastScanSummary: string | null;
+  counts: { titles: number; files: number; unmatched: number; missing: number };
+}
+
+export interface LibrariesResponse {
+  scanning: boolean;
+  roots: string[];
+  items: LocalLibrary[];
+}
+
+export interface FolderListing {
+  path: string | null;
+  parent: string | null;
+  folders: { name: string; path: string; exists?: boolean }[];
+}
+
+export interface LibraryTitle {
+  id: number;
+  name: string;
+  year: string | null;
+  folder: string;
+  matchedTmdbId: number | null;
+  locked: boolean;
+  missingSince: string | null;
+  poster: string | null;
+  matchedTitle: string | null;
+  matchedYear: string | null;
+}
+
+export interface TmdbCandidate {
+  tmdbId: number;
+  title: string;
+  year: string | null;
+  poster: string | null;
+  overview: string | null;
+}

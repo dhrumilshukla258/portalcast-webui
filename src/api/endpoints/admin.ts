@@ -18,6 +18,11 @@ import type {
   SecuritySummary,
   SettingsResponse,
   BackgroundJob,
+  LibrariesResponse,
+  LocalLibrary,
+  FolderListing,
+  LibraryTitle,
+  TmdbCandidate,
 } from '@/api/types/admin';
 
 // --- Server config ---
@@ -191,3 +196,33 @@ export const getJobs = async (): Promise<BackgroundJob[]> =>
 
 export const runJob = async (name: string): Promise<{ started: boolean; items: BackgroundJob[] }> =>
   (await api.post<{ started: boolean; items: BackgroundJob[] }>(`/admin/jobs/${encodeURIComponent(name)}/run`)).data!;
+
+// ---- Local libraries ----
+export const getLibraries = async (): Promise<LibrariesResponse> =>
+  (await api.get<LibrariesResponse>('/admin/libraries')).data!;
+
+export const createLibrary = async (name: string, folders: string[]): Promise<LocalLibrary> =>
+  (await api.post<LocalLibrary>('/admin/libraries', { name, folders })).data!;
+
+export const updateLibrary = async (id: number, patch: { name?: string; folders?: string[]; enabled?: boolean }): Promise<LocalLibrary> =>
+  (await api.put<LocalLibrary>(`/admin/libraries/${id}`, patch)).data!;
+
+export const deleteLibrary = async (id: number): Promise<void> => {
+  await api.delete(`/admin/libraries/${id}`);
+};
+
+export const scanLibrary = async (id: number | 'all'): Promise<{ started: boolean; scanning: boolean }> =>
+  (await api.post<{ started: boolean; scanning: boolean }>(`/admin/libraries/${id}/scan`)).data!;
+
+export const browseFolders = async (path?: string): Promise<FolderListing> =>
+  (await api.get<FolderListing>('/admin/libraries/browse', { params: path ? { path } : {} })).data!;
+
+export const getLibraryTitles = async (id: number, filter: 'all' | 'unmatched' | 'missing', q = ''): Promise<LibraryTitle[]> =>
+  (await api.get<{ items: LibraryTitle[] }>(`/admin/libraries/${id}/items`, { params: { filter, q } })).data?.items ?? [];
+
+export const searchMatches = async (q: string, year?: string | null): Promise<TmdbCandidate[]> =>
+  (await api.get<{ items: TmdbCandidate[] }>('/admin/libraries/match-search', { params: { q, year: year || undefined } })).data?.items ?? [];
+
+export const setTitleMatch = async (itemId: number, tmdbId: number | null): Promise<void> => {
+  await api.post(`/admin/libraries/items/${itemId}/match`, { tmdbId });
+};
