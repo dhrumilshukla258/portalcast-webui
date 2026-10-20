@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowDownAZ, SortDesc, SortAsc, LogOut, Shield, Trash2, Captions, Tv } from 'lucide-react';
+import { ArrowDownAZ, SortDesc, SortAsc, LogOut, Shield, Trash2, Captions, Tv, Search } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '@/context/useSocket';
@@ -11,6 +11,9 @@ export interface HeaderProps {
   handleContentTypeChange: (type: 'movie' | 'series' | 'tv') => void;
   isDiscoverActive?: boolean;
   onSelectDiscover?: () => void;
+  /** Global search page (first tab, like the TV app's rail). */
+  isSearchActive?: boolean;
+  onSelectSearch?: () => void;
   sort: string | null | undefined;
   cycleSort: () => void;
   handleClearWatched: () => void;
@@ -28,6 +31,8 @@ export const Header: React.FC<HeaderProps> = React.memo(
     handleContentTypeChange,
     isDiscoverActive = false,
     onSelectDiscover,
+    isSearchActive = false,
+    onSelectSearch,
     sort,
     cycleSort,
     handleClearWatched,
@@ -105,6 +110,23 @@ export const Header: React.FC<HeaderProps> = React.memo(
         
         {/* Content Type Toggles */}
         <div className="flex w-full justify-between space-x-1 rounded-full border border-white/10 bg-[#0b1120]/85 p-1 transition-all duration-300 sm:w-auto sm:space-x-2">
+          {onSelectSearch && (
+            <button
+              onClick={onSelectSearch}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+                isSearchActive
+                  ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
+                  : 'text-gray-400 hover:bg-white/10 hover:text-white'
+              }`}
+              data-focusable="true"
+              data-default-focus={isSearchActive ? 'true' : undefined}
+              tabIndex={-1}
+              title="Search"
+            >
+              <Search className="h-4 w-4" />
+              <span className="hidden sm:inline">Search</span>
+            </button>
+          )}
           {onSelectDiscover && (
             <button
               onClick={onSelectDiscover}
@@ -129,12 +151,12 @@ export const Header: React.FC<HeaderProps> = React.memo(
           <button
             onClick={() => handleContentTypeChange('movie')}
             className={`flex flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
-              !isDiscoverActive && contentType === 'movie'
+              !isDiscoverActive && !isSearchActive && contentType === 'movie'
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
             }`}
             data-focusable="true"
-            data-default-focus={!isDiscoverActive && contentType === 'movie' ? 'true' : undefined}
+            data-default-focus={!isDiscoverActive && !isSearchActive && contentType === 'movie' ? 'true' : undefined}
             tabIndex={-1}
             title="Movies"
           >
@@ -148,12 +170,12 @@ export const Header: React.FC<HeaderProps> = React.memo(
           <button
             onClick={() => handleContentTypeChange('series')}
             className={`flex flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
-              !isDiscoverActive && contentType === 'series'
+              !isDiscoverActive && !isSearchActive && contentType === 'series'
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
             }`}
             data-focusable="true"
-            data-default-focus={!isDiscoverActive && contentType === 'series' ? 'true' : undefined}
+            data-default-focus={!isDiscoverActive && !isSearchActive && contentType === 'series' ? 'true' : undefined}
             tabIndex={-1}
             title="Series"
           >
@@ -167,12 +189,12 @@ export const Header: React.FC<HeaderProps> = React.memo(
           <button
             onClick={() => handleContentTypeChange('tv')}
             className={`flex flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
-              !isDiscoverActive && contentType === 'tv'
+              !isDiscoverActive && !isSearchActive && contentType === 'tv'
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
             }`}
             data-focusable="true"
-            data-default-focus={!isDiscoverActive && contentType === 'tv' ? 'true' : undefined}
+            data-default-focus={!isDiscoverActive && !isSearchActive && contentType === 'tv' ? 'true' : undefined}
             tabIndex={-1}
             title="TV"
           >

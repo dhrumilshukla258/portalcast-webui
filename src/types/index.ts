@@ -65,6 +65,9 @@ export interface MediaItem {
   /** Discover only: the TV channel the title airs on (taken out of its name) and its logo. */
   network?: string;
   network_logo?: string;
+  /** Catalog lists: the server's grouping key and cleaned name (Search groups versions by these). */
+  title_key?: string;
+  clean_name?: string;
   trailer_key?: string;
 }
 

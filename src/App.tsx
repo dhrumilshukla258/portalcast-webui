@@ -25,13 +25,13 @@ import MainContentGrid from '@/components/organisms/browse/MainContentGrid';
 // Lazy — only mounted when the user opens the Discover tab, not on initial load.
 const DiscoverView = React.lazy(() => import('@/components/organisms/discover/DiscoverView'));
 import { AmbientBackdrop } from '@/components/molecules/AmbientBackdrop';
-import { TitleSearchBar } from '@/components/molecules/TitleSearchBar';
 
 import { useMediaLibrary, initialContext } from '@/hooks/useMediaLibrary';
 import { useDiscover } from '@/hooks/useDiscover';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
 import { useDiscoverNavigation } from '@/hooks/useDiscoverNavigation';
-import { useSearchController, cleanRecentSearches } from '@/hooks/useSearchController';
+import { cleanRecentSearches } from '@/hooks/useSearchController';
+import SearchView from '@/components/organisms/search/SearchView';
 import { useTVFocus } from '@/hooks/useTVFocus';
 import { useCastReceiver } from '@/hooks/useCastReceiver';
 import { isTizenDevice } from './utils/helpers';
@@ -71,7 +71,6 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     recentChannels,
     handleContentTypeChange: handleContentTypeChangeRaw,
     setContentType,
-    handleSearch,
     cycleSort,
     handlePageChange,
     toggleFavorite,
@@ -192,14 +191,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     [handleClearWatched]
   );
 
-  const {
-    isSearchActive,
-    setIsSearchActive,
-    isSearchTyping,
-    setIsSearchTyping,
-    searchTerm,
-    setSearchTerm,
-  } = useTVFocus({
+  useTVFocus({
     streamUrl,
     items,
     contentType,
@@ -226,6 +218,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   const {
     discoverLoadingItemId,
+    openDiscoverItem,
     handleDiscoverItemClick,
     onSelectVariant,
     handleCarouselAction,
@@ -241,17 +234,41 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     handleItemClick,
   });
 
-  const { onSearchSubmit, onSelectRecentSearch, onRemoveRecentSearch } = useSearchController({
-    searchTerm,
-    setSearchTerm,
-    contextSearch: context.search,
-    pushFrame,
-    handleSearch,
-    setDetailItem,
-    recentSearches,
-    updatePreferences,
-    isTizen,
-  });
+  // Global Search (the TV app's Search tab) lives on the same layer as Discover: a title
+  // opened from it is shown over it, and Back returns to the results.
+  const [overlayPage, setOverlayPage] = useState<'discover' | 'search'>('discover');
+  const isSearchPage = showDiscover && overlayPage === 'search';
+  const searchOpenTitle = useCallback(
+    (item: MediaItem, isSeries: boolean) => {
+      openDiscoverItem({
+        ...item,
+        type: isSeries ? 'series' : 'movie',
+        category: item.category_id != null ? String(item.category_id) : '*',
+      } as MediaItem);
+    },
+    [openDiscoverItem]
+  );
+  const searchPickVersion = useCallback(
+    (display: MediaItem, versions: MediaItem[], isSeries: boolean) => {
+      const type = isSeries ? 'series' : 'movie';
+      pushFrame();
+      setVariantPickerItem({ ...display, type } as MediaItem);
+      setVariantPickerOptions(
+        versions.map((v) => ({
+          ...v,
+          type,
+          category: v.category_id != null ? String(v.category_id) : '*',
+          variantLabel: String(v.name || v.title || ''),
+        })) as DiscoverVariant[]
+      );
+    },
+    [pushFrame]
+  );
+  const searchPlayChannel = useCallback((channel: MediaItem) => { startPlayback(channel); }, [startPlayback]);
+  const setRecentSearches = useCallback(
+    (list: string[]) => updatePreferences({ recentSearches: list }),
+    [updatePreferences]
+  );
 
   // Stable reference instead of an inline arrow literal at the JSX call
   // site — VideoPlayer's tree includes React.memo'd controls that consume
@@ -290,7 +307,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     // nothing about switching to Discover ever touches `context`.
     const isDiscoverBrowsing =
       showDiscover && !detailItem && !(currentSeriesItem && contentType === 'series');
-    if (isDiscoverBrowsing) return 'Discover';
+    if (isDiscoverBrowsing) return overlayPage === 'search' ? 'Search' : 'Discover';
 
     // openDiscoverItem's series branch calls fetchData (updating
     // context.parentTitle correctly), but its movie branch never touches
@@ -317,7 +334,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     }
 
     return context.parentTitle || 'Browse';
-  }, [streamUrl, context, contentType, showDiscover, detailItem, currentSeriesItem]);
+  }, [streamUrl, context, contentType, showDiscover, overlayPage, detailItem, currentSeriesItem]);
 
   const onSelectCategory = useCallback(
     (categoryId: string, categoryTitle: string) => {
@@ -389,7 +406,14 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
               currentTitle={currentTitle}
               contentType={contentType}
               handleContentTypeChange={handleContentTypeChange}
-              isDiscoverActive={showDiscover}
+              isDiscoverActive={showDiscover && overlayPage === 'discover'}
+              isSearchActive={isSearchPage}
+              onSelectSearch={() => {
+                setDetailItem(null);
+                setCurrentSeriesItem(null);
+                setOverlayPage('search');
+                setShowDiscover(true);
+              }}
               onSelectDiscover={() => {
                 setDetailItem(null);
                 // A series detail left open (currentSeriesItem) wasn't being
@@ -399,6 +423,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                 // own rows like a stuck modal even though nothing was
                 // actually open there.
                 setCurrentSeriesItem(null);
+                setOverlayPage('discover');
                 setShowDiscover(true);
               }}
               sort={context.sort}
@@ -422,37 +447,17 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                 // competing with it.
                 blurred={!!detailItem || (!!currentSeriesItem && contentType === 'series')}
               />
-              {/* Moved out of Header into its own sub-bar here — mirrors how
-                  DiscoverView's Filters/Movies/Series bar sits below the main
-                  nav row, so Movies/Series/TV get an equivalent section bar
-                  instead of search being buried in the header's action
-                  controls. Discover still has no search of its own (it's
-                  filter-driven, see DiscoverFilters). */}
-              {!showDiscover && !streamUrl && (
-                <TitleSearchBar
-                  searchTerm={searchTerm}
-                  setSearchTerm={setSearchTerm}
-                  handleSearch={onSearchSubmit}
-                  isSearchActive={isSearchActive}
-                  setIsSearchActive={setIsSearchActive}
-                  isSearchTyping={isSearchTyping}
-                  setIsSearchTyping={setIsSearchTyping}
-                  isTizen={isTizen}
+              {isSearchPage && (
+                <SearchView
                   recentSearches={recentSearches}
-                  onSelectRecentSearch={onSelectRecentSearch}
-                  onRemoveRecentSearch={onRemoveRecentSearch}
-                  placeholder={
-                    contentType === 'tv'
-                      ? 'Search channels...'
-                      : contentType === 'movie'
-                        ? 'Search movies...'
-                        : contentType === 'series'
-                          ? 'Search series...'
-                          : 'Search titles...'
-                  }
+                  onRecentSearchesChange={setRecentSearches}
+                  onOpenTitle={searchOpenTitle}
+                  onPickVersion={searchPickVersion}
+                  onPlayChannel={searchPlayChannel}
+                  isTizen={isTizen}
                 />
               )}
-              {showDiscover && (
+              {showDiscover && !isSearchPage && (
                 <React.Suspense fallback={null}>
                   <DiscoverView
                     onClick={handleDiscoverItemClick}
