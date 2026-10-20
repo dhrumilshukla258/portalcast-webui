@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import MediaCard from '@/components/molecules/MediaCard';
 import type { MediaItem } from '@/types';
 import type { ProgressRecord } from '@/api/types/user';
@@ -126,9 +126,11 @@ const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRe
     return items;
   }, [progressRecords]);
 
+  // Removing asks first (same as the TV app): the × opens a confirm, Cancel is the default.
+  const [confirming, setConfirming] = useState<{ id: string; title: string } | null>(null);
+
   const handleDismiss = useCallback(
-    async (e: React.MouseEvent, targetId: string) => {
-      e.stopPropagation();
+    async (targetId: string) => {
       try {
         await deleteUserProgress(targetId);
         // Also delete progress for any record referencing this ID as its parent/itemId
@@ -168,7 +170,10 @@ const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRe
             <button
               className="absolute right-1 top-1 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition-opacity duration-200 hover:bg-red-600 focus:opacity-100 group-hover:opacity-100"
               style={{ lineHeight: 1 }}
-              onClick={(e) => handleDismiss(e, item.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setConfirming({ id: String(item.id), title: String(item.title || item.name || 'this title') });
+              }}
               title="Remove from Continue Watching"
               aria-label="Remove"
               data-focusable="true"
@@ -183,6 +188,42 @@ const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRe
           </div>
         ))}
       </div>
+      {confirming && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setConfirming(null)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setConfirming(null); }}
+          data-focus-group="cw-remove-confirm"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0b1120]/[0.97] p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="line-clamp-2 text-lg font-bold text-white">{confirming.title}</h3>
+            <p className="mt-2 text-sm text-gray-400">Remove it from Continue Watching? Your place in it is forgotten.</p>
+            <div className="mt-5 flex gap-3">
+              <button
+                data-focusable="true"
+                onClick={() => { const id = confirming.id; setConfirming(null); handleDismiss(id); }}
+                className="rounded-full bg-linear-to-r from-sky-400 to-blue-500 px-5 py-2 text-sm font-bold text-white focus:outline-hidden focus:ring-2 focus:ring-white [&.focused]:ring-2 [&.focused]:ring-white"
+              >
+                Remove
+              </button>
+              <button
+                data-focusable="true"
+                data-default-focus="true"
+                autoFocus
+                onClick={() => setConfirming(null)}
+                className="rounded-full border border-white/15 px-5 py-2 text-sm font-bold text-gray-200 hover:bg-white/10 focus:outline-hidden focus:ring-2 focus:ring-white [&.focused]:ring-2 [&.focused]:ring-white"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { URL_PATHS } from '@/api/config';
 import { MediaInfoHeader } from '@/components/organisms/video/MediaInfoHeader';
 import { getSeries } from '@/api/endpoints/series';
 import EpisodeAccordionRow from '@/components/molecules/EpisodeAccordionRow';
+import { findResumeEpisode } from '@/utils/resumeEpisode';
 
 interface SeriesOverviewPageProps {
   seriesItem: MediaItem;
@@ -50,16 +51,22 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
   const [loadingMoreEpisodes, setLoadingMoreEpisodes] = useState(false);
   const [episodePage, setEpisodePage] = useState(1);
   const [hasMoreEpisodes, setHasMoreEpisodes] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
 
-  // Default to the first season once the list loads, rather than requiring
-  // an explicit click before any episodes show.
+  // The series' own progress row: the episode the viewer is in the middle of.
+  const continueRecord = useMemo(() => {
+    const record = progressRecords.find((r) => String(r.mediaId) === String(seriesItem.id));
+    return record && !record.completed ? record : null;
+  }, [progressRecords, seriesItem.id]);
+
+  // Open on the season being watched (else the first), rather than requiring a click
+  // before any episodes show — the same as the TV app.
   useEffect(() => {
-    if (!selectedSeasonId && seasons.length > 0) {
-      setSelectedSeasonId(seasons[0].id);
-    }
-  }, [seasons, selectedSeasonId]);
+    if (selectedSeasonId || seasons.length === 0) return;
+    const watching = continueRecord?.meta?.seasonId;
+    const match = watching ? seasons.find((s) => String(s.id) === String(watching)) : undefined;
+    setSelectedSeasonId((match ?? seasons[0]).id);
+  }, [seasons, selectedSeasonId, continueRecord]);
 
   // Loads just the first page when a season tab is picked, so the opening
   // episodes show up immediately instead of waiting on every page of a long
@@ -69,7 +76,6 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
     if (!selectedSeasonId) return;
     let cancelled = false;
     setLoadingEpisodes(true);
-    setExpandedId(null);
     setEpisodePage(1);
 
     getSeries({
@@ -167,6 +173,29 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
     return map;
   }, [progressRecords]);
 
+  // The episode being resumed, once its page is loaded: marked, scrolled to and focused.
+  // Portals list newest first, so it is often not on page 1 — keep loading pages (bounded)
+  // until it shows up.
+  const resumeEpisode = useMemo(
+    () => (continueRecord && String(continueRecord.meta?.seasonId ?? '') === String(selectedSeasonId ?? '') ? findResumeEpisode(continueRecord, episodes) : null),
+    [continueRecord, episodes, selectedSeasonId],
+  );
+  const resumeRowRef = useRef<HTMLButtonElement | null>(null);
+  const scrolledToResume = useRef<string | null>(null);
+  useEffect(() => {
+    const wantsMore = continueRecord && !resumeEpisode && hasMoreEpisodes && !loadingEpisodes && !loadingMoreEpisodes &&
+      String(continueRecord.meta?.seasonId ?? '') === String(selectedSeasonId ?? '') && episodePage < 15;
+    if (wantsMore) loadMoreEpisodes.current();
+  }, [continueRecord, resumeEpisode, hasMoreEpisodes, loadingEpisodes, loadingMoreEpisodes, selectedSeasonId, episodePage]);
+  useEffect(() => {
+    if (!resumeEpisode || scrolledToResume.current === String(resumeEpisode.id)) return;
+    scrolledToResume.current = String(resumeEpisode.id);
+    requestAnimationFrame(() => {
+      resumeRowRef.current?.scrollIntoView({ block: 'center' });
+      resumeRowRef.current?.focus({ preventScroll: true });
+    });
+  }, [resumeEpisode]);
+
   // Best-effort "Continue Watching" for this series — a progress record saved against the
   // series' own id (not a specific episode) carries the last-played episode's info in meta.
   const continueEntry = useMemo(() => {
@@ -261,15 +290,19 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
               ) : (
                 episodes.map((ep, index) => {
                   const record = progressByMediaId.get(String(ep.id));
+                  const isResume = resumeEpisode?.id === ep.id;
                   return (
                     <EpisodeAccordionRow
                       key={`${ep.id}-${index}`}
+                      ref={isResume ? resumeRowRef : undefined}
                       item={ep}
-                      isExpanded={expandedId === ep.id}
+                      index={index}
+                      seriesTitle={seriesItem.title || seriesItem.name}
                       isCompleted={record?.completed}
-                      onToggle={() => setExpandedId((prev) => (prev === ep.id ? null : ep.id))}
+                      progressPercent={isResume ? Number(continueRecord?.meta?.progressPercent) || undefined : Number(record?.meta?.progressPercent) || undefined}
+                      isResume={isResume}
                       onPlay={onPlayEpisode}
-                      isDefaultFocus={index === 0}
+                      isDefaultFocus={resumeEpisode ? isResume : index === 0}
                     />
                   );
                 })

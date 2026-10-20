@@ -3,7 +3,7 @@ import { Check } from 'lucide-react';
 import MediaCard from '@/components/molecules/MediaCard';
 import MediaCardRow from '@/components/organisms/browse/MediaCardRow';
 import RecommendedRow from '@/components/organisms/browse/RecommendedRow';
-import DiscoverFilters, { ActiveFilterTags, hasAnyActiveFilter, type ActiveDiscoverFilters } from '@/components/organisms/discover/DiscoverFilters';
+import DiscoverFilters, { hasAnyActiveFilter, type ActiveDiscoverFilters, type SingleFilterKey } from '@/components/organisms/discover/DiscoverFilters';
 import { getDiscoverBrowse } from '@/api/endpoints/discover';
 import { useDiscover } from '@/hooks/useDiscover';
 import type { MediaItem } from '@/types';
@@ -87,7 +87,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   // Comedy (same combo, different click order).
   const filterCacheKeyOf = useCallback(
     (filters: ActiveDiscoverFilters) =>
-      `${activeType ?? 'all'}:${[...(filters.genre || [])].sort().join('+')}:${filters.country || ''}:${filters.language || ''}:${filters.theme || ''}`,
+      `${activeType ?? 'all'}:${[...(filters.genre || [])].sort().join('+')}:${filters.country || ''}:${filters.language || ''}:${filters.network || ''}:${filters.theme || ''}`,
     [activeType]
   );
   const [filteredCache, setFilteredCache] = useState<
@@ -152,6 +152,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           country: filters.country,
           language: filters.language,
           theme: filters.theme,
+          network: filters.network,
           type: activeType,
           page,
         });
@@ -186,7 +187,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   const applyNextFilters = useCallback(
     (next: ActiveDiscoverFilters) => {
       setActiveFilters(next);
-      const anyActive = (next.genre?.length ?? 0) > 0 || !!next.country || !!next.language || !!next.theme;
+      const anyActive = hasAnyActiveFilter(next);
       if (anyActive) {
         runFilteredBrowse(next, 1);
       } else {
@@ -203,7 +204,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   );
 
   const handleFilterChange = useCallback(
-    (key: 'country' | 'language' | 'theme', value: string | undefined) => {
+    (key: SingleFilterKey, value: string | undefined) => {
       applyNextFilters({ ...activeFilters, [key]: value });
     },
     [activeFilters, applyNextFilters]
@@ -388,12 +389,6 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           here to nest. */}
       <div className="sticky top-0 z-30 mb-4 rounded-2xl bg-black/80 px-2 py-2">
         <div className="flex items-center gap-2">
-          <DiscoverFilters
-            facets={facets}
-            activeFilters={activeFilters}
-            onFilterChange={handleFilterChange}
-            onGenresChange={handleGenresChange}
-          />
           {(['movie', 'series'] as const).map((t) => {
             const isActive = t === 'movie' ? showMovies : showSeries;
             return (
@@ -425,16 +420,16 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
             );
           })}
         </div>
-        {/* Second row, only rendered once a genre/country/language/theme filter
-            is active — kept inside this same sticky container (not a separate
-            block after it) so the active-selection tags stay pinned next to
-            the Filters/Movies/Series row on scroll instead of disappearing
-            while the count badge on the Filters button stays visible. */}
-        {hasActiveFilter && (
-          <div className="mt-2 border-t border-white/5 pt-2">
-            <ActiveFilterTags activeFilters={activeFilters} onFilterChange={handleFilterChange} onGenresChange={handleGenresChange} />
-          </div>
-        )}
+        {/* The selector row (Genre / Language / Country / Channel / Mood), on its own line
+            under Movies/Series — the same layout as the TV app. */}
+        <div className="mt-2 border-t border-white/5 pt-2">
+          <DiscoverFilters
+            facets={facets}
+            activeFilters={activeFilters}
+            onFilterChange={handleFilterChange}
+            onGenresChange={handleGenresChange}
+          />
+        </div>
       </div>
 
       <div key={contentKey} className="content-transition">

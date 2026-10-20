@@ -1,107 +1,101 @@
-import React, { useMemo } from 'react';
-import { Play, ChevronDown, Clock } from 'lucide-react';
+import React, { forwardRef, useMemo } from 'react';
+import { Play } from 'lucide-react';
 import type { MediaItem } from '@/types';
 import { URL_PATHS } from '@/api/config';
+import { episodeAirDate, episodeNumber, episodeRuntime, episodeTitle } from '@/utils/episodeInfo';
 
 interface EpisodeAccordionRowProps {
   item: MediaItem;
-  isExpanded: boolean;
+  /** Position in the season (for the number when the name carries none). */
+  index: number;
+  /** The show's name: an episode named only that shows as "Episode N". */
+  seriesTitle?: string;
   isCompleted?: boolean;
-  onToggle: () => void;
+  /** 0..100 watched, for the bar under the still. */
+  progressPercent?: number;
+  /** The episode the viewer is in the middle of: marked, and the page opens on it. */
+  isResume?: boolean;
   onPlay: (item: MediaItem) => void;
-  // Marks this row's Play button as the TV-remote landing target when the
-  // page has no other obvious default (e.g. no trailer button) — otherwise
-  // whatever's literally first in the DOM (like the page's Back button)
-  // gets stuck with the focus glow on load.
+  // Marks this row as the TV-remote landing target (the resume episode, else the first).
   isDefaultFocus?: boolean;
 }
 
-// Episodes rarely carry their own thumbnail, so the row leads with a Play
-// button instead of reserving space for an image that's usually blank.
-// Play is a direct action — no expand step required. The expand toggle
-// (only shown when there's a description) reveals just the synopsis below,
-// decoupled from playback.
-const EpisodeAccordionRow: React.FC<EpisodeAccordionRowProps> = ({
+/**
+ * One episode, Netflix-style — the same row as the TV app: number, a 16:9 still when the
+ * episode has one, the title (number prefix and air date taken out of it), a line with
+ * "Continue watching" / air date / runtime / Watched, and a two-line description. An
+ * episode with no still and no description is a single text line. The whole row plays.
+ */
+const EpisodeAccordionRow = forwardRef<HTMLButtonElement, EpisodeAccordionRowProps>(({
   item,
-  isExpanded,
+  index,
+  seriesTitle,
   isCompleted = false,
-  onToggle,
+  progressPercent,
+  isResume = false,
   onPlay,
   isDefaultFocus = false,
-}) => {
+}, ref) => {
   const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
-  const displayTitle = item.title || item.name || 'Episode';
+  const number = episodeNumber(item, index);
+  const title = episodeTitle(item, index, seriesTitle);
+  const overview = String(item.description || '').trim();
 
   const imageUrl = useMemo(() => {
     if (!item.screenshot_uri) return null;
-    return item.screenshot_uri.startsWith('http')
-      ? item.screenshot_uri
-      : `${baseUrl}/api/images${item.screenshot_uri}`;
+    return item.screenshot_uri.startsWith('http') ? item.screenshot_uri : `${baseUrl}/api/images${item.screenshot_uri}`;
   }, [item.screenshot_uri, baseUrl]);
 
+  const sub = [
+    isResume ? '▶ Continue watching' : null,
+    episodeAirDate(item, seriesTitle),
+    episodeRuntime(item),
+    isCompleted ? 'Watched' : null,
+  ].filter(Boolean).join('  ·  ');
+  const compact = !imageUrl && !overview;
+
   return (
-    <div
-      className={`overflow-hidden rounded-xl border transition-colors duration-200 ${
-        isExpanded ? 'border-blue-500/40 bg-blue-950/20' : 'border-white/5 bg-white/5 hover:bg-white/10'
-      }`}
+    <button
+      ref={ref}
+      onClick={() => onPlay(item)}
+      data-focusable="true"
+      data-default-focus={isDefaultFocus ? 'true' : undefined}
+      aria-label={`Play episode ${number}: ${title}`}
+      className={`group flex w-full items-center gap-3 rounded-xl border text-left transition-colors focus:outline-hidden ${
+        compact ? 'px-3 py-2' : 'p-2.5'
+      } ${
+        isResume ? 'border-sky-400/40 bg-sky-400/10' : 'border-transparent hover:bg-white/10'
+      } focus:border-white/80 focus:bg-white/15 [&.focused]:border-white/80 [&.focused]:bg-white/15`}
     >
-      <div className="flex w-full items-center gap-3 p-3 text-left">
-        {isCompleted && <div className="h-2 w-2 shrink-0 rounded-full bg-green-500" />}
-
-        <button
-          onClick={() => onPlay(item)}
-          data-focusable="true"
-          data-default-focus={isDefaultFocus ? 'true' : undefined}
-          aria-label={`Play ${displayTitle}`}
-          className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-white shadow-md transition-all hover:bg-blue-500 active:scale-95"
-        >
-          {imageUrl ? (
-            <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
-          ) : null}
-          <Play size={16} className="relative fill-current" />
-        </button>
-
-        <button
-          onClick={() => onPlay(item)}
-          data-focusable="true"
-          className="min-w-0 flex-1 text-left"
-        >
-          <div className="flex items-center gap-2">
-            {item.episode_num && (
-              <span className="shrink-0 text-xs font-black text-blue-400">{item.episode_num}.</span>
-            )}
-            <h4 className="truncate text-sm font-bold text-white sm:text-base">{displayTitle}</h4>
-          </div>
-          {item.duration && (
-            <div className="mt-0.5 flex items-center gap-1 text-xs text-gray-500">
-              <Clock size={11} />
-              <span>{Math.floor(item.duration / 60) || item.duration} mins</span>
-            </div>
+      <span className="w-9 shrink-0 text-center text-lg font-bold text-gray-400 group-hover:text-white group-[.focused]:text-white">
+        {number}
+      </span>
+      {imageUrl && (
+        <span className="relative aspect-video w-36 shrink-0 overflow-hidden rounded-md bg-white/5 sm:w-40">
+          <img src={imageUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          <span className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60"><Play size={16} className="fill-white text-white" /></span>
+          </span>
+          {progressPercent !== undefined && progressPercent > 0 && (
+            <span className="absolute inset-x-1.5 bottom-1.5 h-1 overflow-hidden rounded-full bg-white/25">
+              <span className="block h-full bg-sky-400" style={{ width: `${Math.min(100, progressPercent)}%` }} />
+            </span>
           )}
-        </button>
-
-        {item.description && (
-          <button
-            onClick={onToggle}
-            data-focusable="true"
-            aria-label={isExpanded ? 'Hide episode description' : 'Show episode description'}
-            className="shrink-0 rounded-full p-1.5 text-gray-500 transition-colors hover:bg-white/10 hover:text-white"
-          >
-            <ChevronDown
-              size={18}
-              className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-            />
-          </button>
-        )}
-      </div>
-
-      {isExpanded && item.description && (
-        <div className="border-t border-white/5 p-3 pt-3">
-          <p className="text-sm leading-relaxed text-gray-300">{item.description}</p>
-        </div>
+        </span>
       )}
-    </div>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-bold text-white sm:text-base">{title}</span>
+        {sub && <span className="mt-0.5 block truncate text-xs text-gray-400">{sub}</span>}
+        {overview && (
+          <span className="mt-1 line-clamp-2 text-sm leading-snug text-gray-400 group-hover:line-clamp-4 group-[.focused]:line-clamp-4">
+            {overview}
+          </span>
+        )}
+      </span>
+    </button>
   );
-};
+});
+
+EpisodeAccordionRow.displayName = 'EpisodeAccordionRow';
 
 export default EpisodeAccordionRow;

@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import type { MediaItem } from '@/types';
 import type { ProgressRecord } from '@/api/types/user';
 import EpisodeAccordionRow from '@/components/molecules/EpisodeAccordionRow';
 import { URL_PATHS } from '@/api/config';
+import { latestUnfinished } from '@/utils/resumeEpisode';
 
 interface SeasonEpisodesPageProps {
   seriesItem: MediaItem;
@@ -22,12 +23,7 @@ const SeasonEpisodesPage: React.FC<SeasonEpisodesPageProps> = ({
   progressRecords,
   onPlayEpisode,
 }) => {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
-
-  useEffect(() => {
-    setExpandedId(null);
-  }, [seasonTitle]);
 
   const posterUrl = useMemo(() => {
     const uri = seriesItem.screenshot_uri;
@@ -41,6 +37,16 @@ const SeasonEpisodesPage: React.FC<SeasonEpisodesPageProps> = ({
     for (const record of progressRecords) map.set(String(record.mediaId), record);
     return map;
   }, [progressRecords]);
+
+  // The episode the viewer is in the middle of: marked and scrolled to, once.
+  const resumeEpisode = useMemo(() => latestUnfinished(progressRecords, episodes), [progressRecords, episodes]);
+  const resumeRowRef = useRef<HTMLButtonElement | null>(null);
+  const scrolledTo = useRef<string | null>(null);
+  useEffect(() => {
+    if (!resumeEpisode || scrolledTo.current === String(resumeEpisode.id)) return;
+    scrolledTo.current = String(resumeEpisode.id);
+    requestAnimationFrame(() => resumeRowRef.current?.scrollIntoView({ block: 'center' }));
+  }, [resumeEpisode]);
 
   return (
     <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-4">
@@ -73,14 +79,19 @@ const SeasonEpisodesPage: React.FC<SeasonEpisodesPageProps> = ({
           <>
             {episodes.map((ep, index) => {
               const record = progressByMediaId.get(String(ep.id));
+              const isResume = resumeEpisode?.id === ep.id;
               return (
                 <EpisodeAccordionRow
                   key={`${ep.id}-${index}`}
+                  ref={isResume ? resumeRowRef : undefined}
                   item={ep}
-                  isExpanded={expandedId === ep.id}
+                  index={index}
+                  seriesTitle={seriesItem.title || seriesItem.name}
                   isCompleted={record?.completed}
-                  onToggle={() => setExpandedId((prev) => (prev === ep.id ? null : ep.id))}
+                  progressPercent={Number(record?.meta?.progressPercent) || undefined}
+                  isResume={isResume}
                   onPlay={onPlayEpisode}
+                  isDefaultFocus={resumeEpisode ? isResume : index === 0}
                 />
               );
             })}

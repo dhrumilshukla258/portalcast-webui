@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { URL_PATHS } from '@/api/config';
 import type { MediaItem } from '@/types';
+import ChannelBadge from '@/components/atoms/ChannelBadge';
 
 interface MediaCardProps {
   item: MediaItem;
@@ -102,7 +103,9 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
             </span>
           </div>
         )}
-        {}
+        {item.network && (
+          <ChannelBadge channel={item.network} logo={item.network_logo} className="absolute left-2 top-2 z-10" />
+        )}
         {displayProgress !== undefined && displayProgress > 0 && (
           <div className="absolute bottom-0 left-0 h-1 w-full bg-gray-600/80">
             <div

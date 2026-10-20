@@ -11,6 +11,8 @@ export const DISCOVER_PATHS = {
 export interface FacetValue {
   value: string;
   count: number;
+  /** Channel facets only: the channel's logo. */
+  logo?: string;
 }
 
 export interface DiscoverFacets {
@@ -18,6 +20,8 @@ export interface DiscoverFacets {
   countries: FacetValue[];
   themes: FacetValue[];
   languages: FacetValue[];
+  /** TV channels shows air on (only ones in Live TV). Absent on older servers. */
+  networks?: FacetValue[];
 }
 
 export interface DiscoverBrowseParams {
@@ -26,6 +30,7 @@ export interface DiscoverBrowseParams {
   country?: string;
   language?: string;
   theme?: string;
+  network?: string;
   page?: number;
   [key: string]: unknown;
 }

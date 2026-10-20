@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { SlidersHorizontal, X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { ChevronDown, X, Check } from 'lucide-react';
 import type { DiscoverFacets } from '@/api/endpoints/discover';
 
-export type DiscoverFilterKey = 'genre' | 'country' | 'language' | 'theme';
+export type DiscoverFilterKey = 'genre' | 'country' | 'language' | 'network' | 'theme';
+export type SingleFilterKey = Exclude<DiscoverFilterKey, 'genre'>;
 
 // Genre is multi-select (AND — a title must carry every selected genre), the
 // rest stay single-select. Single-genre facets run tens of thousands deep
@@ -13,6 +14,8 @@ export interface ActiveDiscoverFilters {
   genre?: string[];
   country?: string;
   language?: string;
+  /** TV channel ("Zee TV"): only channels that exist in Live TV are offered. */
+  network?: string;
   theme?: string;
 }
 
@@ -21,6 +24,7 @@ export function hasAnyActiveFilter(activeFilters: ActiveDiscoverFilters): boolea
     (activeFilters.genre?.length ?? 0) > 0 ||
     !!activeFilters.country ||
     !!activeFilters.language ||
+    !!activeFilters.network ||
     !!activeFilters.theme
   );
 }
@@ -28,7 +32,7 @@ export function hasAnyActiveFilter(activeFilters: ActiveDiscoverFilters): boolea
 interface DiscoverFiltersProps {
   facets: DiscoverFacets | null;
   activeFilters: ActiveDiscoverFilters;
-  onFilterChange: (key: 'country' | 'language' | 'theme', value: string | undefined) => void;
+  onFilterChange: (key: SingleFilterKey, value: string | undefined) => void;
   onGenresChange: (values: string[]) => void;
 }
 
@@ -36,10 +40,12 @@ const DIMENSION_LABELS: Record<DiscoverFilterKey, string> = {
   genre: 'Genre',
   language: 'Language',
   country: 'Country',
-  theme: 'Theme',
+  network: 'Channel',
+  theme: 'Mood',
 };
 
-const DIMENSION_ORDER: DiscoverFilterKey[] = ['language', 'genre', 'country', 'theme'];
+// Same selectors, same order as the TV app (Letterboxd's "Browse by" line).
+const DIMENSION_ORDER: DiscoverFilterKey[] = ['genre', 'language', 'country', 'network', 'theme'];
 
 // TMDB's originalLanguage is an ISO 639-1 code (e.g. "hi", "ta") — display the
 // full name instead of the raw code. Only holds overrides Intl.DisplayNames
@@ -47,7 +53,7 @@ const DIMENSION_ORDER: DiscoverFilterKey[] = ['language', 'genre', 'country', 't
 // ISO 639-1 code is resolved generically below instead of hand-maintaining
 // a list that will always be missing whatever code the catalog turns up next.
 const LANGUAGE_NAME_OVERRIDES: Record<string, string> = {
-  cn: 'Chinese', // TMDB non-standard alias for zh
+  cn: 'Cantonese', // TMDB's own code for Cantonese (Mandarin/Chinese is zh)
   xx: 'No Language',
   // Real ISO 639-1 codes that Intl.DisplayNames still fails to resolve on at
   // least one real runtime (confirmed via the deployed TV app) — likely a
@@ -92,6 +98,7 @@ function valuesFor(facets: DiscoverFacets, dimension: DiscoverFilterKey) {
     case 'language': return facets.languages;
     case 'genre': return facets.genres;
     case 'country': return facets.countries;
+    case 'network': return facets.networks ?? [];
     case 'theme': return facets.themes;
   }
 }
@@ -99,41 +106,13 @@ function valuesFor(facets: DiscoverFacets, dimension: DiscoverFilterKey) {
 function summaryFor(dimension: DiscoverFilterKey, activeFilters: ActiveDiscoverFilters): string {
   if (dimension === 'genre') {
     const genres = activeFilters.genre || [];
-    if (genres.length === 0) return 'Any';
+    if (genres.length === 0) return DIMENSION_LABELS.genre;
     if (genres.length <= 2) return genres.join(', ');
     return `${genres.length} selected`;
   }
   const value = activeFilters[dimension];
-  return value ? displayLabel(dimension, value) : 'Any';
+  return value ? displayLabel(dimension, value) : DIMENSION_LABELS[dimension];
 }
-
-// Top-level list: one row per dimension (Language/Genre/Country/Theme),
-// showing its current selection — tapping drills into ValueList for that
-// dimension instead of showing every value for every dimension at once.
-const CategoryList: React.FC<{
-  facets: DiscoverFacets;
-  activeFilters: ActiveDiscoverFilters;
-  onOpenDimension: (dimension: DiscoverFilterKey) => void;
-}> = ({ facets, activeFilters, onOpenDimension }) => (
-  <div className="space-y-2">
-    {DIMENSION_ORDER.filter((dim) => valuesFor(facets, dim).length > 0).map((dimension) => (
-      <button
-        key={dimension}
-        data-focusable="true"
-        onClick={() => onOpenDimension(dimension)}
-        className="flex w-full items-center justify-between rounded-full border border-gray-800/80 bg-gray-900/40 px-4 py-3.5 text-left transition-all hover:border-gray-700 hover:bg-gray-800/50 focus:border-transparent focus:bg-linear-to-r focus:from-sky-400/20 focus:to-blue-500/20 focus:outline-hidden [&.focused]:border-transparent! [&.focused]:bg-linear-to-r [&.focused]:from-sky-400/20 [&.focused]:to-blue-500/20"
-      >
-        <div>
-          <div className="text-sm font-bold text-white">{DIMENSION_LABELS[dimension]}</div>
-          <div className="mt-0.5 truncate text-xs font-semibold text-sky-400">
-            {summaryFor(dimension, activeFilters)}
-          </div>
-        </div>
-        <ChevronRight className="h-4 w-4 shrink-0 text-gray-500" />
-      </button>
-    ))}
-  </div>
-);
 
 // Drill-down screen for a single dimension — every value as a full-width
 // row (not a wrapped chip grid), easier to scan for dimensions with many
@@ -212,196 +191,94 @@ const ValueList: React.FC<{
   );
 };
 
-// Removable chip per active value (each genre gets its own, country/language/
-// theme get at most one each) — the Filters button's own badge only shows a
-// count and its dropdown summary truncates to "N selected", neither of which
-// says *what's* active without opening the panel. Sits next to the Movies/
-// Series pills in DiscoverView's sticky bar so every active selection —
-// type, genre, country/language/theme — reads the same way at a glance.
-export const ActiveFilterTags: React.FC<{
-  activeFilters: ActiveDiscoverFilters;
-  onFilterChange: (key: 'country' | 'language' | 'theme', value: string | undefined) => void;
-  onGenresChange: (values: string[]) => void;
-}> = ({ activeFilters, onFilterChange, onGenresChange }) => {
-  const tags: { key: string; label: string; onRemove: () => void }[] = [];
-
-  for (const genre of activeFilters.genre || []) {
-    tags.push({
-      key: `genre:${genre}`,
-      label: genre,
-      onRemove: () => onGenresChange((activeFilters.genre || []).filter((g) => g !== genre)),
-    });
-  }
-  (['language', 'country', 'theme'] as const).forEach((dimension) => {
-    const value = activeFilters[dimension];
-    if (!value) return;
-    tags.push({ key: `${dimension}:${value}`, label: displayLabel(dimension, value), onRemove: () => onFilterChange(dimension, undefined) });
-  });
-
-  if (!hasAnyActiveFilter(activeFilters)) return null;
-
-  return (
-    <div className="flex flex-wrap items-center gap-2" data-focus-group="discover-active-filters">
-      {tags.map((tag) => (
-        <button
-          key={tag.key}
-          data-focusable="true"
-          onClick={tag.onRemove}
-          aria-label={`Remove ${tag.label} filter`}
-          className="flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-sky-400/30 bg-sky-400/10 py-1 pl-3 pr-2 text-xs font-bold text-sky-300 transition-all hover:border-sky-400/50 hover:bg-sky-400/20 focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light"
-        >
-          <span className="max-w-40 truncate">{tag.label}</span>
-          <X className="h-3.5 w-3.5 shrink-0" />
-        </button>
-      ))}
-    </div>
-  );
-};
-
+/**
+ * Discover's filters as a row of selectors — "Genre ▾  Language ▾  Country ▾  Channel ▾
+ * Mood ▾" — each opening its own list under it, the same as the TV app. A selector shows
+ * its current value; picking applies at once. Genre stays multi-pick here (a mouse makes
+ * that easy); the others are one value each.
+ */
 export const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  // null = top-level category list; set = drilled into that dimension's values.
-  const [activeDimension, setActiveDimension] = useState<DiscoverFilterKey | null>(null);
+  const [open, setOpen] = useState<DiscoverFilterKey | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Netflix-style: the dropdown stays open across selections (picking a value
-  // just re-runs the browse query and updates the grid underneath) — it only
-  // closes on an explicit close, Escape, or a click outside the panel.
   useEffect(() => {
-    if (!isOpen) return;
+    if (!open) return;
     const onPointerDown = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        close();
-      }
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(null);
     };
+    const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(null); };
     document.addEventListener('mousedown', onPointerDown);
-    return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      // Escape backs out one level at a time, same as the on-screen back button.
-      if (activeDimension) setActiveDimension(null);
-      else close();
-    };
     document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, activeDimension]);
-
-  const close = () => {
-    setIsOpen(false);
-    setActiveDimension(null);
-  };
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
 
   if (!facets) return null;
+  const dims = DIMENSION_ORDER.filter((dim) => valuesFor(facets, dim).length > 0);
+  if (dims.length === 0) return null;
 
-  const anyFacets =
-    facets.genres.length > 0 || facets.countries.length > 0 || facets.languages.length > 0 || facets.themes.length > 0;
-  if (!anyFacets) return null;
-
-  const activeCount =
-    (activeFilters.genre?.length || 0) +
-    (activeFilters.country ? 1 : 0) +
-    (activeFilters.language ? 1 : 0) +
-    (activeFilters.theme ? 1 : 0);
-
-  const clearAll = () => {
-    if (activeFilters.genre?.length) onGenresChange([]);
-    if (activeFilters.country) onFilterChange('country', undefined);
-    if (activeFilters.language) onFilterChange('language', undefined);
-    if (activeFilters.theme) onFilterChange('theme', undefined);
-  };
-
+  const isSet = (dim: DiscoverFilterKey) => (dim === 'genre' ? (activeFilters.genre?.length ?? 0) > 0 : !!activeFilters[dim]);
   const toggleGenre = (value: string) => {
     const current = activeFilters.genre || [];
     onGenresChange(current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
   };
+  const clearAll = () => {
+    if (activeFilters.genre?.length) onGenresChange([]);
+    (['country', 'language', 'network', 'theme'] as const).forEach((k) => { if (activeFilters[k]) onFilterChange(k, undefined); });
+    setOpen(null);
+  };
 
   return (
-    <div ref={containerRef} className="relative shrink-0">
-      <button
-        onClick={() => setIsOpen((prev) => !prev)}
-        data-focusable="true"
-        className="flex h-10 items-center gap-2 rounded-full border border-white/10 bg-[#0b1120]/85 px-4 text-sm font-bold text-gray-300 transition-all hover:border-white/20 hover:text-white focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light"
-      >
-        <SlidersHorizontal className="h-4 w-4" />
-        <span>Filters</span>
-        {activeCount > 0 && (
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-linear-to-r from-sky-400 to-blue-500 text-[11px] font-extrabold text-white">
-            {activeCount}
-          </span>
-        )}
-      </button>
-
-      {isOpen && (
-        // Anchored dropdown, not a full-screen overlay — the grid/rows behind
-        // it keep rendering and update live as filters are picked, instead of
-        // being hidden behind a modal the user has to close first to see them.
-        <div
-          className="custom-scrollbar absolute left-0 top-full z-40 mt-2 max-h-[70vh] w-80 overflow-y-auto rounded-2xl border border-white/10 bg-black/85 shadow-2xl"
-          data-focus-group="discover-filter-panel"
-        >
-          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-black/85 px-4 py-3">
-            <div className="flex items-center gap-2">
-              {activeDimension && (
-                <button
-                  onClick={() => setActiveDimension(null)}
-                  data-focusable="true"
-                  aria-label="Back"
-                  className="-ml-1.5 rounded-full p-1.5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-              )}
-              <h2 className="text-base font-extrabold text-white">
-                {activeDimension ? DIMENSION_LABELS[activeDimension] : 'Filters'}
-              </h2>
-            </div>
-            <button
-              onClick={close}
-              data-focusable="true"
-              aria-label="Close filters"
-              className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
+    <div ref={containerRef} className="flex flex-wrap items-center gap-2" data-focus-group="discover-selectors">
+      {dims.map((dim) => (
+        <div key={dim} className="relative">
+          <button
+            data-focusable="true"
+            onClick={() => setOpen((cur) => (cur === dim ? null : dim))}
+            className={`flex h-9 max-w-56 items-center gap-1.5 rounded-full border px-4 text-sm font-bold transition-all focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light ${
+              isSet(dim)
+                ? 'border-transparent bg-linear-to-r from-sky-400 to-blue-500 text-white'
+                : 'border-white/10 bg-[#0b1120]/85 text-gray-300 hover:border-white/20 hover:text-white'
+            }`}
+          >
+            <span className="truncate">{summaryFor(dim, activeFilters)}</span>
+            <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${open === dim ? 'rotate-180' : ''}`} />
+          </button>
+          {open === dim && (
+            // Near-solid, anchored under its own selector (same as the TV).
+            <div
+              className="custom-scrollbar absolute left-0 top-full z-40 mt-2 max-h-[60vh] w-80 overflow-y-auto rounded-2xl border border-white/10 bg-[#0b1120]/[0.97] p-2 shadow-2xl"
+              data-focus-group={`discover-${dim}-list`}
             >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="px-4 py-3">
-            {activeDimension === 'genre' ? (
-              <ValueList
-                dimension="genre"
-                values={valuesFor(facets, 'genre')}
-                activeValues={activeFilters.genre || []}
-                onToggle={(value) => (value === '' ? onGenresChange([]) : toggleGenre(value))}
-              />
-            ) : activeDimension ? (
-              <ValueList
-                dimension={activeDimension}
-                values={valuesFor(facets, activeDimension)}
-                activeValue={activeFilters[activeDimension]}
-                onSelect={(value) => onFilterChange(activeDimension, value)}
-              />
-            ) : (
-              <CategoryList facets={facets} activeFilters={activeFilters} onOpenDimension={setActiveDimension} />
-            )}
-          </div>
-
-          {!activeDimension && (
-            <div className="sticky bottom-0 border-t border-white/10 bg-black/85 px-4 py-3">
-              <button
-                onClick={clearAll}
-                data-focusable="true"
-                disabled={activeCount === 0}
-                className="w-full rounded-xl border border-white/10 py-2.5 text-sm font-bold text-gray-300 transition-colors hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Clear All
-              </button>
+              {dim === 'genre' ? (
+                <ValueList
+                  dimension="genre"
+                  values={valuesFor(facets, 'genre')}
+                  activeValues={activeFilters.genre || []}
+                  onToggle={(value) => (value === '' ? onGenresChange([]) : toggleGenre(value))}
+                />
+              ) : (
+                <ValueList
+                  dimension={dim}
+                  values={valuesFor(facets, dim)}
+                  activeValue={activeFilters[dim]}
+                  onSelect={(value) => { onFilterChange(dim, value); setOpen(null); }}
+                />
+              )}
             </div>
           )}
         </div>
+      ))}
+      {hasAnyActiveFilter(activeFilters) && (
+        <button
+          data-focusable="true"
+          onClick={clearAll}
+          className="flex h-9 items-center gap-1 rounded-full px-3 text-sm font-bold text-gray-400 transition-colors hover:bg-white/5 hover:text-white focus:outline-hidden [&.focused]:text-white"
+        >
+          <X className="h-4 w-4" /> Clear
+        </button>
       )}
     </div>
   );

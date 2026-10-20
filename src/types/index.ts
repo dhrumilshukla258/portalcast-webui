@@ -62,6 +62,9 @@ export interface MediaItem {
   // resolution floor, see server's tmdb.ts) — used by AmbientBackdrop, which
   // skips an item entirely rather than show a soft/upscaled one.
   backdrop_hd_path?: string;
+  /** Discover only: the TV channel the title airs on (taken out of its name) and its logo. */
+  network?: string;
+  network_logo?: string;
   trailer_key?: string;
 }
 
