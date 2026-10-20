@@ -38,8 +38,13 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
   const [showTrailer, setShowTrailer] = React.useState(false);
   const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
   const displayTitle = item.title || item.name || 'Details';
-  // TMDB's score first (the same source for every title), else the portal's IMDb rating.
-  const rating = [item.rating_tmdb, item.rating_imdb].find((r) => parseFloat(String(r)) > 0);
+  // One main rating with its source: the server's pick (IMDb, else TMDB, else TVmaze), else
+  // the portal's IMDb field. Critics' scores (Rotten Tomatoes, Metacritic) sit beside it.
+  const hasBest = parseFloat(String(item.rating_best)) > 0;
+  const rating = hasBest ? item.rating_best : parseFloat(String(item.rating_imdb)) > 0 ? String(item.rating_imdb) : undefined;
+  const ratingSource = hasBest ? item.rating_source : rating ? 'IMDb' : undefined;
+  const imdbUrl = item.imdb_id && /^tt\d+$/.test(item.imdb_id) ? `https://www.imdb.com/title/${item.imdb_id}/` : undefined;
+  const metascore = Number(item.metascore) > 0 ? Number(item.metascore) : undefined;
 
   const imageUrl = useMemo(() => {
     if (typeof item.screenshot_uri !== 'string' || !item.screenshot_uri) return null;
@@ -140,10 +145,32 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 border-y border-white/5 py-3 text-xs text-gray-300 sm:gap-4 sm:text-sm">
-            {rating && (
-              <div className="flex items-center gap-1 rounded-full bg-yellow-400/10 px-2.5 py-1 font-bold text-yellow-400">
-                <Star size={14} className="fill-current" />
-                <span>{rating} / 10</span>
+            {rating && (() => {
+              const chip = (
+                <>
+                  <Star size={14} className="fill-current" />
+                  <span>{rating} / 10</span>
+                  {ratingSource && <span className="font-medium text-yellow-400/70">{ratingSource}</span>}
+                </>
+              );
+              const cls = 'flex items-center gap-1 rounded-full bg-yellow-400/10 px-2.5 py-1 font-bold text-yellow-400';
+              return ratingSource === 'IMDb' && imdbUrl ? (
+                <a href={imdbUrl} target="_blank" rel="noopener noreferrer" title="Open on IMDb" className={`${cls} hover:bg-yellow-400/20`}>
+                  {chip}
+                </a>
+              ) : (
+                <div className={cls}>{chip}</div>
+              );
+            })()}
+            {item.rt_rating && (
+              <div className="flex items-center gap-1 rounded-full bg-red-500/10 px-2.5 py-1 font-bold text-red-400" title="Rotten Tomatoes">
+                <span aria-hidden>🍅</span>
+                <span>{item.rt_rating}</span>
+              </div>
+            )}
+            {metascore && (
+              <div className="flex items-center gap-1 rounded-full bg-green-500/10 px-2.5 py-1 font-bold text-green-400" title="Metacritic">
+                <span>Metacritic {metascore}</span>
               </div>
             )}
             {item.year && (

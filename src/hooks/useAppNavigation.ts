@@ -528,7 +528,11 @@ export function useAppNavigation(
             actors: item.actors || currentSeriesItem?.actors,
             year: item.year || currentSeriesItem?.year,
             rating_imdb: item.rating_imdb || currentSeriesItem?.rating_imdb,
-            rating_tmdb: item.rating_tmdb || currentSeriesItem?.rating_tmdb,
+            rating_best: item.rating_best || currentSeriesItem?.rating_best,
+            rating_source: item.rating_source || currentSeriesItem?.rating_source,
+            imdb_id: item.imdb_id || currentSeriesItem?.imdb_id,
+            rt_rating: item.rt_rating || currentSeriesItem?.rt_rating,
+            metascore: item.metascore || currentSeriesItem?.metascore,
             rating_kinopoisk:
               item.rating_kinopoisk || currentSeriesItem?.rating_kinopoisk,
             rating_mpaa: item.rating_mpaa || currentSeriesItem?.rating_mpaa,
