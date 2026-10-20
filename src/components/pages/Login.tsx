@@ -1,3 +1,4 @@
+import FirstStartSetup from '@/components/organisms/auth/FirstStartSetup';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '@/api/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -172,6 +173,21 @@ export default function Login() {
     };
   }, [googleClientId]);
 
+  // First start: no admin account on the server yet (FirstStartSetup).
+  const [setup, setSetup] = useState<{ needsSetup: boolean; minPasswordLength: number } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get<{ needsSetup: boolean; minPasswordLength: number }>('/auth/setup/status')
+      .then((r) => {
+        if (!cancelled && r.data) setSetup(r.data);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Setup Google Sign-in button
   useEffect(() => {
     if (activeTab !== 'web' || isLoggedIn || isSignUp || !googleClientId) return;
@@ -226,6 +242,16 @@ export default function Login() {
           />
         </div>
 
+        {setup?.needsSetup ? (
+          <FirstStartSetup
+            minPasswordLength={setup.minPasswordLength}
+            onCreated={async (email, password) => {
+              await loginWithCredentials(email, password);
+              navigate('/admin', { replace: true });
+            }}
+          />
+        ) : (
+        <>
         {/* Tab Switcher — QR/TV option hidden when arriving via /verify's
             login bounce, since generating a second code there would only
             loop back to /verify instead of into the app (see isVerifyRedirect above) */}
@@ -578,6 +604,8 @@ export default function Login() {
               </button>
             </form>
           </div>
+        )}
+        </>
         )}
       </div>
     </div>
