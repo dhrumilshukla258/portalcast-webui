@@ -14,7 +14,7 @@ export interface ActiveDiscoverFilters {
   genre?: string[];
   country?: string;
   language?: string;
-  /** TV channel ("Zee TV"): only channels that exist in Live TV are offered. */
+  /** Channel / Platform ("Zee TV", "Zee5", "Urdu TV"): Live TV channels plus streaming platforms. */
   network?: string;
   theme?: string;
 }
@@ -40,7 +40,7 @@ const DIMENSION_LABELS: Record<DiscoverFilterKey, string> = {
   genre: 'Genre',
   language: 'Language',
   country: 'Country',
-  network: 'Channel',
+  network: 'Channel / Platform',
   theme: 'Mood',
 };
 
