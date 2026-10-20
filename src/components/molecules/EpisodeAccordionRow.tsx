@@ -1,4 +1,4 @@
-import React, { forwardRef, useMemo } from 'react';
+import { forwardRef, useMemo } from 'react';
 import { Play } from 'lucide-react';
 import type { MediaItem } from '@/types';
 import { URL_PATHS } from '@/api/config';
