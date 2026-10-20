@@ -19,6 +19,8 @@ interface MediaInfoHeaderProps {
   // contained in the card like everything else instead of floating below it
   // on the page's bare background.
   children?: React.ReactNode;
+  // "Directed by" for a film; a series lists its creators ("Created by").
+  creditLabel?: string;
 }
 
 // Shared backdrop/poster/metadata block used by both the movie detail page and the series
@@ -31,10 +33,13 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
   metaExtra,
   trailerKey,
   children,
+  creditLabel = 'Directed by',
 }) => {
   const [showTrailer, setShowTrailer] = React.useState(false);
   const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
   const displayTitle = item.title || item.name || 'Details';
+  // TMDB's score first (the same source for every title), else the portal's IMDb rating.
+  const rating = [item.rating_tmdb, item.rating_imdb].find((r) => parseFloat(String(r)) > 0);
 
   const imageUrl = useMemo(() => {
     if (typeof item.screenshot_uri !== 'string' || !item.screenshot_uri) return null;
@@ -129,16 +134,16 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
             </h1>
             {item.director && (
               <p className="mt-1 text-sm text-gray-400">
-                Directed by <span className="font-semibold text-gray-300">{item.director}</span>
+                {creditLabel} <span className="font-semibold text-gray-300">{item.director}</span>
               </p>
             )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 border-y border-white/5 py-3 text-xs text-gray-300 sm:gap-4 sm:text-sm">
-            {parseFloat(String(item.rating_imdb)) > 0 && (
+            {rating && (
               <div className="flex items-center gap-1 rounded-full bg-yellow-400/10 px-2.5 py-1 font-bold text-yellow-400">
                 <Star size={14} className="fill-current" />
-                <span>{item.rating_imdb} / 10</span>
+                <span>{rating} / 10</span>
               </div>
             )}
             {item.year && (

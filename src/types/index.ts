@@ -47,6 +47,8 @@ export interface MediaItem {
   actors?: string;
   year?: string;
   rating_imdb?: string | number;
+  // Discover only: TMDB user score (TVmaze for shows TMDB lacks), "7.4", sent with 5+ votes.
+  rating_tmdb?: string;
   rating_kinopoisk?: string | number;
   rating_mpaa?: string;
   age?: string;

@@ -123,6 +123,7 @@ const MainContentGrid = React.memo(
         actors: item.actors || currentSeriesItem?.actors,
         year: item.year || currentSeriesItem?.year,
         rating_imdb: item.rating_imdb || currentSeriesItem?.rating_imdb,
+        rating_tmdb: item.rating_tmdb || currentSeriesItem?.rating_tmdb,
         rating_kinopoisk:
           item.rating_kinopoisk || currentSeriesItem?.rating_kinopoisk,
         rating_mpaa: item.rating_mpaa || currentSeriesItem?.rating_mpaa,

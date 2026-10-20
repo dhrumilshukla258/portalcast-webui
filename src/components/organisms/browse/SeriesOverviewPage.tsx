@@ -214,6 +214,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
     <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-4">
       <MediaInfoHeader
         item={seriesItem}
+        creditLabel="Created by"
         trailerKey={seriesItem.trailer_key}
         metaExtra={
           <span className="text-gray-400">
