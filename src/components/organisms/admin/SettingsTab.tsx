@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { RefreshCw, RotateCcw, Save, Send, Lock } from 'lucide-react';
-import { getSettings, saveSetting, resetSetting, sendTestEmail } from '@/api/endpoints/admin';
-import type { ServerSetting, SettingsResponse } from '@/api/types/admin';
+import { RefreshCw, RotateCcw, Save, Send, Lock, Play } from 'lucide-react';
+import { getSettings, saveSetting, resetSetting, sendTestEmail, getJobs, runJob } from '@/api/endpoints/admin';
+import type { ServerSetting, SettingsResponse, BackgroundJob } from '@/api/types/admin';
+import { formatAgo } from '@/hooks/useStreamFailures';
 
 const SOURCE_STYLE: Record<ServerSetting['source'], string> = {
   admin: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
@@ -190,6 +191,65 @@ const TestEmail: React.FC = () => {
   );
 };
 
+const Jobs: React.FC = () => {
+  const [jobs, setJobs] = useState<BackgroundJob[]>([]);
+  const load = useCallback(async () => {
+    try {
+      setJobs(await getJobs());
+    } catch {
+      /* older server: no job list */
+    }
+  }, []);
+  useEffect(() => {
+    void load();
+    const t = window.setInterval(() => void load(), 15000);
+    return () => window.clearInterval(t);
+  }, [load]);
+  if (jobs.length === 0) return null;
+  return (
+    <section className="rounded-2xl border border-gray-800 bg-gray-900/40 px-5 py-4">
+      <h2 className="mb-1 text-base font-black text-white">Background jobs</h2>
+      <p className="mb-2 text-xs text-gray-500">
+        One at a time. Jobs marked "waits for playback" hold off while someone is watching, for up to 2 hours.
+      </p>
+      {jobs.map((j) => (
+        <div key={j.name} className="flex flex-col gap-2 border-t border-gray-800/70 py-3 first:border-t-0 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-gray-100">{j.label}</div>
+            <div className="text-xs text-gray-500">
+              {j.schedule}
+              {j.waitsForPlayback ? ' · waits for playback' : ''}
+              {j.lastEnd ? ` · last run ${formatAgo(j.lastEnd)}` : ' · not run yet'}
+            </div>
+            {j.lastError ? (
+              <div className="mt-1 text-xs text-red-400">{j.lastError}</div>
+            ) : j.lastResult ? (
+              <div className="mt-1 text-xs text-gray-400">{j.lastResult}</div>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            disabled={j.running || j.queued}
+            onClick={async () => {
+              try {
+                const r = await runJob(j.name);
+                setJobs(r.items);
+                toast.info(r.started ? `${j.label}: started` : `${j.label}: already running`);
+              } catch (err) {
+                toast.error(errorText(err, 'Could not start the job'));
+              }
+            }}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-700 px-3 py-2 text-xs font-bold text-gray-200 hover:bg-gray-800 disabled:opacity-50"
+            data-focusable="true"
+          >
+            <Play size={14} /> {j.running ? 'Running…' : j.queued ? 'Waiting…' : 'Run now'}
+          </button>
+        </div>
+      ))}
+    </section>
+  );
+};
+
 /** Admin > Settings: every server setting, saved here or taken from the environment. */
 const SettingsTab: React.FC = () => {
   const [data, setData] = useState<SettingsResponse | null>(null);
@@ -246,6 +306,8 @@ const SettingsTab: React.FC = () => {
           {group === 'Email' && <TestEmail />}
         </section>
       ))}
+
+      <Jobs />
 
       {data && (
         <section className="rounded-2xl border border-gray-800 bg-gray-900/40 px-5 py-4">

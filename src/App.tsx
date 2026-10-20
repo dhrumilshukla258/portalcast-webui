@@ -12,7 +12,7 @@ import { Loader2 } from 'lucide-react';
 
 import { Header } from '@/components/organisms/layout/Header';
 // Lazy — admin-only, rarely visited, and it's a large component tree
-// (stats/users/content/carousel/config/logs/API-reference tabs all live
+// (stats/users/content/settings/logs/API-reference tabs all live
 // here). Eagerly bundling it meant every session paid its parse/download
 // cost on first load even though most users never open it.
 const Admin = React.lazy(lazyImport(() => import('@/components/organisms/admin/Admin')));

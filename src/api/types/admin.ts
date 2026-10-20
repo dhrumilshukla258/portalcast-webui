@@ -156,3 +156,17 @@ export interface SettingsResponse {
   settings: ServerSetting[];
   fixed: { key: string; label: string; value: string; help: string }[];
 }
+
+export interface BackgroundJob {
+  name: string;
+  label: string;
+  schedule: string;
+  running: boolean;
+  queued: boolean;
+  waitsForPlayback: boolean;
+  lastStart: string | null;
+  lastEnd: string | null;
+  lastResult: string | null;
+  lastError: string | null;
+  nextDue: string;
+}

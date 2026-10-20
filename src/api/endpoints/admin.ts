@@ -17,6 +17,7 @@ import type {
   SecurityEventRow,
   SecuritySummary,
   SettingsResponse,
+  BackgroundJob,
 } from '@/api/types/admin';
 
 // --- Server config ---
@@ -183,3 +184,10 @@ export const resetSetting = async (key: string): Promise<SettingsResponse> =>
 
 export const sendTestEmail = async (to?: string): Promise<{ ok: boolean; to: string }> =>
   (await api.post<{ ok: boolean; to: string }>('/admin/settings/test-email', { to })).data!;
+
+// ---- Background jobs ----
+export const getJobs = async (): Promise<BackgroundJob[]> =>
+  (await api.get<{ items: BackgroundJob[] }>('/admin/jobs')).data?.items ?? [];
+
+export const runJob = async (name: string): Promise<{ started: boolean; items: BackgroundJob[] }> =>
+  (await api.post<{ started: boolean; items: BackgroundJob[] }>(`/admin/jobs/${encodeURIComponent(name)}/run`)).data!;
