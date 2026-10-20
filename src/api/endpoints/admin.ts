@@ -16,6 +16,7 @@ import type {
   StreamFailureTestResult,
   SecurityEventRow,
   SecuritySummary,
+  SettingsResponse,
 } from '@/api/types/admin';
 
 // --- Server config ---
@@ -169,3 +170,16 @@ export const banIp = async (ip: string, minutes = 60): Promise<void> => {
 export const unbanIp = async (ip: string): Promise<void> => {
   await api.delete(`/admin/security/bans/${encodeURIComponent(ip)}`);
 };
+
+// ---- Settings ----
+export const getSettings = async (): Promise<SettingsResponse> =>
+  (await api.get<SettingsResponse>('/admin/settings')).data!;
+
+export const saveSetting = async (key: string, value: unknown): Promise<SettingsResponse> =>
+  (await api.put<SettingsResponse>(`/admin/settings/${encodeURIComponent(key)}`, { value })).data!;
+
+export const resetSetting = async (key: string): Promise<SettingsResponse> =>
+  (await api.delete<SettingsResponse>(`/admin/settings/${encodeURIComponent(key)}`)).data!;
+
+export const sendTestEmail = async (to?: string): Promise<{ ok: boolean; to: string }> =>
+  (await api.post<{ ok: boolean; to: string }>('/admin/settings/test-email', { to })).data!;

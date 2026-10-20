@@ -131,3 +131,28 @@ export interface SecuritySummary {
   bans: { ip: string; until: string; reason: string }[];
   autoBan: { enabled: boolean; afterFailures: number; windowMinutes: number; banMinutes: number; trustedProxiesConfigured: boolean };
 }
+
+// ---- Settings (Admin > Settings) ----
+export interface ServerSetting {
+  key: string;
+  group: string;
+  label: string;
+  help: string | null;
+  type: 'string' | 'number' | 'boolean' | 'list';
+  env: string | null;
+  secret: boolean;
+  apply: 'live' | 'restart';
+  envWins: boolean;
+  min: number | null;
+  max: number | null;
+  options: string[] | null;
+  source: 'admin' | 'environment' | 'default';
+  /** Secrets: masked ("••••abcd"), never the real value. */
+  value: string | number | boolean | string[];
+  isSet: boolean;
+}
+
+export interface SettingsResponse {
+  settings: ServerSetting[];
+  fixed: { key: string; label: string; value: string; help: string }[];
+}

@@ -25,6 +25,7 @@ const KIND_LABEL: Record<string, string> = {
   unknown_api_path: 'Probed a route that does not exist',
   ip_banned: 'Address banned',
   ip_unbanned: 'Ban lifted',
+  setting_changed: 'Setting changed by an admin',
 };
 
 const SEVERE = new Set(['refresh_reuse', 'image_proxy_blocked', 'forbidden', 'ip_banned', 'suspicious_request']);

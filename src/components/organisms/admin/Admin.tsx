@@ -9,7 +9,7 @@ import {
   BarChart3,
   FolderTree,
   Code2,
-  AlertTriangle, ShieldAlert } from 'lucide-react';
+  AlertTriangle, ShieldAlert, SlidersHorizontal } from 'lucide-react';
 import ProfileManager from '@/components/organisms/admin/ProfileManager';
 import { useAuth } from '@/context/AuthContext';
 import UserManager from '@/components/organisms/admin/UserManager';
@@ -21,6 +21,7 @@ import ConfigTab from '@/components/organisms/admin/ConfigTab';
 import LogsTab from '@/components/organisms/admin/LogsTab';
 import BrokenStreams from '@/components/organisms/admin/BrokenStreams';
 import SecurityTab from '@/components/organisms/admin/SecurityTab';
+import SettingsTab from '@/components/organisms/admin/SettingsTab';
 
 type AdminTab =
   | 'profiles'
@@ -32,6 +33,7 @@ type AdminTab =
   | 'content'
   | 'broken'
   | 'security'
+  | 'settings'
   | 'api';
 
 interface AdminProps {
@@ -70,7 +72,8 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
                 { id: 'broken', label: 'Broken streams', icon: AlertTriangle },
                 { id: 'security', label: 'Security', icon: ShieldAlert },
                 { id: 'carousel', label: 'Carousel', icon: Layout },
-                { id: 'config', label: 'Config', icon: Settings },
+                { id: 'config', label: 'Provider', icon: Settings },
+                { id: 'settings', label: 'Settings', icon: SlidersHorizontal },
                 { id: 'logs', label: 'Logs', icon: Terminal },
                 { id: 'api', label: 'API', icon: Code2 },
               ].map((tab) => (
@@ -175,6 +178,12 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
           {activeTab === 'logs' && <LogsTab />}
 
           {activeTab === 'config' && <ConfigTab />}
+
+          {activeTab === 'settings' && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <SettingsTab />
+            </div>
+          )}
         </main>
       </div>
     </div>
