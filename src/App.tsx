@@ -1,3 +1,4 @@
+import { lazyImport } from '@/utils/staleBuild';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -14,16 +15,16 @@ import { Header } from '@/components/organisms/layout/Header';
 // (stats/users/content/carousel/config/logs/API-reference tabs all live
 // here). Eagerly bundling it meant every session paid its parse/download
 // cost on first load even though most users never open it.
-const Admin = React.lazy(() => import('@/components/organisms/admin/Admin'));
+const Admin = React.lazy(lazyImport(() => import('@/components/organisms/admin/Admin')));
 // Lazy — only needed once playback actually starts, and its tree pulls in
 // the HLS/vidstack player stack, which is one of the heaviest dependencies
 // in the app.
-const VideoPlayer = React.lazy(() => import('@/components/organisms/video/VideoPlayer'));
+const VideoPlayer = React.lazy(lazyImport(() => import('@/components/organisms/video/VideoPlayer')));
 import ConfirmationModal from '@/components/molecules/ConfirmationModal';
 import VariantPickerModal from '@/components/molecules/VariantPickerModal';
 import MainContentGrid from '@/components/organisms/browse/MainContentGrid';
 // Lazy — only mounted when the user opens the Discover tab, not on initial load.
-const DiscoverView = React.lazy(() => import('@/components/organisms/discover/DiscoverView'));
+const DiscoverView = React.lazy(lazyImport(() => import('@/components/organisms/discover/DiscoverView')));
 import { AmbientBackdrop } from '@/components/molecules/AmbientBackdrop';
 
 import { useMediaLibrary, initialContext } from '@/hooks/useMediaLibrary';

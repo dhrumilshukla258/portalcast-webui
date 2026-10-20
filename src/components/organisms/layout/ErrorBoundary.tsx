@@ -1,3 +1,4 @@
+import { isStaleBuildError, reloadForNewBuild } from '@/utils/staleBuild';
 import { Component, type ReactNode, type ErrorInfo } from 'react';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
 
@@ -21,6 +22,8 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+    // A file from the previous build (after a deploy): load the new build instead.
+    if (isStaleBuildError(error)) reloadForNewBuild();
   }
 
   public componentDidMount() {

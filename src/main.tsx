@@ -8,7 +8,11 @@ import { HashRouter } from 'react-router-dom';
 import ErrorBoundary from '@/components/organisms/layout/ErrorBoundary';
 import { webPlatformAdapter } from '@/api/platform';
 import { setPlatformAdapter } from '@/api/config';
+import { installStaleBuildHandler } from '@/utils/staleBuild';
 import { setClientPlatformAdapter } from '@/api/client';
+
+// After a deploy, reload into the new build instead of failing on the old one's files.
+installStaleBuildHandler();
 
 // Wire the web platform adapter (localStorage-backed token storage,
 // clientType resolved via isTizenDevice()) into the networking layer. A
