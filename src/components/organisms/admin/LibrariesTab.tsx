@@ -70,6 +70,7 @@ const FolderBrowser: React.FC<{ onPick: (path: string) => void }> = ({ onPick })
 };
 
 const LibraryEditor: React.FC<{ lib?: LocalLibrary; onClose: () => void; onSaved: () => void }> = ({ lib, onClose, onSaved }) => {
+  const [kind, setKind] = useState<'movies' | 'series'>(lib?.kind === 'series' ? 'series' : 'movies');
   const [name, setName] = useState(lib?.name ?? 'Movies');
   const [folders, setFolders] = useState<string[]>(lib?.folders ?? []);
   const [busy, setBusy] = useState(false);
@@ -77,7 +78,7 @@ const LibraryEditor: React.FC<{ lib?: LocalLibrary; onClose: () => void; onSaved
     setBusy(true);
     try {
       if (lib) await updateLibrary(lib.id, { name, folders });
-      else await createLibrary(name, folders);
+      else await createLibrary(name, folders, kind);
       toast.success(lib ? 'Library saved' : 'Library added; the first scan has started');
       onSaved();
       onClose();
@@ -91,11 +92,28 @@ const LibraryEditor: React.FC<{ lib?: LocalLibrary; onClose: () => void; onSaved
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true">
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-black text-white">{lib ? 'Edit library' : 'Add a movie library'}</h2>
+          <h2 className="text-lg font-black text-white">{lib ? 'Edit library' : 'Add a library'}</h2>
           <button type="button" onClick={onClose} className="rounded p-1 text-gray-400 hover:bg-gray-800" aria-label="Close">
             <X size={18} />
           </button>
         </div>
+        {!lib && (
+          <div className="mb-4 flex gap-2">
+            {(['movies', 'series'] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => {
+                  setKind(k);
+                  if (name === 'Movies' || name === 'Series') setName(k === 'movies' ? 'Movies' : 'Series');
+                }}
+                className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${kind === k ? 'bg-blue-600 text-white' : 'border border-gray-700 text-gray-300 hover:bg-gray-800'}`}
+              >
+                {k === 'movies' ? 'Movies' : 'Series'}
+              </button>
+            ))}
+          </div>
+        )}
         <label className="mb-1 block text-xs font-semibold text-gray-400">Name</label>
         <input
           value={name}
@@ -116,7 +134,10 @@ const LibraryEditor: React.FC<{ lib?: LocalLibrary; onClose: () => void; onSaved
         </div>
         <FolderBrowser onPick={(p) => !folders.includes(p) && setFolders([...folders, p])} />
         <p className="mt-2 text-xs text-gray-500">
-          Folders named like Jellyfin's work as they are: <span className="font-mono">Movie (2010) [tmdbid-123]/Movie (2010) - 1080p.mkv</span>.
+          Folders named like Jellyfin's work as they are:{' '}
+          <span className="font-mono">
+            {kind === 'series' ? 'Show (2005)/Season 01/Show S01E02.mkv' : 'Movie (2010) [tmdbid-123]/Movie (2010) - 1080p.mkv'}
+          </span>.
           Your files are only read, never changed.
         </p>
         <div className="mt-5 flex justify-end gap-2">
@@ -138,7 +159,7 @@ const FixMatch: React.FC<{ title: LibraryTitle; onClose: () => void; onDone: () 
   const search = useCallback(async () => {
     setResults(null);
     try {
-      setResults(await searchMatches(q, year || null));
+      setResults(await searchMatches(q, year || null, title.kind));
     } catch (err) {
       toast.error(errorText(err, 'TMDB search failed'));
       setResults([]);
@@ -306,8 +327,8 @@ const LibrariesTab: React.FC = () => {
     <div className="space-y-6 pb-16">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-2xl text-sm text-gray-400">
-          Movies from your NAS, shown as <span className="font-semibold text-gray-200">My Library</span> in Movies and alongside IPTV in
-          Discover. Folders must be under the media roots ({data?.roots.join(', ') || '…'}), set in Settings.
+          Movies and series from your NAS, shown as <span className="font-semibold text-gray-200">My Library</span> in Movies and Series and
+          alongside IPTV in Discover. Folders must be under the media roots ({data?.roots.join(', ') || '…'}), set in Settings.
         </p>
         <div className="flex gap-2">
           <button type="button" className={btn} disabled={data?.scanning} onClick={() => void scan('all')}>
@@ -331,7 +352,9 @@ const LibrariesTab: React.FC = () => {
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <h2 className="text-base font-black text-white">
-                {lib.name} {!lib.enabled && <span className="ml-2 text-xs font-semibold text-gray-500">(off)</span>}
+                {lib.name}
+                <span className="ml-2 rounded bg-gray-800 px-1.5 py-0.5 text-[10px] font-bold uppercase text-gray-400">{lib.kind === 'series' ? 'Series' : 'Movies'}</span>
+                {!lib.enabled && <span className="ml-2 text-xs font-semibold text-gray-500">(off)</span>}
               </h2>
               {lib.folders.map((f) => (
                 <div key={f} className="truncate font-mono text-xs text-gray-500">{f}</div>

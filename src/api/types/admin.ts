@@ -197,6 +197,7 @@ export interface FolderListing {
 
 export interface LibraryTitle {
   id: number;
+  kind: 'movie' | 'series';
   name: string;
   year: string | null;
   folder: string;

@@ -201,8 +201,8 @@ export const runJob = async (name: string): Promise<{ started: boolean; items: B
 export const getLibraries = async (): Promise<LibrariesResponse> =>
   (await api.get<LibrariesResponse>('/admin/libraries')).data!;
 
-export const createLibrary = async (name: string, folders: string[]): Promise<LocalLibrary> =>
-  (await api.post<LocalLibrary>('/admin/libraries', { name, folders })).data!;
+export const createLibrary = async (name: string, folders: string[], kind: 'movies' | 'series' = 'movies'): Promise<LocalLibrary> =>
+  (await api.post<LocalLibrary>('/admin/libraries', { name, folders, kind })).data!;
 
 export const updateLibrary = async (id: number, patch: { name?: string; folders?: string[]; enabled?: boolean }): Promise<LocalLibrary> =>
   (await api.put<LocalLibrary>(`/admin/libraries/${id}`, patch)).data!;
@@ -220,8 +220,8 @@ export const browseFolders = async (path?: string): Promise<FolderListing> =>
 export const getLibraryTitles = async (id: number, filter: 'all' | 'unmatched' | 'missing', q = ''): Promise<LibraryTitle[]> =>
   (await api.get<{ items: LibraryTitle[] }>(`/admin/libraries/${id}/items`, { params: { filter, q } })).data?.items ?? [];
 
-export const searchMatches = async (q: string, year?: string | null): Promise<TmdbCandidate[]> =>
-  (await api.get<{ items: TmdbCandidate[] }>('/admin/libraries/match-search', { params: { q, year: year || undefined } })).data?.items ?? [];
+export const searchMatches = async (q: string, year?: string | null, kind: 'movie' | 'series' = 'movie'): Promise<TmdbCandidate[]> =>
+  (await api.get<{ items: TmdbCandidate[] }>('/admin/libraries/match-search', { params: { q, year: year || undefined, kind } })).data?.items ?? [];
 
 export const setTitleMatch = async (itemId: number, tmdbId: number | null): Promise<void> => {
   await api.post(`/admin/libraries/items/${itemId}/match`, { tmdbId });
