@@ -97,6 +97,7 @@ async function request<T = unknown>(
 
   const token = platformAdapter.storage.get('auth_token');
   let response = await makeRequest(token);
+  headerListeners.forEach((l) => l(response.headers));
 
   if (response.status === 401) {
     // If the request was actually an auth request, don't try to refresh
@@ -174,6 +175,15 @@ async function request<T = unknown>(
 
   const data = await response.json();
   return { data };
+}
+
+// Listeners told about every answer's headers (utils/iptvHealth.ts reads X-IPTV from them,
+// so the IPTV status needs no polling while the app is in use).
+type HeaderListener = (headers: Headers) => void;
+const headerListeners = new Set<HeaderListener>();
+export function onApiHeaders(listener: HeaderListener): () => void {
+  headerListeners.add(listener);
+  return () => headerListeners.delete(listener);
 }
 
 // Listeners told about content-changing requests (anything but GET, excluding per-user

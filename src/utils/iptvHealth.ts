@@ -1,26 +1,39 @@
 import { useSyncExternalStore } from 'react';
-import { api } from '@/api/client';
+import { api, onApiHeaders } from '@/api/client';
 
-// Offline mode: whether the server can reach the IPTV portal (GET /api/v2/health/iptv,
-// servers from 2026-10-21). While it cannot, IPTV cards are dimmed and a banner says so;
-// local-library titles stay bright and keep playing. Polled once a minute while the app is
-// open; older servers (no endpoint) count as online.
+// Offline mode: whether the server can reach the IPTV portal. While it cannot, IPTV cards
+// are dimmed and a banner says so; local-library titles stay bright and keep playing.
+// Every server answer carries the status (X-IPTV header), so while the app is in use it
+// needs no request of its own; GET /api/v2/health/iptv is asked only after 5 minutes
+// without any answer (was every minute). Older servers (no header, no endpoint) count as online.
 
+const QUIET_MS = 5 * 60_000;
 let offline = false;
 let started = false;
+let lastHeardAt = 0;
 const listeners = new Set<() => void>();
 
-async function poll() {
-  let next = false;
-  try {
-    const r = await api.get<{ iptv: string }>('/v2/health/iptv');
-    next = r.data?.iptv === 'offline';
-  } catch {
-    next = false;
-  }
+function set(next: boolean) {
   if (next !== offline) {
     offline = next;
     listeners.forEach((l) => l());
+  }
+}
+
+onApiHeaders((headers) => {
+  const v = headers.get('x-iptv');
+  if (!v) return;
+  lastHeardAt = Date.now();
+  set(v === 'offline');
+});
+
+async function poll() {
+  if (Date.now() - lastHeardAt < QUIET_MS) return; // recent answers already told us
+  try {
+    const r = await api.get<{ iptv: string }>('/v2/health/iptv');
+    set(r.data?.iptv === 'offline');
+  } catch {
+    set(false);
   }
 }
 

@@ -13,8 +13,8 @@ interface AmbientBackdropProps {
   rotateMs?: number;
   // Discover's items are TMDB-sourced and always carry a qualifying
   // backdrop_hd_path, so it never needs this. MainContentGrid's library
-  // items (Movies/Series) mostly only ever get backdrop_path backfilled
-  // (see useLibraryBackgroundRefresh) — without this, most categories have
+  // items (Movies/Series) without a TMDB match only have the portal's own art
+  // (backdrop_path) — without this, those categories have
   // zero eligible images and the grid falls back to a plain black page.
   // Blurred full-bleed, the resolution difference isn't visible.
   allowLowRes?: boolean;

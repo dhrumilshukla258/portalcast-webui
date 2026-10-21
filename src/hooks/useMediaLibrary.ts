@@ -13,7 +13,6 @@ import type { ProgressRecord } from '@/api/types/user';
 import type { MediaItem, ContextType, EPG_List, ChannelGroup } from '@/types';
 import type { PaginatedResponse } from '@/api/types/channels';
 import { isTizenDevice } from '@/utils/helpers';
-import { useLibraryBackgroundRefresh } from './useLibraryBackgroundRefresh';
 import { useInfiniteScroll } from './useInfiniteScroll';
 
 const EPG_WINDOW_HOURS = 6;
@@ -534,7 +533,6 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
     return () => clearTimeout(timer);
   }, [providerKey, contentType]);
 
-  useLibraryBackgroundRefresh({ context, items, loading, contentType, setItems });
 
   const handlePageChange = useCallback(
     (direction: number) => {
