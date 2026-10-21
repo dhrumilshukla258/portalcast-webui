@@ -34,7 +34,7 @@ export default defineConfig({
             options: {
               cacheName: 'poster-images',
               expiration: {
-                maxEntries: 1000,
+                maxEntries: 3000,
                 maxAgeSeconds: 60 * 60 * 24 * 60, // 60 days
               },
             },
@@ -118,7 +118,9 @@ export default defineConfig({
     },
   },
   build: {
-    target: 'es2015',
+    // Every browser the webui runs on (desktop, phones, smart TVs since ~2020) supports ES2020:
+    // no down-levelled syntax or helpers, a smaller bundle.
+    target: 'es2020',
   },
   base: './',
   server: {
