@@ -75,6 +75,12 @@ export interface MediaItem {
   /** 1 for a title from the server's local library (NAS); quality = its best file ("4K · HDR10"). */
   is_local?: number | string;
   quality?: string;
+  /** Detail fields (servers from 2026-10-21). */
+  tagline?: string;
+  studios?: string;
+  collection?: string;
+  writers?: string;
+  logo_path?: string;
   /** Catalog lists: the server's grouping key and cleaned name (Search groups versions by these). */
   title_key?: string;
   clean_name?: string;

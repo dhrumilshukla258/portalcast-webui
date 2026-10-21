@@ -1,3 +1,4 @@
+import { getTitleDetails, type TitleDetails } from '@/api/endpoints/discover';
 import React, { useMemo } from 'react';
 import { Play, Clock, Star, Calendar, Globe2, Film } from 'lucide-react';
 import type { MediaItem } from '@/types';
@@ -45,6 +46,29 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
   const ratingSource = hasBest ? item.rating_source : rating ? 'IMDb' : undefined;
   const imdbUrl = item.imdb_id && /^tt\d+$/.test(item.imdb_id) ? `https://www.imdb.com/title/${item.imdb_id}/` : undefined;
   const metascore = Number(item.metascore) > 0 ? Number(item.metascore) : undefined;
+
+  // Tagline, age rating, studios, logo, cast with photos (server /api/v2/discover/details).
+  const [details, setDetails] = React.useState<TitleDetails | null>(null);
+  const detailsKey = item.catalogId || `${item.is_series ? 'series' : 'movie'}_${item.id}`;
+  React.useEffect(() => {
+    let cancelled = false;
+    setDetails(null);
+    const params = /^(movie|series)_/.test(detailsKey)
+      ? { id: detailsKey }
+      : { type: (item.is_series ? 'series' : 'movie') as 'movie' | 'series', raw: String(item.id) };
+    void getTitleDetails(params).then((d) => {
+      if (!cancelled) setDetails(d);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detailsKey]);
+  const logo = details?.logo || item.logo_path;
+  const tagline = details?.tagline || item.tagline;
+  const facts = [details?.studios || item.studios, details?.collection || item.collection].filter(Boolean) as string[];
+  const writers = details?.writers || item.writers;
+  const ageRating = details?.ageRating || item.rating_mpaa;
 
   const imageUrl = useMemo(() => {
     if (typeof item.screenshot_uri !== 'string' || !item.screenshot_uri) return null;
@@ -134,9 +158,14 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
         {/* Meta / Details Column */}
         <div className="flex w-full max-w-2xl flex-col gap-4 text-left">
           <div>
-            <h1 className="text-2xl font-black leading-none tracking-tight text-white md:text-4xl">
-              {displayTitle}
-            </h1>
+            {logo ? (
+              <img src={logo} alt={displayTitle} className="max-h-20 max-w-[min(100%,420px)] object-contain object-left md:max-h-28" />
+            ) : (
+              <h1 className="text-2xl font-black leading-none tracking-tight text-white md:text-4xl">
+                {displayTitle}
+              </h1>
+            )}
+            {tagline && <p className="mt-2 text-sm italic text-gray-400 md:text-base">{tagline}</p>}
             {item.director && (
               <p className="mt-1 text-sm text-gray-400">
                 {creditLabel} <span className="font-semibold text-gray-300">{item.director}</span>
@@ -191,9 +220,9 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                 <span>{Math.floor(item.duration / 60) || item.duration} mins</span>
               </div>
             )}
-            {item.rating_mpaa && (
+            {ageRating && (
               <div className="rounded-full border border-gray-600 px-2 py-0.5 text-[10px] font-black text-gray-400">
-                {item.rating_mpaa}
+                {ageRating}
               </div>
             )}
             {metaExtra}
@@ -223,7 +252,37 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
             </div>
           )}
 
-          {item.actors && (
+          {(facts.length > 0 || writers) && (
+            <div className="space-y-1 text-sm text-gray-400">
+              {facts.length > 0 && <p>{facts.join('  \u00b7  ')}</p>}
+              {writers && !item.is_series && (
+                <p>
+                  Written by <span className="font-semibold text-gray-300">{writers}</span>
+                </p>
+              )}
+            </div>
+          )}
+
+          {details && details.cast.length > 0 ? (
+            <div className="space-y-2">
+              <h3 className="text-xs font-black uppercase tracking-wider text-gray-500">Cast</h3>
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {details.cast.slice(0, 12).map((c) => (
+                  <div key={`${c.name}-${c.role ?? ''}`} className="w-20 shrink-0 text-center">
+                    {c.photo ? (
+                      <img src={c.photo} alt={c.name} loading="lazy" className="mx-auto h-16 w-16 rounded-full object-cover" />
+                    ) : (
+                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-gray-400">
+                        {c.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}
+                      </div>
+                    )}
+                    <div className="mt-1 truncate text-xs font-semibold text-gray-200">{c.name}</div>
+                    {c.role && <div className="truncate text-[11px] text-gray-500">{c.role}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : item.actors && (
             <div className="space-y-2">
               <h3 className="text-xs font-black uppercase tracking-wider text-gray-500">
                 Cast

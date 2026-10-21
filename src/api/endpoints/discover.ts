@@ -1,4 +1,5 @@
 import { cachedGet } from '@/api/responseCache';
+import { api } from '@/api/client';
 import type { MediaItem, PaginatedResponse } from '@/api/types/channels';
 
 export const DISCOVER_PATHS = {
@@ -104,4 +105,35 @@ export const getDiscoverVariants = async (id: string, signal?: AbortSignal): Pro
     })
   );
   return response?.variants || [];
+};
+
+export interface PersonCredit {
+  name: string;
+  role: string | null;
+  photo: string | null;
+}
+
+/** Detail-page data (servers from 2026-10-21): tagline, age rating, studios, logo, cast with photos. */
+export interface TitleDetails {
+  tagline: string | null;
+  ageRating: string | null;
+  runtime: number | null;
+  studios: string | null;
+  collection: string | null;
+  originalTitle: string | null;
+  premiered: string | null;
+  writers: string | null;
+  logo: string | null;
+  cast: PersonCredit[];
+  directors: PersonCredit[];
+  creators: PersonCredit[];
+}
+
+/** By content id ("movie_123"), or type + the catalog id the app browses by. */
+export const getTitleDetails = async (params: { id?: string; type?: 'movie' | 'series'; raw?: string }): Promise<TitleDetails | null> => {
+  try {
+    return (await api.get<TitleDetails>('/v2/discover/details', { params })).data ?? null;
+  } catch {
+    return null; // older server: the page shows what the card carried
+  }
 };
