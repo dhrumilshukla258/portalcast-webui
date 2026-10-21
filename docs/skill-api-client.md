@@ -51,3 +51,8 @@ The subtitle search/probe (`src/api/endpoints/subtitles.ts`) and the stream reac
 - `src/api/endpoints/*.ts` — one file per backend domain (channels, movies, series, epg, carousel, downloads, auth, subtitles, admin, profiles, user, discover); thin wrappers over `api.*` plus any endpoint-specific response reshaping
 - `src/api/endpoints/provider.ts` — `getProviderKey()` → `GET /v2/provider-key`: the non-admin way to identify the active provider (any logged-in user). `getConfig()` in `admin.ts` hits the admin-only `/config` (full config incl. credentials) and 403s for regular users — don't use it outside the admin panel
 - `src/api/types/*.ts` — response/request type definitions, one file per domain matching `endpoints/`
+
+## Header listeners and HTTP caching (2026-10-21)
+
+- `onApiHeaders(listener)` in `client.ts`: every answer's `Headers` go to the listeners. `utils/iptvHealth.ts` uses it to read `X-IPTV` (`online`/`offline`, set by the server on every `/api` answer), so the IPTV status needs no request while the app is in use; it asks `GET /api/v2/health/iptv` only after 5 minutes without any answer (was every minute).
+- The server sends `ETag`, `Cache-Control: private, max-age=N, must-revalidate` and `Vary: Authorization` on stable reads (facets, details, Discover rows, catalog pages, groups). `fetch()` goes through the browser's HTTP cache, so within N seconds no request is made and after that an unchanged answer comes back as a bodyless 304, with no client code. `responseCache.ts` (in-memory, 10 min) still sits in front of `cachedGet` calls.
