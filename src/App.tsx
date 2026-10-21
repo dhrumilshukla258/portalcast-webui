@@ -472,6 +472,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                   onOpenTitle={searchOpenTitle}
                   onPickVersion={searchPickVersion}
                   onPlayChannel={searchPlayChannel}
+                  onOpenDiscoverTitle={handleDiscoverItemClick}
                   isTizen={isTizen}
                 />
               )}

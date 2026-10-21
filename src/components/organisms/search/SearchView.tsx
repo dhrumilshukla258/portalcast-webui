@@ -7,23 +7,37 @@ import { getChannels } from '@/api/endpoints/channels';
 import { URL_PATHS } from '@/api/config';
 import MediaCard from '@/components/molecules/MediaCard';
 import { cleanRecentSearches } from '@/hooks/useSearchController';
+import { searchPeople, type PeopleSearchResult, type PersonHit } from '@/api/endpoints/discover';
+import { useOpenPerson } from '@/context/PersonPageContext';
 
 /**
  * Global search — the same as the TV app's Search tab: one query across ALL movie and
- * series categories (server-side, `category=*&search=`, answered from the server's cache)
- * plus live channels (matched here over the channel list), with All / Movies / Series /
- * Live TV tabs and recent searches. A title's language/quality versions ("ABC Hindi",
- * "ABC Tamil 4K") are one result, grouped by the server's `title_key`; opening a result
- * with several versions asks which one.
+ * series categories (server-side, `category=*&search=`, answered from the server's cache),
+ * people by name (`/api/v2/search/people`, from the server's memory) and live channels
+ * (matched here over the channel list), with All / Movies / Series / People / Live TV tabs
+ * and recent searches. A title's language/quality versions ("ABC Hindi", "ABC Tamil 4K")
+ * are one result, grouped by the server's `title_key`; opening a result with several
+ * versions asks which one. When the query clearly names a person ("shah rukh"), People and
+ * "Movies & series with X" come first. The chosen tab is remembered in this browser.
  */
 
-type Filter = 'all' | 'movies' | 'series' | 'live';
+type Filter = 'all' | 'movies' | 'series' | 'people' | 'live';
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'movies', label: 'Movies' },
   { key: 'series', label: 'Series' },
+  { key: 'people', label: 'People' },
   { key: 'live', label: 'Live TV' },
 ];
+const FILTER_KEY = 'portalcast.search.filter';
+function savedFilter(): Filter {
+  try {
+    const f = localStorage.getItem(FILTER_KEY);
+    return FILTERS.some((x) => x.key === f) ? (f as Filter) : 'all';
+  } catch {
+    return 'all';
+  }
+}
 const MIN_CHARS = 2;
 const DEBOUNCE_MS = 400;
 const MAX_CHANNELS = 60;
@@ -88,14 +102,22 @@ interface SearchViewProps {
   /** Several versions: ask which one. */
   onPickVersion: (display: MediaItem, versions: MediaItem[], isSeries: boolean) => void;
   onPlayChannel: (channel: MediaItem) => void;
+  /** A featured person's title (a Discover card): version picker when needed, then its page. */
+  onOpenDiscoverTitle?: (item: MediaItem) => void;
   /** Samsung TV browser: the field only takes typing after it is pressed (else its keyboard traps the remote). */
   isTizen?: boolean;
 }
 
-const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearchesChange, onOpenTitle, onPickVersion, onPlayChannel, isTizen = false }) => {
+const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearchesChange, onOpenTitle, onPickVersion, onPlayChannel, onOpenDiscoverTitle, isTizen = false }) => {
   const [query, setQuery] = useState('');
   const [searched, setSearched] = useState<string | null>(null);
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilterState] = useState<Filter>(savedFilter);
+  const setFilter = useCallback((f: Filter) => {
+    setFilterState(f);
+    try { localStorage.setItem(FILTER_KEY, f); } catch { /* private mode: not remembered */ }
+  }, []);
+  const [people, setPeople] = useState<PeopleSearchResult>({ people: [], featured: null, ready: true });
+  const openPerson = useOpenPerson();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [movies, setMovies] = useState<Section>(EMPTY);
@@ -120,10 +142,11 @@ const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearche
     if (q.length < MIN_CHARS) { setSearched(null); setLoading(false); return; }
     setLoading(true);
     setError(false);
-    const [m, s, c] = await Promise.allSettled([
+    const [m, s, c, p] = await Promise.allSettled([
       getMedia({ category: '*', search: q, page: 1 }),
       getSeries({ category: '*', search: q, page: 1 }),
       allChannels().then((all) => matchChannels(all, q)),
+      searchPeople(q),
     ]);
     if (requestRef.current !== id) return; // superseded by a newer query
     const section = (r: PromiseSettledResult<{ data: MediaItem[]; total_items?: number }>): Section =>
@@ -133,7 +156,8 @@ const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearche
     setMovies(section(m));
     setSeries(section(s));
     setChannels(c.status === 'fulfilled' ? c.value : []);
-    setError(m.status === 'rejected' && s.status === 'rejected');
+    setPeople(p.status === 'fulfilled' ? p.value : { people: [], featured: null, ready: true });
+    setError(m.status === 'rejected' && s.status === 'rejected' && p.status === 'rejected');
     setSearched(q);
     setLoading(false);
   }, []);
@@ -175,7 +199,33 @@ const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearche
 
   const play = useCallback((c: MediaItem) => { remember(query); onPlayChannel(c); }, [query, remember, onPlayChannel]);
 
-  const empty = searched !== null && !loading && movies.groups.length === 0 && series.groups.length === 0 && channels.length === 0;
+  const pickPerson = useCallback((id: number) => { remember(query); openPerson?.(id); }, [query, remember, openPerson]);
+  const pickFeaturedTitle = useCallback((item: MediaItem) => { remember(query); onOpenDiscoverTitle?.(item); }, [query, remember, onOpenDiscoverTitle]);
+
+  const empty = searched !== null && !loading && movies.groups.length === 0 && series.groups.length === 0 && channels.length === 0 && people.people.length === 0;
+  // People lead when the query names someone ("shah rukh") or no title matched.
+  const peopleFirst = !!people.featured || (movies.groups.length === 0 && series.groups.length === 0);
+  const featured = people.featured && people.featured.credits.length > 0 ? people.featured : null;
+  const peopleBlock = (filter === 'all' || filter === 'people') && people.people.length > 0 && (
+    <>
+      <PeopleResults people={people.people} grid={filter === 'people'} onOpen={pickPerson} />
+      {filter === 'all' && featured && (
+        <section>
+          <h2 className="mb-3 text-lg font-bold text-white">Movies &amp; series with {featured.name}</h2>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 md:gap-6 lg:grid-cols-6 xl:grid-cols-7">
+            {featured.credits.slice(0, ALL_TAB_TITLES).map((item) => (
+              <MediaCard key={item.id} item={item} onClick={pickFeaturedTitle} categoryLabel={item.year} />
+            ))}
+          </div>
+          {featured.total > ALL_TAB_TITLES && (
+            <button data-focusable="true" onClick={() => pickPerson(featured.id)} className="mt-3 text-sm font-bold text-sky-400 hover:text-sky-300">
+              All {featured.total} titles →
+            </button>
+          )}
+        </section>
+      )}
+    </>
+  );
 
   return (
     <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 flex-1 overflow-y-auto px-2 sm:px-0">
@@ -193,7 +243,7 @@ const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearche
             readOnly={!typing}
             onClick={() => { if (isTizen) setTyping(true); }}
             onBlur={() => { if (isTizen) setTyping(false); }}
-            placeholder="Search movies, series and channels"
+            placeholder="Search movies, series, actors and channels"
             data-focusable="true"
             className="w-full rounded-full border border-white/10 bg-[#0b1120]/85 py-2.5 pl-10 pr-10 text-base text-gray-100 placeholder-gray-500 focus:outline-hidden focus:ring-1 focus:ring-portalcast-light"
           />
@@ -232,12 +282,14 @@ const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearche
         <p className="py-10 text-center text-gray-400">Nothing found for "{searched}".</p>
       ) : (
         <div className="flex flex-col gap-8 pb-10">
+          {peopleFirst && peopleBlock}
           {(filter === 'all' || filter === 'movies') && movies.groups.length > 0 && (
             <TitleResults title="Movies" section={movies} limit={filter === 'all' ? ALL_TAB_TITLES : undefined} onOpen={(g) => open(g, false)} onMore={() => (filter === 'all' ? setFilter('movies') : loadMore('movies'))} />
           )}
           {(filter === 'all' || filter === 'series') && series.groups.length > 0 && (
             <TitleResults title="Series" section={series} limit={filter === 'all' ? ALL_TAB_TITLES : undefined} onOpen={(g) => open(g, true)} onMore={() => (filter === 'all' ? setFilter('series') : loadMore('series'))} />
           )}
+          {!peopleFirst && peopleBlock}
           {(filter === 'all' || filter === 'live') && channels.length > 0 && (
             <section>
               <h2 className="mb-3 text-lg font-bold text-white">Live TV · {channels.length}{channels.length >= MAX_CHANNELS ? '+' : ''}</h2>
@@ -249,7 +301,7 @@ const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearche
               )}
             </section>
           )}
-          {filter !== 'all' && ((filter === 'movies' && movies.groups.length === 0) || (filter === 'series' && series.groups.length === 0) || (filter === 'live' && channels.length === 0)) && (
+          {filter !== 'all' && ((filter === 'movies' && movies.groups.length === 0) || (filter === 'series' && series.groups.length === 0) || (filter === 'people' && people.people.length === 0) || (filter === 'live' && channels.length === 0)) && (
             <p className="py-10 text-center text-gray-400">No {FILTERS.find((f) => f.key === filter)?.label.toLowerCase()} for "{searched}".</p>
           )}
         </div>
@@ -302,6 +354,38 @@ const TitleResults: React.FC<{
   );
 };
 
+/** People found by name: a row on All, a grid on the People tab. Each opens their page. */
+const PeopleResults: React.FC<{ people: PersonHit[]; grid: boolean; onOpen: (id: number) => void }> = ({ people, grid, onOpen }) => (
+  <section>
+    <h2 className="mb-3 text-lg font-bold text-white">People · {people.length}</h2>
+    <div className={grid ? 'grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8' : 'flex gap-2 overflow-x-auto px-1 pb-2 pt-1 custom-scrollbar'}>
+      {people.map((p) => (
+        <button
+          key={p.id}
+          type="button"
+          data-focusable="true"
+          onClick={() => onOpen(p.id)}
+          title={`${p.name}: all titles`}
+          className={`${grid ? '' : 'w-28 shrink-0'} rounded-xl p-2 text-center transition-colors hover:bg-white/10 focus:bg-white/10 focus:outline-hidden focus:ring-2 focus:ring-portalcast-light [&.focused]:ring-2 [&.focused]:ring-portalcast-light`}
+        >
+          {p.photo ? (
+            <img src={p.photo} alt={p.name} loading="lazy" className="mx-auto h-20 w-20 rounded-full object-cover" />
+          ) : (
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/10 text-lg font-bold text-gray-400">
+              {p.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}
+            </div>
+          )}
+          <div className="mt-1.5 truncate text-sm font-semibold text-gray-100">{p.name}</div>
+          <div className="truncate text-[11px] text-gray-500">
+            {p.knownFor}
+            {p.titles > 0 ? ` · ${p.titles}` : ''}
+          </div>
+        </button>
+      ))}
+    </div>
+  </section>
+);
+
 const ChannelRow: React.FC<{ channel: MediaItem; onPlay: (c: MediaItem) => void }> = ({ channel, onPlay }) => {
   const [failed, setFailed] = useState(false);
   const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
@@ -324,7 +408,7 @@ const ChannelRow: React.FC<{ channel: MediaItem; onPlay: (c: MediaItem) => void 
 
 const RecentSearches: React.FC<{ recent: string[]; onPick: (t: string) => void; onRemove: (t: string) => void }> = ({ recent, onPick, onRemove }) => {
   if (recent.length === 0) {
-    return <p className="py-10 text-center text-gray-500">Search all movies, series and live channels.</p>;
+    return <p className="py-10 text-center text-gray-500">Search all movies, series, actors and live channels.</p>;
   }
   return (
     <section>

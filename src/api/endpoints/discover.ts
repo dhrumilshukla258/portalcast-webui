@@ -9,6 +9,7 @@ export const DISCOVER_PATHS = {
   RECOMMENDATIONS: '/v2/discover/recommendations',
   VARIANTS: '/v2/discover/variants',
   PEOPLE: '/v2/people',
+  PEOPLE_SEARCH: '/v2/search/people',
 };
 
 export interface FacetValue {
@@ -181,3 +182,25 @@ export interface PersonPage {
 
 export const getPerson = async (id: number, signal?: AbortSignal): Promise<PersonPage> =>
   (await api.get<PersonPage>(`${DISCOVER_PATHS.PEOPLE}/${id}`, { signal })).data;
+
+/** One person found by name (`GET /api/v2/search/people`). */
+export interface PersonHit {
+  id: number;
+  name: string;
+  photo: string | null;
+  /** "Actor", "Director", "Actor · Director"... */
+  knownFor: string;
+  /** Titles they lead in the catalog. */
+  titles: number;
+}
+
+export interface PeopleSearchResult {
+  people: PersonHit[];
+  /** The person the query clearly names, with their best-known titles. */
+  featured: { id: number; name: string; credits: MediaItem[]; total: number } | null;
+  ready: boolean;
+}
+
+/** People by name, answered from the server's memory; cached here like other searches. */
+export const searchPeople = async (q: string, signal?: AbortSignal): Promise<PeopleSearchResult> =>
+  (await cachedGet<PeopleSearchResult>(DISCOVER_PATHS.PEOPLE_SEARCH, { params: { q }, signal })) ?? { people: [], featured: null, ready: false };
