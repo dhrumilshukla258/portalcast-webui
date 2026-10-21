@@ -5,6 +5,7 @@ import type { MediaItem, PaginatedResponse } from '@/api/types/channels';
 export const DISCOVER_PATHS = {
   FACETS: '/v2/discover/facets',
   BROWSE: '/v2/discover/browse',
+  ROWS: '/v2/discover/rows',
   RECOMMENDATIONS: '/v2/discover/recommendations',
   VARIANTS: '/v2/discover/variants',
 };
@@ -50,6 +51,18 @@ export const getFacets = async (
     throw new Error('No response data received from discover facets API.');
   }
   return response;
+};
+
+/** Several genre rows (first page each) in one request (servers from 2026-10-21). */
+export const getDiscoverRows = async (
+  genres: string[],
+  type?: 'movie' | 'series'
+): Promise<{ genre: string; data: MediaItem[]; total_items: number }[]> => {
+  const response = await cachedGet<{ rows: { genre: string; data: MediaItem[]; total_items: number }[] }>(DISCOVER_PATHS.ROWS, {
+    params: { genres: genres.join(','), type } as Record<string, unknown>,
+  });
+  if (!response?.rows) throw new Error('No rows in discover rows answer.');
+  return response.rows;
 };
 
 export const getDiscoverBrowse = async (

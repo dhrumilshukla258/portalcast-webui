@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import {
   getFacets,
   getDiscoverBrowse,
+  getDiscoverRows,
   getRecommendations,
 } from '@/api/endpoints/discover';
 import type { DiscoverFacets } from '@/api/endpoints/discover';
@@ -131,6 +132,22 @@ export function useDiscover() {
   // unrelated requests (including active stream playback) until they cleared.
   const GENRE_FETCH_CONCURRENCY = 2;
   const fetchGenreRows = useCallback((genres: string[], type?: 'movie' | 'series') => {
+    // One request for every row (GET /discover/rows); one per row only when the server is
+    // older and does not have it.
+    getDiscoverRows(genres, type)
+      .then((rows) => {
+        setGenreRows((prev) => {
+          const next = { ...prev };
+          for (const r of rows) {
+            next[r.genre] = { items: r.data, page: 1, hasMore: r.data.length < r.total_items, loadingMore: false, loading: false };
+          }
+          return next;
+        });
+      })
+      .catch(() => fetchGenreRowsOneByOne(genres, type));
+  }, []);
+
+  const fetchGenreRowsOneByOne = (genres: string[], type?: 'movie' | 'series') => {
     let nextIndex = 0;
     const runNext = () => {
       const i = nextIndex++;
@@ -155,7 +172,7 @@ export function useDiscover() {
         .finally(runNext);
     };
     for (let w = 0; w < Math.min(GENRE_FETCH_CONCURRENCY, genres.length); w++) runNext();
-  }, []);
+  };
 
   // Marks every target genre's row as "loading" up front (see
   // DiscoverRowState.loading) instead of leaving stale-type items on screen
