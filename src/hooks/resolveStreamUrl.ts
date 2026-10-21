@@ -26,7 +26,9 @@ export async function resolveStreamUrl(
   // server falls back to the file id when absent.
   identity?: { itemId?: string | number; itemType?: 'movie' | 'episode' }
 ): Promise<{ raw: string; proxied: string }> {
-  const urlParams: Record<string, any> = { id: item.id };
+  // client=web: local files a browser cannot play come back as an HLS fallback (server
+  // content/library/remux.ts); IPTV links are unaffected.
+  const urlParams: Record<string, any> = { id: item.id, client: 'web' };
 
   if (seriesNumber !== undefined) {
     urlParams.series = seriesNumber;
