@@ -348,7 +348,7 @@ const LibrariesTab: React.FC = () => {
       )}
 
       {data?.items.map((lib) => (
-        <section key={lib.id} className="rounded-2xl border border-gray-800 bg-gray-900/40 px-5 py-4">
+        <section key={lib.id} className="rounded-xl bg-white/[0.03] px-5 py-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <h2 className="text-base font-black text-white">

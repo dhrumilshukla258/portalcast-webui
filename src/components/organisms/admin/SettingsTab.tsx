@@ -207,7 +207,7 @@ const Jobs: React.FC = () => {
   }, [load]);
   if (jobs.length === 0) return null;
   return (
-    <section className="rounded-2xl border border-gray-800 bg-gray-900/40 px-5 py-4">
+    <section className="rounded-xl bg-white/[0.03] px-5 py-4">
       <h2 className="mb-1 text-base font-black text-white">Background jobs</h2>
       <p className="mb-2 text-xs text-gray-500">
         One at a time. Jobs marked "waits for playback" hold off while someone is watching, for up to 2 hours.
@@ -297,7 +297,7 @@ const SettingsTab: React.FC = () => {
       </div>
 
       {groups.map(([group, items]) => (
-        <section key={group} className="rounded-2xl border border-gray-800 bg-gray-900/40 px-5 py-4">
+        <section key={group} className="rounded-xl bg-white/[0.03] px-5 py-4">
           <h2 className="mb-1 text-base font-black text-white">{group}</h2>
           {items.map((s) => (
             <SettingRow key={s.key} s={s} onSaved={setData} />
@@ -309,7 +309,7 @@ const SettingsTab: React.FC = () => {
       <Jobs />
 
       {data && (
-        <section className="rounded-2xl border border-gray-800 bg-gray-900/40 px-5 py-4">
+        <section className="rounded-xl bg-white/[0.03] px-5 py-4">
           <h2 className="mb-1 text-base font-black text-white">Set by Docker or the environment</h2>
           <p className="mb-2 text-xs text-gray-500">Read-only here: these are needed before the server can start.</p>
           {data.fixed.map((f) => (

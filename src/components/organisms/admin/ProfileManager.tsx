@@ -18,7 +18,7 @@ const ProfileManager = () => {
     <div className="font-sans text-white">
       <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h2 className="text-2xl font-bold">Profiles</h2>
+          <h2 className="text-base font-semibold text-white">IPTV profiles</h2>
           <p className="text-sm text-gray-400">
             Manage your different server configurations
           </p>

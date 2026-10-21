@@ -226,3 +226,31 @@ export const searchMatches = async (q: string, year?: string | null, kind: 'movi
 export const setTitleMatch = async (itemId: number, tmdbId: number | null): Promise<void> => {
   await api.post(`/admin/libraries/items/${itemId}/match`, { tmdbId });
 };
+
+// ---- Overview (Admin front page) ----
+export interface AdminOverview {
+  health: { iptv: 'online' | 'offline'; iptvSince: string; uptimeSeconds: number; memoryMb: number };
+  needs: {
+    pendingUsers: number;
+    brokenStreams: number;
+    securityAlerts: number;
+    unmatchedLocal: number;
+    missingLocal: number;
+    failedJobs: { name: string; label: string; error: string | null }[];
+    iptvOffline: boolean;
+  };
+  watching: { user: string | null; title: string | null; kind: string | null; category: string | null; startedAt: number }[];
+  runningJobs: string[];
+  today: {
+    activeUsers: number;
+    connectedDevices: number;
+    portalRequests: number;
+    portalErrors: number;
+    portalSince: string;
+    outboundLastHour: number | null;
+  };
+}
+
+/** Everything the Overview shows, one request (server caches its counts for 15 s). */
+export const getOverview = async (signal?: AbortSignal): Promise<AdminOverview> =>
+  (await api.get<AdminOverview>('/admin/overview', { signal })).data!;

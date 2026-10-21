@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { RefreshCw, Users, UserCheck, UserCog, Clock, Wifi, Tv2, Radio, Server, AlertTriangle } from 'lucide-react';
-import { StatCard } from '@/components/molecules/StatCard';
+import { Loader2 } from 'lucide-react';
 import { PortalTimelineChart } from '@/components/molecules/PortalTimelineChart';
 import {
   useAdminStats,
@@ -8,183 +7,65 @@ import {
   categoryColor,
   categoryLabel,
   kindLabel,
-  kindColor,
   displayKind,
   formatDuration,
   formatRelativeSince,
   formatEventAge,
   ERROR_COLOR,
 } from '@/hooks/useAdminStats';
+import { formatAgo } from '@/hooks/useStreamFailures';
 
+const H2 = 'mb-3 text-sm font-semibold text-gray-400';
+
+/**
+ * Admin > IPTV > Activity: who is streaming, how much the IPTV portal is asked, and recent
+ * sign-ins. Totals are single lines; the per-request feed is opt-in (it subscribes to the
+ * live socket only while shown). Nothing polls while the browser tab is hidden.
+ */
 const AdminStats: React.FC = () => {
+  const [showFeed, setShowFeed] = useState(false);
   const {
-    activeUserCount,
-    socket,
     stats,
     loading,
     streams,
     portalMetrics,
     liveEvents,
+    socket,
     refreshSecondsInput,
     setRefreshSecondsInput,
     applyRefreshSeconds,
     MIN_REFRESH_SECONDS,
-  } = useAdminStats();
+  } = useAdminStats(showFeed);
   const [streamFilter, setStreamFilter] = useState<'all' | 'live' | 'movie' | 'series'>('all');
 
   if (loading) {
-    return (
-      <div className="flex h-40 items-center justify-center">
-        <RefreshCw className="animate-spin text-blue-500" size={32} />
-      </div>
-    );
+    return <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-gray-500" /></div>;
   }
 
+  const filtered = streamFilter === 'all' ? streams : streams.filter((s) => displayKind(s) === streamFilter);
+  const m = portalMetrics;
+  const lastMinute = m?.timeline[m.timeline.length - 1]?.count ?? 0;
+
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon={Users} label="Total Users" value={stats?.users.total ?? '—'} />
-        <StatCard icon={UserCheck} label="Active" value={stats?.users.active ?? '—'} accent="text-green-500" />
-        <StatCard icon={Clock} label="Pending" value={stats?.users.pending ?? '—'} accent="text-yellow-500" />
-        <StatCard icon={UserCog} label="Admins" value={stats?.users.admins ?? '—'} accent="text-purple-500" />
-        <StatCard icon={Clock} label="Logged in (24h)" value={stats?.users.loggedInLast24h ?? '—'} />
-        <StatCard icon={Clock} label="Logged in (7d)" value={stats?.users.loggedInLast7d ?? '—'} />
-        <StatCard
-          icon={Wifi}
-          label="Connected now"
-          value={activeUserCount ?? stats?.connectedDevices ?? 0}
-          accent="text-green-500"
-        />
-        <StatCard icon={Radio} label="Streams active" value={streams.length} accent="text-red-500" />
-      </div>
-
-      <div className="rounded-2xl border border-gray-800 bg-gray-900/30 p-6">
-        <div className="mb-4 flex items-center gap-3">
-          <Server className="text-blue-500" size={20} />
-          <h3 className="text-lg font-bold text-white">Stalker Portal Requests</h3>
-          {portalMetrics && (
-            <span className="ml-auto text-xs text-gray-500">
-              since {formatRelativeSince(portalMetrics.since)}
-            </span>
-          )}
-        </div>
-
-        {!portalMetrics ? (
-          <p className="text-sm italic text-gray-500">Loading portal request metrics…</p>
-        ) : (
-          <>
-            <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <StatCard icon={Server} label="Total Requests" value={portalMetrics.totalRequests.toLocaleString()} />
-              <StatCard icon={AlertTriangle} label="Total Errors" value={portalMetrics.totalErrors.toLocaleString()} accent="text-red-500" />
-              <StatCard
-                icon={AlertTriangle}
-                label="Error Rate"
-                value={
-                  portalMetrics.totalRequests > 0
-                    ? `${((portalMetrics.totalErrors / portalMetrics.totalRequests) * 100).toFixed(1)}%`
-                    : '0%'
-                }
-                accent={portalMetrics.totalErrors > 0 ? 'text-yellow-500' : 'text-green-500'}
-              />
-              <StatCard
-                icon={Radio}
-                label="Last Minute"
-                value={portalMetrics.timeline[portalMetrics.timeline.length - 1]?.count ?? 0}
-                accent="text-blue-500"
-              />
-            </div>
-
-            {/* Category breakdown — horizontal bars, direct-labeled (required by the
-                dataviz skill's CVD-floor warning for this 6-slot set), fixed hue order. */}
-            <div className="mb-6 space-y-2">
-              {CATEGORY_ORDER.map((cat) => {
-                const count = portalMetrics.byCategory[cat] ?? 0;
-                const max = Math.max(1, ...CATEGORY_ORDER.map((c) => portalMetrics.byCategory[c] ?? 0));
-                const pct = (count / max) * 100;
-                return (
-                  <div key={cat} className="flex items-center gap-3">
-                    <span className="w-14 shrink-0 text-xs font-bold text-gray-400">{categoryLabel[cat]}</span>
-                    <div className="h-4 flex-1 overflow-hidden rounded-sm bg-gray-950">
-                      <div
-                        className="h-full rounded-sm transition-all"
-                        style={{ width: `${pct}%`, backgroundColor: categoryColor[cat] }}
-                      />
-                    </div>
-                    <span className="w-14 shrink-0 text-right font-mono text-xs text-gray-300">
-                      {count.toLocaleString()}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            <PortalTimelineChart timeline={portalMetrics.timeline} />
-
-            <div className="mt-6">
-              <div className="mb-3 flex items-center gap-2">
-                <div className={`h-2 w-2 rounded-full ${socket ? 'animate-pulse bg-green-500' : 'bg-gray-600'}`} />
-                <h4 className="text-sm font-bold text-gray-300">Live Requests</h4>
-                <span className="text-xs text-gray-600">
-                  {socket ? 'streaming in real time' : 'reconnecting…'}
-                </span>
-              </div>
-              {liveEvents.length === 0 ? (
-                <p className="text-sm italic text-gray-500">No recent portal requests.</p>
-              ) : (
-                <div className="max-h-64 overflow-y-auto rounded-xl border border-gray-800 bg-gray-950/50">
-                  <table className="w-full text-left text-xs">
-                    <thead className="sticky top-0 bg-gray-950">
-                      <tr className="border-b border-gray-800 text-[10px] uppercase tracking-widest text-gray-500">
-                        <th className="py-1.5 pl-3 pr-2 font-black">Category</th>
-                        <th className="py-1.5 pr-2 font-black">Outcome</th>
-                        <th className="py-1.5 pr-2 font-black">HTTP Status</th>
-                        <th className="py-1.5 pr-3 text-right font-black">When</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {liveEvents.slice(0, 50).map((event, i) => (
-                        <tr key={`${event.timestamp}-${i}`} className="border-b border-gray-800/60 last:border-0">
-                          <td className="py-1.5 pl-3 pr-2">
-                            <span
-                              className="inline-flex items-center gap-1.5 rounded-sm px-1.5 py-0.5 font-bold uppercase"
-                              style={{ color: categoryColor[event.category], backgroundColor: `${categoryColor[event.category]}1a` }}
-                            >
-                              {categoryLabel[event.category]}
-                            </span>
-                          </td>
-                          <td className="py-1.5 pr-2">
-                            <span className="inline-flex items-center gap-1.5">
-                              <span
-                                className="inline-block h-1.5 w-1.5 rounded-full"
-                                style={{ backgroundColor: event.outcome === 'error' ? ERROR_COLOR : '#0ca30c' }}
-                              />
-                              <span className={event.outcome === 'error' ? 'text-red-400' : 'text-gray-400'}>
-                                {event.outcome === 'error' ? 'Error' : 'Success'}
-                              </span>
-                            </span>
-                          </td>
-                          <td className="py-1.5 pr-2 text-gray-400" title={event.statusCode ? undefined : 'No HTTP status reported for this request'}>
-                            {event.statusCode ?? 'n/a'}
-                          </td>
-                          <td className="py-1.5 pr-3 text-right text-gray-500">
-                            {formatEventAge(event.timestamp)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="rounded-2xl border border-gray-800 bg-gray-900/30 p-6">
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-          <h3 className="text-lg font-bold text-white">Live Streams</h3>
-          <label className="flex items-center gap-1.5 text-xs text-gray-500">
+    <div className="space-y-12">
+      {/* Streams */}
+      <section>
+        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <h2 className="text-sm font-semibold text-gray-400">Streaming now · {streams.length}</h2>
+          <div className="flex gap-3 text-xs">
+            {(['all', 'live', 'movie', 'series'] as const).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setStreamFilter(f)}
+                data-focusable="true"
+                className={streamFilter === f ? 'font-semibold text-white' : 'text-gray-500 hover:text-gray-300'}
+              >
+                {f === 'all' ? 'All' : kindLabel[f]}
+              </button>
+            ))}
+          </div>
+          <label className="ml-auto flex items-center gap-1.5 text-xs text-gray-600">
             refresh every
             <input
               type="number"
@@ -194,112 +75,129 @@ const AdminStats: React.FC = () => {
               onChange={(e) => setRefreshSecondsInput(e.target.value)}
               onBlur={(e) => applyRefreshSeconds(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && applyRefreshSeconds((e.target as HTMLInputElement).value)}
-              className="w-14 rounded-lg border border-gray-800 bg-gray-950 px-2 py-1 text-center text-xs text-white outline-hidden focus:border-blue-500"
+              className="w-12 rounded-md bg-white/5 px-1.5 py-0.5 text-center text-xs text-gray-200 outline-hidden focus:ring-1 focus:ring-sky-400"
             />
-            sec
+            s
           </label>
-          <div className="ml-auto flex gap-1 rounded-xl border border-gray-800 bg-gray-950 p-1">
-            {(['all', 'live', 'movie', 'series'] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setStreamFilter(f)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-bold uppercase transition-colors ${
-                  streamFilter === f ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800'
-                }`}
-                data-focusable="true"
-              >
-                {f === 'all' ? 'All' : kindLabel[f]}
-              </button>
-            ))}
-          </div>
         </div>
-        {(() => {
-          const filtered = streamFilter === 'all' ? streams : streams.filter((s) => displayKind(s) === streamFilter);
-          return filtered.length === 0 ? (
-            <p className="text-sm italic text-gray-500">No active streams right now.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-gray-800 text-xs uppercase tracking-widest text-gray-500">
-                    <th className="pb-2 pr-4 font-black">Type</th>
-                    <th className="pb-2 pr-4 font-black">Title</th>
-                    <th className="pb-2 pr-4 font-black">Category</th>
-                    <th className="pb-2 pr-4 font-black">User</th>
-                    <th className="pb-2 pr-4 font-black">Client IP</th>
-                    <th className="pb-2 font-black">Duration</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((s) => {
-                    const kind = displayKind(s);
-                    return (
-                      <tr key={s.key} className="border-b border-gray-800/60">
-                        <td className="py-2 pr-4">
-                          <span className={`rounded-sm px-2 py-0.5 text-[10px] font-black uppercase ${kindColor[kind]}`}>
-                            {kindLabel[kind]}
-                          </span>
-                        </td>
-                        <td className="max-w-xs truncate py-2 pr-4 text-xs text-gray-200" title={s.label ?? s.resource}>
-                          {s.label ?? <span className="italic text-gray-600" title={s.resource}>Unknown</span>}
-                        </td>
-                        <td className="py-2 pr-4 text-xs text-gray-400">{s.category ?? '—'}</td>
-                        <td className="py-2 pr-4 text-xs text-gray-200">
-                          {s.user ? (
-                            s.user
-                          ) : (
-                            <span className="italic text-gray-600">Unknown</span>
-                          )}
-                        </td>
-                        <td className="py-2 pr-4 font-mono text-xs text-gray-300">{s.ip}</td>
-                        <td className="py-2 text-gray-400">{formatDuration(Date.now() - s.startedAt)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          );
-        })()}
-      </div>
-
-
-      <div className="rounded-2xl border border-gray-800 bg-gray-900/30 p-6">
-        <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
-          <Tv2 className="text-blue-500" size={20} />
-          Recent Logins
-        </h3>
-        {!stats?.recentLogins.length ? (
-          <p className="text-sm italic text-gray-500">No login activity recorded yet.</p>
+        {filtered.length === 0 ? (
+          <p className="text-sm text-gray-600">Nobody right now.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-gray-800 text-xs uppercase tracking-widest text-gray-500">
-                  <th className="pb-2 pr-4 font-black">Name</th>
-                  <th className="pb-2 pr-4 font-black">Email</th>
-                  <th className="pb-2 pr-4 font-black">Role</th>
-                  <th className="pb-2 font-black">Last Login</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.recentLogins.map((u) => (
-                  <tr key={u.id} className="border-b border-gray-800/60">
-                    <td className="py-2 pr-4 text-gray-200">{u.name}</td>
-                    <td className="py-2 pr-4 text-gray-400">{u.email}</td>
-                    <td className="py-2 pr-4">
-                      <span className={`rounded-sm px-2 py-0.5 text-[10px] font-black uppercase ${u.role === 'admin' ? 'bg-purple-900/30 text-purple-400' : 'bg-gray-800 text-gray-400'}`}>
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="py-2 text-gray-400">{new Date(u.lastLogin).toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="divide-y divide-white/5">
+            {filtered.map((s) => {
+              const kind = displayKind(s);
+              return (
+                <li key={s.key} className="flex items-center gap-4 py-2.5 text-sm">
+                  <span className="w-32 shrink-0 truncate font-medium text-gray-200">{s.user ?? 'Unknown'}</span>
+                  <span className="min-w-0 flex-1 truncate text-gray-300" title={s.label ?? s.resource}>
+                    {s.label ?? 'Unknown'}
+                    <span className="ml-2 text-xs text-gray-600">{kindLabel[kind]}{s.category ? ` · ${s.category}` : ''}</span>
+                  </span>
+                  <span className="hidden shrink-0 font-mono text-xs text-gray-600 sm:inline">{s.ip}</span>
+                  <span className="w-16 shrink-0 text-right tabular-nums text-gray-500">{formatDuration(Date.now() - s.startedAt)}</span>
+                </li>
+              );
+            })}
+          </ul>
         )}
-      </div>
+      </section>
+
+      {/* IPTV portal requests */}
+      <section>
+        <h2 className={H2}>Requests to the IPTV portal</h2>
+        {!m ? (
+          <p className="text-sm text-gray-600">Loading…</p>
+        ) : (
+          <>
+            <p className="mb-5 text-sm text-gray-300">
+              {m.totalRequests.toLocaleString()} since {formatRelativeSince(m.since)}
+              <span className="text-gray-500">
+                {'  ·  '}
+                {m.totalErrors === 0
+                  ? 'none failed'
+                  : `${m.totalErrors.toLocaleString()} failed (${((m.totalErrors / Math.max(1, m.totalRequests)) * 100).toFixed(1)}%)`}
+                {'  ·  '}
+                {lastMinute} in the last minute
+              </span>
+            </p>
+            {/* By type: thin bars, direct-labeled, fixed hue order (validated palette). */}
+            <div className="mb-6 max-w-xl space-y-1.5">
+              {CATEGORY_ORDER.filter((cat) => (m.byCategory[cat] ?? 0) > 0).map((cat) => {
+                const count = m.byCategory[cat] ?? 0;
+                const max = Math.max(1, ...CATEGORY_ORDER.map((c) => m.byCategory[c] ?? 0));
+                return (
+                  <div key={cat} className="flex items-center gap-3">
+                    <span className="w-12 shrink-0 text-xs text-gray-500">{categoryLabel[cat]}</span>
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/5">
+                      <div className="h-full rounded-full" style={{ width: `${(count / max) * 100}%`, backgroundColor: categoryColor[cat] }} />
+                    </div>
+                    <span className="w-14 shrink-0 text-right text-xs tabular-nums text-gray-400">{count.toLocaleString()}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <PortalTimelineChart timeline={m.timeline} />
+            <button
+              type="button"
+              data-focusable="true"
+              onClick={() => setShowFeed((v) => !v)}
+              className="mt-4 text-xs font-medium text-gray-500 hover:text-gray-300"
+            >
+              {showFeed ? 'Hide each request' : 'Show each request as it happens'}
+            </button>
+            {showFeed && (
+              <div className="mt-3">
+                <p className="mb-2 flex items-center gap-2 text-xs text-gray-600">
+                  <span className={`h-1.5 w-1.5 rounded-full ${socket ? 'animate-pulse bg-emerald-400' : 'bg-gray-600'}`} />
+                  {socket ? 'live' : 'reconnecting…'}
+                </p>
+                {liveEvents.length === 0 ? (
+                  <p className="text-sm text-gray-600">No requests yet.</p>
+                ) : (
+                  <ul className="max-h-64 divide-y divide-white/5 overflow-y-auto text-xs">
+                    {liveEvents.slice(0, 50).map((e, i) => (
+                      <li key={`${e.timestamp}-${i}`} className="flex items-center gap-3 py-1.5">
+                        <span className="w-14 font-medium" style={{ color: categoryColor[e.category] }}>{categoryLabel[e.category]}</span>
+                        <span className="flex-1" style={{ color: e.outcome === 'error' ? ERROR_COLOR : undefined }}>
+                          {e.outcome === 'error' ? `Failed${e.statusCode ? ` (${e.statusCode})` : ''}` : <span className="text-gray-500">OK</span>}
+                        </span>
+                        <span className="text-gray-600">{formatEventAge(e.timestamp)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* Sign-ins */}
+      <section>
+        <h2 className={H2}>
+          Recent sign-ins
+          {stats && (
+            <span className="ml-2 font-normal text-gray-600">
+              {stats.users.loggedInLast24h} today · {stats.users.loggedInLast7d} this week
+            </span>
+          )}
+        </h2>
+        {!stats?.recentLogins.length ? (
+          <p className="text-sm text-gray-600">No sign-ins yet.</p>
+        ) : (
+          <ul className="divide-y divide-white/5">
+            {stats.recentLogins.map((u) => (
+              <li key={u.id} className="flex items-center gap-4 py-2 text-sm" title={u.email}>
+                <span className="min-w-0 flex-1 truncate text-gray-200">
+                  {u.name}
+                  {u.role === 'admin' && <span className="ml-2 text-xs text-gray-600">admin</span>}
+                </span>
+                <span className="text-gray-500" title={new Date(u.lastLogin).toLocaleString()}>{formatAgo(u.lastLogin)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 };

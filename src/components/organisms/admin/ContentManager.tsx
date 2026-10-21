@@ -8,7 +8,7 @@ const ContentManager: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-gray-800 bg-gray-900/40 p-1.5">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl bg-white/[0.03] p-1.5">
         {(['channel', 'movie', 'series'] as ContentType[]).map((t) => (
           <button
             key={t}

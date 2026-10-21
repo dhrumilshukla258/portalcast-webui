@@ -56,7 +56,7 @@ const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
   const isFilteringCats = !!catSearch;
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-800 bg-gray-900/30">
+    <div className="flex flex-col overflow-hidden rounded-xl bg-white/[0.03]">
       <div className="flex items-center gap-2 border-b border-gray-800 p-3">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" />

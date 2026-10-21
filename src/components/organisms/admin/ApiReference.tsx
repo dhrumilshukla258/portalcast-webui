@@ -96,7 +96,7 @@ const ApiReference: React.FC = () => {
         require a Bearer JWT — admin routes additionally require the admin role.
       </p>
       {GROUPS.map((group) => (
-        <div key={group.title} className="rounded-2xl border border-gray-800 bg-gray-900/30 p-5">
+        <div key={group.title} className="rounded-xl bg-white/[0.03] p-5">
           <h3 className="mb-3 text-sm font-black uppercase tracking-widest text-gray-400">{group.title}</h3>
           <div className="space-y-1.5">
             {group.endpoints.map((ep) => (

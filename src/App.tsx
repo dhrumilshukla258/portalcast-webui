@@ -645,7 +645,7 @@ export default function App() {
           path="/admin"
           element={
             <ProtectedRoute adminOnly>
-              <div className="min-h-screen app-bg font-sans text-gray-200">
+              <div className="min-h-screen app-bg pt-6 font-sans text-gray-200 md:pt-10">
                 <React.Suspense
                   fallback={
                     <div className="flex h-screen w-full items-center justify-center">

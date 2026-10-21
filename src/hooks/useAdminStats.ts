@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useVisiblePoll } from '@/hooks/useVisiblePoll';
 import { toast } from 'react-toastify';
 import { api } from '@/api/client';
 import { useSocket } from '@/context/useSocket';
@@ -142,7 +143,8 @@ export function formatEventAge(iso: string): string {
 // initial load, the admin-configurable live-streams poll, the fixed-cadence
 // portal-metrics poll, and the real-time portal-request socket feed. The
 // component itself only owns display-only state (stream type filter).
-export function useAdminStats() {
+/** `liveFeed`: subscribe to the per-request socket feed (only while the admin shows it). */
+export function useAdminStats(liveFeed = false) {
   const { activeUserCount, socket } = useSocket();
   const { token } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
@@ -208,8 +210,6 @@ export function useAdminStats() {
   useEffect(() => {
     const controller = new AbortController();
     load(controller.signal);
-    loadStreams(controller.signal);
-    loadPortalMetrics(controller.signal);
     return () => controller.abort();
   }, []);
 
@@ -217,16 +217,14 @@ export function useAdminStats() {
   // a fixed 30s cadence is plenty and keeps this independent of the
   // admin-configurable stream-list refresh rate above. (This refreshes the
   // aggregate totals/timeline/category breakdown; the live feed itself comes
-  // from the socket subscription below, not this poll.)
-  useEffect(() => {
-    const interval = setInterval(() => loadPortalMetrics(), 30000);
-    return () => clearInterval(interval);
-  }, []);
+  // from the socket subscription below, not this poll.) Paused while the
+  // browser tab is hidden.
+  useVisiblePoll((signal) => loadPortalMetrics(signal), 30000);
 
   // Real-time feed — mirrors the log-console pattern exactly (start_logging/
   // server_log in LogsTab.tsx): subscribe on mount, unsubscribe on unmount.
   useEffect(() => {
-    if (!socket || !token) return;
+    if (!socket || !token || !liveFeed) return;
 
     const handlePortalRequest = (event: PortalRequestEvent) => {
       setLiveEvents((prev) => [event, ...prev].slice(0, MAX_LIVE_EVENTS));
@@ -241,19 +239,16 @@ export function useAdminStats() {
       socket.emit('stop_portal_metrics');
       socket.off('portal_request', handlePortalRequest);
     };
-  }, [socket, token]);
+  }, [socket, token, liveFeed]);
 
   // Live streams list polls at an admin-configurable interval. Note: this only
   // controls how often the browser re-fetches the list — the backend's own
   // idle timeout (20s, how long a session is considered "active" without a
   // fresh request) is independent, so any poll rate here is safe to pick.
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadStreams();
-      forceTick((t) => t + 1); // re-render so "duration" labels keep ticking
-    }, refreshInterval);
-    return () => clearInterval(interval);
-  }, [refreshInterval]);
+  useVisiblePoll(async (signal) => {
+    await loadStreams(signal);
+    forceTick((t) => t + 1); // re-render so "duration" labels keep ticking
+  }, refreshInterval);
 
   const applyRefreshSeconds = (raw: string) => {
     const seconds = Number(raw);

@@ -49,7 +49,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({
   const isFilteringItems = !!itemSearch;
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-800 bg-gray-900/30">
+    <div className="flex flex-col overflow-hidden rounded-xl bg-white/[0.03]">
       <div className="flex items-center gap-2 border-b border-gray-800 p-3">
         <h3 className="flex-1 truncate text-sm font-bold text-gray-300">
           {currentCategory ? (currentCategory.display_name || currentCategory.title) : 'Select a category'}

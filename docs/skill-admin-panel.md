@@ -20,20 +20,19 @@ Skipping step 2–3 is the most common cause of "I fixed it but it's still broke
 
 All admin-tab components live under `src/components/organisms/admin/` (moved out of the flat `organisms/` directory in a folder reorg — see [[skill-browsing-grid]] for the same reorg applied to the browse/discover/video organisms).
 
-`src/components/organisms/admin/Admin.tsx` is a tabbed shell (`activeTab` state, no router sub-paths):
+`src/components/organisms/admin/Admin.tsx` (2026-10-21) is five sections with pages: a side menu on wide screens, chips on narrow ones, page links underlined under the section. The last section/page is remembered (`localStorage` `portalcast.admin.place`). Calm by default: Overview is the front page; charts, feeds and tables are one level deeper.
 
-| Tab | Component | Purpose |
-|-----|-----------|---------|
-| Stats | `AdminStats.tsx` | User counts, recent logins, live "who's streaming what" (STRM generation was removed with the server's Xtream emulation layer, 2026-10-18) |
-| Profiles | `ProfileManager.tsx` | Portal profile CRUD (pre-existing) |
-| Users | `UserManager.tsx` | User approval/role management (pre-existing) |
-| Content | `ContentManager.tsx` | Genre/item override CRUD — React port of the legacy `/contentmanager` standalone page |
-| Broken streams | `BrokenStreams.tsx` (+ `hooks/useStreamFailures.ts`) | Titles that failed to play — filter Active / Auto-hidden / All; per-row Test now (inline result), Unhide (auto-hidden only), Dismiss. Backend: `/api/admin/stream-failures` (portalcast-server `skill-stream-failures.md`) — movies auto-hide after 3 failed attempts in 24 h, episodes/live are record-only |
-| Provider | `ConfigTab.tsx` | Provider connection settings (tab id `config`; was labelled Config) |
-| Libraries | `LibrariesTab.tsx` | Local NAS movie libraries (server `docs/skill-local-library.md`): add with a folder browser limited to the media roots, scan, counts and last result, titles (unmatched/all/missing) with Fix match (TMDB search) |
-| Settings | `SettingsTab.tsx` | Every server setting (server `docs/skill-settings.md`): grouped, source badge (saved here / environment / default), save and reset per setting, secrets masked, test email, background jobs with Run now, read-only Docker settings |
-| Logs | `LogsTab.tsx` | Live server log tail via Socket.IO `server_log` event |
-| API | `ApiReference.tsx` | Static, read-only list of backend endpoints grouped by area — documentation only, no requests made |
+| Section | Page | Component |
+|---------|------|-----------|
+| Overview | — | `AdminOverview.tsx`: one health line, "Needs you" (only when something does: pending users, broken streams, security alerts today, failed jobs, missing/unmatched local titles, IPTV offline; each row opens the right page), watching now, one line of today's numbers. One request, `GET /api/admin/overview`, every 10 s while visible |
+| People | Users | `UserManager.tsx` |
+| Content | Local libraries · Categories & titles | `LibrariesTab.tsx` · `ContentManager.tsx` |
+| IPTV | Provider · Profiles · Activity · Broken streams | `ConfigTab.tsx` · `ProfileManager.tsx` (IPTV accounts) · `AdminStats.tsx` · `BrokenStreams.tsx` |
+| Server | Settings & jobs · Security · Logs · API | `SettingsTab.tsx` · `SecurityTab.tsx` · `LogsTab.tsx` · `ApiReference.tsx` |
+
+Activity (`AdminStats.tsx`): streaming now, IPTV portal requests as one line + thin bars + timeline, the per-request feed opt-in (socket subscription only while shown), recent sign-ins. Polls go through `hooks/useVisiblePoll.ts`: nothing is fetched while the browser tab is hidden.
+
+Style: no bordered cards (`bg-white/[0.03]` panels or plain dividers), one accent (sky) for the current place, status colours only for status, zero values hidden, relative times.
 
 The tab bar sits on its own full-width row under the title (it scrolls sideways on narrow screens) so it never overlaps the Back/Logout buttons. The carousel editor was removed on 2026-10-20; slides already saved still show on Home (`WelcomeCarousel.tsx`, `GET /api/carousel`).
 

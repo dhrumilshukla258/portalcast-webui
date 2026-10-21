@@ -59,7 +59,7 @@ const BrokenStreams: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-gray-800 bg-gray-900/30 p-6">
+      <div className="rounded-xl bg-white/[0.03] p-6">
         <div className="mb-2 flex flex-wrap items-center gap-3">
           <AlertTriangle className="text-yellow-500" size={20} />
           <h3 className="text-lg font-bold text-white">Broken Streams</h3>

@@ -1,14 +1,5 @@
-import React, { useState } from 'react';
-import {
-  Settings,
-  Terminal,
-  Users,
-  Globe,
-  LogOut,
-  BarChart3,
-  FolderTree,
-  Code2,
-  AlertTriangle, ShieldAlert, SlidersHorizontal, HardDrive } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
+import { ArrowLeft, LogOut, LayoutDashboard, Users, Film, Satellite, Server } from 'lucide-react';
 import ProfileManager from '@/components/organisms/admin/ProfileManager';
 import { useAuth } from '@/context/AuthContext';
 import UserManager from '@/components/organisms/admin/UserManager';
@@ -21,19 +12,62 @@ import BrokenStreams from '@/components/organisms/admin/BrokenStreams';
 import SecurityTab from '@/components/organisms/admin/SecurityTab';
 import SettingsTab from '@/components/organisms/admin/SettingsTab';
 import LibrariesTab from '@/components/organisms/admin/LibrariesTab';
+import AdminOverview, { type AdminTarget } from '@/components/organisms/admin/AdminOverview';
 
-type AdminTab =
-  | 'profiles'
-  | 'users'
-  | 'config'
-  | 'logs'
-  | 'stats'
-  | 'content'
-  | 'broken'
-  | 'security'
-  | 'settings'
-  | 'libraries'
-  | 'api';
+/**
+ * Admin: five sections instead of eleven tabs, each with its pages. Overview is the calm
+ * front page (health, what needs the admin, who is watching); everything else is one level
+ * deeper. The last section and page are remembered in this browser.
+ */
+interface Page {
+  id: string;
+  label: string;
+  render: () => React.ReactNode;
+}
+interface Section {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  pages: Page[];
+}
+
+const SECTIONS: Section[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard, pages: [] },
+  { id: 'people', label: 'People', icon: Users, pages: [{ id: 'users', label: 'Users', render: () => <UserManager /> }] },
+  {
+    id: 'content', label: 'Content', icon: Film, pages: [
+      { id: 'libraries', label: 'Local libraries', render: () => <LibrariesTab /> },
+      { id: 'content', label: 'Categories & titles', render: () => <ContentManager /> },
+    ],
+  },
+  {
+    id: 'iptv', label: 'IPTV', icon: Satellite, pages: [
+      { id: 'provider', label: 'Provider', render: () => <ConfigTab /> },
+      { id: 'profiles', label: 'Profiles', render: () => <ProfileManager /> },
+      { id: 'activity', label: 'Activity', render: () => <AdminStats /> },
+      { id: 'broken', label: 'Broken streams', render: () => <BrokenStreams /> },
+    ],
+  },
+  {
+    id: 'server', label: 'Server', icon: Server, pages: [
+      { id: 'settings', label: 'Settings & jobs', render: () => <SettingsTab /> },
+      { id: 'security', label: 'Security', render: () => <SecurityTab /> },
+      { id: 'logs', label: 'Logs', render: () => <LogsTab /> },
+      { id: 'api', label: 'API', render: () => <ApiReference /> },
+    ],
+  },
+];
+
+const STORE_KEY = 'portalcast.admin.place';
+
+function savedPlace(): AdminTarget {
+  try {
+    const v = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    const sec = SECTIONS.find((s) => s.id === v?.section);
+    if (sec) return { section: sec.id, page: sec.pages.find((p) => p.id === v.page)?.id ?? sec.pages[0]?.id ?? '' };
+  } catch { /* first visit or storage blocked */ }
+  return { section: 'overview', page: '' };
+}
 
 interface AdminProps {
   onBack?: () => void;
@@ -41,148 +75,101 @@ interface AdminProps {
 
 const Admin: React.FC<AdminProps> = ({ onBack }) => {
   const { logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<AdminTab>('stats');
+  const [place, setPlace] = useState<AdminTarget>(savedPlace);
 
-  const handleLogout = () => {
-    logout();
+  const go = useCallback((t: AdminTarget) => {
+    const sec = SECTIONS.find((s) => s.id === t.section) ?? SECTIONS[0];
+    const next = { section: sec.id, page: sec.pages.find((p) => p.id === t.page)?.id ?? sec.pages[0]?.id ?? '' };
+    setPlace(next);
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(next)); } catch { /* not remembered */ }
+  }, []);
+
+  const section = SECTIONS.find((s) => s.id === place.section) ?? SECTIONS[0];
+  const page = section.pages.find((p) => p.id === place.page) ?? section.pages[0];
+
+  const back = () => {
+    if (onBack) onBack();
+    else window.history.back();
   };
 
   return (
     <div className="text-gray-200 selection:bg-blue-500/30">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        {/* --- Header & Navigation --- */}
-        <header className="mb-6 flex flex-col gap-4 md:mb-8">
-          {/* Title and account buttons */}
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="text-center md:text-left">
-              <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-                Admin <span className="text-blue-500">Dashboard</span>
-              </h1>
-              <p className="mt-1 text-sm text-gray-500">Manage your server, users and settings.</p>
-            </div>
-            <div className="flex w-full gap-2 sm:w-auto">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 md:flex-row md:gap-10">
+        {/* Sections: a side menu on wide screens, a row of chips on narrow ones */}
+        <aside className="md:sticky md:top-6 md:h-fit md:w-48 md:shrink-0">
+          <div className="mb-4 flex items-center justify-between md:mb-8 md:block">
+            <h1 className="text-lg font-bold text-white">Admin</h1>
+            <div className="flex gap-1 md:mt-3">
               <button
-                onClick={() => {
-                  if (onBack) {
-                    onBack();
-                  } else if (window.history.state && window.history.state.view === 'admin') {
-                    window.history.back();
-                  } else {
-                    window.history.pushState({}, '', '');
-                    window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
-                  }
-                }}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-700/50 bg-gray-800 px-4 py-2.5 text-sm font-bold text-gray-300 transition-colors hover:bg-gray-700 sm:flex-none"
+                type="button"
+                onClick={back}
                 data-focusable="true"
+                className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-gray-400 hover:bg-white/5 hover:text-white"
               >
-                <Globe size={16} />
-                <span>Back to TV</span>
+                <ArrowLeft size={14} /> Back to TV
               </button>
               <button
-                onClick={handleLogout}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-900/30 bg-red-900/20 px-4 py-2.5 text-sm font-bold text-red-500 transition-colors hover:bg-red-900/40 sm:flex-none"
+                type="button"
+                onClick={() => logout()}
                 data-focusable="true"
+                className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-gray-500 hover:bg-white/5 hover:text-red-400"
               >
-                <LogOut size={16} />
-                <span>Logout</span>
+                <LogOut size={14} /> Log out
               </button>
             </div>
           </div>
-
-          {/* Tabs: their own full-width row; scrolls sideways when the screen is narrow */}
-          <nav className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0" aria-label="Admin sections">
-            <div className="flex w-max min-w-full items-center gap-1 rounded-2xl border border-gray-800 bg-gray-900/50 p-1.5 backdrop-blur-md">
-              {[
-                { id: 'stats', label: 'Stats', icon: BarChart3 },
-                { id: 'users', label: 'Users', icon: Users },
-                { id: 'profiles', label: 'Profiles', icon: Globe },
-                { id: 'config', label: 'Provider', icon: Settings },
-                { id: 'libraries', label: 'Libraries', icon: HardDrive },
-                { id: 'content', label: 'Content', icon: FolderTree },
-                { id: 'broken', label: 'Broken streams', icon: AlertTriangle },
-                { id: 'security', label: 'Security', icon: ShieldAlert },
-                { id: 'settings', label: 'Settings', icon: SlidersHorizontal },
-                { id: 'logs', label: 'Logs', icon: Terminal },
-                { id: 'api', label: 'API', icon: Code2 },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as AdminTab)}
-                  className={`flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-xs font-bold transition-all duration-200 sm:px-4 sm:text-sm ${
-                    activeTab === tab.id
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
-                  }`}
-                  data-focusable="true"
-                >
-                  <tab.icon size={16} />
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </div>
+          <nav aria-label="Admin sections" className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
+            <ul className="flex gap-1 md:flex-col">
+              {SECTIONS.map((s) => {
+                const active = s.id === section.id;
+                return (
+                  <li key={s.id}>
+                    <button
+                      type="button"
+                      onClick={() => go({ section: s.id, page: '' })}
+                      data-focusable="true"
+                      aria-current={active ? 'page' : undefined}
+                      className={`flex w-full items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors ${
+                        active ? 'bg-white/10 font-semibold text-white' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
+                      }`}
+                    >
+                      <s.icon size={16} className={active ? 'text-sky-400' : 'text-gray-500'} />
+                      {s.label}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </nav>
-        </header>
+        </aside>
 
-        {/* --- Content Area --- */}
-        <main className="transition-all duration-300">
-          {activeTab === 'stats' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <AdminStats />
-            </div>
+        <main className="min-w-0 flex-1 pb-16">
+          {/* Pages of the section: plain underlined text, only when there is more than one */}
+          {section.pages.length > 1 && (
+            <nav aria-label={`${section.label} pages`} className="-mx-4 mb-6 overflow-x-auto border-b border-white/5 px-4 md:mx-0 md:px-0">
+              <ul className="flex gap-5">
+                {section.pages.map((p) => {
+                  const active = p.id === page?.id;
+                  return (
+                    <li key={p.id}>
+                      <button
+                        type="button"
+                        onClick={() => go({ section: section.id, page: p.id })}
+                        data-focusable="true"
+                        aria-current={active ? 'page' : undefined}
+                        className={`-mb-px whitespace-nowrap border-b-2 pb-2.5 text-sm transition-colors ${
+                          active ? 'border-sky-400 font-semibold text-white' : 'border-transparent text-gray-500 hover:text-gray-300'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
           )}
-
-          {activeTab === 'content' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <ContentManager />
-            </div>
-          )}
-
-          {activeTab === 'broken' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <BrokenStreams />
-            </div>
-          )}
-
-          {activeTab === 'security' && (
-            <div className="space-y-6">
-              <SecurityTab />
-            </div>
-          )}
-
-          {activeTab === 'api' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <ApiReference />
-            </div>
-          )}
-
-          {activeTab === 'profiles' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <ProfileManager />
-            </div>
-          )}
-
-          {activeTab === 'users' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <UserManager />
-            </div>
-          )}
-
-
-          {activeTab === 'logs' && <LogsTab />}
-
-          {activeTab === 'config' && <ConfigTab />}
-
-          {activeTab === 'libraries' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <LibrariesTab />
-            </div>
-          )}
-
-          {activeTab === 'settings' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <SettingsTab />
-            </div>
-          )}
+          {section.id === 'overview' ? <AdminOverview onOpen={go} /> : page?.render()}
         </main>
       </div>
     </div>
