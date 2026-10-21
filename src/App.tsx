@@ -260,7 +260,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
           ...v,
           type,
           category: v.category_id != null ? String(v.category_id) : '*',
-          variantLabel: String(v.name || v.title || ''),
+          // version_label: the server's short label ("Hindi 1080p", "Local · Malayalam 4K").
+          variantLabel: String(v.version_label || v.name || v.title || ''),
         })) as DiscoverVariant[]
       );
     },

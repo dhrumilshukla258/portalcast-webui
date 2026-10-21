@@ -74,6 +74,8 @@ export interface MediaItem {
   network_logo?: string;
   /** 1 for a title from the server's local library (NAS); quality = its best file ("4K · HDR10"). */
   is_local?: number | string;
+  /** Search results: the version picker's label (server content/versionLabel.ts). */
+  version_label?: string;
   quality?: string;
   /** Detail fields (servers from 2026-10-21). */
   tagline?: string;
