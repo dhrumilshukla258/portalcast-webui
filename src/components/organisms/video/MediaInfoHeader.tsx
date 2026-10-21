@@ -1,6 +1,8 @@
 import { getTitleDetails, type TitleDetails } from '@/api/endpoints/discover';
 import React, { useMemo } from 'react';
-import { Play, Clock, Star, Calendar, Globe2, Film } from 'lucide-react';
+import { Play, Clock, Star, Calendar, Globe2, Film, Image as ImageIcon } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import EditImagesDialog from '@/components/organisms/admin/EditImagesDialog';
 import type { MediaItem } from '@/types';
 import { URL_PATHS } from '@/api/config';
 
@@ -64,6 +66,9 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detailsKey]);
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  const [editingImages, setEditingImages] = React.useState(false);
   const logo = details?.logo || item.logo_path;
   const tagline = details?.tagline || item.tagline;
   const facts = [details?.studios || item.studios, details?.collection || item.collection].filter(Boolean) as string[];
@@ -166,6 +171,16 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
               </h1>
             )}
             {tagline && <p className="mt-2 text-sm italic text-gray-400 md:text-base">{tagline}</p>}
+            {isAdmin && /^(movie|series)_/.test(detailsKey) && (
+              <button
+                type="button"
+                onClick={() => setEditingImages(true)}
+                className="mt-2 inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs font-semibold text-gray-400 hover:bg-white/10 hover:text-gray-200"
+                data-focusable="true"
+              >
+                <ImageIcon size={13} /> Edit images
+              </button>
+            )}
             {item.director && (
               <p className="mt-1 text-sm text-gray-400">
                 {creditLabel} <span className="font-semibold text-gray-300">{item.director}</span>
@@ -305,6 +320,15 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
           )}
         </div>
       </div>
+
+      {editingImages && (
+        <EditImagesDialog
+          contentId={detailsKey}
+          title={displayTitle}
+          onClose={() => setEditingImages(false)}
+          onChanged={() => void getTitleDetails({ id: detailsKey }).then(setDetails)}
+        />
+      )}
 
       {showTrailer && trailerKey && (
         <div className="aspect-video w-full overflow-hidden border-t border-white/10 bg-black">
