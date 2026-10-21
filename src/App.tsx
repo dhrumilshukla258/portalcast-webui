@@ -27,6 +27,9 @@ import MainContentGrid from '@/components/organisms/browse/MainContentGrid';
 // Lazy — only mounted when the user opens the Discover tab, not on initial load.
 const DiscoverView = React.lazy(lazyImport(() => import('@/components/organisms/discover/DiscoverView')));
 import { AmbientBackdrop } from '@/components/molecules/AmbientBackdrop';
+import { PersonPageContext } from '@/context/PersonPageContext';
+// Lazy — only mounted when a cast or crew member is opened.
+const PersonPage = React.lazy(lazyImport(() => import('@/components/organisms/person/PersonPage')));
 
 import { useMediaLibrary, initialContext } from '@/hooks/useMediaLibrary';
 import { useDiscover } from '@/hooks/useDiscover';
@@ -267,6 +270,17 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     },
     [pushFrame]
   );
+  // A cast or crew member's page, over everything else (opened from a title's header).
+  const [personId, setPersonId] = useState<number | null>(null);
+  const closePerson = useCallback(() => setPersonId(null), []);
+  const openPersonTitle = useCallback(
+    async (item: MediaItem) => {
+      await handleDiscoverItemClick(item);
+      setPersonId(null);
+    },
+    [handleDiscoverItemClick]
+  );
+
   const searchPlayChannel = useCallback((channel: MediaItem) => { startPlayback(channel); }, [startPlayback]);
   const setRecentSearches = useCallback(
     (list: string[]) => updatePreferences({ recentSearches: list }),
@@ -359,7 +373,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   );
 
   return (
-    <>
+    <PersonPageContext.Provider value={setPersonId}>
       {streamUrl ? (
         <React.Suspense
           fallback={
@@ -570,7 +584,13 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
         // incorrectly reopen this exact picker again.
         onClose={handleBack}
       />
-    </>
+
+      {personId != null && !streamUrl && (
+        <React.Suspense fallback={null}>
+          <PersonPage id={personId} onClose={closePerson} onOpenTitle={openPersonTitle} loadingItemId={discoverLoadingItemId} />
+        </React.Suspense>
+      )}
+    </PersonPageContext.Provider>
   );
 }
 

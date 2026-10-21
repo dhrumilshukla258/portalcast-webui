@@ -1,4 +1,5 @@
-import { getTitleDetails, type TitleDetails } from '@/api/endpoints/discover';
+import { getTitleDetails, type PersonCredit, type TitleDetails } from '@/api/endpoints/discover';
+import { useOpenPerson } from '@/context/PersonPageContext';
 import React, { useMemo } from 'react';
 import { Play, Clock, Star, Calendar, Globe2, Film, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -73,6 +74,24 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
   const tagline = details?.tagline || item.tagline;
   const facts = [details?.studios || item.studios, details?.collection || item.collection].filter(Boolean) as string[];
   const writers = details?.writers || item.writers;
+  const openPerson = useOpenPerson();
+  // Cast first (with characters), then creators, directors and writers (with the job).
+  const people = React.useMemo(() => {
+    if (!details) return [];
+    const list: { person: PersonCredit; line: string | null }[] = [
+      ...details.cast.slice(0, 16).map((c) => ({ person: c, line: c.role || null })),
+      ...(details.creators ?? []).map((c) => ({ person: c, line: 'Creator' })),
+      ...(details.directors ?? []).map((c) => ({ person: c, line: 'Director' })),
+      ...(details.writersPeople ?? []).slice(0, 4).map((c) => ({ person: c, line: c.role || 'Writer' })),
+    ];
+    const seen = new Set<string>();
+    return list.filter((e) => {
+      const k = `${e.person.id ?? e.person.name}|${e.line}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }, [details]);
   const ageRating = details?.ageRating || item.rating_mpaa;
 
   const imageUrl = useMemo(() => {
@@ -278,23 +297,42 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
             </div>
           )}
 
-          {details && details.cast.length > 0 ? (
+          {people.length > 0 ? (
             <div className="space-y-2">
-              <h3 className="text-xs font-black uppercase tracking-wider text-gray-500">Cast</h3>
-              <div className="flex gap-3 overflow-x-auto pb-1">
-                {details.cast.slice(0, 12).map((c) => (
-                  <div key={`${c.name}-${c.role ?? ''}`} className="w-20 shrink-0 text-center">
-                    {c.photo ? (
-                      <img src={c.photo} alt={c.name} loading="lazy" className="mx-auto h-16 w-16 rounded-full object-cover" />
-                    ) : (
-                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-gray-400">
-                        {c.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}
-                      </div>
-                    )}
-                    <div className="mt-1 truncate text-xs font-semibold text-gray-200">{c.name}</div>
-                    {c.role && <div className="truncate text-[11px] text-gray-500">{c.role}</div>}
-                  </div>
-                ))}
+              <h3 className="text-xs font-black uppercase tracking-wider text-gray-500">Cast &amp; crew</h3>
+              <div className="flex gap-2 overflow-x-auto px-1 pb-2 pt-1 custom-scrollbar">
+                {people.map(({ person: c, line }, i) => {
+                  const body = (
+                    <>
+                      {c.photo ? (
+                        <img src={c.photo} alt={c.name} loading="lazy" className="mx-auto h-16 w-16 rounded-full object-cover" />
+                      ) : (
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-gray-400">
+                          {c.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}
+                        </div>
+                      )}
+                      <div className="mt-1 truncate text-xs font-semibold text-gray-200">{c.name}</div>
+                      {line && <div className="truncate text-[11px] text-gray-500">{line}</div>}
+                    </>
+                  );
+                  // Each person opens their page with every title of theirs (servers from 2026-10-21 send ids).
+                  return openPerson && c.id ? (
+                    <button
+                      key={`${i}-${c.id}`}
+                      type="button"
+                      onClick={() => openPerson(c.id!)}
+                      title={`${c.name}: all titles`}
+                      data-focusable="true"
+                      className="w-22 shrink-0 rounded-xl p-1 text-center transition-colors hover:bg-white/10 focus:bg-white/10 focus:outline-hidden focus:ring-2 focus:ring-portalcast-light"
+                    >
+                      {body}
+                    </button>
+                  ) : (
+                    <div key={`${i}-${c.name}`} className="w-22 shrink-0 p-1 text-center">
+                      {body}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ) : item.actors && (

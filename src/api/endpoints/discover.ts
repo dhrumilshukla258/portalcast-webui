@@ -8,6 +8,7 @@ export const DISCOVER_PATHS = {
   ROWS: '/v2/discover/rows',
   RECOMMENDATIONS: '/v2/discover/recommendations',
   VARIANTS: '/v2/discover/variants',
+  PEOPLE: '/v2/people',
 };
 
 export interface FacetValue {
@@ -124,6 +125,8 @@ export interface PersonCredit {
   name: string;
   role: string | null;
   photo: string | null;
+  /** Opens the person's page (servers from 2026-10-21). */
+  id?: number | null;
 }
 
 /** Detail-page data (servers from 2026-10-21): tagline, age rating, studios, logo, cast with photos. */
@@ -140,6 +143,7 @@ export interface TitleDetails {
   cast: PersonCredit[];
   directors: PersonCredit[];
   creators: PersonCredit[];
+  writersPeople?: PersonCredit[];
 }
 
 /** By content id ("movie_123"), or type + the catalog id the app browses by. */
@@ -150,3 +154,30 @@ export const getTitleDetails = async (params: { id?: string; type?: 'movie' | 's
     return null; // older server: the page shows what the card carried
   }
 };
+
+/** `GET /api/v2/people/{id}`: who the person is. */
+export interface PersonInfo {
+  id: number;
+  name: string;
+  photo: string | null;
+  biography: string | null;
+  knownFor: string | null;
+  birthday: string | null;
+  deathday: string | null;
+  placeOfBirth: string | null;
+}
+
+/** How the person worked on a title: kind (cast, director, writer, creator) and character or job. */
+export interface CreditRole {
+  kind: string;
+  role: string | null;
+}
+
+/** A person's page: details and every title of theirs in the catalog (Discover cards, newest first). */
+export interface PersonPage {
+  person: PersonInfo;
+  credits: (MediaItem & { roles?: CreditRole[] })[];
+}
+
+export const getPerson = async (id: number, signal?: AbortSignal): Promise<PersonPage> =>
+  (await api.get<PersonPage>(`${DISCOVER_PATHS.PEOPLE}/${id}`, { signal })).data;
