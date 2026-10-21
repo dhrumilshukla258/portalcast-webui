@@ -155,6 +155,7 @@ export function useProgressTracking({
     }
   }, [contentType, mediaId, itemId, initialPlaybackState, completePlayback, playerRef]);
 
+  const lastSavedRef = useRef<{ mediaId: string; time: number } | null>(null);
   const saveProgress = useCallback(() => {
     if (contentType === 'tv') return;
     const player = playerRef.current;
@@ -168,6 +169,9 @@ export function useProgressTracking({
       return;
 
     if (player.currentTime / player.duration >= 0.9) return;
+    // Paused (or barely moved since the last save of this title): nothing new to send.
+    const last = lastSavedRef.current;
+    if (last && last.mediaId === mediaId && Math.abs(player.currentTime - last.time) < 5) return;
 
     const resolvedTitle =
       seriesItem?.name || seriesItem?.title || item?.name || item?.title || '';
@@ -207,8 +211,8 @@ export function useProgressTracking({
       cmd: item?.cmd || rawStreamUrl || '',
       series_number: item?.series_number,
       catalogId,
-    };
-
+    };
+    lastSavedRef.current = { mediaId, time: player.currentTime };
     saveUserProgress(targetKeyId, player.currentTime, false, progressData).catch((err) => {
       console.error('Failed to save progress to DB:', err);
     });
