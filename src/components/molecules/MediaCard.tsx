@@ -106,6 +106,14 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
         {item.network && (
           <ChannelBadge channel={item.network} logo={item.network_logo} className="absolute left-2 top-2 z-10" />
         )}
+        {String(item.is_local) === '1' && (
+          <span
+            className="absolute right-2 top-2 z-10 rounded-md bg-sky-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white shadow"
+            title="On your NAS: plays without the IPTV portal"
+          >
+            {item.quality?.includes('4K') ? 'Local · 4K' : 'Local'}
+          </span>
+        )}
         {displayProgress !== undefined && displayProgress > 0 && (
           <div className="absolute bottom-0 left-0 h-1 w-full bg-gray-600/80">
             <div

@@ -72,6 +72,9 @@ export interface MediaItem {
   /** Discover only: the TV channel the title airs on (taken out of its name) and its logo. */
   network?: string;
   network_logo?: string;
+  /** 1 for a title from the server's local library (NAS); quality = its best file ("4K · HDR10"). */
+  is_local?: number | string;
+  quality?: string;
   /** Catalog lists: the server's grouping key and cleaned name (Search groups versions by these). */
   title_key?: string;
   clean_name?: string;
