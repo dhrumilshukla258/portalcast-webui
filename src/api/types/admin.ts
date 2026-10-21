@@ -163,7 +163,6 @@ export interface BackgroundJob {
   schedule: string;
   running: boolean;
   queued: boolean;
-  waitsForPlayback: boolean;
   lastStart: string | null;
   lastEnd: string | null;
   lastResult: string | null;

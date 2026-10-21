@@ -218,7 +218,6 @@ const Jobs: React.FC = () => {
             <div className="text-sm font-semibold text-gray-100">{j.label}</div>
             <div className="text-xs text-gray-500">
               {j.schedule}
-              {j.waitsForPlayback ? ' · waits for playback' : ''}
               {j.lastEnd ? ` · last run ${formatAgo(j.lastEnd)}` : ' · not run yet'}
             </div>
             {j.lastError ? (
