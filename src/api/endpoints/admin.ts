@@ -238,6 +238,8 @@ export interface AdminOverview {
     missingLocal: number;
     failedJobs: { name: string; label: string; error: string | null }[];
     iptvOffline: boolean;
+    /** Repeats or orphans the nightly integrity job could not repair (normally 0). */
+    dataIssues?: number;
   };
   watching: { user: string | null; title: string | null; kind: string | null; category: string | null; startedAt: number }[];
   runningJobs: string[];
