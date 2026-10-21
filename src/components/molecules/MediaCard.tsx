@@ -1,3 +1,4 @@
+import { useIptvOffline } from '@/utils/iptvHealth';
 import React, { useState, useEffect } from 'react';
 import { URL_PATHS } from '@/api/config';
 import type { MediaItem } from '@/types';
@@ -66,9 +67,11 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
   // extra round-trip, so a cached image just paints as soon as it's in the
   // DOM.
 
+  const iptvOffline = useIptvOffline();
   return (
     <div
-      className="group relative transform cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-black/65 transition-all duration-300 hover:scale-[1.03] hover:border-portalcast-light/50 hover:bg-black/75 hover:shadow-2xl hover:shadow-black/40"
+      // IPTV offline (utils/iptvHealth.ts): IPTV cards dim, local-library titles stay bright.
+      className={`group relative transform cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-black/65 transition-all duration-300 hover:scale-[1.03] hover:border-portalcast-light/50 hover:bg-black/75 hover:shadow-2xl hover:shadow-black/40 ${iptvOffline && String(item.is_local) !== '1' && item.category_id !== 'local' ? 'opacity-35' : ''}`}
       onClick={() => {
         if (isLoading) return; // avoid re-triggering the resolve while one is already in flight for this card
         onClick(item);

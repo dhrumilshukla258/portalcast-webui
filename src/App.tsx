@@ -1,3 +1,4 @@
+import IptvOfflineBanner from '@/components/atoms/IptvOfflineBanner';
 import { lazyImport } from '@/utils/staleBuild';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { ToastContainer } from 'react-toastify';
@@ -438,6 +439,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
             />
 
             <main className="relative min-h-0 flex-1">
+              <IptvOfflineBanner />
               <AmbientBackdrop
                 items={activeBackdropItems}
                 allowLowRes
