@@ -92,3 +92,7 @@ Full-bleed blurred TMDB backdrop, `position: fixed` behind content. Only titles 
 - `src/components/molecules/AmbientBackdrop.tsx`, `src/components/molecules/VariantPickerModal.tsx`
 - `src/hooks/useDiscoverNavigation.ts` — `openDiscoverItem`, `handleDiscoverItemClick`, `onSelectVariant`, `handleCarouselAction` (the actual translation/resolution layer, wired into `App.tsx` via `pushFrame`/`fetchData`/`setCurrentSeriesItem`/the picker+detail setters passed in as args)
 - `src/hooks/useSearchController.ts` — `cleanRecentSearches()` (used by the global Search page, see skill-browsing-grid.md)
+
+## Person pages (cast & crew)
+
+`MediaInfoHeader` lists cast, creators, directors and writers from `/api/v2/discover/details`; people with an `id` are buttons. They call `useOpenPerson()` (`context/PersonPageContext.tsx`, provided by `TVPortal` in `App.tsx`), which mounts the lazy `organisms/person/PersonPage.tsx` over everything (`role="dialog"`, so `useTVFocus` keeps focus inside). It loads `GET /api/v2/people/{id}` (`getPerson` in `discover.ts`): photo, known for, birth/death, biography, and the person's titles as Discover cards with `roles`. A title opens through `handleDiscoverItemClick` (version picker, then the detail page) and the page closes. Escape, Backspace, the TV Back key (10009) and browser Back close it; it is not a history frame.
