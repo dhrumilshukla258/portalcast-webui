@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { URL_PATHS } from '@/api/config';
 import type { MediaItem } from '@/types';
 import ChannelBadge from '@/components/atoms/ChannelBadge';
+import { cardPoster } from '@/utils/imageSize';
 
 interface MediaCardProps {
   item: MediaItem;
@@ -92,7 +93,8 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
       <div className="relative z-1 flex aspect-2/3 w-full items-center justify-center overflow-hidden bg-black/20">
         {imageUrl && !imageError ? (
           <img
-            src={imageUrl}
+            // w342 at 1x, w500 at 2x (utils/imageSize.ts): about half the bytes of w500 everywhere.
+            {...cardPoster(imageUrl)}
             alt={displayTitle}
             loading="lazy"
             decoding="async"

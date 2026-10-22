@@ -1,6 +1,7 @@
 import React from 'react';
 import { URL_PATHS } from '@/api/config';
 import type { MediaItem } from '@/types';
+import { downsize, AMBIENT_BACKDROP } from '@/utils/imageSize';
 
 interface AmbientBackdropProps {
   // Pool of items to pull backdrop_path from. App.tsx maintains this as one
@@ -38,7 +39,9 @@ export const AmbientBackdrop: React.FC<AmbientBackdropProps> = ({ items, rotateM
     return (items || [])
       .map((i) => i.backdrop_hd_path || (allowLowRes ? i.backdrop_path : undefined))
       .filter((path): path is string => !!path)
-      .map((path) => (path.startsWith('http') ? path : `${baseUrl}/api/images${path}`));
+      .map((path) => (path.startsWith('http') ? path : `${baseUrl}/api/images${path}`))
+      // Dimmed behind content: w780 instead of the original file (utils/imageSize.ts).
+      .map((url) => downsize(url, AMBIENT_BACKDROP));
   }, [items, allowLowRes]);
 
   // `items` gets a new array reference on every silent background refresh
