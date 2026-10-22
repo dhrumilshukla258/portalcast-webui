@@ -25,6 +25,7 @@ import ConfirmationModal from '@/components/molecules/ConfirmationModal';
 import VariantPickerModal from '@/components/molecules/VariantPickerModal';
 import MainContentGrid from '@/components/organisms/browse/MainContentGrid';
 import ContinueWatching from '@/components/organisms/browse/ContinueWatching';
+import SportsView from '@/components/organisms/sports/SportsView';
 import ContinueHero from '@/components/organisms/browse/ContinueHero';
 // Lazy — only mounted when the user opens the Discover tab, not on initial load.
 const DiscoverView = React.lazy(lazyImport(() => import('@/components/organisms/discover/DiscoverView')));
@@ -244,7 +245,10 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   // Global Search (the TV app's Search tab) lives on the same layer as Discover: a title
   // opened from it is shown over it, and Back returns to the results.
-  const [overlayPage, setOverlayPage] = useState<'discover' | 'search' | 'mylist' | 'movies' | 'series'>('discover');
+  const [overlayPage, setOverlayPage] = useState<'discover' | 'search' | 'mylist' | 'movies' | 'series' | 'sports'>('discover');
+  // Sports (plan Phase 6.7) on the same layer; its "Find channel" opens Search on Live TV.
+  const isSportsPage = showDiscover && overlayPage === 'sports';
+  const [searchLiveQuery, setSearchLiveQuery] = useState<string | undefined>(undefined);
   const isSearchPage = showDiscover && overlayPage === 'search';
   // My List (design Phase 6) lives on the same layer as Discover and Search.
   const isMyListPage = showDiscover && overlayPage === 'mylist';
@@ -348,6 +352,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     if (isDiscoverBrowsing) {
       if (overlayPage === 'search') return 'Search';
       if (overlayPage === 'mylist') return 'My List';
+      if (overlayPage === 'sports') return 'Sports';
       if (overlayPage === 'movies') return 'Movies';
       if (overlayPage === 'series') return 'Series';
       return 'Discover';
@@ -470,7 +475,15 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
               onSelectSearch={() => {
                 setDetailItem(null);
                 setCurrentSeriesItem(null);
+                setSearchLiveQuery(undefined);
                 setOverlayPage('search');
+                setShowDiscover(true);
+              }}
+              isSportsActive={isSportsPage}
+              onSelectSports={() => {
+                setDetailItem(null);
+                setCurrentSeriesItem(null);
+                setOverlayPage('sports');
                 setShowDiscover(true);
               }}
               onSelectDiscover={() => {
@@ -509,6 +522,9 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
               />
               {isSearchPage && (
                 <SearchView
+                  // A new "Find channel" query starts a fresh search.
+                  key={searchLiveQuery ?? 'search'}
+                  liveQuery={searchLiveQuery}
                   recentSearches={recentSearches}
                   onRecentSearchesChange={setRecentSearches}
                   onOpenTitle={searchOpenTitle}
@@ -516,6 +532,15 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                   onPlayChannel={searchPlayChannel}
                   onOpenDiscoverTitle={handleDiscoverItemClick}
                   isTizen={isTizen}
+                />
+              )}
+              {isSportsPage && (
+                <SportsView
+                  onPlayChannel={searchPlayChannel}
+                  onFindChannel={(q) => {
+                    setSearchLiveQuery(q);
+                    setOverlayPage('search');
+                  }}
                 />
               )}
               {isMyListPage && (

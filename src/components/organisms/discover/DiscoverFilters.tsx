@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronDown, X, Check } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, X, Check, SlidersHorizontal } from 'lucide-react';
 import type { DiscoverFacets } from '@/api/endpoints/discover';
 
 export type DiscoverFilterKey = 'genre' | 'country' | 'language' | 'network' | 'theme';
@@ -34,6 +34,9 @@ interface DiscoverFiltersProps {
   activeFilters: ActiveDiscoverFilters;
   onFilterChange: (key: SingleFilterKey, value: string | undefined) => void;
   onGenresChange: (values: string[]) => void;
+  // 'phone': one "Categories" button opening a full-screen picker (a row of five selectors does
+  // not fit a phone); 'row' (default): the selectors in a row, each with its own list.
+  variant?: 'row' | 'phone';
 }
 
 const DIMENSION_LABELS: Record<DiscoverFilterKey, string> = {
@@ -197,7 +200,135 @@ const ValueList: React.FC<{
  * its current value; picking applies at once. Genre stays multi-pick here (a mouse makes
  * that easy); the others are one value each.
  */
-export const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange }) => {
+export const DiscoverFilters: React.FC<DiscoverFiltersProps> = (props) =>
+  props.variant === 'phone' ? <PhoneFilters {...props} /> : <RowFilters {...props} />;
+
+/** How many filters are set (each genre counts). */
+function activeCount(f: ActiveDiscoverFilters): number {
+  return (f.genre?.length ?? 0) + (['country', 'language', 'network', 'theme'] as const).filter((k) => !!f[k]).length;
+}
+
+/**
+ * The phone's filters: a "Categories" button (with how many are set) opening a full-screen
+ * picker. First the five selectors with their current values, then a selector's values;
+ * "Show titles" closes it. Same choices and rules as the row.
+ */
+const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange }) => {
+  const [sheet, setSheet] = useState(false);
+  const [dim, setDim] = useState<DiscoverFilterKey | null>(null);
+  useEffect(() => {
+    if (!sheet) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (dim) setDim(null);
+      else setSheet(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    // The page under the sheet does not scroll along.
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = overflow;
+    };
+  }, [sheet, dim]);
+
+  if (!facets) return null;
+  const dims = DIMENSION_ORDER.filter((d) => valuesFor(facets, d).length > 0);
+  if (dims.length === 0) return null;
+  const count = activeCount(activeFilters);
+  const toggleGenre = (value: string) => {
+    const current = activeFilters.genre || [];
+    onGenresChange(current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
+  };
+  const clearAll = () => {
+    if (activeFilters.genre?.length) onGenresChange([]);
+    (['country', 'language', 'network', 'theme'] as const).forEach((k) => { if (activeFilters[k]) onFilterChange(k, undefined); });
+  };
+  const close = () => { setSheet(false); setDim(null); };
+
+  return (
+    <>
+      <button
+        data-focusable="true"
+        onClick={() => setSheet(true)}
+        className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-bold transition-all focus:outline-hidden ${
+          count > 0 ? 'border-transparent bg-linear-to-r from-sky-400 to-blue-500 text-white' : 'border-white/15 bg-[#0b1120]/85 text-gray-200'
+        }`}
+      >
+        <SlidersHorizontal className="h-4 w-4" />
+        {count > 0 ? `Categories · ${count}` : 'All Categories'}
+        <ChevronDown className="h-4 w-4" />
+      </button>
+      {sheet && (
+        <div className="fixed inset-0 z-[70] flex flex-col bg-[#0A0F1C]" role="dialog" aria-modal="true" data-focus-group="discover-phone-filters">
+          <div className="flex h-14 shrink-0 items-center gap-2 border-b border-white/10 px-2">
+            <button
+              data-focusable="true"
+              onClick={() => (dim ? setDim(null) : close())}
+              aria-label={dim ? 'Back' : 'Close'}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/10"
+            >
+              {dim ? <ChevronLeft className="h-6 w-6" /> : <X className="h-6 w-6" />}
+            </button>
+            <h2 className="flex-1 truncate text-lg font-bold text-white">{dim ? DIMENSION_LABELS[dim] : 'Categories'}</h2>
+            {count > 0 && !dim && (
+              <button data-focusable="true" onClick={clearAll} className="rounded-full px-3 py-2 text-sm font-bold text-gray-300 hover:bg-white/10">
+                Clear all
+              </button>
+            )}
+          </div>
+          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-3">
+            {dim === null ? (
+              <div className="space-y-1">
+                {dims.map((d) => {
+                  const set = d === 'genre' ? (activeFilters.genre?.length ?? 0) > 0 : !!activeFilters[d];
+                  return (
+                    <button
+                      key={d}
+                      data-focusable="true"
+                      onClick={() => setDim(d)}
+                      className="flex w-full items-center gap-3 rounded-xl px-4 py-4 text-left hover:bg-white/5"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-base font-bold text-white">{DIMENSION_LABELS[d]}</span>
+                        <span className={`block truncate text-sm ${set ? 'text-sky-400' : 'text-gray-500'}`}>
+                          {set ? summaryFor(d, activeFilters) : `Any ${DIMENSION_LABELS[d].toLowerCase()}`}
+                        </span>
+                      </span>
+                      <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" />
+                    </button>
+                  );
+                })}
+              </div>
+            ) : dim === 'genre' ? (
+              <ValueList
+                dimension="genre"
+                values={valuesFor(facets, 'genre')}
+                activeValues={activeFilters.genre || []}
+                onToggle={(value) => (value === '' ? onGenresChange([]) : toggleGenre(value))}
+              />
+            ) : (
+              <ValueList
+                dimension={dim}
+                values={valuesFor(facets, dim)}
+                activeValue={activeFilters[dim]}
+                onSelect={(value) => { onFilterChange(dim, value); setDim(null); }}
+              />
+            )}
+          </div>
+          <div className="shrink-0 border-t border-white/10 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <button data-focusable="true" onClick={close} className="h-12 w-full rounded-xl bg-white text-base font-bold text-[#0A0F1C]">
+              Show titles
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+const RowFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange }) => {
   const [open, setOpen] = useState<DiscoverFilterKey | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 

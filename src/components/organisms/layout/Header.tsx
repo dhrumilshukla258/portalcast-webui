@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowDownAZ, SortDesc, SortAsc, LogOut, Shield, Trash2, Captions, Tv, Search, Bookmark } from 'lucide-react';
+import { ArrowDownAZ, SortDesc, SortAsc, LogOut, Shield, Trash2, Captions, Tv, Search, Bookmark, Trophy } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '@/context/useSocket';
@@ -17,6 +17,9 @@ export interface HeaderProps {
   /** The My List page (saved titles). */
   isMyListActive?: boolean;
   onSelectMyList?: () => void;
+  /** The Sports page (schedule with channels). */
+  isSportsActive?: boolean;
+  onSelectSports?: () => void;
   /** Movies / Series showing Home's layout for that type (their per-category browse counts as the same tab). */
   typedHome?: 'movie' | 'series';
   onSelectTypedHome?: (type: 'movie' | 'series') => void;
@@ -41,6 +44,8 @@ export const Header: React.FC<HeaderProps> = React.memo(
     onSelectSearch,
     isMyListActive = false,
     onSelectMyList,
+    isSportsActive = false,
+    onSelectSports,
     typedHome,
     onSelectTypedHome,
     sort,
@@ -50,7 +55,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
     historyLength,
     handleBack,
   }) => {
-    const overlayActive = isDiscoverActive || isSearchActive || isMyListActive || !!typedHome;
+    const overlayActive = isDiscoverActive || isSearchActive || isMyListActive || isSportsActive || !!typedHome;
     const { user, logout } = useAuth();
     const { activeUserCount } = useSocket();
     const navigate = useNavigate();
@@ -217,6 +222,23 @@ export const Header: React.FC<HeaderProps> = React.memo(
             </span>
             <span>TV</span>
           </button>
+          {onSelectSports && (
+            <button
+              onClick={onSelectSports}
+              className={`flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+                isSportsActive
+                  ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
+                  : 'text-gray-400 hover:bg-white/10 hover:text-white'
+              }`}
+              data-focusable="true"
+              data-default-focus={isSportsActive ? 'true' : undefined}
+              tabIndex={-1}
+              title="Sports"
+            >
+              <Trophy className="h-4 w-4 sm:hidden" />
+              <span>Sports</span>
+            </button>
+          )}
           {onSelectMyList && (
             <button
               onClick={onSelectMyList}

@@ -3,7 +3,7 @@ import { Search as SearchIcon, X, Tv } from 'lucide-react';
 import type { MediaItem } from '@/types';
 import { getMedia } from '@/api/endpoints/movies';
 import { getSeries } from '@/api/endpoints/series';
-import { getChannels } from '@/api/endpoints/channels';
+import { allChannels } from '@/utils/channelList';
 import { URL_PATHS } from '@/api/config';
 import MediaCard from '@/components/molecules/MediaCard';
 import { cleanRecentSearches } from '@/hooks/useSearchController';
@@ -73,14 +73,6 @@ function group(existing: TitleGroup[], items: MediaItem[]): TitleGroup[] {
   return [...byKey.values()];
 }
 
-let channelCache: Promise<MediaItem[]> | null = null;
-function allChannels(): Promise<MediaItem[]> {
-  if (!channelCache) {
-    channelCache = getChannels().then((r) => r.data).catch((e) => { channelCache = null; throw e; });
-  }
-  return channelCache;
-}
-
 function matchChannels(all: MediaItem[], query: string): MediaItem[] {
   const q = query.trim().toLowerCase();
   const number = /^\d+$/.test(q) ? Number(q) : null;
@@ -106,12 +98,14 @@ interface SearchViewProps {
   onOpenDiscoverTitle?: (item: MediaItem) => void;
   /** Samsung TV browser: the field only takes typing after it is pressed (else its keyboard traps the remote). */
   isTizen?: boolean;
+  /** Sports' "Find channel": open with this query on the Live TV results (not remembered as the tab). */
+  liveQuery?: string;
 }
 
-const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearchesChange, onOpenTitle, onPickVersion, onPlayChannel, onOpenDiscoverTitle, isTizen = false }) => {
-  const [query, setQuery] = useState('');
+const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearchesChange, onOpenTitle, onPickVersion, onPlayChannel, onOpenDiscoverTitle, isTizen = false, liveQuery }) => {
+  const [query, setQuery] = useState(liveQuery ?? '');
   const [searched, setSearched] = useState<string | null>(null);
-  const [filter, setFilterState] = useState<Filter>(savedFilter);
+  const [filter, setFilterState] = useState<Filter>(() => (liveQuery ? 'live' : savedFilter()));
   const setFilter = useCallback((f: Filter) => {
     setFilterState(f);
     try { localStorage.setItem(FILTER_KEY, f); } catch { /* private mode: not remembered */ }

@@ -18,7 +18,18 @@ interface MediaCardRowProps {
   hasMore?: boolean;
   loadingMore?: boolean;
   onLoadMore?: () => void;
+  // 'large': a bigger poster (about 2.3 a screen on a phone instead of 3.3), for a row worth
+  // standing out (design: some rows slightly bigger than the rest).
+  size?: 'normal' | 'large';
+  // A card other than MediaCard (Continue Watching's poster with progress); same row, widths, paging.
+  renderItem?: (item: MediaItem, index: number) => React.ReactNode;
 }
+
+/** Card widths per breakpoint: as many columns as the grids (MainContentGrid) for 'normal'. */
+const ROW_WIDTHS = {
+  normal: 'w-[31%] sm:w-[23%] md:w-[18.5%] lg:w-[15.3%] xl:w-[13%]',
+  large: 'w-[44%] sm:w-[31%] md:w-[23%] lg:w-[18.5%] xl:w-[15.3%]',
+} as const;
 
 const MediaCardRow: React.FC<MediaCardRowProps> = ({
   title,
@@ -29,7 +40,10 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
   hasMore = false,
   loadingMore = false,
   onLoadMore,
+  size = 'normal',
+  renderItem,
 }) => {
+  const widths = ROW_WIDTHS[size];
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -131,15 +145,15 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
   // until the new fetch overwrites it mid-frame.
   if (loading) {
     return (
-      <div className="content-transition group/row relative mb-8 px-2 sm:px-0">
-        <h2 className="mb-4 text-center text-xl font-bold text-white sm:text-left sm:text-2xl">
+      <div className="content-transition group/row relative mb-6 px-2 sm:mb-8 sm:px-0">
+        <h2 className="mb-2 text-left text-lg font-bold text-white sm:mb-4 sm:text-2xl">
           {title}
         </h2>
         <div className="flex gap-2 overflow-hidden sm:gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="aspect-2/3 w-[31%] shrink-0 animate-pulse rounded-xl bg-white/5 sm:w-[23%] md:w-[18.5%] lg:w-[15.3%] xl:w-[13%]"
+              className={`aspect-2/3 shrink-0 animate-pulse rounded-xl bg-white/5 ${widths}`}
             />
           ))}
         </div>
@@ -148,8 +162,8 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
   }
 
   return (
-    <div className="content-transition group/row relative mb-8 px-2 sm:px-0">
-      <h2 className="mb-4 text-center text-xl font-bold text-white sm:text-left sm:text-2xl">
+    <div className="content-transition group/row relative mb-6 px-2 sm:mb-8 sm:px-0">
+      <h2 className="mb-2 text-left text-lg font-bold text-white sm:mb-4 sm:text-2xl">
         {title}
       </h2>
 
@@ -181,12 +195,14 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
             those grids' className) — fixed px widths here previously meant
             these row tiles rendered a different size than the grid ones. */}
         {items.map((item, index) => (
-          <div key={`${item.id}-${index}`} className="w-[31%] shrink-0 sm:w-[23%] md:w-[18.5%] lg:w-[15.3%] xl:w-[13%]">
-            <MediaCard item={item} onClick={onClick} isLoading={loadingItemId === item.id} />
+          <div key={`${item.id}-${index}`} className={`shrink-0 ${widths}`}>
+            {renderItem ? renderItem(item, index) : (
+              <MediaCard item={item} onClick={onClick} isLoading={loadingItemId === item.id} posterOnlyOnPhone />
+            )}
           </div>
         ))}
         {loadingMore && (
-          <div className="flex w-[31%] shrink-0 items-center justify-center sm:w-[23%] md:w-[18.5%] lg:w-[15.3%] xl:w-[13%]">
+          <div className={`flex shrink-0 items-center justify-center ${widths}`}>
             <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-blue-500" />
           </div>
         )}

@@ -6,6 +6,7 @@ import { downsize, AMBIENT_BACKDROP } from '@/utils/imageSize';
 import { continueItemsOf, type ProgressEntry } from '@/utils/continueItems';
 import type { ProgressRecord } from '@/api/types/user';
 import { deleteUserProgress, getUserProgress } from '@/api/endpoints/user';
+import MediaCardRow from '@/components/organisms/browse/MediaCardRow';
 
 interface ContinueWatchingProps {
   onClick: (item: MediaItem) => void;
@@ -27,27 +28,27 @@ const imageUrlOf = (path: string | undefined): string | null => {
 };
 
 /**
- * A Continue Watching card (design-system.md, Cards): 16:9 art (the title's backdrop, else
- * the poster cropped), a progress bar along its bottom, then the title and the episode and
- * time left.
+ * A Continue Watching card: the poster (else the backdrop, cropped) with a progress bar along
+ * its bottom and "Episode · 23 min left" under it, the size of the other rows' posters. The
+ * landscape art is the Home hero's (ContinueHero), above this row.
  */
-const ContinueCard: React.FC<{ item: MediaItem; onClick: (item: MediaItem) => void }> = React.memo(({ item, onClick }) => {
+const ContinueCard: React.FC<{ item: MediaItem; onClick: (item: MediaItem) => void; onRemove: () => void }> = React.memo(({ item, onClick, onRemove }) => {
   const anyItem = item as any;
   const [failed, setFailed] = useState(false);
-  const wide = imageUrlOf(anyItem.cw_backdrop);
   const poster = imageUrlOf(item.screenshot_uri);
-  const src = !failed && wide ? downsize(wide, AMBIENT_BACKDROP) : poster ? downsize(poster, 'w342') : null;
+  const wide = imageUrlOf(anyItem.cw_backdrop);
+  const src = !failed && poster ? downsize(poster, 'w342') : wide ? downsize(wide, AMBIENT_BACKDROP) : null;
   const title = anyItem.cw_show_title || item.title || item.name || '';
   const pct = Math.min(100, Math.max(0, Number(item.progressPercent) || 0));
   return (
     <div
-      className="group cursor-pointer"
+      className="group relative cursor-pointer"
       onClick={() => onClick(item)}
       title={String(item.title || item.name || '')}
       data-focusable="true"
       tabIndex={-1}
     >
-      <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-black/40 transition-all duration-300 group-hover:border-portalcast-light/50 group-hover:shadow-2xl group-hover:shadow-black/40 group-[.focused]:ring-2 group-[.focused]:ring-white">
+      <div className="relative aspect-2/3 w-full overflow-hidden rounded-md border border-white/10 bg-black/40 transition-all duration-300 group-hover:border-portalcast-light/50 group-hover:shadow-2xl group-hover:shadow-black/40 group-[.focused]:ring-2 group-[.focused]:ring-white sm:rounded-xl">
         {src ? (
           <img
             src={src}
@@ -58,16 +59,30 @@ const ContinueCard: React.FC<{ item: MediaItem; onClick: (item: MediaItem) => vo
             onError={() => setFailed(true)}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-white/10 to-transparent text-2xl font-bold text-white/30">
-            {title.substring(0, 2).toUpperCase()}
+          <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-white/10 to-transparent p-2 text-center text-sm font-bold text-white/60">
+            {title}
           </div>
         )}
+        {/* Always visible on a phone (no hover there); on hover elsewhere. */}
+        <button
+          className="absolute right-1 top-1 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white transition-opacity duration-200 hover:bg-red-600 focus:opacity-100 sm:h-6 sm:w-6 sm:opacity-0 sm:group-hover:opacity-100"
+          style={{ lineHeight: 1 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          title="Remove from Continue Watching"
+          aria-label="Remove"
+          data-focusable="true"
+        >
+          ×
+        </button>
         <div className="absolute bottom-0 left-0 h-1 w-full bg-white/20">
           <div className="h-full bg-sky-400" style={{ width: `${pct}%` }} />
         </div>
       </div>
-      <h3 className="mt-2 truncate text-sm font-semibold text-white group-hover:text-portalcast-light md:text-base">{title}</h3>
-      {anyItem.cw_detail && <p className="truncate text-xs text-gray-400 md:text-sm">{anyItem.cw_detail}</p>}
+      <h3 className="mt-2 hidden truncate text-sm font-semibold text-white group-hover:text-portalcast-light sm:block md:text-base">{title}</h3>
+      {anyItem.cw_detail && <p className="mt-1 truncate text-xs text-gray-400 sm:mt-0 md:text-sm">{anyItem.cw_detail}</p>}
     </div>
   );
 });
@@ -109,30 +124,21 @@ const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRe
   }
 
   return (
-    <div className="content-transition mb-8 px-2 sm:px-0">
-      <h2 className="mb-4 text-center text-xl font-bold text-white sm:text-left sm:text-2xl">
-        Continue Watching
-      </h2>
-      <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:gap-4 md:grid-cols-3 md:gap-5 xl:grid-cols-4 2xl:grid-cols-5">
-        {inProgressItems.map((item, index) => (
-          <div key={`${item.id}-${index}`} className="group relative">
-            <button
-              className="absolute right-1 top-1 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition-opacity duration-200 hover:bg-red-600 focus:opacity-100 group-hover:opacity-100"
-              style={{ lineHeight: 1 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setConfirming({ id: String(item.id), title: String(item.title || item.name || 'this title') });
-              }}
-              title="Remove from Continue Watching"
-              aria-label="Remove"
-              data-focusable="true"
-            >
-              ×
-            </button>
-            <ContinueCard item={item} onClick={onClick} />
-          </div>
-        ))}
-      </div>
+    <>
+      {/* One row like every other (design: no wrapping onto more lines), portrait posters. */}
+      <MediaCardRow
+        title="Continue Watching"
+        onClick={onClick}
+        items={inProgressItems}
+        loading={false}
+        renderItem={(item) => (
+          <ContinueCard
+            item={item}
+            onClick={onClick}
+            onRemove={() => setConfirming({ id: String(item.id), title: String(item.title || item.name || 'this title') })}
+          />
+        )}
+      />
       {confirming && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
@@ -169,7 +175,7 @@ const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRe
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

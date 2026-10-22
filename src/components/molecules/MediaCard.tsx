@@ -19,6 +19,8 @@ interface MediaCardProps {
   // dead click — no visual difference between "nothing happened" and "still
   // working on it" — which is exactly what made Discover clicks look broken.
   isLoading?: boolean;
+  // Rows on a phone: the poster alone (its art carries the title), smaller corners.
+  posterOnlyOnPhone?: boolean;
 }
 
 // Splits `text` around the first case-insensitive match of `term` so the
@@ -38,6 +40,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
   categoryLabel,
   highlightTerm,
   isLoading = false,
+  posterOnlyOnPhone = false,
 }) => {
   const [imageError, setImageError] = useState(false);
 
@@ -74,7 +77,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
   return (
     <div
       // IPTV offline (utils/iptvHealth.ts): IPTV cards dim, local-library titles stay bright.
-      className={`group relative transform cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-black/65 transition-all duration-300 hover:scale-[1.03] hover:border-portalcast-light/50 hover:bg-black/75 hover:shadow-2xl hover:shadow-black/40 ${iptvOffline && String(item.is_local) !== '1' && item.category_id !== 'local' ? 'opacity-35' : ''}`}
+      className={`group relative transform cursor-pointer overflow-hidden ${posterOnlyOnPhone ? 'rounded-md sm:rounded-xl' : 'rounded-xl'} border border-white/10 bg-black/65 transition-all duration-300 hover:scale-[1.03] hover:border-portalcast-light/50 hover:bg-black/75 hover:shadow-2xl hover:shadow-black/40 ${iptvOffline && String(item.is_local) !== '1' && item.category_id !== 'local' ? 'opacity-35' : ''}`}
       onClick={() => {
         if (isLoading) return; // avoid re-triggering the resolve while one is already in flight for this card
         onClick(item);
@@ -138,7 +141,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
           </div>
         )}
       </div>
-      <div className="relative z-1 flex flex-col items-center justify-center gap-0.5 p-3 md:p-4">
+      <div className={`relative z-1 flex-col items-center justify-center gap-0.5 p-3 md:p-4 ${posterOnlyOnPhone && imageUrl && !imageError ? 'hidden sm:flex' : 'flex'}`}>
         <h3 className="w-full truncate text-center text-sm font-bold text-white transition-colors duration-300 group-hover:text-portalcast-light md:text-base">
           {highlighted ? (
             <>

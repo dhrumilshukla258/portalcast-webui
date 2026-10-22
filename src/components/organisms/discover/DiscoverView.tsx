@@ -359,8 +359,9 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
       {continueWatching}
       {homeRows.length > 0 ? (
         // Complete as served (prepared on the server): no paging.
-        homeRows.map((row) => (
-          <MediaCardRow key={row.key} title={row.title} onClick={onClick} items={row.data} loading={false} loadingItemId={loadingItemId} />
+        // The first prepared row gets bigger posters, so Home is not one even grid of rows.
+        homeRows.map((row, i) => (
+          <MediaCardRow key={row.key} title={row.title} onClick={onClick} items={row.data} loading={false} loadingItemId={loadingItemId} size={i === 0 ? 'large' : 'normal'} />
         ))
       ) : (
         <RecommendedRow
@@ -424,11 +425,14 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
                 {whatsNew.total.toLocaleString()} {fixedType === 'movie' ? 'films' : 'series'}
               </span>
             )}
+            <div className="ml-auto sm:hidden">
+            <DiscoverFilters variant="phone" facets={facets} activeFilters={activeFilters} onFilterChange={handleFilterChange} onGenresChange={handleGenresChange} />
+          </div>
             {onOpenCategories && (
               <button
                 data-focusable="true"
                 onClick={onOpenCategories}
-                className="ml-auto flex h-10 shrink-0 items-center rounded-full border border-white/10 bg-[#0b1120]/85 px-4 text-sm font-bold text-gray-300 transition-all hover:border-white/20 hover:text-white focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light"
+                className="hidden sm:ml-auto sm:flex h-10 shrink-0 items-center rounded-full border border-white/10 bg-[#0b1120]/85 px-4 text-sm font-bold text-gray-300 transition-all hover:border-white/20 hover:text-white focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light"
               >
                 Categories
               </button>
@@ -466,11 +470,14 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
               </button>
             );
           })}
+          <div className="ml-auto sm:hidden">
+            <DiscoverFilters variant="phone" facets={facets} activeFilters={activeFilters} onFilterChange={handleFilterChange} onGenresChange={handleGenresChange} />
+          </div>
         </div>
         )}
         {/* The selector row (Genre / Language / Country / Channel / Mood), on its own line
             under Movies/Series — the same layout as the TV app. */}
-        <div className="mt-2 border-t border-white/5 pt-2">
+        <div className="mt-2 hidden border-t border-white/5 pt-2 sm:block">
           <DiscoverFilters
             facets={facets}
             activeFilters={activeFilters}
