@@ -37,10 +37,23 @@ export interface SportsAnswer {
   games: SportsGame[];
 }
 
+export interface SportsLeagues {
+  leagues: { id: string; name: string; sport: string }[];
+  /** The viewer's leagues (the admin's when they have not chosen). */
+  chosen: string[];
+  defaults: string[];
+  max: number;
+}
+
+/** `GET /api/v2/sports/leagues`: every league there is, and the viewer's choice. */
+export const getSportsLeagues = async (): Promise<SportsLeagues> =>
+  (await api.get<SportsLeagues>('/v2/sports/leagues')).data;
+
 /** Null when the server has no Sports page (older servers answer 404). */
-export const getSports = async (days = 7): Promise<SportsAnswer | null> => {
+export const getSports = async (days = 30, fresh = false): Promise<SportsAnswer | null> => {
   try {
-    return (await api.get<SportsAnswer>('/v2/sports', { params: { days } })).data ?? null;
+    // fresh: right after the viewer changed their leagues (the answer is cached 2 minutes).
+    return (await api.get<SportsAnswer>('/v2/sports', { params: fresh ? { days, t: Date.now() } : { days } })).data ?? null;
   } catch (e) {
     if ((e as { response?: { status?: number } })?.response?.status === 404) return null;
     throw e;

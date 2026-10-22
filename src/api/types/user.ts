@@ -21,6 +21,8 @@ export interface User {
     recentSearches?: string[];
     lastSelectedTvGroup?: Record<string, string>;
     lastSelectedTvChannel?: Record<string, string>;
+    /** The Sports page's leagues (servers from 2026-10-22). */
+    sportsLeagues?: string[];
   };
 }
 

@@ -26,6 +26,7 @@ import VariantPickerModal from '@/components/molecules/VariantPickerModal';
 import MainContentGrid from '@/components/organisms/browse/MainContentGrid';
 import ContinueWatching from '@/components/organisms/browse/ContinueWatching';
 import SportsView from '@/components/organisms/sports/SportsView';
+import CategoryBrowseView from '@/components/organisms/browse/CategoryBrowseView';
 import PeopleView from '@/components/organisms/people/PeopleView';
 import SectionChips, { type HomeSection } from '@/components/molecules/SectionChips';
 import ContinueHero from '@/components/organisms/browse/ContinueHero';
@@ -223,6 +224,9 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   // Global Search (the TV app's Search tab) lives on the same layer as Discover: a title
   // opened from it is shown over it, and Back returns to the results.
   const [overlayPage, setOverlayPage] = useState<'discover' | 'search' | 'mylist' | 'movies' | 'series' | 'sports' | 'people'>('discover');
+  // Browse by category (Movies / Series tabs), the new-layout page over the tab.
+  const [categoryType, setCategoryType] = useState<'movie' | 'series' | null>(null);
+  useEffect(() => { setCategoryType(null); }, [overlayPage]);
   const isPeoplePage = showDiscover && overlayPage === 'people';
   // Sports (plan Phase 6.7) on the same layer; its "Find channel" opens Search on Live TV.
   const isSportsPage = showDiscover && overlayPage === 'sports';
@@ -282,13 +286,29 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   // A cast or crew member's page, over everything else (opened from a title's header).
   const [personId, setPersonId] = useState<number | null>(null);
   const closePerson = useCallback(() => setPersonId(null), []);
+  // A title opened from a person's page: Back from it returns to that page, not past it.
+  const [personReturn, setPersonReturn] = useState<number | null>(null);
   const openPersonTitle = useCallback(
     async (item: MediaItem) => {
+      if (personId != null) setPersonReturn(personId);
       await handleDiscoverItemClick(item);
       setPersonId(null);
     },
-    [handleDiscoverItemClick]
+    [handleDiscoverItemClick, personId]
   );
+
+  const titleOpen = !!detailItem || !!currentSeriesItem || !!variantPickerItem || !!streamUrl;
+  const titleWasOpen = React.useRef(false);
+  useEffect(() => {
+    if (titleOpen) { titleWasOpen.current = true; return; }
+    if (titleWasOpen.current && personReturn != null) {
+      setPersonId(personReturn);
+      setPersonReturn(null);
+    }
+    titleWasOpen.current = false;
+  }, [titleOpen, personReturn]);
+  // Leaving for another tab forgets the way back to the person.
+  useEffect(() => { setPersonReturn(null); }, [overlayPage]);
 
   // More Like This on a detail page opens titles the way a person's page does.
   const openTitle = React.useMemo(
@@ -535,8 +555,12 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                   active={!detailItem && !(currentSeriesItem && contentType === 'series')}
                 />
               )}
+              {showDiscover && categoryType && (
+                <CategoryBrowseView key={categoryType} type={categoryType} onOpenTitle={searchOpenTitle} onClose={() => setCategoryType(null)} />
+              )}
               {showDiscover && (overlayPage === 'discover' || !!typedHome) && (
                 <React.Suspense fallback={null}>
+                  <div className={categoryType ? 'hidden' : 'contents'}>
                   <DiscoverView
                     // A fresh view per tab: Home, Movies and Series each keep their own filters.
                     key={overlayPage}
@@ -553,14 +577,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                         />
                       </>
                     }
-                    onOpenCategories={
-                      typedHome
-                        ? () => {
-                            handleContentTypeChange(typedHome);
-                            if (window.matchMedia('(max-width: 767px)').matches) setOpenCategoryDrawer(true);
-                          }
-                        : undefined
-                    }
+                    onOpenCategories={typedHome ? () => setCategoryType(typedHome) : undefined}
                     onClick={handleDiscoverItemClick}
                     recommendations={recommendations}
                     recommendationsBasedOn={recommendationsBasedOn}
@@ -571,6 +588,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                     onActiveTypeChange={setDiscoverActiveType}
                     onBackdropItemsChange={mergeBackdropItems}
                   />
+                  </div>
                 </React.Suspense>
               )}
               {/* Discover keeps showDiscover=true when opening a title (see

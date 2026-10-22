@@ -231,16 +231,24 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
   const [dim, setDim] = useState<DiscoverFilterKey | null>(null);
   // History entries this sheet pushed (1 open, 2 with a selector open).
   const levels = useRef(0);
+  // Run once the sheet's entries are popped (Browse by category opens its own page).
+  const afterClose = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!sheet) return;
     const onPop = (e: PopStateEvent) => {
-      if (levels.current === 0) return;
+      if (levels.current === 0 || (Number(e.state?.filterSheet) || 0) >= levels.current) return;
       // Ours: the app's Back handling (useNavigationHistory) must not treat it as a page change.
       e.stopImmediatePropagation();
-      levels.current -= 1;
+      levels.current = Math.max(0, Number(e.state?.filterSheet) || 0);
       if (levels.current >= 1) setDim(null);
-      else { setDim(null); setSheet(false); }
+      else {
+        setDim(null);
+        setSheet(false);
+        const next = afterClose.current;
+        afterClose.current = null;
+        if (next) setTimeout(next, 0);
+      }
     };
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && levels.current > 0) window.history.back();
@@ -330,7 +338,7 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
             {onBrowseCategories && (
               <button
                 data-focusable="true"
-                onClick={() => { close(); onBrowseCategories(); }}
+                onClick={() => { afterClose.current = onBrowseCategories; close(); }}
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-4 text-left hover:bg-white/5"
               >
                 <span className="min-w-0 flex-1 text-base font-bold text-white">{browseLabel ?? 'Browse by category'}</span>

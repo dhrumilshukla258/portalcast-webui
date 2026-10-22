@@ -3,6 +3,7 @@ import { Play, Search } from 'lucide-react';
 import type { MediaItem } from '@/types';
 import { getSports, type SportsAnswer, type SportsGame } from '@/api/endpoints/sports';
 import { allChannels } from '@/utils/channelList';
+import ChooseSports from './ChooseSports';
 import { sportsDays, sportsOf, timeLabel, findQuery } from '@/utils/sportsLayout';
 
 interface SportsViewProps {
@@ -23,15 +24,16 @@ const SportsView: React.FC<SportsViewProps> = ({ onPlayChannel, onFindChannel })
   const [sport, setSport] = useState<string | null>(null);
   const [picking, setPicking] = useState<SportsGame | null>(null);
   const retries = useRef(0);
+  const [choosing, setChoosing] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (fresh = false) => {
     setError(false);
     try {
-      const [a, list] = await Promise.all([getSports(7), allChannels().catch(() => [] as MediaItem[])]);
+      const [a, list] = await Promise.all([getSports(30, fresh), allChannels().catch(() => [] as MediaItem[])]);
       setAnswer(a);
       setChannels(new Map(list.map((c) => [String(c.id), c])));
       // The server's first fetch is still running: ask again shortly (a few times).
-      if (a?.loading && retries.current++ < 3) setTimeout(load, 4000);
+      if (a?.loading && retries.current++ < 3) setTimeout(() => void load(true), 4000);
     } catch {
       setError(true);
     }
@@ -72,7 +74,14 @@ const SportsView: React.FC<SportsViewProps> = ({ onPlayChannel, onFindChannel })
     <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 overflow-y-auto px-3 pb-8 pt-3 sm:px-6 sm:pt-5">
       <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="text-xl font-bold text-white sm:text-2xl">Sports</h2>
-        <span className="text-sm text-gray-400">{count} {count === 1 ? 'game' : 'games'} this week</span>
+        <span className="text-sm text-gray-400">{count} {count === 1 ? 'game' : 'games'} in the next 30 days</span>
+        <button
+          data-focusable="true"
+          onClick={() => setChoosing(true)}
+          className="h-9 rounded-full border border-white/15 px-4 text-sm font-bold text-gray-200 hover:border-white/30"
+        >
+          Choose sports
+        </button>
         <a href={answer.source.url} target="_blank" rel="noopener noreferrer" className="ml-auto text-xs text-gray-500 hover:text-gray-300">
           Schedule: {answer.source.name}
         </a>
@@ -96,7 +105,7 @@ const SportsView: React.FC<SportsViewProps> = ({ onPlayChannel, onFindChannel })
       )}
       {days.length === 0 && (
         <p className="py-16 text-center text-gray-400">
-          {answer.loading ? 'Fetching the schedule…' : 'No games in the next 7 days for the chosen leagues.'}
+          {answer.loading ? 'Fetching the schedule…' : 'No games in the next 30 days for your leagues. Choose sports to add more.'}
         </p>
       )}
       {days.map((day) => (
@@ -109,6 +118,14 @@ const SportsView: React.FC<SportsViewProps> = ({ onPlayChannel, onFindChannel })
           </div>
         </section>
       ))}
+      {choosing && (
+        <ChooseSports
+          onClose={(saved) => {
+            setChoosing(false);
+            if (saved) { setSport(null); retries.current = 0; void load(true); }
+          }}
+        />
+      )}
       {picking && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4" onClick={() => setPicking(null)} data-focus-group="sports-picker">
           <div role="dialog" aria-modal="true" className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0b1120] p-5" onClick={(e) => e.stopPropagation()}>
