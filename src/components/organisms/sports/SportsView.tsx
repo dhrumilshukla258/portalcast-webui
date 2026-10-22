@@ -17,10 +17,15 @@ interface SportsViewProps {
  * leagues by day, a chip per sport. A game the guide shows on a channel plays it; otherwise
  * "Find channel" searches Live TV for the broadcaster. Credit: "Schedule: sporting-events.org".
  */
+// The last answer, kept on this device: going back to Sports shows it at once while a fresh
+// one loads (owner: tabs from the client's cache, not a wait on the server).
+let lastAnswer: SportsAnswer | null | undefined;
+let lastChannels = new Map<string, MediaItem>();
+
 const SportsView: React.FC<SportsViewProps> = ({ onPlayChannel, onFindChannel }) => {
-  const [answer, setAnswer] = useState<SportsAnswer | null | undefined>(undefined);
+  const [answer, setAnswer] = useState<SportsAnswer | null | undefined>(lastAnswer);
   const [error, setError] = useState(false);
-  const [channels, setChannels] = useState<Map<string, MediaItem>>(new Map());
+  const [channels, setChannels] = useState<Map<string, MediaItem>>(lastChannels);
   const [sport, setSport] = useState<string | null>(null);
   const [picking, setPicking] = useState<SportsGame | null>(null);
   const retries = useRef(0);
@@ -32,6 +37,8 @@ const SportsView: React.FC<SportsViewProps> = ({ onPlayChannel, onFindChannel })
       const [a, list] = await Promise.all([getSports(30, fresh), allChannels().catch(() => [] as MediaItem[])]);
       setAnswer(a);
       setChannels(new Map(list.map((c) => [String(c.id), c])));
+      lastAnswer = a;
+      lastChannels = new Map(list.map((c) => [String(c.id), c]));
       // The server's first fetch is still running: ask again shortly (a few times).
       if (a?.loading && retries.current++ < 3) setTimeout(() => void load(true), 4000);
     } catch {

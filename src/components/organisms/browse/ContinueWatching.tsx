@@ -7,6 +7,8 @@ import { continueItemsOf, type ProgressEntry } from '@/utils/continueItems';
 import type { ProgressRecord } from '@/api/types/user';
 import { deleteUserProgress, getUserProgress } from '@/api/endpoints/user';
 import MediaCardRow from '@/components/organisms/browse/MediaCardRow';
+import { useTitleMenu } from '@/context/TitleMenuContext';
+import { useLongPress } from '@/hooks/useLongPress';
 
 interface ContinueWatchingProps {
   onClick: (item: MediaItem) => void;
@@ -34,8 +36,11 @@ const imageUrlOf = (path: string | undefined): string | null => {
  * its bottom and "Episode · 23 min left" under it, the size of the other rows' posters. The
  * landscape art is the Home hero's (ContinueHero), above this row.
  */
-const ContinueCard: React.FC<{ item: MediaItem; onClick: (item: MediaItem) => void; onRemove: () => void }> = React.memo(({ item, onClick, onRemove }) => {
+const ContinueCard: React.FC<{ item: MediaItem; onClick: (item: MediaItem) => void; onRemove: () => void; onRemoveNow: () => void }> = React.memo(({ item, onClick, onRemove, onRemoveNow }) => {
   const anyItem = item as any;
+  // The title menu (hold / right-click), with Remove from Continue Watching.
+  const openMenu = useTitleMenu();
+  const hold = useLongPress(openMenu ? () => openMenu(item, { onRemoveFromContinue: onRemoveNow }) : undefined);
   const [failed, setFailed] = useState(false);
   const poster = imageUrlOf(item.screenshot_uri);
   const wide = imageUrlOf(anyItem.cw_backdrop);
@@ -46,6 +51,7 @@ const ContinueCard: React.FC<{ item: MediaItem; onClick: (item: MediaItem) => vo
     <div
       className="group relative cursor-pointer"
       onClick={() => onClick(item)}
+      {...hold}
       title={String(item.title || item.name || '')}
       data-focusable="true"
       tabIndex={-1}
@@ -141,6 +147,7 @@ const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRe
             item={item}
             onClick={onClick}
             onRemove={() => setConfirming({ id: String(item.id), title: String(item.title || item.name || 'this title') })}
+            onRemoveNow={() => void handleDismiss(String(item.id))}
           />
         )}
       />

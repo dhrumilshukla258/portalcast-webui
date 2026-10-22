@@ -63,6 +63,21 @@ export const deleteUserProgress = async (
   return response.data;
 };
 
+/** The title menu: mark a title (content id, "movie_123") watched or not (servers from 2026-10-22). */
+export const setWatched = async (contentId: string, watched: boolean): Promise<void> => {
+  const path = `/user/watched/${encodeURIComponent(contentId)}`;
+  if (watched) await api.put(path);
+  else await api.delete(path);
+  invalidateProgressCache();
+};
+
+/** The title menu: Not interested (kept off this viewer's Home rows), or undo. */
+export const setNotInterested = async (contentId: string, hidden: boolean): Promise<void> => {
+  const path = `/user/hidden/${encodeURIComponent(contentId)}`;
+  if (hidden) await api.put(path);
+  else await api.delete(path);
+};
+
 export const clearUserProgress = async (): Promise<{ success: boolean }> => {
   const response = await api.post<{ success: boolean }>('/user/clear-history');
   invalidateProgressCache();

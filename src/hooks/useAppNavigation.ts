@@ -82,6 +82,7 @@ export function useAppNavigation(
   const {
     history,
     setHistory,
+    resetHistory,
     isFromContinueWatching,
     pushFrame,
     handleBack,
@@ -673,6 +674,7 @@ export function useAppNavigation(
 
   return {
     history,
+    resetHistory,
     streamUrl,
     rawStreamUrl,
     currentItem,

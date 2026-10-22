@@ -1,3 +1,5 @@
+import { useTitleMenu } from '@/context/TitleMenuContext';
+import { useLongPress } from '@/hooks/useLongPress';
 import { useIptvOffline } from '@/utils/iptvHealth';
 import React, { useState, useEffect } from 'react';
 import { URL_PATHS } from '@/api/config';
@@ -43,6 +45,9 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
   posterOnlyOnPhone = false,
 }) => {
   const [imageError, setImageError] = useState(false);
+  // The title menu: hold (touch), right-click or the ⋯ button (mouse).
+  const openMenu = useTitleMenu();
+  const hold = useLongPress(openMenu ? () => openMenu(item) : undefined);
 
   const displayTitle = item.title || item.name;
   const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
@@ -82,10 +87,22 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
         if (isLoading) return; // avoid re-triggering the resolve while one is already in flight for this card
         onClick(item);
       }}
+      {...hold}
       title={displayTitle}
       data-focusable="true"
       tabIndex={-1}
     >
+      {openMenu && (
+        <button
+          type="button"
+          aria-label="More"
+          title="More: My List, Mark as watched, Not interested"
+          onClick={(e) => { e.stopPropagation(); openMenu(item); }}
+          className="absolute bottom-2 right-2 z-20 hidden h-8 w-8 items-center justify-center rounded-full bg-black/70 text-lg font-bold leading-none text-white hover:bg-sky-500 sm:group-hover:flex"
+        >
+          ⋯
+        </button>
+      )}
       {isLoading && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/75">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />

@@ -27,6 +27,9 @@ import MainContentGrid from '@/components/organisms/browse/MainContentGrid';
 import ContinueWatching from '@/components/organisms/browse/ContinueWatching';
 import SportsView from '@/components/organisms/sports/SportsView';
 import CategoryBrowseView from '@/components/organisms/browse/CategoryBrowseView';
+import TitleMenu from '@/components/organisms/TitleMenu';
+import { TitleMenuContext, type TitleMenuExtra } from '@/context/TitleMenuContext';
+import { clearResponseCache } from '@/api/responseCache';
 import PeopleView from '@/components/organisms/people/PeopleView';
 import SectionChips, { type HomeSection } from '@/components/molecules/SectionChips';
 import ContinueHero from '@/components/organisms/browse/ContinueHero';
@@ -124,6 +127,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   const {
     history,
+    resetHistory,
     streamUrl,
     rawStreamUrl,
     currentItem,
@@ -197,11 +201,13 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   const handleContentTypeChange = useCallback(
     (type: 'movie' | 'series' | 'tv') => {
+      // A tab (Live TV): a fresh Back history (see resetHistory).
+      resetHistory();
       setDetailItem(null);
       setShowDiscover(false);
       handleContentTypeChangeRaw(type);
     },
-    [handleContentTypeChangeRaw]
+    [handleContentTypeChangeRaw, resetHistory]
   );
 
   const {
@@ -245,11 +251,12 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   // Phones: Movies · Series · People are chips at the top of Home and those pages (the bottom
   // bar is Home, Live TV, Sports, Search, My List).
   const openSection = useCallback((sec: HomeSection) => {
+    resetHistory();
     setDetailItem(null);
     setCurrentSeriesItem(null);
     setOverlayPage(sec === 'movie' ? 'movies' : sec === 'series' ? 'series' : sec === 'people' ? 'people' : 'discover');
     setShowDiscover(true);
-  }, [setDetailItem, setCurrentSeriesItem, setShowDiscover]);
+  }, [setDetailItem, setCurrentSeriesItem, setShowDiscover, resetHistory]);
   const activeSection: HomeSection = typedHome ?? (overlayPage === 'people' ? 'people' : 'home');
   const sectionChips = (filterButton: React.ReactNode) => (
     <SectionChips active={activeSection} onSelect={openSection} trailing={filterButton} />
@@ -312,6 +319,16 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   }, [titleOpen, personReturn]);
   // Leaving for another tab forgets the way back to the person.
   useEffect(() => { setPersonReturn(null); }, [overlayPage]);
+
+  // The title menu (hold / right-click / ⋯ on a card): My List, watched, not interested.
+  const [titleMenu, setTitleMenu] = useState<{ item: MediaItem; extra?: TitleMenuExtra } | null>(null);
+  const openTitleMenu = useCallback((item: MediaItem, extra?: TitleMenuExtra) => setTitleMenu({ item, extra }), []);
+  // After an action: Home's rows and Continue Watching come again from the server.
+  const onTitlesChanged = useCallback(() => {
+    clearResponseCache();
+    fetchRecommendations(discoverActiveType);
+    setCwRefreshKey((k) => k + 1);
+  }, [fetchRecommendations, discoverActiveType, setCwRefreshKey]);
 
   // More Like This on a detail page opens titles the way a person's page does.
   const openTitle = React.useMemo(
@@ -420,6 +437,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   return (
     <PersonPageContext.Provider value={setPersonId}>
+    <TitleMenuContext.Provider value={openTitleMenu}>
     <OpenTitleContext.Provider value={openTitle}>
       {streamUrl ? (
         <React.Suspense
@@ -475,18 +493,21 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
               isMyListActive={isMyListPage}
               typedHome={typedHome}
               onSelectTypedHome={(t) => {
+                resetHistory();
                 setDetailItem(null);
                 setCurrentSeriesItem(null);
                 setOverlayPage(t === 'movie' ? 'movies' : 'series');
                 setShowDiscover(true);
               }}
               onSelectMyList={() => {
+                resetHistory();
                 setDetailItem(null);
                 setCurrentSeriesItem(null);
                 setOverlayPage('mylist');
                 setShowDiscover(true);
               }}
               onSelectSearch={() => {
+                resetHistory();
                 setDetailItem(null);
                 setCurrentSeriesItem(null);
                 setSearchLiveQuery(undefined);
@@ -497,12 +518,14 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
               onSelectPeople={() => openSection('people')}
               isSportsActive={isSportsPage}
               onSelectSports={() => {
+                resetHistory();
                 setDetailItem(null);
                 setCurrentSeriesItem(null);
                 setOverlayPage('sports');
                 setShowDiscover(true);
               }}
               onSelectDiscover={() => {
+                resetHistory();
                 setDetailItem(null);
                 // A series detail left open (currentSeriesItem) wasn't being
                 // cleared here — the dark tint/overlay condition below checks
@@ -705,7 +728,16 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
           <PersonPage id={personId} onClose={closePerson} onOpenTitle={openPersonTitle} loadingItemId={discoverLoadingItemId} />
         </React.Suspense>
       )}
+      {titleMenu && (
+        <TitleMenu
+          item={titleMenu.item}
+          extra={titleMenu.extra}
+          onClose={() => setTitleMenu(null)}
+          onChanged={onTitlesChanged}
+        />
+      )}
     </OpenTitleContext.Provider>
+    </TitleMenuContext.Provider>
     </PersonPageContext.Provider>
   );
 }

@@ -22,10 +22,15 @@ interface PeopleViewProps {
  * a chip per role (Actors / Actresses appear once the server knows genders), a search box
  * (people search). A person opens their page, which lists what can be played.
  */
+// Pages already seen, per role, kept on this device: Cast shows them at once when it opens
+// again (or a role is chosen again) while page 1 is refreshed.
+const seen = new Map<PeopleRole, PeoplePage[]>();
+let lastRole: PeopleRole = 'all';
+
 const PeopleView: React.FC<PeopleViewProps> = ({ sectionChips }) => {
   const openPerson = useOpenPerson();
-  const [role, setRole] = useState<PeopleRole>('all');
-  const [pages, setPages] = useState<PeoplePage[]>([]);
+  const [role, setRole] = useState<PeopleRole>(lastRole);
+  const [pages, setPages] = useState<PeoplePage[]>(seen.get(lastRole) ?? []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState('');
@@ -39,14 +44,22 @@ const PeopleView: React.FC<PeopleViewProps> = ({ sectionChips }) => {
     try {
       const p = await getPeople(r, page);
       if (request.current !== id) return;
-      setPages((prev) => (page === 1 ? [p] : [...prev, p]));
+      setPages((prev) => {
+        const next = page === 1 ? [p] : [...prev, p];
+        seen.set(r, next);
+        return next;
+      });
     } catch {
       if (request.current === id) setError(true);
     } finally {
       if (request.current === id) setLoading(false);
     }
   }, []);
-  useEffect(() => { setPages([]); void load(role, 1); }, [role, load]);
+  useEffect(() => {
+    lastRole = role;
+    setPages(seen.get(role) ?? []);
+    void load(role, 1);
+  }, [role, load]);
 
   // Search as you type (people search, from the server's memory).
   useEffect(() => {

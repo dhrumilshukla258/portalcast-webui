@@ -318,10 +318,25 @@ export function useNavigationHistory({
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
+  /**
+   * A new tab or section (Home, Live TV, Sports, Search, My List, Movies, Series, Cast) starts
+   * a fresh Back history: before, frames from earlier tabs stayed, and closing a player later
+   * "went back" into one of them, reopening an old title's page or version picker (owner:
+   * "it randomly opens the pop-up of the previous title").
+   */
+  const resetHistory = useCallback(() => {
+    setHistory([]);
+    setFuture([]);
+    isFromContinueWatching.current = false;
+    prevNavDepth.current = 0;
+    try { window.history.replaceState({ ...(window.history.state ?? {}), depth: 0 }, ''); } catch { /* not allowed: fine */ }
+  }, []);
+
   return {
     history,
     setHistory,
     future,
+    resetHistory,
     isFromContinueWatching,
     pushFrame,
     popHistoryFrame,
