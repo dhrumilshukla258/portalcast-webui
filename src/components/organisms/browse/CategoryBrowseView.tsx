@@ -45,7 +45,8 @@ const CategoryBrowseView: React.FC<CategoryBrowseViewProps> = ({ type, only, onO
         { id: '*', title: `All ${label.toLowerCase()}` },
         ...r.data
           .map((g) => ({ id: String(g.id), title: String(g.title) }))
-          .filter((g) => g.id !== LOCAL_CATEGORY && !/^my library$/i.test(g.title.trim())),
+          // Not the library, and not the provider's own "All" (our "All movies" is first).
+          .filter((g) => g.id !== LOCAL_CATEGORY && g.id !== '*' && !/^(my library|all)$/i.test(g.title.trim())),
       ]))
       .catch(() => setGroups([]));
   }, [type, label]);

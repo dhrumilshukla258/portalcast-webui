@@ -39,3 +39,30 @@ export function installStaleBuildHandler(): void {
     if (reloadForNewBuild()) event.preventDefault();
   });
 }
+
+/**
+ * The offline cache (service worker) serves the previous build first and installs a new one in
+ * the background; without this the new build only showed on a later visit (the owner kept
+ * seeing old screens after a deploy, cookies cleared or not). When a new worker takes over,
+ * the page reloads into it, but never while a video plays (it waits for that). New builds are
+ * also looked for when the app comes back to the front and every 30 minutes.
+ */
+export function installServiceWorkerUpdates(): void {
+  if (!('serviceWorker' in navigator)) return;
+  const sw = navigator.serviceWorker;
+  const hadController = !!sw.controller; // first install: nothing old on screen
+  let pending = false;
+  const playing = () => Array.from(document.querySelectorAll('video')).some((v) => !v.paused && !v.ended);
+  const reloadWhenIdle = () => {
+    if (!playing()) { window.location.reload(); return; }
+    setTimeout(reloadWhenIdle, 30_000);
+  };
+  sw.addEventListener('controllerchange', () => {
+    if (!hadController || pending) return;
+    pending = true;
+    reloadWhenIdle();
+  });
+  const check = () => { sw.getRegistration().then((r) => r?.update()).catch(() => {}); };
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+  setInterval(check, 30 * 60_000);
+}
