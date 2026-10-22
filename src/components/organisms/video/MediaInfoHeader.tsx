@@ -156,7 +156,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
             {onPlay && (
               <button
                 onClick={onPlay}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 font-bold text-white shadow-lg shadow-blue-500/20 transition-all duration-200 hover:bg-blue-500 active:scale-95"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 font-bold text-[#0A0F1C] shadow-lg shadow-black/30 transition-all duration-200 hover:bg-gray-200 active:scale-95 focus:outline-hidden focus:ring-2 focus:ring-sky-400 [&.focused]:ring-2 [&.focused]:ring-sky-400"
                 data-focusable="true"
                 data-default-focus="true"
               >
