@@ -54,11 +54,12 @@ const AdminOverview: React.FC<{ onOpen: (t: AdminTarget) => void }> = ({ onOpen 
   if (n.brokenStreams) needs.push({ text: `${plural(n.brokenStreams, 'broken stream')}`, target: { section: 'iptv', page: 'broken' } });
   if (n.securityAlerts) needs.push({ text: `${plural(n.securityAlerts, 'security alert')} today`, target: { section: 'server', page: 'security' }, urgent: true });
   for (const j of n.failedJobs) needs.push({ text: `${j.label} failed`, target: { section: 'server', page: 'settings' } });
+  if (n.catalogDifferences) needs.push({ text: `${plural(n.catalogDifferences, 'answer')} from the in-memory catalog differed from the database (see the server log)`, target: { section: 'server', page: 'settings' }, urgent: false });
   if (n.dataIssues) needs.push({ text: `${plural(n.dataIssues, 'stored-data problem')} the nightly check could not repair`, target: { section: 'server', page: 'settings' }, urgent: true });
   if (n.missingLocal) needs.push({ text: `${plural(n.missingLocal, 'local title')} missing from the NAS`, target: { section: 'content', page: 'libraries' } });
   if (n.unmatchedLocal) needs.push({ text: `${plural(n.unmatchedLocal, 'local title')} not matched`, target: { section: 'content', page: 'libraries' } });
 
-  const allGood = !n.iptvOffline && n.securityAlerts === 0 && n.failedJobs.length === 0 && !n.dataIssues;
+  const allGood = !n.iptvOffline && n.securityAlerts === 0 && n.failedJobs.length === 0 && !n.dataIssues && !n.catalogDifferences;
   const t = data.today;
   const today = [
     t.activeUsers ? plural(t.activeUsers, 'person', 'people') + ' active' : null,

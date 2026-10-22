@@ -24,7 +24,7 @@ All admin-tab components live under `src/components/organisms/admin/` (moved out
 
 | Section | Page | Component |
 |---------|------|-----------|
-| Overview | — | `AdminOverview.tsx`: one health line, "Needs you" (only when something does: pending users, broken streams, security alerts today, failed jobs, missing/unmatched local titles, IPTV offline; each row opens the right page), watching now, one line of today's numbers. One request, `GET /api/admin/overview`, every 10 s while visible |
+| Overview | — | `AdminOverview.tsx`: one health line, "Needs you" (only when something does: pending users, broken streams, security alerts today, failed jobs, missing/unmatched local titles, IPTV offline, stored-data problems, in-memory catalog answers that differed from the database; each row opens the right page), watching now, one line of today's numbers. One request, `GET /api/admin/overview`, every 10 s while visible |
 | People | Users | `UserManager.tsx` |
 | Content | Local libraries · Categories & titles | `LibrariesTab.tsx` · `ContentManager.tsx` |
 | IPTV | Provider · Profiles · Activity · Broken streams | `ConfigTab.tsx` · `ProfileManager.tsx` (IPTV accounts) · `AdminStats.tsx` · `BrokenStreams.tsx` |

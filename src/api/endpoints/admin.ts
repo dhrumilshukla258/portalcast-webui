@@ -229,7 +229,11 @@ export const setTitleMatch = async (itemId: number, tmdbId: number | null): Prom
 
 // ---- Overview (Admin front page) ----
 export interface AdminOverview {
-  health: { iptv: 'online' | 'offline'; iptvSince: string; uptimeSeconds: number; memoryMb: number };
+  health: {
+    iptv: 'online' | 'offline'; iptvSince: string; uptimeSeconds: number; memoryMb: number;
+    /** The in-memory catalog, when on: version, size and the shadow check against the database. */
+    catalog?: { version: number; sizeMb: number; checked: number; differed: number };
+  };
   needs: {
     pendingUsers: number;
     brokenStreams: number;
@@ -240,6 +244,7 @@ export interface AdminOverview {
     iptvOffline: boolean;
     /** Repeats or orphans the nightly integrity job could not repair (normally 0). */
     dataIssues?: number;
+    catalogDifferences?: number;
   };
   watching: { user: string | null; title: string | null; kind: string | null; category: string | null; startedAt: number }[];
   runningJobs: string[];
