@@ -1,3 +1,5 @@
+import { useHiddenTitles } from '@/utils/hiddenTitles';
+import { contentIdOf } from '@/utils/contentId';
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import MediaCard from '@/components/molecules/MediaCard';
 import MediaCardRow from '@/components/organisms/browse/MediaCardRow';
@@ -94,6 +96,13 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   const activeType = fixedType ?? (showMovies === showSeries ? undefined : showMovies ? 'movie' : 'series');
 
   const [activeFilters, setActiveFilters] = useState<ActiveDiscoverFilters>({});
+  // The viewer's Not interested titles are left out of every row here (utils/hiddenTitles.ts).
+  const hiddenTitles = useHiddenTitles();
+  const notHidden = (item: MediaItem) => {
+    const id = contentIdOf(item);
+    return !id || !hiddenTitles.has(id);
+  };
+
   const [loadingFiltered, setLoadingFiltered] = useState(false);
 
   const hasActiveFilter = hasAnyActiveFilter(activeFilters);
@@ -334,7 +343,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           tiles — nothing to skeleton, they're already there. */}
       {filteredItems.length > 0 && (
         <div className="row-content-fade-in grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 md:gap-6 lg:grid-cols-6 xl:grid-cols-7">
-          {filteredItems.map((item, index) => (
+          {filteredItems.filter(notHidden).map((item, index) => (
             <MediaCard key={`${item.id}-${index}`} item={item} onClick={onClick} isLoading={loadingItemId === item.id} />
           ))}
         </div>
@@ -366,7 +375,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
         // Complete as served (prepared on the server): no paging.
         // The first prepared row gets bigger posters, so Home is not one even grid of rows.
         homeRows.map((row, i) => (
-          <MediaCardRow key={row.key} title={row.title} onClick={onClick} items={row.data} loading={false} loadingItemId={loadingItemId} size={i === 0 ? 'large' : 'normal'} />
+          <MediaCardRow key={row.key} title={row.title} onClick={onClick} items={row.data.filter(notHidden)} loading={false} loadingItemId={loadingItemId} size={i === 0 ? 'large' : 'normal'} />
         ))
       ) : (
         <RecommendedRow
@@ -380,7 +389,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
       <MediaCardRow
         title="What's New"
         onClick={onClick}
-        items={whatsNew.items}
+        items={whatsNew.items.filter(notHidden)}
         loading={loadingWhatsNew}
         loadingItemId={loadingItemId}
         hasMore={whatsNew.hasMore}
@@ -401,7 +410,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           key={genre}
           title={genre}
           onClick={onClick}
-          items={row.items}
+          items={row.items.filter(notHidden)}
           loading={!!row.loading}
           loadingItemId={loadingItemId}
           hasMore={row.hasMore}

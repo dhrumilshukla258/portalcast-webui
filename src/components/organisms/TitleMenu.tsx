@@ -6,6 +6,7 @@ import type { TitleMenuExtra } from '@/context/TitleMenuContext';
 import { contentIdOf } from '@/utils/contentId';
 import { getMyListIds, setInMyList } from '@/api/endpoints/discover';
 import { setNotInterested, setWatched } from '@/api/endpoints/user';
+import { markHidden, useHiddenTitles } from '@/utils/hiddenTitles';
 
 interface TitleMenuProps {
   item: MediaItem;
@@ -23,6 +24,7 @@ interface TitleMenuProps {
  */
 const TitleMenu: React.FC<TitleMenuProps> = ({ item, extra, onClose, onChanged }) => {
   const id = contentIdOf(item);
+  const hidden = useHiddenTitles();
   const [inList, setInList] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
@@ -99,12 +101,21 @@ const TitleMenu: React.FC<TitleMenuProps> = ({ item, extra, onClose, onChanged }
               note="Leaves Continue Watching and your suggestions"
               onClick={() => void run('Marked as watched', () => setWatched(id, true))}
             />
-            <Row
-              icon={<EyeOff className="h-5 w-5" />}
-              label="Not interested"
-              note="Keeps it off your Home rows"
-              onClick={() => void run("Got it: you won't see it on Home", () => setNotInterested(id, true))}
-            />
+            {hidden.has(id) ? (
+              <Row
+                icon={<EyeOff className="h-5 w-5" />}
+                label="Show on Home again"
+                note="You said Not interested"
+                onClick={() => void run('It can show on Home again', async () => { await setNotInterested(id, false); markHidden(id, false); })}
+              />
+            ) : (
+              <Row
+                icon={<EyeOff className="h-5 w-5" />}
+                label="Not interested"
+                note="Keeps it off your Home rows (undo in My List)"
+                onClick={() => void run("Got it: you won't see it on Home", async () => { await setNotInterested(id, true); markHidden(id, true); })}
+              />
+            )}
             {extra?.onRemoveFromContinue && (
               <Row
                 icon={<Trash2 className="h-5 w-5" />}

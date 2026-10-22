@@ -30,6 +30,7 @@ import CategoryBrowseView from '@/components/organisms/browse/CategoryBrowseView
 import TitleMenu from '@/components/organisms/TitleMenu';
 import { TitleMenuContext, type TitleMenuExtra } from '@/context/TitleMenuContext';
 import { clearResponseCache } from '@/api/responseCache';
+import { loadHiddenTitles, clearHiddenTitles } from '@/utils/hiddenTitles';
 import PeopleView from '@/components/organisms/people/PeopleView';
 import SectionChips, { type HomeSection } from '@/components/molecules/SectionChips';
 import ContinueHero from '@/components/organisms/browse/ContinueHero';
@@ -322,6 +323,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   // The title menu (hold / right-click / ⋯ on a card): My List, watched, not interested.
   const [titleMenu, setTitleMenu] = useState<{ item: MediaItem; extra?: TitleMenuExtra } | null>(null);
+  // The viewer's Not interested list, for Home's rows (utils/hiddenTitles.ts).
+  useEffect(() => { if (user?.id) void loadHiddenTitles(); else clearHiddenTitles(); }, [user?.id]);
   const openTitleMenu = useCallback((item: MediaItem, extra?: TitleMenuExtra) => setTitleMenu({ item, extra }), []);
   // After an action: Home's rows and Continue Watching come again from the server.
   const onTitlesChanged = useCallback(() => {
@@ -579,9 +582,15 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                   onClick={handleDiscoverItemClick}
                   loadingItemId={discoverLoadingItemId}
                   active={!detailItem && !(currentSeriesItem && contentType === 'series')}
+                  favorites={favorites}
+                  toggleFavorite={toggleFavorite}
+                  onPlayChannel={searchPlayChannel}
+                  onChanged={onTitlesChanged}
                 />
               )}
               {showDiscover && categoryType && (
+                // IPTV categories and My library stay as they are: no title menu there (owner).
+                <TitleMenuContext.Provider value={null}>
                 <CategoryBrowseView
                   key={`${categoryType}:${categoryOnly?.id ?? 'list'}`}
                   type={categoryType}
@@ -589,6 +598,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                   onOpenTitle={searchOpenTitle}
                   onClose={() => { setCategoryType(null); setCategoryOnly(null); }}
                 />
+                </TitleMenuContext.Provider>
               )}
               {showDiscover && (overlayPage === 'discover' || !!typedHome) && (
                 <React.Suspense fallback={null}>

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { MediaItem } from '@/types';
 import { api } from '@/api/client';
 import type { ProgressRecord } from '@/api/types/user';
 
@@ -70,6 +71,18 @@ export const setWatched = async (contentId: string, watched: boolean): Promise<v
   else await api.delete(path);
   invalidateProgressCache();
 };
+
+/** My List > Watched: titles finished or marked watched, newest first, as cards. */
+export const getWatchedTitles = async (): Promise<MediaItem[]> =>
+  (await api.get<{ data: MediaItem[] }>('/user/watched')).data?.data ?? [];
+
+/** My List > Not interested, as cards. */
+export const getHiddenCards = async (): Promise<MediaItem[]> =>
+  (await api.get<{ data: MediaItem[] }>('/user/hidden/cards')).data?.data ?? [];
+
+/** The viewer's Not interested titles (content ids). */
+export const getHiddenTitles = async (): Promise<string[]> =>
+  (await api.get<{ ids: string[] }>('/user/hidden')).data?.ids ?? [];
 
 /** The title menu: Not interested (kept off this viewer's Home rows), or undo. */
 export const setNotInterested = async (contentId: string, hidden: boolean): Promise<void> => {
