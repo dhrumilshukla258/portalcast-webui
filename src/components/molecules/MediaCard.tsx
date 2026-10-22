@@ -4,6 +4,7 @@ import { URL_PATHS } from '@/api/config';
 import type { MediaItem } from '@/types';
 import ChannelBadge from '@/components/atoms/ChannelBadge';
 import { cardPoster } from '@/utils/imageSize';
+import { ratingLabel } from '@/utils/titleFormat';
 
 interface MediaCardProps {
   item: MediaItem;
@@ -56,6 +57,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
   }, [item.screenshot_uri]);
 
   const displayProgress = progressPercent ?? item.progressPercent;
+  const rating = ratingLabel(item.rating_best);
   const highlighted = highlightTerm && displayTitle ? splitOnMatch(displayTitle, highlightTerm) : null;
 
   // No custom IntersectionObserver gate here — it used to hold `isVisible`
@@ -111,14 +113,22 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
         {item.network && (
           <ChannelBadge channel={item.network} logo={item.network_logo} className="absolute left-2 top-2 z-10" />
         )}
-        {String(item.is_local) === '1' && (
+        {String(item.is_local) === '1' ? (
           <span
             className="absolute right-2 top-2 z-10 rounded-md bg-sky-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white shadow"
             title="On your NAS: plays without the IPTV portal"
           >
             {item.quality?.includes('4K') ? 'Local · 4K' : 'Local'}
           </span>
-        )}
+        ) : rating && !isCompleted ? (
+          // The title's one rating (design-system.md, Cards): "★ 8.4", top right.
+          <span
+            className="absolute right-2 top-2 z-10 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur-sm"
+            title={item.rating_source ? `${item.rating_source} rating` : 'Rating'}
+          >
+            <span className="text-amber-400">★</span> {rating}
+          </span>
+        ) : null}
         {displayProgress !== undefined && displayProgress > 0 && (
           <div className="absolute bottom-0 left-0 h-1 w-full bg-gray-600/80">
             <div

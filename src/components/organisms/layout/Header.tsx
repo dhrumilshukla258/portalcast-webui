@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowDownAZ, SortDesc, SortAsc, LogOut, Shield, Trash2, Captions, Tv, Search } from 'lucide-react';
+import { ArrowDownAZ, SortDesc, SortAsc, LogOut, Shield, Trash2, Captions, Tv, Search, Bookmark } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '@/context/useSocket';
@@ -14,6 +14,9 @@ export interface HeaderProps {
   /** Global search page (first tab, like the TV app's rail). */
   isSearchActive?: boolean;
   onSelectSearch?: () => void;
+  /** The My List page (saved titles). */
+  isMyListActive?: boolean;
+  onSelectMyList?: () => void;
   sort: string | null | undefined;
   cycleSort: () => void;
   handleClearWatched: () => void;
@@ -33,6 +36,8 @@ export const Header: React.FC<HeaderProps> = React.memo(
     onSelectDiscover,
     isSearchActive = false,
     onSelectSearch,
+    isMyListActive = false,
+    onSelectMyList,
     sort,
     cycleSort,
     handleClearWatched,
@@ -40,6 +45,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
     historyLength,
     handleBack,
   }) => {
+    const overlayActive = isDiscoverActive || isSearchActive || isMyListActive;
     const { user, logout } = useAuth();
     const { activeUserCount } = useSocket();
     const navigate = useNavigate();
@@ -151,12 +157,12 @@ export const Header: React.FC<HeaderProps> = React.memo(
           <button
             onClick={() => handleContentTypeChange('movie')}
             className={`flex flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
-              !isDiscoverActive && !isSearchActive && contentType === 'movie'
+              !overlayActive && contentType === 'movie'
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
             }`}
             data-focusable="true"
-            data-default-focus={!isDiscoverActive && !isSearchActive && contentType === 'movie' ? 'true' : undefined}
+            data-default-focus={!overlayActive && contentType === 'movie' ? 'true' : undefined}
             tabIndex={-1}
             title="Movies"
           >
@@ -170,12 +176,12 @@ export const Header: React.FC<HeaderProps> = React.memo(
           <button
             onClick={() => handleContentTypeChange('series')}
             className={`flex flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
-              !isDiscoverActive && !isSearchActive && contentType === 'series'
+              !overlayActive && contentType === 'series'
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
             }`}
             data-focusable="true"
-            data-default-focus={!isDiscoverActive && !isSearchActive && contentType === 'series' ? 'true' : undefined}
+            data-default-focus={!overlayActive && contentType === 'series' ? 'true' : undefined}
             tabIndex={-1}
             title="Series"
           >
@@ -189,12 +195,12 @@ export const Header: React.FC<HeaderProps> = React.memo(
           <button
             onClick={() => handleContentTypeChange('tv')}
             className={`flex flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
-              !isDiscoverActive && !isSearchActive && contentType === 'tv'
+              !overlayActive && contentType === 'tv'
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
             }`}
             data-focusable="true"
-            data-default-focus={!isDiscoverActive && !isSearchActive && contentType === 'tv' ? 'true' : undefined}
+            data-default-focus={!overlayActive && contentType === 'tv' ? 'true' : undefined}
             tabIndex={-1}
             title="TV"
           >
@@ -205,6 +211,23 @@ export const Header: React.FC<HeaderProps> = React.memo(
             </span>
             <span>TV</span>
           </button>
+          {onSelectMyList && (
+            <button
+              onClick={onSelectMyList}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+                isMyListActive
+                  ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
+                  : 'text-gray-400 hover:bg-white/10 hover:text-white'
+              }`}
+              data-focusable="true"
+              data-default-focus={isMyListActive ? 'true' : undefined}
+              tabIndex={-1}
+              title="My List"
+            >
+              <Bookmark className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">My List</span>
+            </button>
+          )}
         </div>
 
         {/* Action Controls Container */}

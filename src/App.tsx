@@ -27,7 +27,8 @@ import MainContentGrid from '@/components/organisms/browse/MainContentGrid';
 // Lazy — only mounted when the user opens the Discover tab, not on initial load.
 const DiscoverView = React.lazy(lazyImport(() => import('@/components/organisms/discover/DiscoverView')));
 import { AmbientBackdrop } from '@/components/molecules/AmbientBackdrop';
-import { PersonPageContext } from '@/context/PersonPageContext';
+import { OpenTitleContext, PersonPageContext } from '@/context/PersonPageContext';
+import MyListView from '@/components/organisms/discover/MyListView';
 // Lazy — only mounted when a cast or crew member is opened.
 const PersonPage = React.lazy(lazyImport(() => import('@/components/organisms/person/PersonPage')));
 
@@ -241,8 +242,10 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   // Global Search (the TV app's Search tab) lives on the same layer as Discover: a title
   // opened from it is shown over it, and Back returns to the results.
-  const [overlayPage, setOverlayPage] = useState<'discover' | 'search'>('discover');
+  const [overlayPage, setOverlayPage] = useState<'discover' | 'search' | 'mylist'>('discover');
   const isSearchPage = showDiscover && overlayPage === 'search';
+  // My List (design Phase 6) lives on the same layer as Discover and Search.
+  const isMyListPage = showDiscover && overlayPage === 'mylist';
   const searchOpenTitle = useCallback(
     (item: MediaItem, isSeries: boolean) => {
       openDiscoverItem({
@@ -279,6 +282,12 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
       setPersonId(null);
     },
     [handleDiscoverItemClick]
+  );
+
+  // More Like This on a detail page opens titles the way a person's page does.
+  const openTitle = React.useMemo(
+    () => ({ open: (item: MediaItem) => void openPersonTitle(item), loadingItemId: discoverLoadingItemId }),
+    [openPersonTitle, discoverLoadingItemId]
   );
 
   const searchPlayChannel = useCallback((channel: MediaItem) => { startPlayback(channel); }, [startPlayback]);
@@ -324,7 +333,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     // nothing about switching to Discover ever touches `context`.
     const isDiscoverBrowsing =
       showDiscover && !detailItem && !(currentSeriesItem && contentType === 'series');
-    if (isDiscoverBrowsing) return overlayPage === 'search' ? 'Search' : 'Discover';
+    if (isDiscoverBrowsing) return overlayPage === 'search' ? 'Search' : overlayPage === 'mylist' ? 'My List' : 'Discover';
 
     // openDiscoverItem's series branch calls fetchData (updating
     // context.parentTitle correctly), but its movie branch never touches
@@ -374,6 +383,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   return (
     <PersonPageContext.Provider value={setPersonId}>
+    <OpenTitleContext.Provider value={openTitle}>
       {streamUrl ? (
         <React.Suspense
           fallback={
@@ -425,6 +435,13 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
               handleContentTypeChange={handleContentTypeChange}
               isDiscoverActive={showDiscover && overlayPage === 'discover'}
               isSearchActive={isSearchPage}
+              isMyListActive={isMyListPage}
+              onSelectMyList={() => {
+                setDetailItem(null);
+                setCurrentSeriesItem(null);
+                setOverlayPage('mylist');
+                setShowDiscover(true);
+              }}
               onSelectSearch={() => {
                 setDetailItem(null);
                 setCurrentSeriesItem(null);
@@ -476,7 +493,14 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                   isTizen={isTizen}
                 />
               )}
-              {showDiscover && !isSearchPage && (
+              {isMyListPage && (
+                <MyListView
+                  onClick={handleDiscoverItemClick}
+                  loadingItemId={discoverLoadingItemId}
+                  active={!detailItem && !(currentSeriesItem && contentType === 'series')}
+                />
+              )}
+              {showDiscover && overlayPage === 'discover' && (
                 <React.Suspense fallback={null}>
                   <DiscoverView
                     onClick={handleDiscoverItemClick}
@@ -593,6 +617,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
           <PersonPage id={personId} onClose={closePerson} onOpenTitle={openPersonTitle} loadingItemId={discoverLoadingItemId} />
         </React.Suspense>
       )}
+    </OpenTitleContext.Provider>
     </PersonPageContext.Provider>
   );
 }

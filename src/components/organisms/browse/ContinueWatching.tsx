@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useCallback, useMemo, useState } from 'react';
-import MediaCard from '@/components/molecules/MediaCard';
 import type { MediaItem } from '@/types';
+import { URL_PATHS } from '@/api/config';
+import { downsize, AMBIENT_BACKDROP } from '@/utils/imageSize';
+import { timeLeft } from '@/utils/titleFormat';
 import type { ProgressRecord } from '@/api/types/user';
 import { deleteUserProgress, getUserProgress } from '@/api/endpoints/user';
 
@@ -34,6 +36,59 @@ interface ProgressEntry {
   progressPercent: number;
   timestamp: number;
 }
+
+const imageUrlOf = (path: string | undefined): string | null => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  const base = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
+  return path.startsWith('/api/') ? `${base}${path}` : `${base}/api/images${path}`;
+};
+
+/**
+ * A Continue Watching card (design-system.md, Cards): 16:9 art (the title's backdrop, else
+ * the poster cropped), a progress bar along its bottom, then the title and the episode and
+ * time left.
+ */
+const ContinueCard: React.FC<{ item: MediaItem; onClick: (item: MediaItem) => void }> = React.memo(({ item, onClick }) => {
+  const anyItem = item as any;
+  const [failed, setFailed] = useState(false);
+  const wide = imageUrlOf(anyItem.cw_backdrop);
+  const poster = imageUrlOf(item.screenshot_uri);
+  const src = !failed && wide ? downsize(wide, AMBIENT_BACKDROP) : poster ? downsize(poster, 'w342') : null;
+  const title = anyItem.cw_show_title || item.title || item.name || '';
+  const pct = Math.min(100, Math.max(0, Number(item.progressPercent) || 0));
+  return (
+    <div
+      className="group cursor-pointer"
+      onClick={() => onClick(item)}
+      title={String(item.title || item.name || '')}
+      data-focusable="true"
+      tabIndex={-1}
+    >
+      <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-black/40 transition-all duration-300 group-hover:border-portalcast-light/50 group-hover:shadow-2xl group-hover:shadow-black/40 group-[.focused]:ring-2 group-[.focused]:ring-white">
+        {src ? (
+          <img
+            src={src}
+            alt={title}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={() => setFailed(true)}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-white/10 to-transparent text-2xl font-bold text-white/30">
+            {title.substring(0, 2).toUpperCase()}
+          </div>
+        )}
+        <div className="absolute bottom-0 left-0 h-1 w-full bg-white/20">
+          <div className="h-full bg-sky-400" style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+      <h3 className="mt-2 truncate text-sm font-semibold text-white group-hover:text-portalcast-light md:text-base">{title}</h3>
+      {anyItem.cw_detail && <p className="truncate text-xs text-gray-400 md:text-sm">{anyItem.cw_detail}</p>}
+    </div>
+  );
+});
 
 const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRecords, onProgressChanged }) => {
   const inProgressItems = useMemo<MediaItem[]>(() => {
@@ -117,6 +172,13 @@ const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRe
           cw_category_id: (entry as any).categoryId || null,
 
           cw_episode_card_id: (entry as any).episodeCardId || entry.itemId || null,
+
+          // The wide card (design-system.md): the title's backdrop from the server, and
+          // "Episode title · 23 min left" under the title.
+          cw_backdrop: (record as any).backdrop_path || undefined,
+          cw_show_title: entry.title,
+          cw_detail: [isSeries ? entry.episodeTitle : undefined, timeLeft(entry.duration - entry.currentTime)]
+            .filter(Boolean).join(' · ') || undefined,
         } as any);
         addedIds.add(displayId.toString());
       } catch (err) {
@@ -164,7 +226,7 @@ const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRe
       <h2 className="mb-4 text-center text-xl font-bold text-white sm:text-left sm:text-2xl">
         Continue Watching
       </h2>
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 md:gap-6 lg:grid-cols-6 xl:grid-cols-7">
+      <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:gap-4 md:grid-cols-3 md:gap-5 xl:grid-cols-4 2xl:grid-cols-5">
         {inProgressItems.map((item, index) => (
           <div key={`${item.id}-${index}`} className="group relative">
             <button
@@ -180,11 +242,7 @@ const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRe
             >
               ×
             </button>
-            <MediaCard
-              item={item}
-              onClick={onClick}
-              progressPercent={item.progressPercent}
-            />
+            <ContinueCard item={item} onClick={onClick} />
           </div>
         ))}
       </div>

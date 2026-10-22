@@ -226,3 +226,33 @@ export interface PeopleSearchResult {
 /** People by name, answered from the server's memory; cached here like other searches. */
 export const searchPeople = async (q: string, signal?: AbortSignal): Promise<PeopleSearchResult> =>
   (await cachedGet<PeopleSearchResult>(DISCOVER_PATHS.PEOPLE_SEARCH, { params: { q }, signal })) ?? { people: [], featured: null, ready: false };
+
+/** `GET /api/v2/discover/similar?id=movie_123`: More Like This (servers from 2026-10-22; empty before). */
+export const getSimilar = async (id: string): Promise<MediaItem[]> => {
+  try {
+    return (await api.get<{ data: MediaItem[] }>('/v2/discover/similar', { params: { id } })).data?.data ?? [];
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * My List (servers from 2026-10-22): the viewer's saved titles. `getMyListIds` answers null
+ * when the server has no My List, and the button is then not shown.
+ */
+export const getMyList = async (): Promise<MediaItem[]> =>
+  (await api.get<{ data: MediaItem[] }>('/user/list')).data?.data ?? [];
+
+export const getMyListIds = async (): Promise<Set<string> | null> => {
+  try {
+    return new Set((await api.get<{ ids: string[] }>('/user/list/ids')).data?.ids ?? []);
+  } catch {
+    return null;
+  }
+};
+
+export const setInMyList = async (id: string, inList: boolean): Promise<void> => {
+  const path = `/user/list/${encodeURIComponent(id)}`;
+  if (inList) await api.put(path);
+  else await api.delete(path);
+};

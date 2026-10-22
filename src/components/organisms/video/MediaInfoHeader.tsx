@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import EditImagesDialog from '@/components/organisms/admin/EditImagesDialog';
 import type { MediaItem } from '@/types';
 import { URL_PATHS } from '@/api/config';
+import { MoreLikeThis, MyListButton } from '@/components/molecules/TitleExtras';
 
 interface MediaInfoHeaderProps {
   item: MediaItem;
@@ -151,7 +152,6 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
             )}
           </div>
 
-          {(onPlay || trailerKey) && (
           <div className="mt-4 flex w-full flex-col gap-2">
             {onPlay && (
               <button
@@ -175,8 +175,8 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                 <span>{showTrailer ? 'Hide Trailer' : 'Trailer'}</span>
               </button>
             )}
+            <MyListButton contentId={detailsKey} />
           </div>
-          )}
         </div>
 
         {/* Meta / Details Column */}
@@ -383,6 +383,8 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
       {children && (
         <div className="border-t border-white/10 p-4 sm:p-6">{children}</div>
       )}
+
+      <MoreLikeThis contentId={detailsKey} />
     </div>
   );
 };
