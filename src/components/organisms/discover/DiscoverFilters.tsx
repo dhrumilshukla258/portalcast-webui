@@ -34,7 +34,7 @@ interface DiscoverFiltersProps {
   activeFilters: ActiveDiscoverFilters;
   onFilterChange: (key: SingleFilterKey, value: string | undefined) => void;
   onGenresChange: (values: string[]) => void;
-  // 'phone': one "Categories" button opening a full-screen picker (a row of five selectors does
+  // 'phone': one "Filters" button opening a full-screen picker (a row of five selectors does
   // not fit a phone); 'row' (default): the selectors in a row, each with its own list.
   variant?: 'row' | 'phone';
 }
@@ -209,7 +209,7 @@ function activeCount(f: ActiveDiscoverFilters): number {
 }
 
 /**
- * The phone's filters: a "Categories" button (with how many are set) opening a full-screen
+ * The phone's filters: a "Filters" button (with how many are set) opening a full-screen
  * picker. First the five selectors with their current values, then a selector's values;
  * "Show titles" closes it. Same choices and rules as the row.
  */
@@ -257,7 +257,7 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
         }`}
       >
         <SlidersHorizontal className="h-4 w-4" />
-        {count > 0 ? `Categories · ${count}` : 'All Categories'}
+        {count > 0 ? `Filters · ${count}` : 'Filters'}
         <ChevronDown className="h-4 w-4" />
       </button>
       {sheet && (
@@ -271,7 +271,7 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
             >
               {dim ? <ChevronLeft className="h-6 w-6" /> : <X className="h-6 w-6" />}
             </button>
-            <h2 className="flex-1 truncate text-lg font-bold text-white">{dim ? DIMENSION_LABELS[dim] : 'Categories'}</h2>
+            <h2 className="flex-1 truncate text-lg font-bold text-white">{dim ? DIMENSION_LABELS[dim] : 'Filters'}</h2>
             {count > 0 && !dim && (
               <button data-focusable="true" onClick={clearAll} className="rounded-full px-3 py-2 text-sm font-bold text-gray-300 hover:bg-white/10">
                 Clear all
