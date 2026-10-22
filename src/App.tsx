@@ -440,7 +440,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
         </React.Suspense>
       ) : (
         <div className="flex h-screen flex-col overflow-hidden app-bg font-sans text-gray-200">
-          <div className="flex min-h-0 w-full flex-1 flex-col px-2 py-0 sm:px-6 sm:py-6">
+          <div className="flex min-h-0 w-full flex-1 flex-col px-2 py-0 pb-16 sm:px-6 sm:py-6">
             <Header
               currentTitle={currentTitle}
               contentType={contentType}
