@@ -44,11 +44,8 @@ interface DiscoverFiltersProps {
   iconOnly?: boolean;
   /** 'phone', Home: Movies / Series inside the picker (at least one stays on). */
   types?: { movie: boolean; series: boolean; onToggle: (t: 'movie' | 'series') => void };
-  /** 'phone', Movies / Series pages: the per-category browse, from inside the picker. */
-  onBrowseCategories?: () => void;
-  browseLabel?: string;
-  /** 'phone', Movies / Series pages: the NAS library's titles of that type. */
-  onMyLibrary?: () => void;
+  /** 'phone': pages to open from the picker (My library, IPTV categories), before the selectors. */
+  links?: { label: string; note: string; onClick: () => void }[];
 }
 
 const DIMENSION_LABELS: Record<DiscoverFilterKey, string> = {
@@ -228,7 +225,7 @@ function activeCount(f: ActiveDiscoverFilters): number {
  * steps back a level and then closes it: each level is a browser history entry, consumed
  * here before the app's own Back handling sees it.
  */
-const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange, fullWidth = false, types, onBrowseCategories, browseLabel, iconOnly = false, onMyLibrary }) => {
+const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange, fullWidth = false, types, links, iconOnly = false }) => {
   const [sheet, setSheet] = useState(false);
   const [dim, setDim] = useState<DiscoverFilterKey | null>(null);
   // History entries this sheet pushed (1 open, 2 with a selector open).
@@ -280,7 +277,7 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
 
   if (!facets) return null;
   const dims = DIMENSION_ORDER.filter((d) => valuesFor(facets, d).length > 0);
-  if (dims.length === 0 && !types && !onBrowseCategories) return null;
+  if (dims.length === 0 && !types && !links?.length) return null;
   const count = activeCount(activeFilters) + (types && types.movie !== types.series ? 1 : 0);
   const toggleGenre = (value: string) => {
     const current = activeFilters.genre || [];
@@ -338,32 +335,20 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
                 </div>
               </div>
             )}
-            {onMyLibrary && (
+            {links?.map((l) => (
               <button
+                key={l.label}
                 data-focusable="true"
-                onClick={() => { afterClose.current = onMyLibrary; close(); }}
+                onClick={() => { afterClose.current = l.onClick; close(); }}
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-4 text-left hover:bg-white/5"
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block text-base font-bold text-white">My library</span>
-                  <span className="block truncate text-sm text-gray-500">Only the files on your NAS</span>
+                  <span className="block text-base font-bold text-white">{l.label}</span>
+                  <span className="block truncate text-sm text-gray-500">{l.note}</span>
                 </span>
                 <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" />
               </button>
-            )}
-            {onBrowseCategories && (
-              <button
-                data-focusable="true"
-                onClick={() => { afterClose.current = onBrowseCategories; close(); }}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-4 text-left hover:bg-white/5"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block text-base font-bold text-white">{browseLabel ?? 'IPTV categories'}</span>
-                  <span className="block truncate text-sm text-gray-500">The provider's own lists</span>
-                </span>
-                <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" />
-              </button>
-            )}
+            ))}
             {dims.map((d) => {
               const set = d === 'genre' ? (activeFilters.genre?.length ?? 0) > 0 : !!activeFilters[d];
               return (

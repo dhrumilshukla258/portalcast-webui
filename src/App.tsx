@@ -586,8 +586,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                         />
                       </>
                     }
-                    onOpenCategories={typedHome ? () => { setCategoryOnly(null); setCategoryType(typedHome); } : undefined}
-                    onOpenMyLibrary={typedHome ? () => { setCategoryOnly({ id: 'local', title: 'My library' }); setCategoryType(typedHome); } : undefined}
+                    onOpenCategories={(t) => { setCategoryOnly(null); setCategoryType(t); }}
+                    onOpenMyLibrary={(t) => { setCategoryOnly({ id: 'local', title: 'My library' }); setCategoryType(t); }}
                     onClick={handleDiscoverItemClick}
                     recommendations={recommendations}
                     recommendationsBasedOn={recommendationsBasedOn}

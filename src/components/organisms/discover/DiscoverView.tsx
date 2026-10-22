@@ -42,11 +42,11 @@ interface DiscoverViewProps {
   // The Movies / Series tabs (design-system.md, Screens): this view for one type, without the
   // type toggle; a Categories button opens the per-category browse.
   fixedType?: 'movie' | 'series';
-  onOpenCategories?: () => void;
+  onOpenCategories?: (type: 'movie' | 'series') => void;
   // The Continue Watching row, first on Home (design-system.md): App owns progress and playback.
   continueWatching?: React.ReactNode;
   /** Movies / Series: the NAS library's titles of that type (App), from the filter picker. */
-  onOpenMyLibrary?: () => void;
+  onOpenMyLibrary?: (type: 'movie' | 'series') => void;
   /** The Movies · Series · People chips row (App), given this page's filter button: the one row under the header. */
   sectionChips?: (filterButton: React.ReactNode) => React.ReactNode;
 }
@@ -412,6 +412,17 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     </>
   );
 
+  // My library (the NAS files) and IPTV categories (the provider's lists), from Filters: for this
+  // page's type on Movies / Series, for both on Home.
+  const libraryLinks = (fixedType ? [fixedType] : (['movie', 'series'] as const)).flatMap((t) => {
+    const what = t === 'movie' ? 'Movies' : 'Series';
+    const both = !fixedType;
+    return [
+      ...(onOpenMyLibrary ? [{ label: both ? `My library · ${what}` : 'My library', note: 'Only the files on your NAS', onClick: () => onOpenMyLibrary(t) }] : []),
+      ...(onOpenCategories ? [{ label: both ? `IPTV categories · ${what}` : 'IPTV categories', note: "The provider's own lists", onClick: () => onOpenCategories(t) }] : []),
+    ];
+  });
+
   // Movies / Series on Home: at least one stays on ("neither" means nothing here).
   const toggleType = (t: 'movie' | 'series') => {
     if (t === 'movie') {
@@ -442,9 +453,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
             onFilterChange={handleFilterChange}
             onGenresChange={handleGenresChange}
             types={fixedType ? undefined : { movie: showMovies, series: showSeries, onToggle: toggleType }}
-            onBrowseCategories={fixedType ? onOpenCategories : undefined}
-            browseLabel={fixedType ? 'IPTV categories' : undefined}
-            onMyLibrary={fixedType ? onOpenMyLibrary : undefined}
+            links={libraryLinks}
           />
         )}
       </div>
