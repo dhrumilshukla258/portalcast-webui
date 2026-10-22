@@ -5,6 +5,8 @@ import {
   getDiscoverBrowse,
   getDiscoverRows,
   getRecommendations,
+  getHome,
+  type HomeRow,
 } from '@/api/endpoints/discover';
 import type { DiscoverFacets } from '@/api/endpoints/discover';
 import type { MediaItem } from '@/types';
@@ -41,6 +43,10 @@ export function useDiscover() {
   const [recommendations, setRecommendations] = useState<MediaItem[]>([]);
   const [recommendationsBasedOn, setRecommendationsBasedOn] = useState<string | null>(null);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  // The server's prepared personal rows (GET /api/v2/home) and the viewer's genre order; empty
+  // with an older server, which gets the single recommendations row instead.
+  const [homeRows, setHomeRows] = useState<HomeRow[]>([]);
+  const [genreOrder, setGenreOrder] = useState<string[]>([]);
 
   const [whatsNew, setWhatsNew] = useState<DiscoverRowState>(EMPTY_ROW);
   const [loadingWhatsNew, setLoadingWhatsNew] = useState(false);
@@ -73,6 +79,17 @@ export function useDiscover() {
     if (!user) return;
     setLoadingRecommendations(true);
     try {
+      try {
+        const home = await getHome(type);
+        setHomeRows(home.rows);
+        setGenreOrder(home.genreOrder);
+        setRecommendations([]);
+        setRecommendationsBasedOn(null);
+        return;
+      } catch {
+        setHomeRows([]);
+        setGenreOrder([]);
+      }
       const { items, basedOnTitle } = await getRecommendations(type);
       setRecommendations(items);
       setRecommendationsBasedOn(basedOnTitle);
@@ -224,6 +241,8 @@ export function useDiscover() {
     recommendationsBasedOn,
     loadingRecommendations,
     fetchRecommendations,
+    homeRows,
+    genreOrder,
     whatsNew,
     loadingWhatsNew,
     fetchWhatsNew,

@@ -4,7 +4,7 @@ import MediaCard from '@/components/molecules/MediaCard';
 import MediaCardRow from '@/components/organisms/browse/MediaCardRow';
 import RecommendedRow from '@/components/organisms/browse/RecommendedRow';
 import DiscoverFilters, { hasAnyActiveFilter, type ActiveDiscoverFilters, type SingleFilterKey } from '@/components/organisms/discover/DiscoverFilters';
-import { getDiscoverBrowse } from '@/api/endpoints/discover';
+import { getDiscoverBrowse, type HomeRow } from '@/api/endpoints/discover';
 import { useDiscover } from '@/hooks/useDiscover';
 import type { MediaItem } from '@/types';
 
@@ -19,6 +19,11 @@ interface DiscoverViewProps {
   recommendations: MediaItem[];
   recommendationsBasedOn: string | null;
   loadingRecommendations: boolean;
+  // The server's prepared personal rows ("Because you watched X", "Top picks for you"...),
+  // shown instead of the single Recommended row when the server has them.
+  homeRows: HomeRow[];
+  // The viewer's genres, most watched first: genre rows follow this order.
+  genreOrder: string[];
   // Id of the card currently being resolved (variants check + resolve) —
   // shows a spinner on just that card so a slow click reads as "working" not
   // "broken." Owned by App.tsx since handleDiscoverItemClick lives there.
@@ -42,6 +47,8 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   recommendations,
   recommendationsBasedOn,
   loadingRecommendations,
+  homeRows,
+  genreOrder,
   loadingItemId,
   onActiveTypeChange,
   onBackdropItemsChange,
@@ -125,11 +132,14 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
 
   useEffect(() => {
     if (!facets || facets.genres.length === 0) return;
-    const targetGenres = facets.genres.slice(0, TOP_GENRE_COUNT).map((g) => g.value);
+    // The viewer's genres first (most watched first, from the server), then the biggest.
+    const byCount = facets.genres.map((g) => g.value);
+    const known = new Set(byCount);
+    const targetGenres = [...new Set([...genreOrder.filter((g) => known.has(g)), ...byCount])].slice(0, TOP_GENRE_COUNT);
     beginGenreRefresh(targetGenres);
     fetchGenreRows(targetGenres, activeType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [facets, fetchGenreRows]);
+  }, [facets, fetchGenreRows, genreOrder.join('|')]);
 
   const runFilteredBrowse = useCallback(
     async (filters: ActiveDiscoverFilters, page: number, opts?: { force?: boolean }) => {
@@ -260,10 +270,11 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     if (hasActiveFilter) return filteredItems;
     return [
       ...recommendations,
+      ...homeRows.flatMap((r) => r.data),
       ...whatsNew.items,
       ...Object.values(genreRows).flatMap((row) => row.items),
     ];
-  }, [hasActiveFilter, filteredItems, recommendations, whatsNew.items, genreRows]);
+  }, [hasActiveFilter, filteredItems, recommendations, homeRows, whatsNew.items, genreRows]);
 
   // Debounced instead of reporting synchronously on every `backdropItems`
   // change: each of the ~9 genre rows resolves its own fetch independently
@@ -336,13 +347,20 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     </>
   ) : (
     <>
-      <RecommendedRow
-        onClick={onClick}
-        items={recommendations.slice(0, RECOMMENDED_ROW_LIMIT)}
-        loading={loadingRecommendations}
-        basedOnTitle={recommendationsBasedOn}
-        loadingItemId={loadingItemId}
-      />
+      {homeRows.length > 0 ? (
+        // Complete as served (prepared on the server): no paging.
+        homeRows.map((row) => (
+          <MediaCardRow key={row.key} title={row.title} onClick={onClick} items={row.data} loading={false} loadingItemId={loadingItemId} />
+        ))
+      ) : (
+        <RecommendedRow
+          onClick={onClick}
+          items={recommendations.slice(0, RECOMMENDED_ROW_LIMIT)}
+          loading={loadingRecommendations}
+          basedOnTitle={recommendationsBasedOn}
+          loadingItemId={loadingItemId}
+        />
+      )}
       <MediaCardRow
         title="What's New"
         onClick={onClick}

@@ -7,6 +7,7 @@ export const DISCOVER_PATHS = {
   BROWSE: '/v2/discover/browse',
   ROWS: '/v2/discover/rows',
   RECOMMENDATIONS: '/v2/discover/recommendations',
+  HOME: '/v2/home',
   VARIANTS: '/v2/discover/variants',
   PEOPLE: '/v2/people',
   PEOPLE_SEARCH: '/v2/search/people',
@@ -99,6 +100,27 @@ export const getRecommendations = async (
     })
   );
   return { items: response?.data || [], basedOnTitle: response?.basedOnTitle ?? null };
+};
+
+/** One of the viewer's personal rows, prepared on the server (GET /api/v2/home). */
+export interface HomeRow {
+  key: string;
+  kind: 'because' | 'picks' | 'person' | 'popular' | string;
+  title: string;
+  data: MediaItem[];
+}
+
+export interface HomeResult {
+  rows: HomeRow[];
+  /** The viewer's genres, most watched first: the order of the genre rows. */
+  genreOrder: string[];
+}
+
+/** The viewer's prepared rows (servers from 2026-10-22; older ones answer 404). */
+export const getHome = async (type?: 'movie' | 'series', signal?: AbortSignal): Promise<HomeResult> => {
+  const response = await cachedGet<HomeResult>(DISCOVER_PATHS.HOME, { params: type ? { type } : undefined, signal });
+  if (!response?.rows) throw new Error('No rows in home answer.');
+  return { rows: response.rows, genreOrder: response.genreOrder ?? [] };
 };
 
 export interface DiscoverVariant extends MediaItem {

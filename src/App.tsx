@@ -99,7 +99,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     providerKey,
   } = useMediaLibrary(!!detailItem);
 
-  const { recommendations, recommendationsBasedOn, loadingRecommendations, fetchRecommendations } = useDiscover();
+  const { recommendations, recommendationsBasedOn, loadingRecommendations, fetchRecommendations, homeRows, genreOrder } = useDiscover();
 
   // Mirrors DiscoverView's own Movies/Series checkbox state (reported up via
   // onActiveTypeChange) so "Because You Watched" can be based on the
@@ -483,6 +483,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                     recommendations={recommendations}
                     recommendationsBasedOn={recommendationsBasedOn}
                     loadingRecommendations={loadingRecommendations}
+                    homeRows={homeRows}
+                    genreOrder={genreOrder}
                     loadingItemId={discoverLoadingItemId}
                     onActiveTypeChange={setDiscoverActiveType}
                     onBackdropItemsChange={mergeBackdropItems}
