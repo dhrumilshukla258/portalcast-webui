@@ -84,7 +84,7 @@ const PeopleView: React.FC<PeopleViewProps> = ({ sectionChips }) => {
       <div className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-[#05080F] px-3 pb-2 pt-2 sm:-mx-6 sm:px-6">
         {sectionChips?.(null)}
         <div className="mt-2 flex items-baseline gap-3 sm:mt-0">
-          <h2 className="text-xl font-bold text-white sm:text-2xl">People</h2>
+          <h2 className="text-xl font-bold text-white sm:text-2xl">Cast</h2>
           {!hits && total > 0 && <span className="text-sm text-gray-400">{total.toLocaleString()}</span>}
         </div>
         <label className="mt-2 flex h-10 items-center gap-2 rounded-full border border-white/10 bg-[#0b1120] px-4">
@@ -122,7 +122,7 @@ const PeopleView: React.FC<PeopleViewProps> = ({ sectionChips }) => {
 
       {error && people.length === 0 && (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <p className="text-gray-300">Couldn't load people.</p>
+          <p className="text-gray-300">Couldn't load the cast.</p>
           <button data-focusable="true" onClick={() => void load(role, 1)} className="rounded-full bg-white px-5 py-2 font-bold text-[#0A0F1C]">Retry</button>
         </div>
       )}

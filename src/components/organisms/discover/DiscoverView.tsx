@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { Check } from 'lucide-react';
 import MediaCard from '@/components/molecules/MediaCard';
 import MediaCardRow from '@/components/organisms/browse/MediaCardRow';
 import RecommendedRow from '@/components/organisms/browse/RecommendedRow';
@@ -46,7 +45,9 @@ interface DiscoverViewProps {
   onOpenCategories?: () => void;
   // The Continue Watching row, first on Home (design-system.md): App owns progress and playback.
   continueWatching?: React.ReactNode;
-  /** Phone: the Movies · Series · People chips row (App), given this page's filter button. */
+  /** Movies / Series: the NAS library's titles of that type (App), from the filter picker. */
+  onOpenMyLibrary?: () => void;
+  /** The Movies · Series · People chips row (App), given this page's filter button: the one row under the header. */
   sectionChips?: (filterButton: React.ReactNode) => React.ReactNode;
 }
 
@@ -64,6 +65,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   onOpenCategories,
   continueWatching,
   sectionChips,
+  onOpenMyLibrary,
 }) => {
   const {
     facets,
@@ -441,74 +443,10 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
             onGenresChange={handleGenresChange}
             types={fixedType ? undefined : { movie: showMovies, series: showSeries, onToggle: toggleType }}
             onBrowseCategories={fixedType ? onOpenCategories : undefined}
-            browseLabel={fixedType ? `Browse ${fixedType === 'movie' ? 'movies' : 'series'} by category` : undefined}
+            browseLabel={fixedType ? 'IPTV categories' : undefined}
+            onMyLibrary={fixedType ? onOpenMyLibrary : undefined}
           />
         )}
-        {fixedType ? (
-          // From sm up (phones: the chosen chip says where you are).
-          <div className="hidden items-center gap-3 px-1 sm:flex">
-            <h2 className="text-xl font-bold text-white sm:text-2xl">{fixedType === 'movie' ? 'Movies' : 'Series'}</h2>
-            {!!whatsNew.total && (
-              <span className="text-sm text-gray-400">
-                {whatsNew.total.toLocaleString()} {fixedType === 'movie' ? 'films' : 'series'}
-              </span>
-            )}
-            {onOpenCategories && (
-              <button
-                data-focusable="true"
-                onClick={onOpenCategories}
-                className="ml-auto flex h-10 shrink-0 items-center rounded-full border border-white/10 bg-[#0b1120]/85 px-4 text-sm font-bold text-gray-300 transition-all hover:border-white/20 hover:text-white focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light"
-              >
-                Categories
-              </button>
-            )}
-          </div>
-        ) : null}
-        {!fixedType ? (
-        // Phones: Movies / Series are inside the filter picker (the chips row's filter icon).
-        <div className="hidden items-center gap-2 sm:flex">
-          {(['movie', 'series'] as const).map((t) => {
-            const isActive = t === 'movie' ? showMovies : showSeries;
-            return (
-              <button
-                key={t}
-                data-focusable="true"
-                onClick={() => {
-                  // Unselecting both doesn't have a sensible meaning here (it
-                  // isn't "show neither" anywhere in this UI) — block turning
-                  // off the last remaining one instead of silently falling
-                  // back to "show everything" behind the user's back.
-                  if (t === 'movie') {
-                    if (showMovies && !showSeries) return;
-                    setShowMovies((v) => !v);
-                  } else {
-                    if (showSeries && !showMovies) return;
-                    setShowSeries((v) => !v);
-                  }
-                }}
-                className={`flex h-10 flex-1 shrink-0 items-center justify-center gap-1.5 rounded-full border px-4 text-sm font-bold capitalize sm:flex-none transition-all focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light ${
-                  isActive
-                    ? 'border-transparent bg-linear-to-r from-sky-400 to-blue-500 text-white'
-                    : 'border-white/10 bg-[#0b1120]/85 text-gray-300 hover:border-white/20 hover:text-white'
-                }`}
-              >
-                {isActive && <Check size={14} />}
-                {t === 'movie' ? 'Movies' : 'Series'}
-              </button>
-            );
-          })}
-        </div>
-        ) : null}
-        {/* The selector row (Genre / Language / Country / Channel / Mood), on its own line
-            under Movies/Series — the same layout as the TV app. */}
-        <div className="mt-2 hidden border-t border-white/5 pt-2 sm:block">
-          <DiscoverFilters
-            facets={facets}
-            activeFilters={activeFilters}
-            onFilterChange={handleFilterChange}
-            onGenresChange={handleGenresChange}
-          />
-        </div>
       </div>
 
       <div key={contentKey} className="content-transition">

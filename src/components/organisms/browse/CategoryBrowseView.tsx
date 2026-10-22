@@ -7,6 +7,8 @@ import MediaCard from '@/components/molecules/MediaCard';
 
 interface CategoryBrowseViewProps {
   type: 'movie' | 'series';
+  /** Open straight on this category (My library: the NAS files), no list; Back leaves. */
+  only?: { id: string; title: string };
   /** Open a title (App: the same path as Search results). */
   onOpenTitle: (item: MediaItem, isSeries: boolean) => void;
   /** Leave: back to the Movies / Series tab. */
@@ -15,6 +17,9 @@ interface CategoryBrowseViewProps {
 
 interface Group { id: string; title: string }
 
+/** The catalog category of NAS library titles (server: content/metaEnrichment.ts LOCAL_CATEGORY). */
+const LOCAL_CATEGORY = 'local';
+
 /**
  * Browse by category (the IPTV portal's categories), in the new layout: a full-screen list of
  * categories, then a poster grid of the chosen one (endless scroll). Back (the arrow, Escape
@@ -22,7 +27,7 @@ interface Group { id: string; title: string }
  * level is a browser history entry consumed here, so the app's own Back handling (the old
  * per-category screen) never sees it.
  */
-const CategoryBrowseView: React.FC<CategoryBrowseViewProps> = ({ type, onOpenTitle, onClose }) => {
+const CategoryBrowseView: React.FC<CategoryBrowseViewProps> = ({ type, only, onOpenTitle, onClose }) => {
   const [groups, setGroups] = useState<Group[] | null>(null);
   const [group, setGroup] = useState<Group | null>(null);
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -35,7 +40,13 @@ const CategoryBrowseView: React.FC<CategoryBrowseViewProps> = ({ type, onOpenTit
 
   useEffect(() => {
     (type === 'movie' ? getMovieCategories() : getSeriesCategories())
-      .then((r) => setGroups([{ id: '*', title: `All ${label.toLowerCase()}` }, ...r.data.map((g) => ({ id: String(g.id), title: String(g.title) }))]))
+      // The provider's lists only: the NAS library has its own filter (My library).
+      .then((r) => setGroups([
+        { id: '*', title: `All ${label.toLowerCase()}` },
+        ...r.data
+          .map((g) => ({ id: String(g.id), title: String(g.title) }))
+          .filter((g) => g.id !== LOCAL_CATEGORY && !/^my library$/i.test(g.title.trim())),
+      ]))
       .catch(() => setGroups([]));
   }, [type, label]);
 
@@ -46,6 +57,7 @@ const CategoryBrowseView: React.FC<CategoryBrowseViewProps> = ({ type, onOpenTit
   };
   useEffect(() => {
     push();
+    if (only) choose(only, false);
     const onPop = (e: PopStateEvent) => {
       // Ours only when it lands below our top entry: closing a title opened from here lands
       // on our top entry, and that Back is the app's.
@@ -83,8 +95,8 @@ const CategoryBrowseView: React.FC<CategoryBrowseViewProps> = ({ type, onOpenTit
     }
   }, [type]);
 
-  const choose = (g: Group) => {
-    push();
+  const choose = (g: Group, withEntry = true) => {
+    if (withEntry) push();
     setGroup(g);
     setItems([]);
     setTotal(0);
@@ -109,7 +121,7 @@ const CategoryBrowseView: React.FC<CategoryBrowseViewProps> = ({ type, onOpenTit
         <button data-focusable="true" onClick={back} aria-label="Back" className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/10">
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <h2 className="min-w-0 flex-1 truncate text-lg font-bold text-white sm:text-xl">{group ? group.title : `${label} by category`}</h2>
+        <h2 className="min-w-0 flex-1 truncate text-lg font-bold text-white sm:text-xl">{group ? group.title : `IPTV categories · ${label}`}</h2>
         {group && total > 0 && <span className="shrink-0 text-sm text-gray-400">{total.toLocaleString()}</span>}
       </div>
 

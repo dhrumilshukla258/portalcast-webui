@@ -41,7 +41,8 @@ const SportsView: React.FC<SportsViewProps> = ({ onPlayChannel, onFindChannel })
   useEffect(() => { void load(); }, [load]);
 
   const games = useMemo(() => answer?.games ?? [], [answer]);
-  const sports = useMemo(() => sportsOf(games), [games]);
+  // A chip per chosen league's sport, even one with no game this month (its next games show).
+  const sports = useMemo(() => [...new Set([...(answer?.leagues ?? []).map((l) => l.sport), ...sportsOf(games)])], [answer, games]);
   const days = useMemo(() => sportsDays(games, sport), [games, sport]);
   const channelsOf = useCallback(
     (g: SportsGame) => g.channels.map((c) => channels.get(c.channelId)).filter((c): c is MediaItem => !!c),

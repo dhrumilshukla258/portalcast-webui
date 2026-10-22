@@ -5,14 +5,14 @@ export type HomeSection = 'home' | 'movie' | 'series' | 'people';
 const CHIPS: { id: Exclude<HomeSection, 'home'>; label: string }[] = [
   { id: 'movie', label: 'Movies' },
   { id: 'series', label: 'Series' },
-  { id: 'people', label: 'People' },
+  { id: 'people', label: 'Cast' },
 ];
 
 /**
- * Phones: the second (and last) top row: Movies · Series · People as compact chips from the
- * left, and the page's filter button on the right (`trailing`). The bottom bar holds Home,
- * Live TV, Sports, Search and My List. The chosen chip is filled; choosing it again goes back
- * to Home. Hidden from sm up, where the header has these tabs and the filter row shows.
+ * Home's sections, the same on phone, PC and TV: Movies · Series · People as compact chips
+ * from the left and the page's Filters button on the right (`trailing`): the one row under
+ * the header (owner: two rows at the top, everywhere). The chosen chip is filled; choosing it
+ * again goes back to Home.
  */
 const SectionChips: React.FC<{ active: HomeSection; onSelect: (s: HomeSection) => void; trailing?: React.ReactNode }> = ({
   active,
@@ -32,7 +32,7 @@ const SectionChips: React.FC<{ active: HomeSection; onSelect: (s: HomeSection) =
         {c.label}
       </button>
     ))}
-    {trailing && <div className="ml-auto sm:hidden">{trailing}</div>}
+    {trailing && <div className="ml-auto">{trailing}</div>}
   </div>
 );
 

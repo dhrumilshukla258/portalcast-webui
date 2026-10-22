@@ -59,7 +59,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   // Movies / Series tabs' "Browse by category" on a phone: open the category list, not just the last category.
   const [openCategoryDrawer, setOpenCategoryDrawer] = useState(false);
   const onCategoryDrawerOpened = useCallback(() => setOpenCategoryDrawer(false), []);
-  const [showDiscover, setShowDiscover] = useState(false);
+  // Home on load, always (owner: the old Movies / Live TV screen showed first).
+  const [showDiscover, setShowDiscover] = useState(true);
   const [variantPickerItem, setVariantPickerItem] = useState<MediaItem | null>(null);
   const [variantPickerOptions, setVariantPickerOptions] = useState<DiscoverVariant[]>([]);
   // Track whether the detail modal pushed its own history entry
@@ -226,6 +227,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   const [overlayPage, setOverlayPage] = useState<'discover' | 'search' | 'mylist' | 'movies' | 'series' | 'sports' | 'people'>('discover');
   // Browse by category (Movies / Series tabs), the new-layout page over the tab.
   const [categoryType, setCategoryType] = useState<'movie' | 'series' | null>(null);
+  // My library (the NAS files) instead of the IPTV categories list.
+  const [categoryOnly, setCategoryOnly] = useState<{ id: string; title: string } | null>(null);
   useEffect(() => { setCategoryType(null); }, [overlayPage]);
   const isPeoplePage = showDiscover && overlayPage === 'people';
   // Sports (plan Phase 6.7) on the same layer; its "Find channel" opens Search on Live TV.
@@ -363,7 +366,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
       if (overlayPage === 'search') return 'Search';
       if (overlayPage === 'mylist') return 'My List';
       if (overlayPage === 'sports') return 'Sports';
-      if (overlayPage === 'people') return 'People';
+      if (overlayPage === 'people') return 'Cast';
       if (overlayPage === 'movies') return 'Movies';
       if (overlayPage === 'series') return 'Series';
       return 'Discover';
@@ -556,7 +559,13 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                 />
               )}
               {showDiscover && categoryType && (
-                <CategoryBrowseView key={categoryType} type={categoryType} onOpenTitle={searchOpenTitle} onClose={() => setCategoryType(null)} />
+                <CategoryBrowseView
+                  key={`${categoryType}:${categoryOnly?.id ?? 'list'}`}
+                  type={categoryType}
+                  only={categoryOnly ?? undefined}
+                  onOpenTitle={searchOpenTitle}
+                  onClose={() => { setCategoryType(null); setCategoryOnly(null); }}
+                />
               )}
               {showDiscover && (overlayPage === 'discover' || !!typedHome) && (
                 <React.Suspense fallback={null}>
@@ -577,7 +586,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                         />
                       </>
                     }
-                    onOpenCategories={typedHome ? () => setCategoryType(typedHome) : undefined}
+                    onOpenCategories={typedHome ? () => { setCategoryOnly(null); setCategoryType(typedHome); } : undefined}
+                    onOpenMyLibrary={typedHome ? () => { setCategoryOnly({ id: 'local', title: 'My library' }); setCategoryType(typedHome); } : undefined}
                     onClick={handleDiscoverItemClick}
                     recommendations={recommendations}
                     recommendationsBasedOn={recommendationsBasedOn}

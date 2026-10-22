@@ -47,6 +47,8 @@ interface DiscoverFiltersProps {
   /** 'phone', Movies / Series pages: the per-category browse, from inside the picker. */
   onBrowseCategories?: () => void;
   browseLabel?: string;
+  /** 'phone', Movies / Series pages: the NAS library's titles of that type. */
+  onMyLibrary?: () => void;
 }
 
 const DIMENSION_LABELS: Record<DiscoverFilterKey, string> = {
@@ -226,7 +228,7 @@ function activeCount(f: ActiveDiscoverFilters): number {
  * steps back a level and then closes it: each level is a browser history entry, consumed
  * here before the app's own Back handling sees it.
  */
-const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange, fullWidth = false, types, onBrowseCategories, browseLabel, iconOnly = false }) => {
+const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange, fullWidth = false, types, onBrowseCategories, browseLabel, iconOnly = false, onMyLibrary }) => {
   const [sheet, setSheet] = useState(false);
   const [dim, setDim] = useState<DiscoverFilterKey | null>(null);
   // History entries this sheet pushed (1 open, 2 with a selector open).
@@ -292,7 +294,8 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
   };
 
   const sheetNode = (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-[#0A0F1C]" role="dialog" aria-modal="true" data-focus-group="discover-phone-filters">
+    // Phones: the whole screen; wider screens: a full-height panel on the right.
+    <div className="fixed inset-0 z-[100] flex flex-col bg-[#05080F] sm:left-auto sm:w-[420px] sm:border-l sm:border-white/10 sm:shadow-2xl" role="dialog" aria-modal="true" data-focus-group="discover-phone-filters">
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-white/10 px-2 pt-[env(safe-area-inset-top)]">
         <button
           data-focusable="true"
@@ -335,13 +338,29 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
                 </div>
               </div>
             )}
+            {onMyLibrary && (
+              <button
+                data-focusable="true"
+                onClick={() => { afterClose.current = onMyLibrary; close(); }}
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-4 text-left hover:bg-white/5"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-bold text-white">My library</span>
+                  <span className="block truncate text-sm text-gray-500">Only the files on your NAS</span>
+                </span>
+                <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" />
+              </button>
+            )}
             {onBrowseCategories && (
               <button
                 data-focusable="true"
                 onClick={() => { afterClose.current = onBrowseCategories; close(); }}
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-4 text-left hover:bg-white/5"
               >
-                <span className="min-w-0 flex-1 text-base font-bold text-white">{browseLabel ?? 'Browse by category'}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-bold text-white">{browseLabel ?? 'IPTV categories'}</span>
+                  <span className="block truncate text-sm text-gray-500">The provider's own lists</span>
+                </span>
                 <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" />
               </button>
             )}
@@ -396,11 +415,12 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
           data-focusable="true"
           onClick={open}
           aria-label={count > 0 ? `Filters, ${count} set` : 'Filters'}
-          className={`relative flex h-9 w-9 items-center justify-center rounded-full border ${
+          className={`relative flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-full border px-2.5 text-sm font-bold ${
             count > 0 ? 'border-transparent bg-sky-400 text-[#082F49]' : 'border-white/25 text-gray-200'
           }`}
         >
           <SlidersHorizontal className="h-4 w-4" />
+          <span className="hidden sm:inline">Filters</span>
           {count > 0 && (
             <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-[#05080F]">{count}</span>
           )}
