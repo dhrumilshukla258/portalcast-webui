@@ -19,7 +19,7 @@ const SectionChips: React.FC<{ active: HomeSection; onSelect: (s: HomeSection) =
   onSelect,
   trailing,
 }) => (
-  <div className="flex items-center gap-2 sm:hidden" data-focus-group="section-chips">
+  <div className="flex items-center gap-2" data-focus-group="section-chips">
     {CHIPS.map((c) => (
       <button
         key={c.id}
@@ -32,7 +32,7 @@ const SectionChips: React.FC<{ active: HomeSection; onSelect: (s: HomeSection) =
         {c.label}
       </button>
     ))}
-    {trailing && <div className="ml-auto">{trailing}</div>}
+    {trailing && <div className="ml-auto sm:hidden">{trailing}</div>}
   </div>
 );
 

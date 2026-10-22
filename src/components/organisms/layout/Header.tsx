@@ -61,6 +61,8 @@ export const Header: React.FC<HeaderProps> = React.memo(
     handleBack,
   }) => {
     const overlayActive = isDiscoverActive || isSearchActive || isMyListActive || isSportsActive || isPeopleActive || !!typedHome;
+    // Home covers its sections (Movies, Series, People: chips on the page) and their category browse.
+    const homeActive = isDiscoverActive || !!typedHome || isPeopleActive || (!overlayActive && contentType !== 'tv');
     const { user, logout } = useAuth();
     const { activeUserCount } = useSocket();
     const navigate = useNavigate();
@@ -136,7 +138,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           {onSelectSearch && (
             <button
               onClick={onSelectSearch}
-              className={`order-4 sm:order-none flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+              className={`order-4 flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
                 isSearchActive
                   ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                   : 'text-gray-400 hover:bg-white/10 hover:text-white'
@@ -153,13 +155,13 @@ export const Header: React.FC<HeaderProps> = React.memo(
           {onSelectDiscover && (
             <button
               onClick={onSelectDiscover}
-              className={`order-1 sm:order-none flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
-                isDiscoverActive
+              className={`order-1 flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+                homeActive
                   ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                   : 'text-gray-400 hover:bg-white/10 hover:text-white'
               }`}
               data-focusable="true"
-              data-default-focus={isDiscoverActive ? 'true' : undefined}
+              data-default-focus={homeActive ? 'true' : undefined}
               tabIndex={-1}
               title="Home"
             >
@@ -173,7 +175,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           )}
           <button
             onClick={() => (onSelectTypedHome ? onSelectTypedHome('movie') : handleContentTypeChange('movie'))}
-            className={`hidden sm:flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+            className={`hidden flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
               (typedHome === 'movie' || (!overlayActive && contentType === 'movie'))
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
@@ -192,7 +194,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           </button>
           <button
             onClick={() => (onSelectTypedHome ? onSelectTypedHome('series') : handleContentTypeChange('series'))}
-            className={`hidden sm:flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+            className={`hidden flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
               (typedHome === 'series' || (!overlayActive && contentType === 'series'))
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
@@ -212,7 +214,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           {onSelectPeople && (
             <button
               onClick={onSelectPeople}
-              className={`hidden sm:flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+              className={`hidden flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
                 isPeopleActive
                   ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                   : 'text-gray-400 hover:bg-white/10 hover:text-white'
@@ -227,7 +229,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           )}
           <button
             onClick={() => handleContentTypeChange('tv')}
-            className={`order-2 sm:order-none flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+            className={`order-2 flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
               !overlayActive && contentType === 'tv'
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
@@ -247,7 +249,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           {onSelectSports && (
             <button
               onClick={onSelectSports}
-              className={`order-3 sm:order-none flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+              className={`order-3 flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
                 isSportsActive
                   ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                   : 'text-gray-400 hover:bg-white/10 hover:text-white'
@@ -264,7 +266,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           {onSelectMyList && (
             <button
               onClick={onSelectMyList}
-              className={`order-5 sm:order-none flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+              className={`order-5 flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
                 isMyListActive
                   ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                   : 'text-gray-400 hover:bg-white/10 hover:text-white'
