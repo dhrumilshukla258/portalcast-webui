@@ -17,6 +17,9 @@ export interface HeaderProps {
   /** The My List page (saved titles). */
   isMyListActive?: boolean;
   onSelectMyList?: () => void;
+  /** Movies / Series showing Home's layout for that type (their per-category browse counts as the same tab). */
+  typedHome?: 'movie' | 'series';
+  onSelectTypedHome?: (type: 'movie' | 'series') => void;
   sort: string | null | undefined;
   cycleSort: () => void;
   handleClearWatched: () => void;
@@ -38,6 +41,8 @@ export const Header: React.FC<HeaderProps> = React.memo(
     onSelectSearch,
     isMyListActive = false,
     onSelectMyList,
+    typedHome,
+    onSelectTypedHome,
     sort,
     cycleSort,
     handleClearWatched,
@@ -45,7 +50,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
     historyLength,
     handleBack,
   }) => {
-    const overlayActive = isDiscoverActive || isSearchActive || isMyListActive;
+    const overlayActive = isDiscoverActive || isSearchActive || isMyListActive || !!typedHome;
     const { user, logout } = useAuth();
     const { activeUserCount } = useSocket();
     const navigate = useNavigate();
@@ -155,14 +160,14 @@ export const Header: React.FC<HeaderProps> = React.memo(
             </button>
           )}
           <button
-            onClick={() => handleContentTypeChange('movie')}
+            onClick={() => (onSelectTypedHome ? onSelectTypedHome('movie') : handleContentTypeChange('movie'))}
             className={`flex flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
-              !overlayActive && contentType === 'movie'
+              (typedHome === 'movie' || (!overlayActive && contentType === 'movie'))
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
             }`}
             data-focusable="true"
-            data-default-focus={!overlayActive && contentType === 'movie' ? 'true' : undefined}
+            data-default-focus={(typedHome === 'movie' || (!overlayActive && contentType === 'movie')) ? 'true' : undefined}
             tabIndex={-1}
             title="Movies"
           >
@@ -174,14 +179,14 @@ export const Header: React.FC<HeaderProps> = React.memo(
             <span>Movies</span>
           </button>
           <button
-            onClick={() => handleContentTypeChange('series')}
+            onClick={() => (onSelectTypedHome ? onSelectTypedHome('series') : handleContentTypeChange('series'))}
             className={`flex flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
-              !overlayActive && contentType === 'series'
+              (typedHome === 'series' || (!overlayActive && contentType === 'series'))
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
             }`}
             data-focusable="true"
-            data-default-focus={!overlayActive && contentType === 'series' ? 'true' : undefined}
+            data-default-focus={(typedHome === 'series' || (!overlayActive && contentType === 'series')) ? 'true' : undefined}
             tabIndex={-1}
             title="Series"
           >

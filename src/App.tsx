@@ -242,10 +242,15 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   // Global Search (the TV app's Search tab) lives on the same layer as Discover: a title
   // opened from it is shown over it, and Back returns to the results.
-  const [overlayPage, setOverlayPage] = useState<'discover' | 'search' | 'mylist'>('discover');
+  const [overlayPage, setOverlayPage] = useState<'discover' | 'search' | 'mylist' | 'movies' | 'series'>('discover');
   const isSearchPage = showDiscover && overlayPage === 'search';
   // My List (design Phase 6) lives on the same layer as Discover and Search.
   const isMyListPage = showDiscover && overlayPage === 'mylist';
+  // The Movies / Series tabs: Home's layout for one type (design Phase 6.3); their per-category
+  // browse (the regular Movies/Series section) opens from its Categories button.
+  const typedHome: 'movie' | 'series' | undefined = !showDiscover
+    ? undefined
+    : overlayPage === 'movies' ? 'movie' : overlayPage === 'series' ? 'series' : undefined;
   const searchOpenTitle = useCallback(
     (item: MediaItem, isSeries: boolean) => {
       openDiscoverItem({
@@ -333,7 +338,13 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     // nothing about switching to Discover ever touches `context`.
     const isDiscoverBrowsing =
       showDiscover && !detailItem && !(currentSeriesItem && contentType === 'series');
-    if (isDiscoverBrowsing) return overlayPage === 'search' ? 'Search' : overlayPage === 'mylist' ? 'My List' : 'Discover';
+    if (isDiscoverBrowsing) {
+      if (overlayPage === 'search') return 'Search';
+      if (overlayPage === 'mylist') return 'My List';
+      if (overlayPage === 'movies') return 'Movies';
+      if (overlayPage === 'series') return 'Series';
+      return 'Discover';
+    }
 
     // openDiscoverItem's series branch calls fetchData (updating
     // context.parentTitle correctly), but its movie branch never touches
@@ -436,6 +447,13 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
               isDiscoverActive={showDiscover && overlayPage === 'discover'}
               isSearchActive={isSearchPage}
               isMyListActive={isMyListPage}
+              typedHome={typedHome}
+              onSelectTypedHome={(t) => {
+                setDetailItem(null);
+                setCurrentSeriesItem(null);
+                setOverlayPage(t === 'movie' ? 'movies' : 'series');
+                setShowDiscover(true);
+              }}
               onSelectMyList={() => {
                 setDetailItem(null);
                 setCurrentSeriesItem(null);
@@ -500,9 +518,13 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                   active={!detailItem && !(currentSeriesItem && contentType === 'series')}
                 />
               )}
-              {showDiscover && overlayPage === 'discover' && (
+              {showDiscover && (overlayPage === 'discover' || !!typedHome) && (
                 <React.Suspense fallback={null}>
                   <DiscoverView
+                    // A fresh view per tab: Home, Movies and Series each keep their own filters.
+                    key={overlayPage}
+                    fixedType={typedHome}
+                    onOpenCategories={typedHome ? () => handleContentTypeChange(typedHome) : undefined}
                     onClick={handleDiscoverItemClick}
                     recommendations={recommendations}
                     recommendationsBasedOn={recommendationsBasedOn}

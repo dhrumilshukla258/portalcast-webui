@@ -40,6 +40,10 @@ interface DiscoverViewProps {
   // replaces it — the backdrop is meant to be one continuous rotation no
   // section, filter, or remount ever resets (see the merge comment there).
   onBackdropItemsChange?: (items: MediaItem[]) => void;
+  // The Movies / Series tabs (design-system.md, Screens): this view for one type, without the
+  // type toggle; a Categories button opens the per-category browse.
+  fixedType?: 'movie' | 'series';
+  onOpenCategories?: () => void;
 }
 
 const DiscoverView: React.FC<DiscoverViewProps> = ({
@@ -52,6 +56,8 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   loadingItemId,
   onActiveTypeChange,
   onBackdropItemsChange,
+  fixedType,
+  onOpenCategories,
 }) => {
   const {
     facets,
@@ -77,7 +83,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   // both-off showing nothing.
   const [showMovies, setShowMovies] = useState(true);
   const [showSeries, setShowSeries] = useState(true);
-  const activeType = showMovies === showSeries ? undefined : showMovies ? 'movie' : 'series';
+  const activeType = fixedType ?? (showMovies === showSeries ? undefined : showMovies ? 'movie' : 'series');
 
   const [activeFilters, setActiveFilters] = useState<ActiveDiscoverFilters>({});
   const [loadingFiltered, setLoadingFiltered] = useState(false);
@@ -406,6 +412,25 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           caused the sticky-bar flicker — there's no backdrop-filter left
           here to nest. */}
       <div className="sticky top-0 z-30 mb-4 rounded-2xl bg-black/80 px-2 py-2">
+        {fixedType ? (
+          <div className="flex items-center gap-3 px-1">
+            <h2 className="text-xl font-bold text-white sm:text-2xl">{fixedType === 'movie' ? 'Movies' : 'Series'}</h2>
+            {!!whatsNew.total && (
+              <span className="text-sm text-gray-400">
+                {whatsNew.total.toLocaleString()} {fixedType === 'movie' ? 'films' : 'series'}
+              </span>
+            )}
+            {onOpenCategories && (
+              <button
+                data-focusable="true"
+                onClick={onOpenCategories}
+                className="ml-auto flex h-10 shrink-0 items-center rounded-full border border-white/10 bg-[#0b1120]/85 px-4 text-sm font-bold text-gray-300 transition-all hover:border-white/20 hover:text-white focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light"
+              >
+                Categories
+              </button>
+            )}
+          </div>
+        ) : (
         <div className="flex items-center gap-2">
           {(['movie', 'series'] as const).map((t) => {
             const isActive = t === 'movie' ? showMovies : showSeries;
@@ -438,6 +463,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
             );
           })}
         </div>
+        )}
         {/* The selector row (Genre / Language / Country / Channel / Mood), on its own line
             under Movies/Series — the same layout as the TV app. */}
         <div className="mt-2 border-t border-white/5 pt-2">

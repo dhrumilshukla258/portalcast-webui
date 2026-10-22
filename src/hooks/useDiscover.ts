@@ -14,6 +14,8 @@ import type { MediaItem } from '@/types';
 export interface DiscoverRowState {
   items: MediaItem[];
   page: number;
+  /** How many titles the row has in all (What's new: the catalog's count for the type). */
+  total?: number;
   hasMore: boolean;
   loadingMore: boolean;
   // True while this row's content is being replaced outright (a Movies/
@@ -107,6 +109,7 @@ export function useDiscover() {
       setWhatsNew({
         items: response.data,
         page: 1,
+        total: response.total_items,
         hasMore: response.data.length < response.total_items,
         loadingMore: false,
       });
@@ -126,7 +129,7 @@ export function useDiscover() {
       .then((response) => {
         setWhatsNew((prev) => {
           const items = [...prev.items, ...response.data];
-          return { items, page: nextPage, hasMore: items.length < response.total_items, loadingMore: false };
+          return { items, page: nextPage, total: response.total_items, hasMore: items.length < response.total_items, loadingMore: false };
         });
       })
       .catch((err) => {
