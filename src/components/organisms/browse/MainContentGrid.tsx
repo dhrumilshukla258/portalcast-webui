@@ -292,7 +292,7 @@ const MainContentGrid = React.memo(
 
             if (showVodBrowser && vodCategories.length > 1) {
               return (
-                <div className="flex min-h-0 flex-1 items-stretch overflow-hidden rounded-xl border border-gray-800/60">
+                <div className="flex min-h-0 flex-1 items-stretch overflow-hidden">
                   <CategorySidebar
                     sidebarWidth={sidebarWidth}
                     onSidebarResizeStart={onSidebarResizeStart}
@@ -305,7 +305,7 @@ const MainContentGrid = React.memo(
                     setIsCategoriesOpen={setIsCategoriesOpen}
                   />
 
-                  <div id="app-content-scroll" ref={contentScrollRef} className="custom-scrollbar min-w-0 flex-1 overflow-y-auto p-2 sm:p-3">
+                  <div id="app-content-scroll" ref={contentScrollRef} className="custom-scrollbar min-w-0 flex-1 overflow-y-auto px-3 py-3 sm:px-6">
                     {/* Category drawer trigger (mobile) */}
                     <div className="mb-3 px-2 md:hidden">
                       <button
@@ -343,7 +343,7 @@ const MainContentGrid = React.memo(
             }
 
             return (
-              <div id="app-content-scroll" ref={contentScrollRef} className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">
+              <div id="app-content-scroll" ref={contentScrollRef} className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-6">
                 <div key={viewKey} className={isRestoringFromHistory ? '' : 'content-transition'}>
                   {mainBody}
                 </div>

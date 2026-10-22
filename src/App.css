@@ -1,10 +1,8 @@
 .app-bg {
   position: relative;
-  background-color: #030305;
-  background-image:
-    radial-gradient(ellipse 90% 55% at 50% -12%, rgba(56, 111, 245, 0.16), transparent 60%),
-    radial-gradient(ellipse 60% 45% at 100% 0%, rgba(139, 92, 246, 0.10), transparent 60%),
-    radial-gradient(ellipse 70% 50% at 0% 100%, rgba(30, 41, 59, 0.35), transparent 60%);
+  /* Black with a faint blue light from the top; no pictures behind the page. */
+  background-color: #05080F;
+  background-image: radial-gradient(ellipse 90% 45% at 50% -10%, rgba(56, 189, 248, 0.10), transparent 60%);
 }
 
 .app-bg::before {

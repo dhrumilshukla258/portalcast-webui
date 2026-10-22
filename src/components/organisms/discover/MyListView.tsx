@@ -31,7 +31,7 @@ const MyListView: React.FC<MyListViewProps> = ({ onClick, loadingItemId, active 
   }, [active]);
 
   return (
-    <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-2 pb-10 sm:px-0">
+    <div className="custom-scrollbar h-full min-h-0 flex-1 overflow-y-auto px-3 pb-10 pt-3 sm:px-6 sm:pt-5">
       <div className="mb-4 flex items-baseline gap-3">
         <h2 className="text-xl font-bold text-white sm:text-2xl">My List</h2>
         {items && items.length > 0 && (

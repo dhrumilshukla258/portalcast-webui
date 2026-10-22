@@ -419,7 +419,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   };
 
   return (
-    <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 flex-1 overflow-y-auto content-transition px-2 sm:px-0">
+    <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 flex-1 overflow-y-auto content-transition px-3 sm:px-6">
       {/* No backdrop-blur-sm anywhere in this bar (or its buttons) on purpose —
           AmbientBackdrop now blurs its image at the source (filter:blur() on
           the <img> itself, a one-time cost), so a foreground panel doesn't
@@ -427,7 +427,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           eliminates Chromium's nested-backdrop-filter compositing bug that
           caused the sticky-bar flicker — there's no backdrop-filter left
           here to nest. */}
-      <div className="sticky top-0 z-30 mb-4 rounded-2xl bg-black/80 px-2 py-2">
+      <div className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-[#05080F] px-3 py-2 sm:-mx-6 sm:px-6">
         {fixedType ? (
           <div className="flex items-center gap-3 px-1">
             <h2 className="text-xl font-bold text-white sm:text-2xl">{fixedType === 'movie' ? 'Movies' : 'Series'}</h2>

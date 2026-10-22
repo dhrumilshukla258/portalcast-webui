@@ -222,7 +222,7 @@ const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearche
   );
 
   return (
-    <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 flex-1 overflow-y-auto px-2 sm:px-0">
+    <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 flex-1 overflow-y-auto px-3 pt-3 sm:px-6 sm:pt-5">
       <div className="sticky top-0 z-30 mb-4 rounded-2xl bg-black/80 px-2 py-2">
         <form
           onSubmit={(e) => { e.preventDefault(); remember(query); run(query); }}

@@ -29,7 +29,6 @@ import SportsView from '@/components/organisms/sports/SportsView';
 import ContinueHero from '@/components/organisms/browse/ContinueHero';
 // Lazy — only mounted when the user opens the Discover tab, not on initial load.
 const DiscoverView = React.lazy(lazyImport(() => import('@/components/organisms/discover/DiscoverView')));
-import { AmbientBackdrop } from '@/components/molecules/AmbientBackdrop';
 import { OpenTitleContext, PersonPageContext } from '@/context/PersonPageContext';
 import MyListView from '@/components/organisms/discover/MyListView';
 // Lazy — only mounted when a cast or crew member is opened.
@@ -167,36 +166,9 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     setContentType
   );
 
-  // One shared AmbientBackdrop instance instead of one per view (Discover,
-  // MainContentGrid) — every section reports its on-screen items into this
-  // single pool via mergeBackdropItems, and the backdrop just keeps
-  // rotating through it regardless of which section is actually active.
-  //
-  // Reports only ever ADD to the pool, never replace it — a plain "set to
-  // whatever this section just reported" meant a Movies/Series toggle, a
-  // Discover filter change, or DiscoverView simply remounting (it unmounts
-  // when you leave Discover and loses all fetched state, so every
-  // re-entry starts by reporting an almost-empty pool while it refetches)
-  // could each wipe out whatever backdrop was currently showing before the
-  // pool grew back, causing a visible jump. Deduped by id. Capped, but
-  // additions are simply dropped once the cap is hit rather than evicting
-  // the oldest entries — evicting used to be able to evict whichever item
-  // AmbientBackdrop was currently showing, forcing a jarring reset (see its
-  // preservedIndex comment). Once full, the backdrop just keeps looping the
-  // same first N items rather than the pool trying to keep growing forever.
-  const BACKDROP_POOL_CAP = 500;
-  const [backdropItemPool, setBackdropItemPool] = useState<MediaItem[]>([]);
-  const mergeBackdropItems = useCallback((items: MediaItem[]) => {
-    setBackdropItemPool((prev) => {
-      if (prev.length >= BACKDROP_POOL_CAP) return prev;
-      const seen = new Set(prev.map((i) => i.id));
-      const additions = items.filter((i) => !seen.has(i.id));
-      if (additions.length === 0) return prev;
-      const merged = [...prev, ...additions];
-      return merged.length > BACKDROP_POOL_CAP ? merged.slice(0, BACKDROP_POOL_CAP) : merged;
-    });
-  }, []);
-  const activeBackdropItems = backdropItemPool;
+  // No page backdrop any more (owner, 2026-10-22: a plain black-blue page). Views still
+  // report their on-screen items; nothing uses them now.
+  const mergeBackdropItems = useCallback<(items: MediaItem[]) => void>(() => {}, []);
 
   const onClearWatched = useCallback(
     () => handleClearWatched(setConfirmModal),
@@ -454,7 +426,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
         </React.Suspense>
       ) : (
         <div className="flex h-screen flex-col overflow-hidden app-bg font-sans text-gray-200">
-          <div className="flex min-h-0 w-full flex-1 flex-col px-2 py-0 pb-16 sm:px-6 sm:py-6">
+          <div className="flex min-h-0 w-full flex-1 flex-col pb-16 sm:pb-0">
             <Header
               currentTitle={currentTitle}
               contentType={contentType}
@@ -513,16 +485,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
             <main className="relative min-h-0 flex-1">
               <IptvOfflineBanner />
-              <AmbientBackdrop
-                items={activeBackdropItems}
-                allowLowRes
-                // Same "detail page is open" condition MainContentGrid's own
-                // overlay/tint rendering already uses (line ~489 below) —
-                // the detail page shows its own sharp per-item backdrop
-                // banner up front, so this page-level one recedes instead of
-                // competing with it.
-                blurred={!!detailItem || (!!currentSeriesItem && contentType === 'series')}
-              />
+              {/* No rotating backdrop any more (owner: a plain black-blue page reads better). */}
               {isSearchPage && (
                 <SearchView
                   // A new "Find channel" query starts a fresh search.

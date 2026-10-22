@@ -25,7 +25,7 @@ const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex md:hidden">
       <div className="absolute inset-0 bg-black/85" onClick={onClose} />
-      <div className="animate-in slide-in-from-left relative flex h-full w-[78vw] max-w-xs flex-col border-r border-white/10 bg-black/90 p-3 shadow-2xl duration-200">
+      <div className="animate-in slide-in-from-left relative flex h-full w-full flex-col bg-[#05080F] p-3 pt-[max(0.75rem,env(safe-area-inset-top))] duration-200">
         <div className="mb-2 flex items-center justify-between px-1">
           <span className="text-xs font-black uppercase tracking-tight text-white/60">
             Browse

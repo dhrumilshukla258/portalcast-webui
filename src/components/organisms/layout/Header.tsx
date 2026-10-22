@@ -74,7 +74,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
     }, []);
 
     return (
-      <header className="sticky top-0 z-50 mb-2 border-b border-white/10 bg-black/60 p-2 shadow-lg shadow-black/40 sm:top-4 sm:mb-6 sm:rounded-xl sm:bg-black/55 sm:p-4 animate-in fade-in duration-300">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#05080F] px-3 py-2 sm:px-6 sm:py-3 animate-in fade-in duration-300">
   {/* One row on a phone too: logo left, sort and profile right (the tabs are the bottom bar). */}
   <div className="flex w-full flex-row items-center justify-between gap-2 sm:gap-3">
     
