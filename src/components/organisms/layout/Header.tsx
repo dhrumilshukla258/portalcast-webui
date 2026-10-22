@@ -20,6 +20,9 @@ export interface HeaderProps {
   /** The Sports page (schedule with channels). */
   isSportsActive?: boolean;
   onSelectSports?: () => void;
+  /** The People page (cast and crew). */
+  isPeopleActive?: boolean;
+  onSelectPeople?: () => void;
   /** Movies / Series showing Home's layout for that type (their per-category browse counts as the same tab). */
   typedHome?: 'movie' | 'series';
   onSelectTypedHome?: (type: 'movie' | 'series') => void;
@@ -46,6 +49,8 @@ export const Header: React.FC<HeaderProps> = React.memo(
     onSelectMyList,
     isSportsActive = false,
     onSelectSports,
+    isPeopleActive = false,
+    onSelectPeople,
     typedHome,
     onSelectTypedHome,
     sort,
@@ -55,7 +60,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
     historyLength,
     handleBack,
   }) => {
-    const overlayActive = isDiscoverActive || isSearchActive || isMyListActive || isSportsActive || !!typedHome;
+    const overlayActive = isDiscoverActive || isSearchActive || isMyListActive || isSportsActive || isPeopleActive || !!typedHome;
     const { user, logout } = useAuth();
     const { activeUserCount } = useSocket();
     const navigate = useNavigate();
@@ -131,7 +136,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           {onSelectSearch && (
             <button
               onClick={onSelectSearch}
-              className={`flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+              className={`order-4 sm:order-none flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
                 isSearchActive
                   ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                   : 'text-gray-400 hover:bg-white/10 hover:text-white'
@@ -148,7 +153,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           {onSelectDiscover && (
             <button
               onClick={onSelectDiscover}
-              className={`flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+              className={`order-1 sm:order-none flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
                 isDiscoverActive
                   ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                   : 'text-gray-400 hover:bg-white/10 hover:text-white'
@@ -156,19 +161,19 @@ export const Header: React.FC<HeaderProps> = React.memo(
               data-focusable="true"
               data-default-focus={isDiscoverActive ? 'true' : undefined}
               tabIndex={-1}
-              title="Discover"
+              title="Home"
             >
               <span className="sm:mr-1 sm:hidden">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3z" />
                 </svg>
               </span>
-              <span>Discover</span>
+              <span>Home</span>
             </button>
           )}
           <button
             onClick={() => (onSelectTypedHome ? onSelectTypedHome('movie') : handleContentTypeChange('movie'))}
-            className={`flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+            className={`hidden sm:flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
               (typedHome === 'movie' || (!overlayActive && contentType === 'movie'))
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
@@ -187,7 +192,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           </button>
           <button
             onClick={() => (onSelectTypedHome ? onSelectTypedHome('series') : handleContentTypeChange('series'))}
-            className={`flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+            className={`hidden sm:flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
               (typedHome === 'series' || (!overlayActive && contentType === 'series'))
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
@@ -204,9 +209,25 @@ export const Header: React.FC<HeaderProps> = React.memo(
             </span>
             <span>Series</span>
           </button>
+          {onSelectPeople && (
+            <button
+              onClick={onSelectPeople}
+              className={`hidden sm:flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+                isPeopleActive
+                  ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
+                  : 'text-gray-400 hover:bg-white/10 hover:text-white'
+              }`}
+              data-focusable="true"
+              data-default-focus={isPeopleActive ? 'true' : undefined}
+              tabIndex={-1}
+              title="People"
+            >
+              <span>People</span>
+            </button>
+          )}
           <button
             onClick={() => handleContentTypeChange('tv')}
-            className={`flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+            className={`order-2 sm:order-none flex flex-1 flex-col items-center justify-center sm:flex-row rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
               !overlayActive && contentType === 'tv'
                 ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
@@ -214,19 +235,19 @@ export const Header: React.FC<HeaderProps> = React.memo(
             data-focusable="true"
             data-default-focus={!overlayActive && contentType === 'tv' ? 'true' : undefined}
             tabIndex={-1}
-            title="TV"
+            title="Live TV"
           >
             <span className="sm:mr-1 sm:hidden">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </span>
-            <span>TV</span>
+            <span>Live TV</span>
           </button>
           {onSelectSports && (
             <button
               onClick={onSelectSports}
-              className={`flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+              className={`order-3 sm:order-none flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
                 isSportsActive
                   ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                   : 'text-gray-400 hover:bg-white/10 hover:text-white'
@@ -243,7 +264,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
           {onSelectMyList && (
             <button
               onClick={onSelectMyList}
-              className={`flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
+              className={`order-5 sm:order-none flex flex-1 flex-col items-center justify-center sm:flex-row gap-1.5 rounded-xl px-1 py-1 text-[11px] sm:rounded-full font-semibold transition-all duration-300 active:scale-95 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
                 isMyListActive
                   ? 'bg-linear-to-r from-portalcast-light to-portalcast-dark text-white shadow-lg shadow-portalcast-dark/50'
                   : 'text-gray-400 hover:bg-white/10 hover:text-white'

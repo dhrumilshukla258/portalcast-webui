@@ -26,6 +26,8 @@ import VariantPickerModal from '@/components/molecules/VariantPickerModal';
 import MainContentGrid from '@/components/organisms/browse/MainContentGrid';
 import ContinueWatching from '@/components/organisms/browse/ContinueWatching';
 import SportsView from '@/components/organisms/sports/SportsView';
+import PeopleView from '@/components/organisms/people/PeopleView';
+import SectionChips, { type HomeSection } from '@/components/molecules/SectionChips';
 import ContinueHero from '@/components/organisms/browse/ContinueHero';
 // Lazy — only mounted when the user opens the Discover tab, not on initial load.
 const DiscoverView = React.lazy(lazyImport(() => import('@/components/organisms/discover/DiscoverView')));
@@ -220,7 +222,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   // Global Search (the TV app's Search tab) lives on the same layer as Discover: a title
   // opened from it is shown over it, and Back returns to the results.
-  const [overlayPage, setOverlayPage] = useState<'discover' | 'search' | 'mylist' | 'movies' | 'series' | 'sports'>('discover');
+  const [overlayPage, setOverlayPage] = useState<'discover' | 'search' | 'mylist' | 'movies' | 'series' | 'sports' | 'people'>('discover');
+  const isPeoplePage = showDiscover && overlayPage === 'people';
   // Sports (plan Phase 6.7) on the same layer; its "Find channel" opens Search on Live TV.
   const isSportsPage = showDiscover && overlayPage === 'sports';
   const [searchLiveQuery, setSearchLiveQuery] = useState<string | undefined>(undefined);
@@ -232,6 +235,18 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   const typedHome: 'movie' | 'series' | undefined = !showDiscover
     ? undefined
     : overlayPage === 'movies' ? 'movie' : overlayPage === 'series' ? 'series' : undefined;
+  // Phones: Movies · Series · People are chips at the top of Home and those pages (the bottom
+  // bar is Home, Live TV, Sports, Search, My List).
+  const openSection = useCallback((sec: HomeSection) => {
+    setDetailItem(null);
+    setCurrentSeriesItem(null);
+    setOverlayPage(sec === 'movie' ? 'movies' : sec === 'series' ? 'series' : sec === 'people' ? 'people' : 'discover');
+    setShowDiscover(true);
+  }, [setDetailItem, setCurrentSeriesItem, setShowDiscover]);
+  const activeSection: HomeSection = typedHome ?? (overlayPage === 'people' ? 'people' : 'home');
+  const sectionChips = (filterButton: React.ReactNode) => (
+    <SectionChips active={activeSection} onSelect={openSection} trailing={filterButton} />
+  );
   // Continue Watching on Home; the Movies / Series tabs show only that type's titles.
   const homeProgress = React.useMemo(
     () => (typedHome ? progressRecords.filter((r) => (Number(r.meta?.is_series) === 1) === (typedHome === 'series')) : progressRecords),
@@ -328,6 +343,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
       if (overlayPage === 'search') return 'Search';
       if (overlayPage === 'mylist') return 'My List';
       if (overlayPage === 'sports') return 'Sports';
+      if (overlayPage === 'people') return 'People';
       if (overlayPage === 'movies') return 'Movies';
       if (overlayPage === 'series') return 'Series';
       return 'Discover';
@@ -454,6 +470,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                 setOverlayPage('search');
                 setShowDiscover(true);
               }}
+              isPeopleActive={isPeoplePage}
+              onSelectPeople={() => openSection('people')}
               isSportsActive={isSportsPage}
               onSelectSports={() => {
                 setDetailItem(null);
@@ -500,6 +518,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                   isTizen={isTizen}
                 />
               )}
+              {isPeoplePage && <PeopleView sectionChips={sectionChips} />}
               {isSportsPage && (
                 <SportsView
                   onPlayChannel={searchPlayChannel}
@@ -522,6 +541,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                     // A fresh view per tab: Home, Movies and Series each keep their own filters.
                     key={overlayPage}
                     fixedType={typedHome}
+                    sectionChips={sectionChips}
                     continueWatching={
                       <>
                         <ContinueHero progressRecords={homeProgress} onResume={handleItemClick} />

@@ -40,6 +40,8 @@ interface DiscoverFiltersProps {
   variant?: 'row' | 'phone';
   /** 'phone': the button fills its row. */
   fullWidth?: boolean;
+  /** 'phone': a round icon button (the phone's chips row), with how many filters are set. */
+  iconOnly?: boolean;
   /** 'phone', Home: Movies / Series inside the picker (at least one stays on). */
   types?: { movie: boolean; series: boolean; onToggle: (t: 'movie' | 'series') => void };
   /** 'phone', Movies / Series pages: the per-category browse, from inside the picker. */
@@ -224,7 +226,7 @@ function activeCount(f: ActiveDiscoverFilters): number {
  * steps back a level and then closes it: each level is a browser history entry, consumed
  * here before the app's own Back handling sees it.
  */
-const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange, fullWidth = false, types, onBrowseCategories, browseLabel }) => {
+const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange, fullWidth = false, types, onBrowseCategories, browseLabel, iconOnly = false }) => {
   const [sheet, setSheet] = useState(false);
   const [dim, setDim] = useState<DiscoverFilterKey | null>(null);
   // History entries this sheet pushed (1 open, 2 with a selector open).
@@ -381,6 +383,21 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
 
   return (
     <>
+      {iconOnly ? (
+        <button
+          data-focusable="true"
+          onClick={open}
+          aria-label={count > 0 ? `Filters, ${count} set` : 'Filters'}
+          className={`relative flex h-9 w-9 items-center justify-center rounded-full border ${
+            count > 0 ? 'border-transparent bg-sky-400 text-[#082F49]' : 'border-white/25 text-gray-200'
+          }`}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          {count > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-[#05080F]">{count}</span>
+          )}
+        </button>
+      ) : (
       <button
         data-focusable="true"
         onClick={open}
@@ -392,6 +409,7 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
         {count > 0 ? `Filters · ${count}` : 'Filters'}
         <ChevronDown className="h-4 w-4" />
       </button>
+      )}
       {sheet && createPortal(sheetNode, document.body)}
     </>
   );

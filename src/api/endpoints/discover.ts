@@ -227,6 +227,23 @@ export interface PeopleSearchResult {
 export const searchPeople = async (q: string, signal?: AbortSignal): Promise<PeopleSearchResult> =>
   (await cachedGet<PeopleSearchResult>(DISCOVER_PATHS.PEOPLE_SEARCH, { params: { q }, signal })) ?? { people: [], featured: null, ready: false };
 
+export type PeopleRole = 'all' | 'actor' | 'actress' | 'director' | 'creator' | 'writer';
+
+export interface PeoplePage {
+  data: PersonHit[];
+  total: number;
+  page: number;
+  pageSize: number;
+  /** People per role, for the chips; null before the server's index is ready. */
+  counts: Record<PeopleRole, number> | null;
+  genderReady: boolean;
+  ready: boolean;
+}
+
+/** `GET /api/v2/people?role=&page=` (servers from 2026-10-22): the People tab, 60 a page. */
+export const getPeople = async (role: PeopleRole, page: number): Promise<PeoplePage> =>
+  (await api.get<PeoplePage>('/v2/people', { params: { role, page } })).data;
+
 /** `GET /api/v2/discover/similar?id=movie_123`: More Like This (servers from 2026-10-22; empty before). */
 export const getSimilar = async (id: string): Promise<MediaItem[]> => {
   try {

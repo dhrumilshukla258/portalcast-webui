@@ -46,6 +46,8 @@ interface DiscoverViewProps {
   onOpenCategories?: () => void;
   // The Continue Watching row, first on Home (design-system.md): App owns progress and playback.
   continueWatching?: React.ReactNode;
+  /** Phone: the Movies · Series · People chips row (App), given this page's filter button. */
+  sectionChips?: (filterButton: React.ReactNode) => React.ReactNode;
 }
 
 const DiscoverView: React.FC<DiscoverViewProps> = ({
@@ -61,6 +63,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   fixedType,
   onOpenCategories,
   continueWatching,
+  sectionChips,
 }) => {
   const {
     facets,
@@ -428,30 +431,33 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           caused the sticky-bar flicker — there's no backdrop-filter left
           here to nest. */}
       <div className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-[#05080F] px-3 py-2 sm:-mx-6 sm:px-6">
+        {sectionChips?.(
+          <DiscoverFilters
+            variant="phone"
+            iconOnly
+            facets={facets}
+            activeFilters={activeFilters}
+            onFilterChange={handleFilterChange}
+            onGenresChange={handleGenresChange}
+            types={fixedType ? undefined : { movie: showMovies, series: showSeries, onToggle: toggleType }}
+            onBrowseCategories={fixedType ? onOpenCategories : undefined}
+            browseLabel={fixedType ? `Browse ${fixedType === 'movie' ? 'movies' : 'series'} by category` : undefined}
+          />
+        )}
         {fixedType ? (
-          <div className="flex items-center gap-3 px-1">
+          // From sm up (phones: the chosen chip says where you are).
+          <div className="hidden items-center gap-3 px-1 sm:flex">
             <h2 className="text-xl font-bold text-white sm:text-2xl">{fixedType === 'movie' ? 'Movies' : 'Series'}</h2>
             {!!whatsNew.total && (
               <span className="text-sm text-gray-400">
                 {whatsNew.total.toLocaleString()} {fixedType === 'movie' ? 'films' : 'series'}
               </span>
             )}
-            <div className="ml-auto md:hidden">
-            <DiscoverFilters
-              variant="phone"
-              facets={facets}
-              activeFilters={activeFilters}
-              onFilterChange={handleFilterChange}
-              onGenresChange={handleGenresChange}
-              onBrowseCategories={onOpenCategories}
-              browseLabel={`Browse ${fixedType === 'movie' ? 'movies' : 'series'} by category`}
-            />
-          </div>
             {onOpenCategories && (
               <button
                 data-focusable="true"
                 onClick={onOpenCategories}
-                className="hidden md:ml-auto md:flex h-10 shrink-0 items-center rounded-full border border-white/10 bg-[#0b1120]/85 px-4 text-sm font-bold text-gray-300 transition-all hover:border-white/20 hover:text-white focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light"
+                className="ml-auto flex h-10 shrink-0 items-center rounded-full border border-white/10 bg-[#0b1120]/85 px-4 text-sm font-bold text-gray-300 transition-all hover:border-white/20 hover:text-white focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light"
               >
                 Categories
               </button>
@@ -459,8 +465,8 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           </div>
         ) : null}
         {!fixedType ? (
-        // Phones and small tablets: Movies / Series are inside Filters (the row below).
-        <div className="hidden items-center gap-2 md:flex">
+        // Phones: Movies / Series are inside the filter picker (the chips row's filter icon).
+        <div className="hidden items-center gap-2 sm:flex">
           {(['movie', 'series'] as const).map((t) => {
             const isActive = t === 'movie' ? showMovies : showSeries;
             return (
@@ -480,7 +486,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
                     setShowSeries((v) => !v);
                   }
                 }}
-                className={`flex h-10 flex-1 shrink-0 items-center justify-center gap-1.5 rounded-full border px-4 text-sm font-bold capitalize md:flex-none transition-all focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light ${
+                className={`flex h-10 flex-1 shrink-0 items-center justify-center gap-1.5 rounded-full border px-4 text-sm font-bold capitalize sm:flex-none transition-all focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light ${
                   isActive
                     ? 'border-transparent bg-linear-to-r from-sky-400 to-blue-500 text-white'
                     : 'border-white/10 bg-[#0b1120]/85 text-gray-300 hover:border-white/20 hover:text-white'
@@ -493,23 +499,9 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           })}
         </div>
         ) : null}
-        {!fixedType && (
-          // Phones and small tablets: one full-width Filters button (Movies / Series inside it).
-          <div className="md:hidden">
-            <DiscoverFilters
-              variant="phone"
-              fullWidth
-              facets={facets}
-              activeFilters={activeFilters}
-              onFilterChange={handleFilterChange}
-              onGenresChange={handleGenresChange}
-              types={{ movie: showMovies, series: showSeries, onToggle: toggleType }}
-            />
-          </div>
-        )}
         {/* The selector row (Genre / Language / Country / Channel / Mood), on its own line
             under Movies/Series — the same layout as the TV app. */}
-        <div className="mt-2 hidden border-t border-white/5 pt-2 md:block">
+        <div className="mt-2 hidden border-t border-white/5 pt-2 sm:block">
           <DiscoverFilters
             facets={facets}
             activeFilters={activeFilters}
