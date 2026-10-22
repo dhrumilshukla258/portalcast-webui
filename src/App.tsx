@@ -25,6 +25,7 @@ import ConfirmationModal from '@/components/molecules/ConfirmationModal';
 import VariantPickerModal from '@/components/molecules/VariantPickerModal';
 import MainContentGrid from '@/components/organisms/browse/MainContentGrid';
 import ContinueWatching from '@/components/organisms/browse/ContinueWatching';
+import ContinueHero from '@/components/organisms/browse/ContinueHero';
 // Lazy — only mounted when the user opens the Discover tab, not on initial load.
 const DiscoverView = React.lazy(lazyImport(() => import('@/components/organisms/discover/DiscoverView')));
 import { AmbientBackdrop } from '@/components/molecules/AmbientBackdrop';
@@ -252,6 +253,11 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   const typedHome: 'movie' | 'series' | undefined = !showDiscover
     ? undefined
     : overlayPage === 'movies' ? 'movie' : overlayPage === 'series' ? 'series' : undefined;
+  // Continue Watching on Home; the Movies / Series tabs show only that type's titles.
+  const homeProgress = React.useMemo(
+    () => (typedHome ? progressRecords.filter((r) => (Number(r.meta?.is_series) === 1) === (typedHome === 'series')) : progressRecords),
+    [progressRecords, typedHome]
+  );
   const searchOpenTitle = useCallback(
     (item: MediaItem, isSeries: boolean) => {
       openDiscoverItem({
@@ -526,16 +532,14 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                     key={overlayPage}
                     fixedType={typedHome}
                     continueWatching={
-                      <ContinueWatching
-                        onClick={handleItemClick}
-                        // Movies / Series tabs: only that type's titles.
-                        progressRecords={
-                          typedHome
-                            ? progressRecords.filter((r) => (Number(r.meta?.is_series) === 1) === (typedHome === 'series'))
-                            : progressRecords
-                        }
-                        onProgressChanged={() => setCwRefreshKey((prev) => prev + 1)}
-                      />
+                      <>
+                        <ContinueHero progressRecords={homeProgress} onResume={handleItemClick} />
+                        <ContinueWatching
+                          onClick={handleItemClick}
+                          progressRecords={homeProgress}
+                          onProgressChanged={() => setCwRefreshKey((prev) => prev + 1)}
+                        />
+                      </>
                     }
                     onOpenCategories={typedHome ? () => handleContentTypeChange(typedHome) : undefined}
                     onClick={handleDiscoverItemClick}
