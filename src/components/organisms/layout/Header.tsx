@@ -75,11 +75,12 @@ export const Header: React.FC<HeaderProps> = React.memo(
 
     return (
       <header className="sticky top-0 z-50 mb-2 border-b border-white/10 bg-black/60 p-2 shadow-lg shadow-black/40 sm:top-4 sm:mb-6 sm:rounded-xl sm:bg-black/55 sm:p-4 animate-in fade-in duration-300">
-  <div className="flex flex-col items-center justify-between gap-2 sm:flex-row sm:gap-3 w-full">
+  {/* One row on a phone too: logo left, sort and profile right (the tabs are the bottom bar). */}
+  <div className="flex w-full flex-row items-center justify-between gap-2 sm:gap-3">
     
     {/* Left Block: Navigation Back, Logo, Title */}
-    <div className="flex w-full items-center justify-between sm:w-auto">
-      <div className="flex items-center gap-3">
+    <div className="flex min-w-0 items-center justify-between sm:w-auto">
+      <div className="flex min-w-0 items-center gap-3">
         {(historyLength > 0 || streamUrl) && !streamUrl && (
           <button
             onClick={handleBack}
@@ -122,7 +123,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
 
     {/* Right Block: Content Controls & Actions */}
     {!streamUrl && (
-      <div className="flex w-full flex-col items-center gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end sm:gap-2">
+      <div className="flex shrink-0 items-center gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end sm:gap-2">
         
         {/* Content Type Toggles. On a phone: a bar along the bottom of the screen, icon over
             label (design-system.md, Screens); from sm up: the pill in the header. */}
@@ -259,7 +260,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
         </div>
 
         {/* Action Controls Container */}
-        <div className="flex w-full items-center justify-end gap-1.5 sm:w-auto sm:gap-2">
+        <div className="flex items-center justify-end gap-1.5 sm:w-auto sm:gap-2">
           
           {/* Sort Button */}
           <button
