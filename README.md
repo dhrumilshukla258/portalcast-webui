@@ -22,27 +22,25 @@
 
 ---
 
-<table>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/discover.png" alt="Discover"><p align="center"><sub>Discover</sub></p></td>
-    <td width="50%"><img src="docs/screenshots/series-details.png" alt="Series page"><p align="center"><sub>Series</sub></p></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/movies.png" alt="Movies"><p align="center"><sub>Movies</sub></p></td>
-    <td width="50%"><img src="docs/screenshots/admin.png" alt="Admin dashboard"><p align="center"><sub>Admin</sub></p></td>
-  </tr>
-</table>
+<p align="center"><img src="docs/screenshots/home.jpg" alt="Home: Continue Watching and rows made for each viewer"></p>
+<p align="center"><img src="docs/screenshots/title.jpg" alt="A title page with cast and More Like This"></p>
+<p align="center"><img src="docs/screenshots/phone.jpg" alt="On a phone: Home, Sports and Cast"></p>
 
-<sub>Artwork and titles are blurred in the screenshots.</sub>
+<p align="center"><sub>Demo data. Artwork: public-domain film posters and stills, and the Blender Foundation's open movies (CC BY), via Wikimedia Commons.</sub></p>
 
 ## Features
 
-- **Search** across every movie, series and live channel at once; versions of a title are one result.
-- **Discover** with a rotating backdrop, recommendations, and Genre / Language / Country / Channel / Mood selectors; channel and platform badges on cards.
-- **Series** with TMDB episode stills and descriptions, air dates, and the page opening on the episode you are watching.
-- **Player** with live TV and EPG, subtitles (online search, embedded tracks, your own file) with per-title timing, real resolution and frame rate, next-episode prompt.
-- **Continue Watching** synced with the TV app; favourites and recent channels sync live across devices.
-- **Admin** — users, profiles, content manager, broken streams, security log, live viewers and server logs.
+- **The same app everywhere** — five tabs (Home, Live TV, Sports, Search, My List) and Movies · Series · Cast chips on PC, phone and TV browsers, in one black-blue page from edge to edge.
+- **Home made for each viewer** — your last title to resume up top, Continue Watching, "Because you watched", top picks and trending, built from what this profile watched. One card per title across all its language and quality versions. It opens on the Home you saw last, at once.
+- **Filters** — genre, language, country, channel or platform and mood, plus the provider's own **IPTV categories** and **My library** (your own files) as separate choices.
+- **Title menu** — hold a card (right-click or ⋯ on PC) to add it to My List, mark it watched, say "Not interested" (it leaves every Home row) or remove it from Continue Watching. **My List** keeps My List, Watched, Not interested and favourite channels, so anything can be undone.
+- **Title pages** — backdrop, tagline, ratings, cast and crew with photos, and More Like This. Series open on the episode you are watching, with TMDB episode stills and air dates.
+- **Cast** — actors, actresses, directors, creators and writers with photos, ranked by what the profile watches; a person's page lists every title of theirs you have.
+- **Sports** — the next 30 days of the sports and leagues each viewer chooses (football, cricket, NBA, F1, tennis…), with the channel showing each match from your provider's TV guide.
+- **Live TV** with the guide, catch-up, favourites and recent channels synced live across devices.
+- **Search** across every movie, series, channel and person at once.
+- **Player** — subtitles (online search, embedded tracks, your own file) with per-title timing, real resolution and frame rate, next-episode prompt.
+- **Admin** — users, profiles, settings, content manager, broken streams, security log, live viewers and server logs.
 - Runs in any modern browser and Samsung/LG TV browsers; installable as a PWA.
 
 ## Get started
