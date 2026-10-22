@@ -561,6 +561,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                         <ContinueHero progressRecords={homeProgress} onResume={handleItemClick} />
                         <ContinueWatching
                           onClick={handleItemClick}
+                          skipFirst
                           progressRecords={homeProgress}
                           onProgressChanged={() => setCwRefreshKey((prev) => prev + 1)}
                         />

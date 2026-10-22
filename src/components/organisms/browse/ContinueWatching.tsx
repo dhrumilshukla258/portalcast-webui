@@ -17,6 +17,8 @@ interface ContinueWatchingProps {
   // after the category header had already rendered, reading as a flicker.
   progressRecords: ProgressRecord[];
   onProgressChanged?: () => void;
+  // Home: the newest title is the hero above (ContinueHero), so the row starts at the second.
+  skipFirst?: boolean;
 }
 
 
@@ -87,8 +89,11 @@ const ContinueCard: React.FC<{ item: MediaItem; onClick: (item: MediaItem) => vo
   );
 });
 
-const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRecords, onProgressChanged }) => {
-  const inProgressItems = useMemo<MediaItem[]>(() => continueItemsOf(progressRecords), [progressRecords]);
+const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRecords, onProgressChanged, skipFirst = false }) => {
+  const inProgressItems = useMemo<MediaItem[]>(
+    () => continueItemsOf(progressRecords).slice(skipFirst ? 1 : 0),
+    [progressRecords, skipFirst]
+  );
 
   // Removing asks first (same as the TV app): the × opens a confirm, Cancel is the default.
   const [confirming, setConfirming] = useState<{ id: string; title: string } | null>(null);

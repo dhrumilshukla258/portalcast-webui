@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, ChevronLeft, ChevronRight, X, Check, SlidersHorizontal } from 'lucide-react';
 import type { DiscoverFacets } from '@/api/endpoints/discover';
 
@@ -39,6 +40,11 @@ interface DiscoverFiltersProps {
   variant?: 'row' | 'phone';
   /** 'phone': the button fills its row. */
   fullWidth?: boolean;
+  /** 'phone', Home: Movies / Series inside the picker (at least one stays on). */
+  types?: { movie: boolean; series: boolean; onToggle: (t: 'movie' | 'series') => void };
+  /** 'phone', Movies / Series pages: the per-category browse, from inside the picker. */
+  onBrowseCategories?: () => void;
+  browseLabel?: string;
 }
 
 const DIMENSION_LABELS: Record<DiscoverFilterKey, string> = {
@@ -212,33 +218,58 @@ function activeCount(f: ActiveDiscoverFilters): number {
 
 /**
  * The phone's filters: a "Filters" button (with how many are set) opening a full-screen
- * picker. First the five selectors with their current values, then a selector's values;
- * "Show titles" closes it. Same choices and rules as the row.
+ * picker over everything (a portal on <body>, so no page layer or header sits on top).
+ * Its first screen holds Show (Movies / Series, on Home), "Browse by category" (Movies /
+ * Series pages) and the five selectors; a selector opens its values. The phone's Back
+ * steps back a level and then closes it: each level is a browser history entry, consumed
+ * here before the app's own Back handling sees it.
  */
-const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange, fullWidth = false }) => {
+const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange, fullWidth = false, types, onBrowseCategories, browseLabel }) => {
   const [sheet, setSheet] = useState(false);
   const [dim, setDim] = useState<DiscoverFilterKey | null>(null);
+  // History entries this sheet pushed (1 open, 2 with a selector open).
+  const levels = useRef(0);
+
   useEffect(() => {
     if (!sheet) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      if (dim) setDim(null);
-      else setSheet(false);
+    const onPop = (e: PopStateEvent) => {
+      if (levels.current === 0) return;
+      // Ours: the app's Back handling (useNavigationHistory) must not treat it as a page change.
+      e.stopImmediatePropagation();
+      levels.current -= 1;
+      if (levels.current >= 1) setDim(null);
+      else { setDim(null); setSheet(false); }
     };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && levels.current > 0) window.history.back();
+    };
+    // Capture: runs before the app's popstate listener.
+    window.addEventListener('popstate', onPop, true);
     document.addEventListener('keydown', onKeyDown);
     // The page under the sheet does not scroll along.
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
+      window.removeEventListener('popstate', onPop, true);
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = overflow;
     };
-  }, [sheet, dim]);
+  }, [sheet]);
+
+  // A new entry with the same app state, so Back lands where the page already is.
+  const push = () => {
+    window.history.pushState({ ...(window.history.state ?? {}), filterSheet: levels.current + 1 }, '');
+    levels.current += 1;
+  };
+  const open = () => { push(); setSheet(true); };
+  const openDim = (d: DiscoverFilterKey) => { push(); setDim(d); };
+  const back = () => { if (levels.current > 0) window.history.back(); };
+  const close = () => { if (levels.current > 0) window.history.go(-levels.current); };
 
   if (!facets) return null;
   const dims = DIMENSION_ORDER.filter((d) => valuesFor(facets, d).length > 0);
-  if (dims.length === 0) return null;
-  const count = activeCount(activeFilters);
+  if (dims.length === 0 && !types && !onBrowseCategories) return null;
+  const count = activeCount(activeFilters) + (types && types.movie !== types.series ? 1 : 0);
   const toggleGenre = (value: string) => {
     const current = activeFilters.genre || [];
     onGenresChange(current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
@@ -246,14 +277,113 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
   const clearAll = () => {
     if (activeFilters.genre?.length) onGenresChange([]);
     (['country', 'language', 'network', 'theme'] as const).forEach((k) => { if (activeFilters[k]) onFilterChange(k, undefined); });
+    if (types && !types.movie) types.onToggle('movie');
+    if (types && !types.series) types.onToggle('series');
   };
-  const close = () => { setSheet(false); setDim(null); };
+
+  const sheetNode = (
+    <div className="fixed inset-0 z-[100] flex flex-col bg-[#0A0F1C]" role="dialog" aria-modal="true" data-focus-group="discover-phone-filters">
+      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-white/10 px-2 pt-[env(safe-area-inset-top)]">
+        <button
+          data-focusable="true"
+          onClick={dim ? back : close}
+          aria-label={dim ? 'Back' : 'Close'}
+          className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/10"
+        >
+          {dim ? <ChevronLeft className="h-6 w-6" /> : <X className="h-6 w-6" />}
+        </button>
+        <h2 className="flex-1 truncate text-lg font-bold text-white">{dim ? DIMENSION_LABELS[dim] : 'Filters'}</h2>
+        {count > 0 && !dim && (
+          <button data-focusable="true" onClick={clearAll} className="rounded-full px-3 py-2 text-sm font-bold text-gray-300 hover:bg-white/10">
+            Clear all
+          </button>
+        )}
+      </div>
+      <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-3">
+        {dim === null ? (
+          <div className="space-y-1">
+            {types && (
+              <div className="px-4 pb-3 pt-1">
+                <span className="mb-2 block text-base font-bold text-white">Show</span>
+                <div className="flex gap-2">
+                  {(['movie', 'series'] as const).map((t) => {
+                    const on = types[t];
+                    return (
+                      <button
+                        key={t}
+                        data-focusable="true"
+                        onClick={() => types.onToggle(t)}
+                        className={`flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full border text-sm font-bold ${
+                          on ? 'border-transparent bg-linear-to-r from-sky-400 to-blue-500 text-white' : 'border-white/15 text-gray-300'
+                        }`}
+                      >
+                        {on && <Check className="h-4 w-4" />}
+                        {t === 'movie' ? 'Movies' : 'Series'}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {onBrowseCategories && (
+              <button
+                data-focusable="true"
+                onClick={() => { close(); onBrowseCategories(); }}
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-4 text-left hover:bg-white/5"
+              >
+                <span className="min-w-0 flex-1 text-base font-bold text-white">{browseLabel ?? 'Browse by category'}</span>
+                <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" />
+              </button>
+            )}
+            {dims.map((d) => {
+              const set = d === 'genre' ? (activeFilters.genre?.length ?? 0) > 0 : !!activeFilters[d];
+              return (
+                <button
+                  key={d}
+                  data-focusable="true"
+                  onClick={() => openDim(d)}
+                  className="flex w-full items-center gap-3 rounded-xl px-4 py-4 text-left hover:bg-white/5"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-base font-bold text-white">{DIMENSION_LABELS[d]}</span>
+                    <span className={`block truncate text-sm ${set ? 'text-sky-400' : 'text-gray-500'}`}>
+                      {set ? summaryFor(d, activeFilters) : `Any ${DIMENSION_LABELS[d].toLowerCase()}`}
+                    </span>
+                  </span>
+                  <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" />
+                </button>
+              );
+            })}
+          </div>
+        ) : dim === 'genre' ? (
+          <ValueList
+            dimension="genre"
+            values={valuesFor(facets, 'genre')}
+            activeValues={activeFilters.genre || []}
+            onToggle={(value) => (value === '' ? onGenresChange([]) : toggleGenre(value))}
+          />
+        ) : (
+          <ValueList
+            dimension={dim}
+            values={valuesFor(facets, dim)}
+            activeValue={activeFilters[dim]}
+            onSelect={(value) => { onFilterChange(dim, value); back(); }}
+          />
+        )}
+      </div>
+      <div className="shrink-0 border-t border-white/10 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <button data-focusable="true" onClick={close} className="h-12 w-full rounded-xl bg-white text-base font-bold text-[#0A0F1C]">
+          Show titles
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <>
       <button
         data-focusable="true"
-        onClick={() => setSheet(true)}
+        onClick={open}
         className={`flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border px-4 text-sm font-bold transition-all focus:outline-hidden ${fullWidth ? 'w-full' : ''} ${
           count > 0 ? 'border-transparent bg-linear-to-r from-sky-400 to-blue-500 text-white' : 'border-white/15 bg-[#0b1120]/85 text-gray-200'
         }`}
@@ -262,70 +392,7 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
         {count > 0 ? `Filters · ${count}` : 'Filters'}
         <ChevronDown className="h-4 w-4" />
       </button>
-      {sheet && (
-        <div className="fixed inset-0 z-[70] flex flex-col bg-[#0A0F1C]" role="dialog" aria-modal="true" data-focus-group="discover-phone-filters">
-          <div className="flex h-14 shrink-0 items-center gap-2 border-b border-white/10 px-2">
-            <button
-              data-focusable="true"
-              onClick={() => (dim ? setDim(null) : close())}
-              aria-label={dim ? 'Back' : 'Close'}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/10"
-            >
-              {dim ? <ChevronLeft className="h-6 w-6" /> : <X className="h-6 w-6" />}
-            </button>
-            <h2 className="flex-1 truncate text-lg font-bold text-white">{dim ? DIMENSION_LABELS[dim] : 'Filters'}</h2>
-            {count > 0 && !dim && (
-              <button data-focusable="true" onClick={clearAll} className="rounded-full px-3 py-2 text-sm font-bold text-gray-300 hover:bg-white/10">
-                Clear all
-              </button>
-            )}
-          </div>
-          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-3">
-            {dim === null ? (
-              <div className="space-y-1">
-                {dims.map((d) => {
-                  const set = d === 'genre' ? (activeFilters.genre?.length ?? 0) > 0 : !!activeFilters[d];
-                  return (
-                    <button
-                      key={d}
-                      data-focusable="true"
-                      onClick={() => setDim(d)}
-                      className="flex w-full items-center gap-3 rounded-xl px-4 py-4 text-left hover:bg-white/5"
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-base font-bold text-white">{DIMENSION_LABELS[d]}</span>
-                        <span className={`block truncate text-sm ${set ? 'text-sky-400' : 'text-gray-500'}`}>
-                          {set ? summaryFor(d, activeFilters) : `Any ${DIMENSION_LABELS[d].toLowerCase()}`}
-                        </span>
-                      </span>
-                      <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" />
-                    </button>
-                  );
-                })}
-              </div>
-            ) : dim === 'genre' ? (
-              <ValueList
-                dimension="genre"
-                values={valuesFor(facets, 'genre')}
-                activeValues={activeFilters.genre || []}
-                onToggle={(value) => (value === '' ? onGenresChange([]) : toggleGenre(value))}
-              />
-            ) : (
-              <ValueList
-                dimension={dim}
-                values={valuesFor(facets, dim)}
-                activeValue={activeFilters[dim]}
-                onSelect={(value) => { onFilterChange(dim, value); setDim(null); }}
-              />
-            )}
-          </div>
-          <div className="shrink-0 border-t border-white/10 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <button data-focusable="true" onClick={close} className="h-12 w-full rounded-xl bg-white text-base font-bold text-[#0A0F1C]">
-              Show titles
-            </button>
-          </div>
-        </div>
-      )}
+      {sheet && createPortal(sheetNode, document.body)}
     </>
   );
 };
