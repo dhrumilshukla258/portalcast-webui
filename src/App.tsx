@@ -24,6 +24,7 @@ const VideoPlayer = React.lazy(lazyImport(() => import('@/components/organisms/v
 import ConfirmationModal from '@/components/molecules/ConfirmationModal';
 import VariantPickerModal from '@/components/molecules/VariantPickerModal';
 import MainContentGrid from '@/components/organisms/browse/MainContentGrid';
+import ContinueWatching from '@/components/organisms/browse/ContinueWatching';
 // Lazy — only mounted when the user opens the Discover tab, not on initial load.
 const DiscoverView = React.lazy(lazyImport(() => import('@/components/organisms/discover/DiscoverView')));
 import { AmbientBackdrop } from '@/components/molecules/AmbientBackdrop';
@@ -524,6 +525,18 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                     // A fresh view per tab: Home, Movies and Series each keep their own filters.
                     key={overlayPage}
                     fixedType={typedHome}
+                    continueWatching={
+                      <ContinueWatching
+                        onClick={handleItemClick}
+                        // Movies / Series tabs: only that type's titles.
+                        progressRecords={
+                          typedHome
+                            ? progressRecords.filter((r) => (Number(r.meta?.is_series) === 1) === (typedHome === 'series'))
+                            : progressRecords
+                        }
+                        onProgressChanged={() => setCwRefreshKey((prev) => prev + 1)}
+                      />
+                    }
                     onOpenCategories={typedHome ? () => handleContentTypeChange(typedHome) : undefined}
                     onClick={handleDiscoverItemClick}
                     recommendations={recommendations}

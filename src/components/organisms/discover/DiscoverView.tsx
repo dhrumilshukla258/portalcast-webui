@@ -44,6 +44,8 @@ interface DiscoverViewProps {
   // type toggle; a Categories button opens the per-category browse.
   fixedType?: 'movie' | 'series';
   onOpenCategories?: () => void;
+  // The Continue Watching row, first on Home (design-system.md): App owns progress and playback.
+  continueWatching?: React.ReactNode;
 }
 
 const DiscoverView: React.FC<DiscoverViewProps> = ({
@@ -58,6 +60,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   onBackdropItemsChange,
   fixedType,
   onOpenCategories,
+  continueWatching,
 }) => {
   const {
     facets,
@@ -353,6 +356,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     </>
   ) : (
     <>
+      {continueWatching}
       {homeRows.length > 0 ? (
         // Complete as served (prepared on the server): no paging.
         homeRows.map((row) => (
