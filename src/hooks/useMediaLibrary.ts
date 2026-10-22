@@ -1,3 +1,4 @@
+import { readSnapshot, saveSnapshot } from '@/utils/startSnapshot';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { toast } from 'react-toastify';
@@ -194,10 +195,17 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
     try {
       const records = await getUserProgress();
       setInProgressRecords(records);
+      saveSnapshot(user?.id, 'progress', records);
     } catch (err) {
       console.error('Failed to load user progress:', err);
     }
-  }, []);
+  }, [user?.id]);
+
+  // Cold start: Continue Watching and the resume hero from the last visit, at once.
+  useEffect(() => {
+    const snap = readSnapshot<ProgressRecord[]>(user?.id, 'progress');
+    if (snap?.length) setInProgressRecords((cur) => (cur.length ? cur : snap));
+  }, [user?.id]);
 
   useEffect(() => {
     if (user) {

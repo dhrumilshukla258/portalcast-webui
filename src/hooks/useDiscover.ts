@@ -1,3 +1,4 @@
+import { readSnapshot, saveSnapshot } from '@/utils/startSnapshot';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -80,11 +81,19 @@ export function useDiscover() {
   const fetchRecommendations = useCallback(async (type?: 'movie' | 'series') => {
     if (!user) return;
     setLoadingRecommendations(true);
+    const snapKey = `home:${type ?? 'all'}`;
+    // Cold start: the last Home seen, at once, while the fresh one loads.
+    const snap = readSnapshot<{ rows: HomeRow[]; genreOrder: string[] }>(user.id, snapKey);
+    if (snap?.rows?.length) {
+      setHomeRows((cur) => (cur.length ? cur : snap.rows));
+      setGenreOrder((cur) => (cur.length ? cur : snap.genreOrder ?? []));
+    }
     try {
       try {
         const home = await getHome(type);
         setHomeRows(home.rows);
         setGenreOrder(home.genreOrder);
+        saveSnapshot(user.id, snapKey, home);
         setRecommendations([]);
         setRecommendationsBasedOn(null);
         return;

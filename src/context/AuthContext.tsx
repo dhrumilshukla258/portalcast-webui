@@ -1,3 +1,4 @@
+import { clearSnapshots } from '@/utils/startSnapshot';
 import React, {
   createContext,
   useContext,
@@ -185,6 +186,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (rt) void serverLogout(rt).catch(() => undefined);
     authStorage.remove('auth_user');
     clearResponseCache();
+    // The saved Home and progress of this user go too (utils/startSnapshot.ts).
+    clearSnapshots();
 
     window.location.hash = '/home';
   }, []);
