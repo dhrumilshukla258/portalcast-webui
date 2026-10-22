@@ -78,6 +78,8 @@ const MediaGrid: React.FC<MediaGridProps> = ({
                 key={`${item.id}-${index}`}
                 item={item}
                 onClick={handleItemClick}
+                // Phones: posters only, as in the rows (search keeps captions: it shows the category).
+                posterOnlyOnPhone={!context.search}
                 isCompleted={record?.completed}
                 progressPercent={record?.meta?.progressPercent}
                 categoryLabel={categoryLabel}

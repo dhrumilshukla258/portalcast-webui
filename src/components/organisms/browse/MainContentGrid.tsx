@@ -1,8 +1,6 @@
 import React from 'react';
 import LoadingSpinner from '@/components/atoms/LoadingSpinner';
 import TvChannelList from '@/components/organisms/channels/TvChannelList';
-import ContinueWatching from '@/components/organisms/browse/ContinueWatching';
-import { WelcomeCarousel } from '@/components/organisms/browse/WelcomeCarousel';
 import MovieDetailPage from '@/components/organisms/browse/MovieDetailPage';
 import SeriesOverviewPage from '@/components/organisms/browse/SeriesOverviewPage';
 import SeasonEpisodesPage from '@/components/organisms/browse/SeasonEpisodesPage';
@@ -47,6 +45,9 @@ interface MainContentGridProps {
   providerKey?: string;
   isCategoriesOpen?: boolean;
   setIsCategoriesOpen?: (open: boolean) => void;
+  /** Open the phone's category list once (then onCategoryDrawerOpened). */
+  openCategoryDrawer?: boolean;
+  onCategoryDrawerOpened?: () => void;
   detailItem?: MediaItem | null;
   onCloseDetail?: () => void;
   onPlayDetailItem?: (item: MediaItem) => void;
@@ -76,12 +77,9 @@ const MainContentGrid = React.memo(
     handlePageChange,
     channelGroups,
     handleBack,
-    setCwRefreshKey,
     fetchData,
     isRestoringFromHistory,
     vodCategories = [],
-    carouselSlides = [],
-    handleCarouselAction = () => {},
     onSelectCategory = () => {},
     favorites = [],
     recentChannels = [],
@@ -89,6 +87,8 @@ const MainContentGrid = React.memo(
     providerKey = 'default',
     isCategoriesOpen = false,
     setIsCategoriesOpen = () => {},
+    openCategoryDrawer = false,
+    onCategoryDrawerOpened,
     detailItem = null,
     onCloseDetail = () => {},
     onPlayDetailItem = () => {},
@@ -100,6 +100,13 @@ const MainContentGrid = React.memo(
       useResizableWidth(`vodSidebarWidth_${providerKey}_${contentType}`, 220, 160, 420);
     const [showMobileCategoryDrawer, setShowMobileCategoryDrawer] =
       React.useState(false);
+    // "Browse by category" from the Movies / Series tabs on a phone: open the category list
+    // right away (the sidebar is always visible from md up).
+    React.useEffect(() => {
+      if (!openCategoryDrawer) return;
+      setShowMobileCategoryDrawer(true);
+      onCategoryDrawerOpened?.();
+    }, [openCategoryDrawer, onCategoryDrawerOpened]);
     const contentScrollRef = React.useRef<HTMLDivElement>(null);
 
     // The content pane keeps its scroll position across renders (it's the same DOM node),
@@ -155,7 +162,6 @@ const MainContentGrid = React.memo(
       return map;
     }, [vodCategories]);
 
-    const isRootVod = contentType !== 'tv' && !context.search && !context.movieId;
     // True for the whole movie/series browsing experience (root list, inside a category,
     // and drilled into a series' seasons/episodes) — the category sidebar stays mounted
     // throughout all of these, only the content pane on the right changes.
@@ -272,20 +278,10 @@ const MainContentGrid = React.memo(
               />
             ) : (
               <>
-                {isRootVod && carouselSlides.length > 0 && (
-                  <div data-focus-group="carousel">
-                    <WelcomeCarousel slides={carouselSlides} onAction={handleCarouselAction} />
-                  </div>
-                )}
-                {isRootVod && (
-                  <ContinueWatching
-                    onClick={handleItemClick}
-                    progressRecords={progressRecords}
-                    onProgressChanged={() => setCwRefreshKey?.((prev) => prev + 1)}
-                  />
-                )}
+                {/* No carousel or Continue Watching here any more: the Movies / Series tabs show
+                    them in the new layout; this is the per-category browse. */}
                 {!isEpisodeList && (
-                  <h2 className="mb-4 px-2 text-center text-xl font-bold text-white sm:px-0 sm:text-left sm:text-2xl">
+                  <h2 className="mb-3 px-2 text-left text-lg font-bold text-white sm:mb-4 sm:px-0 sm:text-2xl">
                     {context.parentTitle}
                   </h2>
                 )}

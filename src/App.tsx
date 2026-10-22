@@ -54,6 +54,9 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   const recentSearches = useMemo(() => cleanRecentSearches(user?.preferences?.recentSearches || []), [user?.preferences?.recentSearches]);
   const [detailItem, setDetailItem] = useState<MediaItem | null>(null);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  // Movies / Series tabs' "Browse by category" on a phone: open the category list, not just the last category.
+  const [openCategoryDrawer, setOpenCategoryDrawer] = useState(false);
+  const onCategoryDrawerOpened = useCallback(() => setOpenCategoryDrawer(false), []);
   const [showDiscover, setShowDiscover] = useState(false);
   const [variantPickerItem, setVariantPickerItem] = useState<MediaItem | null>(null);
   const [variantPickerOptions, setVariantPickerOptions] = useState<DiscoverVariant[]>([]);
@@ -567,7 +570,14 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                         />
                       </>
                     }
-                    onOpenCategories={typedHome ? () => handleContentTypeChange(typedHome) : undefined}
+                    onOpenCategories={
+                      typedHome
+                        ? () => {
+                            handleContentTypeChange(typedHome);
+                            if (window.matchMedia('(max-width: 767px)').matches) setOpenCategoryDrawer(true);
+                          }
+                        : undefined
+                    }
                     onClick={handleDiscoverItemClick}
                     recommendations={recommendations}
                     recommendationsBasedOn={recommendationsBasedOn}
@@ -643,6 +653,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                 providerKey={providerKey}
                 isCategoriesOpen={isCategoriesOpen}
                 setIsCategoriesOpen={setIsCategoriesOpen}
+                openCategoryDrawer={openCategoryDrawer}
+                onCategoryDrawerOpened={onCategoryDrawerOpened}
                 detailItem={detailItem}
                 onCloseDetail={handleBack}
                 onPlayDetailItem={startPlayback}
