@@ -471,7 +471,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
                     setShowSeries((v) => !v);
                   }
                 }}
-                className={`flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-bold capitalize transition-all focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light ${
+                className={`flex h-10 flex-1 shrink-0 items-center justify-center gap-1.5 rounded-full border px-4 text-sm font-bold capitalize md:flex-none transition-all focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light ${
                   isActive
                     ? 'border-transparent bg-linear-to-r from-sky-400 to-blue-500 text-white'
                     : 'border-white/10 bg-[#0b1120]/85 text-gray-300 hover:border-white/20 hover:text-white'
@@ -482,11 +482,14 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
               </button>
             );
           })}
-          <div className="ml-auto md:hidden">
-            <DiscoverFilters variant="phone" facets={facets} activeFilters={activeFilters} onFilterChange={handleFilterChange} onGenresChange={handleGenresChange} />
-          </div>
         </div>
         ) : null}
+        {!fixedType && (
+          // Phones and small tablets: Movies / Series share the first row, Filters the second.
+          <div className="mt-2 md:hidden">
+            <DiscoverFilters variant="phone" fullWidth facets={facets} activeFilters={activeFilters} onFilterChange={handleFilterChange} onGenresChange={handleGenresChange} />
+          </div>
+        )}
         {/* The selector row (Genre / Language / Country / Channel / Mood), on its own line
             under Movies/Series — the same layout as the TV app. */}
         <div className="mt-2 hidden border-t border-white/5 pt-2 md:block">

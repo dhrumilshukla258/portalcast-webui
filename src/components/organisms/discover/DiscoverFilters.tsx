@@ -37,6 +37,8 @@ interface DiscoverFiltersProps {
   // 'phone': one "Filters" button opening a full-screen picker (a row of five selectors does
   // not fit a phone); 'row' (default): the selectors in a row, each with its own list.
   variant?: 'row' | 'phone';
+  /** 'phone': the button fills its row. */
+  fullWidth?: boolean;
 }
 
 const DIMENSION_LABELS: Record<DiscoverFilterKey, string> = {
@@ -213,7 +215,7 @@ function activeCount(f: ActiveDiscoverFilters): number {
  * picker. First the five selectors with their current values, then a selector's values;
  * "Show titles" closes it. Same choices and rules as the row.
  */
-const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange }) => {
+const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange, fullWidth = false }) => {
   const [sheet, setSheet] = useState(false);
   const [dim, setDim] = useState<DiscoverFilterKey | null>(null);
   useEffect(() => {
@@ -252,7 +254,7 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
       <button
         data-focusable="true"
         onClick={() => setSheet(true)}
-        className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-bold transition-all focus:outline-hidden ${
+        className={`flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border px-4 text-sm font-bold transition-all focus:outline-hidden ${fullWidth ? 'w-full' : ''} ${
           count > 0 ? 'border-transparent bg-linear-to-r from-sky-400 to-blue-500 text-white' : 'border-white/15 bg-[#0b1120]/85 text-gray-200'
         }`}
       >
