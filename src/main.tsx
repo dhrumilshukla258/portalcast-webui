@@ -1,6 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@/index.css';
+// Catalog reads carry the server's answer version (cached for a year at that address).
+import '@/api/answerVersions';
 import App from '@/App';
 import { SocketProvider } from '@/context/SocketContext.tsx';
 import { AuthProvider } from '@/context/AuthContext.tsx';

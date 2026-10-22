@@ -65,6 +65,9 @@ async function request<T = unknown>(
       ? new URL(fullUrl, window.location.origin)
       : new URL(fullUrl);
 
+  // Catalog reads carry the server's answer version (api/answerVersions.ts).
+  const version = method === 'GET' ? getVersion?.(path, config?.params) ?? null : null;
+  if (version) url.searchParams.append('v', version);
   if (config?.params) {
     Object.keys(config.params).forEach((key) => {
       if (config.params![key] !== null && config.params![key] !== undefined) {
@@ -175,6 +178,13 @@ async function request<T = unknown>(
 
   const data = await response.json();
   return { data };
+}
+
+// The answer version for a GET (api/answerVersions.ts registers it; null: plain address).
+type VersionSource = (path: string, params?: Record<string, unknown>) => string | null;
+let getVersion: VersionSource | null = null;
+export function setVersionSource(source: VersionSource): void {
+  getVersion = source;
 }
 
 // Listeners told about every answer's headers (utils/iptvHealth.ts reads X-IPTV from them,
