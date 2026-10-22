@@ -8,7 +8,6 @@ import { getChannels, getChannelGroups } from '@/api/endpoints/channels';
 import { getMedia, getMovieCategories } from '@/api/endpoints/movies';
 import { getSeries, getSeriesCategories } from '@/api/endpoints/series';
 import { getEPG, getEPGWindow } from '@/api/endpoints/epg';
-import { getCarouselSlides, type CarouselSlide } from '@/api/endpoints/carousel';
 import { clearUserProgress, getUserProgress } from '@/api/endpoints/user';
 import type { ProgressRecord } from '@/api/types/user';
 import type { MediaItem, ContextType, EPG_List, ChannelGroup } from '@/types';
@@ -110,7 +109,6 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
 
   const [vodCategories, setVodCategories] = useState<ChannelGroup[]>([]);
   const [loadingCategories, setLoadingCategories] = useState<boolean>(false);
-  const [carouselSlides, setCarouselSlides] = useState<CarouselSlide[]>([]);
   const [providerKey, setProviderKey] = useState<string>('');
 
   // Channels/groups don't need to be refetched every time the user switches
@@ -159,15 +157,6 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
       console.error('Failed to load categories', err);
     } finally {
       if (categoriesRequestRef.current === requestId) setLoadingCategories(false);
-    }
-  }, []);
-
-  const fetchCarousel = useCallback(async () => {
-    try {
-      const slides = await getCarouselSlides();
-      setCarouselSlides(slides.sort((a, b) => (a.order || 0) - (b.order || 0)));
-    } catch (err) {
-      console.error('Failed to load carousel slides', err);
     }
   }, []);
 
@@ -498,10 +487,9 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [providerKey, user?.id, fetchData]);
 
-  // 2. Fetch ancillary items (carousel, categories, epg) when contentType or providerKey changes
+  // 2. Fetch ancillary items (categories, epg) when contentType or providerKey changes
   useEffect(() => {
     if (!providerKey) return;
-    fetchCarousel();
     if (contentType !== 'tv') {
       fetchVodCategories(contentType as 'movie' | 'series');
     } else {
@@ -511,14 +499,14 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
         setPlayLastTvChannel(lastPlayedId || '__play_first__');
       }
     }
-  }, [contentType, providerKey, fetchCarousel, fetchVodCategories, loadEpgData, isTizen, user?.preferences?.lastSelectedCategory?.['lastPlayedTvChannelId']]);
+  }, [contentType, providerKey, fetchVodCategories, loadEpgData, isTizen, user?.preferences?.lastSelectedCategory?.['lastPlayedTvChannelId']]);
 
   // Warms the channel-list cache in the background while the user is
   // browsing Movies/Series, so the *first* switch to the TV tab each
   // session — the one visit the client-side cache above can't otherwise
   // speed up, since there's nothing to reuse yet — is already instant too.
   // Delayed so it doesn't compete with the movies/series grid's own
-  // carousel/categories/EPG requests firing right after login.
+  // categories/EPG requests firing right after login.
   useEffect(() => {
     if (!providerKey || contentType === 'tv') return;
     if (channelsCacheRef.current?.providerKey === providerKey) return;
@@ -727,7 +715,6 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
       };
       setContext(initCtx);
       fetchData(initCtx, contentType);
-      fetchCarousel();
       if (contentType !== 'tv') {
         fetchVodCategories(contentType as 'movie' | 'series');
       } else {
@@ -741,17 +728,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
     window.addEventListener('config-changed', handleConfigChange);
     return () =>
       window.removeEventListener('config-changed', handleConfigChange);
-  }, [fetchData, contentType, loadEpgData, fetchCarousel, fetchVodCategories, user?.id, providerKey, fetchProviderKey]);
-
-  useEffect(() => {
-    const handleCarouselChange = () => {
-      fetchCarousel();
-    };
-
-    window.addEventListener('carousel-changed', handleCarouselChange);
-    return () =>
-      window.removeEventListener('carousel-changed', handleCarouselChange);
-  }, [fetchCarousel]);
+  }, [fetchData, contentType, loadEpgData, fetchVodCategories, user?.id, providerKey, fetchProviderKey]);
 
   return {
     context,
@@ -775,7 +752,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
     // frame restore (see useNavigationHistory's NavFrame.contentType) needs
     // to silently put contentType back to whatever it was before a
     // Discover-opened detail page switched it, without handleContentTypeChange's
-    // side effects (preference save, category/carousel refetch, toast) firing
+    // side effects (preference save, category refetch, toast) firing
     // as if the user had deliberately picked a different tab.
     setContentType,
     cycleSort,
@@ -787,9 +764,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
     setPlayLastTvChannel,
     vodCategories,
     loadingCategories,
-    carouselSlides,
     fetchVodCategories,
-    fetchCarousel,
     setLoading,
     setItems,
     setContext,

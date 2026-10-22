@@ -53,7 +53,7 @@ interface UseNavigationHistoryArgs {
   onSetShowDiscover?: (value: boolean) => void;
   onSetVariantPicker?: (item: MediaItem | null, options: MediaItem[]) => void;
   // Raw setter, not handleContentTypeChange — restoring a frame must not
-  // trigger that function's side effects (preference save, category/carousel
+  // trigger that function's side effects (preference save, category
   // refetch, toast) as if the user had deliberately switched tabs.
   onSetContentType?: (type: 'movie' | 'series' | 'tv') => void;
   fetchData: (context: ContextType, typeOverride?: 'movie' | 'series' | 'tv') => void;

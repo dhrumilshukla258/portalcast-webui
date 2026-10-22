@@ -11,7 +11,6 @@ import MobileCategoryDrawer from './main-content-grid/MobileCategoryDrawer';
 import { useResizableWidth } from '@/hooks/useResizableWidth';
 import { isTizenDevice } from '@/utils/helpers';
 import type { MediaItem, ContextType, ChannelGroup } from '@/types';
-import type { CarouselSlide } from '@/api/endpoints/carousel';
 import type { ProgressRecord } from '@/api/types/user';
 
 interface MainContentGridProps {
@@ -36,8 +35,6 @@ interface MainContentGridProps {
   isRestoringFromHistory: boolean;
   vodCategories?: ChannelGroup[];
   loadingCategories?: boolean;
-  carouselSlides?: CarouselSlide[];
-  handleCarouselAction?: (slide: CarouselSlide) => void;
   onSelectCategory?: (categoryId: string, categoryTitle: string) => void;
   favorites?: string[];
   recentChannels?: string[];

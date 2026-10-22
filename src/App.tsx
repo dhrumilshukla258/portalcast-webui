@@ -108,7 +108,6 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     setTotalItemsCount,
     vodCategories,
     loadingCategories,
-    carouselSlides,
     progressRecords,
     providerKey,
   } = useMediaLibrary(!!detailItem);
@@ -216,7 +215,6 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     openDiscoverItem,
     handleDiscoverItemClick,
     onSelectVariant,
-    handleCarouselAction,
   } = useDiscoverNavigation({
     pushFrame,
     fetchData,
@@ -225,8 +223,6 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     setVariantPickerItem,
     setVariantPickerOptions,
     setDetailItem,
-    startPlayback,
-    handleItemClick,
   });
 
   // Global Search (the TV app's Search tab) lives on the same layer as Discover: a title
@@ -688,8 +684,6 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                 isRestoringFromHistory={isRestoringFromHistory.current}
                 vodCategories={vodCategories}
                 loadingCategories={loadingCategories}
-                carouselSlides={carouselSlides}
-                handleCarouselAction={handleCarouselAction}
                 onSelectCategory={onSelectCategory}
                 favorites={favorites}
                 recentChannels={recentChannels}

@@ -2,9 +2,7 @@ import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
 import { getMedia } from '@/api/endpoints/movies';
 import { getSeries } from '@/api/endpoints/series';
-import { getChannels } from '@/api/endpoints/channels';
 import { getDiscoverVariants, type DiscoverVariant } from '@/api/endpoints/discover';
-import type { CarouselSlide } from '@/api/endpoints/carousel';
 import { initialContext } from '@/hooks/useMediaLibrary';
 import type { MediaItem, ContextType } from '@/types';
 
@@ -16,8 +14,6 @@ interface UseDiscoverNavigationArgs {
   setVariantPickerItem: (item: MediaItem | null) => void;
   setVariantPickerOptions: (options: DiscoverVariant[]) => void;
   setDetailItem: (item: MediaItem | null) => void;
-  startPlayback: (item: MediaItem, startTime?: number, endTime?: number) => Promise<void>;
-  handleItemClick: (item: MediaItem) => Promise<void>;
 }
 
 // Everything involved in translating a Discover card (TMDB-sourced, carries
@@ -25,8 +21,7 @@ interface UseDiscoverNavigationArgs {
 // is_series/is_playable_movie flags the regular browsing flow relies on)
 // into the app's normal detail-page/playback flow. Kept as one hook since
 // openDiscoverItem/handleDiscoverItemClick/onSelectVariant share the same
-// pushFrame-then-clear-picker ordering rule (see openDiscoverItem) and
-// handleCarouselAction resolves carousel slides the same way.
+// pushFrame-then-clear-picker ordering rule (see openDiscoverItem).
 export function useDiscoverNavigation({
   pushFrame,
   fetchData,
@@ -35,8 +30,6 @@ export function useDiscoverNavigation({
   setVariantPickerItem,
   setVariantPickerOptions,
   setDetailItem,
-  startPlayback,
-  handleItemClick,
 }: UseDiscoverNavigationArgs) {
   // Id of the Discover card currently being resolved (variants check +
   // getMedia/getSeries) — without this, a slow resolve (the whole reason
@@ -50,7 +43,7 @@ export function useDiscoverNavigation({
   // flags encode this app's per-category VOD browsing model (e.g. "is this a
   // category tile or an actual movie"), which Discover has no equivalent of.
   // So instead of feeding raw Discover items into handleItemClick, resolve
-  // them the same way handleCarouselAction already does for carousel slides:
+  // them first:
   // fetch the real movie/series via getMedia/getSeries, then open its detail
   // page directly, switching the active tab to match so MainContentGrid's
   // (contentType-keyed) detail-page rendering picks it up.
@@ -241,62 +234,10 @@ export function useDiscoverNavigation({
     [openDiscoverItem]
   );
 
-  const handleCarouselAction = useCallback(
-    async (slide: CarouselSlide) => {
-      if (slide.actionType === 'none') return;
-      try {
-        let resolvedItem: MediaItem;
-        if (slide.mediaType === 'movie') {
-          const res = await getMedia({ movieId: slide.mediaId, category: '*' });
-          if (res.data && res.data.length > 0) {
-            resolvedItem = {
-              ...res.data[0],
-              is_playable_movie: true,
-            };
-          } else {
-            throw new Error('Movie not found');
-          }
-        } else if (slide.mediaType === 'series') {
-          const res = await getSeries({ movieId: slide.mediaId, category: '*' });
-          if (res.data && res.data.length > 0) {
-            resolvedItem = {
-              ...res.data[0],
-              is_series: 1,
-            };
-          } else {
-            throw new Error('Series not found');
-          }
-        } else {
-          // TV Channel
-          const res = await getChannels();
-          const channel = res.data.find(
-            (c) => String(c.id) === String(slide.mediaId)
-          );
-          if (channel) {
-            resolvedItem = channel;
-          } else {
-            throw new Error('Channel not found');
-          }
-        }
-
-        if (slide.actionType === 'play') {
-          await startPlayback(resolvedItem);
-        } else if (slide.actionType === 'details') {
-          await handleItemClick(resolvedItem);
-        }
-      } catch (err) {
-        console.error('Failed to execute carousel action:', err);
-        toast.error('Failed to load media.');
-      }
-    },
-    [startPlayback, handleItemClick]
-  );
-
   return {
     discoverLoadingItemId,
     openDiscoverItem,
     handleDiscoverItemClick,
     onSelectVariant,
-    handleCarouselAction,
   };
 }

@@ -66,7 +66,6 @@ const GROUPS: Group[] = [
       { method: 'GET', path: '/api/config', purpose: 'Read active provider config' },
       { method: 'POST', path: '/api/config', purpose: 'Update provider config (hot-reloads provider)' },
       { method: 'POST', path: '/api/clear-cache', purpose: 'Clear channel/genre/EPG/content caches' },
-      { method: 'GET', path: '/api/carousel', purpose: 'Read VOD homepage carousel slides' },
     ],
   },
   {

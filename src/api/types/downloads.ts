@@ -7,8 +7,3 @@ export interface DownloadLinkResponse {
   url: string;
 }
 
-export interface UploadFileResponse {
-  success: boolean;
-  url?: string;
-  error?: string;
-}

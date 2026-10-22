@@ -12,7 +12,6 @@ export const API_PATHS = {
   EPG_WINDOW: '/v2/epg/window',
   CHANNEL_GROUPS: '/v2/groups',
   EXPIRY: '/v2/expiry',
-  CAROUSEL: '/carousel',
   MOVIE_GROUPS: '/v2/movie-groups',
   SERIES_GROUPS: '/v2/series-groups',
 };
