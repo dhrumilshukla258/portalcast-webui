@@ -28,6 +28,7 @@ onApiHeaders((headers) => {
 });
 
 async function poll() {
+  if (document.hidden) return; // a tab in the background asks nothing; it asks on coming back
   if (Date.now() - lastHeardAt < QUIET_MS) return; // recent answers already told us
   try {
     const r = await api.get<{ iptv: string }>('/v2/health/iptv');
@@ -43,6 +44,7 @@ function subscribe(listener: () => void) {
     started = true;
     void poll();
     window.setInterval(() => void poll(), 60_000);
+    document.addEventListener('visibilitychange', () => void poll());
   }
   return () => listeners.delete(listener);
 }

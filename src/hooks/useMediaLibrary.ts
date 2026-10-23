@@ -240,11 +240,22 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
     }
   }, []);
 
-  // Keep the guide current while on the Live tab (the window only reaches ~6 h ahead).
+  // Keep the guide current while on the Live tab (the window only reaches ~6 h ahead). A tab
+  // in the background asks nothing; coming back refreshes it when the last load is too old.
   useEffect(() => {
     if (contentType !== 'tv' || !providerKey) return;
-    const timer = setInterval(() => loadEpgData({ silent: true }), EPG_REFRESH_MS);
-    return () => clearInterval(timer);
+    let loadedAt = Date.now();
+    const refresh = () => {
+      if (document.hidden || Date.now() - loadedAt < EPG_REFRESH_MS - 1000) return;
+      loadedAt = Date.now();
+      void loadEpgData({ silent: true });
+    };
+    const timer = setInterval(refresh, EPG_REFRESH_MS);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', refresh);
+    };
   }, [contentType, providerKey, loadEpgData]);
 
   const fetchData = useCallback(
