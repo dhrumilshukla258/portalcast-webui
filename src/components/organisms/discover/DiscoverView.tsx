@@ -289,6 +289,23 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   // now: the filtered grid when a filter's active, otherwise a mix of
   // Recommended/What's New/genre-row items so the backdrop isn't always
   // anchored to just one row.
+  // A title shows once on Home (owner, 2026-10-22): each row keeps only what no row above it has,
+  // in the order they are drawn (the server's rows, What's New, then the genre rows).
+  const uniqueRows = useMemo(() => {
+    const seen = new Set<string>();
+    const uniq = (items: MediaItem[]) => items.filter((m) => {
+      const id = contentIdOf(m) ?? String(m.id);
+      if ((contentIdOf(m) && hiddenTitles.has(id)) || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+    const home = homeRows.map((r) => ({ ...r, data: uniq(r.data) }));
+    const rec = homeRows.length ? [] : uniq(recommendations.slice(0, RECOMMENDED_ROW_LIMIT));
+    const news = uniq(whatsNew.items);
+    const genres = new Map(Object.entries(genreRows).map(([g, row]) => [g, uniq(row.items)] as const));
+    return { home, rec, news, genres };
+  }, [homeRows, recommendations, whatsNew.items, genreRows, hiddenTitles]);
+
   const backdropItems = useMemo(() => {
     if (hasActiveFilter) return filteredItems;
     return [
@@ -374,13 +391,13 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
       {homeRows.length > 0 ? (
         // Complete as served (prepared on the server): no paging.
         // The first prepared row gets bigger posters, so Home is not one even grid of rows.
-        homeRows.map((row, i) => (
-          <MediaCardRow key={row.key} title={row.title} onClick={onClick} items={row.data.filter(notHidden)} loading={false} loadingItemId={loadingItemId} size={i === 0 ? 'large' : 'normal'} />
+        uniqueRows.home.map((row, i) => (
+          <MediaCardRow key={row.key} title={row.title} onClick={onClick} items={row.data} loading={false} loadingItemId={loadingItemId} size={i === 0 ? 'large' : 'normal'} />
         ))
       ) : (
         <RecommendedRow
           onClick={onClick}
-          items={recommendations.slice(0, RECOMMENDED_ROW_LIMIT)}
+          items={uniqueRows.rec}
           loading={loadingRecommendations}
           basedOnTitle={recommendationsBasedOn}
           loadingItemId={loadingItemId}
@@ -389,7 +406,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
       <MediaCardRow
         title="What's New"
         onClick={onClick}
-        items={whatsNew.items.filter(notHidden)}
+        items={uniqueRows.news}
         loading={loadingWhatsNew}
         loadingItemId={loadingItemId}
         hasMore={whatsNew.hasMore}
@@ -410,7 +427,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           key={genre}
           title={genre}
           onClick={onClick}
-          items={row.items.filter(notHidden)}
+          items={uniqueRows.genres.get(genre) ?? []}
           loading={!!row.loading}
           loadingItemId={loadingItemId}
           hasMore={row.hasMore}
