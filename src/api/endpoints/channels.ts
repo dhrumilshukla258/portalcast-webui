@@ -1,3 +1,4 @@
+import { cachedGet } from '@/api/responseCache';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { api } from '@/api/client';
 import type { MediaItem, ChannelGroup, PaginatedResponse } from '@/api/types/channels';
@@ -19,8 +20,8 @@ export const API_PATHS = {
 export const getChannels = async (
   signal?: AbortSignal
 ): Promise<PaginatedResponse<MediaItem>> => {
-  const response = (await api.get<MediaItem[]>(API_PATHS.CHANNELS, { signal }))
-    .data;
+  // Cached, and kept in the browser (api/responseCache.ts): the list shows at once after a reload.
+  const response = await cachedGet<MediaItem[]>(API_PATHS.CHANNELS, { signal });
   if (!response || !Array.isArray(response)) {
     throw new Error('No response data received from channels API.');
   }
@@ -41,9 +42,7 @@ export const getChannelGroups = async (
     params.all = 'true';
   }
 
-  const response = (
-    await api.get<ChannelGroup[]>(API_PATHS.CHANNEL_GROUPS, { params, signal })
-  ).data;
+  const response = await cachedGet<ChannelGroup[]>(API_PATHS.CHANNEL_GROUPS, { params, signal });
   if (!response || !Array.isArray(response)) {
     throw new Error('No response data received from channel groups API.');
   }

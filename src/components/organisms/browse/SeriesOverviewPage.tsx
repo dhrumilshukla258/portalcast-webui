@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useAnswersUpdated } from '@/hooks/useAnswersUpdated';
 import { Play, Layers } from 'lucide-react';
 import type { MediaItem } from '@/types';
 import type { ProgressRecord } from '@/api/types/user';
@@ -52,6 +53,9 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
   const [episodePage, setEpisodePage] = useState(1);
   const [hasMoreEpisodes, setHasMoreEpisodes] = useState(false);
   const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
+  // A stored copy of the episodes was shown and the server's differs: load them again.
+  const episodesUpdated = useAnswersUpdated('/v2/series');
+  const episodesUpdatedRef = useRef(0);
 
   // The series' own progress row: the episode the viewer is in the middle of.
   const continueRecord = useMemo(() => {
@@ -75,7 +79,10 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
   useEffect(() => {
     if (!selectedSeasonId) return;
     let cancelled = false;
-    setLoadingEpisodes(true);
+    // A refresh (episodesUpdated) keeps the list on screen; a new season shows loading.
+    const refreshing = episodesUpdatedRef.current !== episodesUpdated;
+    episodesUpdatedRef.current = episodesUpdated;
+    if (!refreshing) setLoadingEpisodes(true);
     setEpisodePage(1);
 
     getSeries({
@@ -112,7 +119,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [selectedSeasonId, seriesItem.id]);
+  }, [selectedSeasonId, seriesItem.id, episodesUpdated]);
 
   // Guards against the observer firing again (e.g. a second intersection
   // event) while a "load more" request is still in flight.

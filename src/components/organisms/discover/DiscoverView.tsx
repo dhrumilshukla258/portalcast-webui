@@ -7,6 +7,7 @@ import RecommendedRow from '@/components/organisms/browse/RecommendedRow';
 import DiscoverFilters, { hasAnyActiveFilter, type ActiveDiscoverFilters, type SingleFilterKey } from '@/components/organisms/discover/DiscoverFilters';
 import { getDiscoverBrowse, type HomeRow } from '@/api/endpoints/discover';
 import { useDiscover } from '@/hooks/useDiscover';
+import { useAnswersUpdated } from '@/hooks/useAnswersUpdated';
 import type { MediaItem } from '@/types';
 
 const TOP_GENRE_COUNT = 10;
@@ -147,6 +148,18 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     fetchFacets(activeType);
     fetchWhatsNew(activeType);
   }, [activeType, fetchFacets, fetchWhatsNew]);
+
+  // A stored answer was shown and the server's differs: the same rows again, in place (the fresh
+  // answers are in memory by now, so no request and no skeleton).
+  const discoverUpdated = useAnswersUpdated('/v2/discover');
+  useEffect(() => {
+    if (!discoverUpdated) return;
+    fetchFacets(activeType);
+    fetchWhatsNew(activeType);
+    const genres = Object.keys(genreRows);
+    if (genres.length) fetchGenreRows(genres, activeType);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discoverUpdated]);
 
   useEffect(() => {
     onActiveTypeChange?.(activeType);

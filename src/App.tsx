@@ -30,6 +30,7 @@ import CategoryBrowseView from '@/components/organisms/browse/CategoryBrowseView
 import TitleMenu from '@/components/organisms/TitleMenu';
 import { TitleMenuContext, type TitleMenuExtra } from '@/context/TitleMenuContext';
 import { clearResponseCache } from '@/api/responseCache';
+import { useAnswersUpdated } from '@/hooks/useAnswersUpdated';
 import { loadHiddenTitles, clearHiddenTitles } from '@/utils/hiddenTitles';
 import PeopleView from '@/components/organisms/people/PeopleView';
 import SectionChips, { type HomeSection } from '@/components/molecules/SectionChips';
@@ -121,9 +122,11 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   // watch overall" behavior.
   const [discoverActiveType, setDiscoverActiveType] = useState<'movie' | 'series' | undefined>(undefined);
 
+  // Home's rows; again when a stored copy was shown and the server's differs.
+  const homeUpdated = useAnswersUpdated('/v2/home');
   useEffect(() => {
     if (user) fetchRecommendations(discoverActiveType);
-  }, [user?.id, discoverActiveType, fetchRecommendations]);
+  }, [user?.id, discoverActiveType, fetchRecommendations, homeUpdated]);
 
   const {
     history,
