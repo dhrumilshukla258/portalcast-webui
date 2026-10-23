@@ -23,6 +23,7 @@ import type {
   FolderListing,
   LibraryTitle,
   TmdbCandidate,
+  PortalTitleMatch,
 } from '@/api/types/admin';
 
 // --- Server config ---
@@ -247,6 +248,13 @@ export const searchMatches = async (q: string, year?: string | null, kind: 'movi
 export const setTitleMatch = async (itemId: number, tmdbId: number | null): Promise<void> => {
   await api.post(`/admin/libraries/items/${itemId}/match`, { tmdbId });
 };
+
+// ---- Fix match on a portal title ("movie_123") ----
+export const getPortalTitleMatch = async (contentId: string): Promise<PortalTitleMatch> =>
+  (await api.get<PortalTitleMatch>(`/admin/titles/${encodeURIComponent(contentId)}/match`)).data!;
+
+export const setPortalTitleMatch = async (contentId: string, tmdbId: number | null): Promise<{ tmdbId: number | null; locked: boolean }> =>
+  (await api.post<{ tmdbId: number | null; locked: boolean }>(`/admin/titles/${encodeURIComponent(contentId)}/match`, { tmdbId })).data!;
 
 // ---- Overview (Admin front page) ----
 export interface AdminOverview {

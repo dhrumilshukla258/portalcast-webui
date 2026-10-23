@@ -215,3 +215,15 @@ export interface TmdbCandidate {
   poster: string | null;
   overview: string | null;
 }
+
+/** A portal title's current match, for "Fix match" on its detail page. */
+export interface PortalTitleMatch {
+  id: string;
+  kind: 'movie' | 'series';
+  name: string;
+  year: string | null;
+  tmdbId: number | null;
+  imdbId: string | null;
+  /** Matched by an admin: no job changes it. */
+  locked: boolean;
+}

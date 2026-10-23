@@ -1,9 +1,10 @@
 import { getTitleDetails, type PersonCredit, type TitleDetails } from '@/api/endpoints/discover';
 import { useOpenPerson } from '@/context/PersonPageContext';
 import React, { useMemo } from 'react';
-import { Play, Clock, Star, Calendar, Globe2, Film, Image as ImageIcon } from 'lucide-react';
+import { Play, Clock, Star, Calendar, Globe2, Film, Image as ImageIcon, Link2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import EditImagesDialog from '@/components/organisms/admin/EditImagesDialog';
+import { PortalFixMatch } from '@/components/organisms/admin/FixMatchDialog';
 import type { MediaItem } from '@/types';
 import { URL_PATHS } from '@/api/config';
 import { MoreLikeThis, MyListButton } from '@/components/molecules/TitleExtras';
@@ -71,6 +72,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
   const [editingImages, setEditingImages] = React.useState(false);
+  const [fixingMatch, setFixingMatch] = React.useState(false);
   const logo = details?.logo || item.logo_path;
   const tagline = details?.tagline || item.tagline;
   const facts = [details?.studios || item.studios, details?.collection || item.collection].filter(Boolean) as string[];
@@ -191,14 +193,27 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
             )}
             {tagline && <p className="mt-2 text-sm italic text-gray-400 md:text-base">{tagline}</p>}
             {isAdmin && /^(movie|series)_/.test(detailsKey) && (
-              <button
-                type="button"
-                onClick={() => setEditingImages(true)}
-                className="mt-2 inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs font-semibold text-gray-400 hover:bg-white/10 hover:text-gray-200"
-                data-focusable="true"
-              >
-                <ImageIcon size={13} /> Edit images
-              </button>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingImages(true)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs font-semibold text-gray-400 hover:bg-white/10 hover:text-gray-200"
+                  data-focusable="true"
+                >
+                  <ImageIcon size={13} /> Edit images
+                </button>
+                {/* Local library titles ("movie_L12") have theirs in Admin → Libraries. */}
+                {!/^(movie|series)_L\d+$/.test(detailsKey) && (
+                  <button
+                    type="button"
+                    onClick={() => setFixingMatch(true)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs font-semibold text-gray-400 hover:bg-white/10 hover:text-gray-200"
+                    data-focusable="true"
+                  >
+                    <Link2 size={13} /> Fix match
+                  </button>
+                )}
+              </div>
             )}
             {item.director && (
               <p className="mt-1 text-sm text-gray-400">
@@ -358,6 +373,14 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
           )}
         </div>
       </div>
+
+      {fixingMatch && (
+        <PortalFixMatch
+          contentId={detailsKey}
+          onClose={() => setFixingMatch(false)}
+          onChanged={() => void getTitleDetails({ id: detailsKey }).then(setDetails)}
+        />
+      )}
 
       {editingImages && (
         <EditImagesDialog

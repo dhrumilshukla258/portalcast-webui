@@ -1,14 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import {
-  FolderOpen, Folder, ChevronLeft, Plus, RefreshCw, Trash2, Pencil, X, Search, Film, AlertTriangle, Check,
+  FolderOpen, Folder, ChevronLeft, Plus, RefreshCw, Trash2, Pencil, X, Film, AlertTriangle, Check,
 } from 'lucide-react';
 import {
   getLibraries, createLibrary, updateLibrary, deleteLibrary, scanLibrary, browseFolders,
-  getLibraryTitles, searchMatches, setTitleMatch,
+  getLibraryTitles, setTitleMatch,
 } from '@/api/endpoints/admin';
-import type { LibrariesResponse, LocalLibrary, FolderListing, LibraryTitle, TmdbCandidate } from '@/api/types/admin';
+import type { LibrariesResponse, LocalLibrary, FolderListing, LibraryTitle } from '@/api/types/admin';
 import { formatAgo } from '@/hooks/useStreamFailures';
+import FixMatchDialog from '@/components/organisms/admin/FixMatchDialog';
 
 const errorText = (err: unknown, fallback: string) =>
   (err as { response?: { data?: { error?: string } } })?.response?.data?.error || fallback;
@@ -151,89 +152,22 @@ const LibraryEditor: React.FC<{ lib?: LocalLibrary; onClose: () => void; onSaved
   );
 };
 
-const FixMatch: React.FC<{ title: LibraryTitle; onClose: () => void; onDone: () => void }> = ({ title, onClose, onDone }) => {
-  const [q, setQ] = useState(title.name);
-  const [year, setYear] = useState(title.year ?? '');
-  const [results, setResults] = useState<TmdbCandidate[] | null>(null);
-  const [busy, setBusy] = useState(false);
-  const search = useCallback(async () => {
-    setResults(null);
-    try {
-      setResults(await searchMatches(q, year || null, title.kind));
-    } catch (err) {
-      toast.error(errorText(err, 'TMDB search failed'));
-      setResults([]);
-    }
-  }, [q, year]);
-  useEffect(() => {
-    void search();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const choose = async (tmdbId: number | null) => {
-    setBusy(true);
-    try {
+const FixMatch: React.FC<{ title: LibraryTitle; onClose: () => void; onDone: () => void }> = ({ title, onClose, onDone }) => (
+  <FixMatchDialog
+    name={title.name}
+    year={title.year}
+    kind={title.kind}
+    subtitle={title.folder}
+    currentTmdbId={title.matchedTmdbId}
+    locked={title.locked}
+    onChoose={async (tmdbId) => {
       await setTitleMatch(title.id, tmdbId);
-      toast.success(tmdbId ? 'Match saved' : 'Back to automatic matching');
       onDone();
-      onClose();
-    } catch (err) {
-      toast.error(errorText(err, 'Could not save the match'));
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-5">
-        <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-lg font-black text-white">Fix match</h2>
-          <button type="button" onClick={onClose} className="rounded p-1 text-gray-400 hover:bg-gray-800" aria-label="Close">
-            <X size={18} />
-          </button>
-        </div>
-        <p className="mb-3 truncate font-mono text-xs text-gray-500">{title.folder}</p>
-        <form
-          className="mb-4 flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void search();
-          }}
-        >
-          <input value={q} onChange={(e) => setQ(e.target.value)} className="min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-2 text-sm text-gray-100 outline-none focus:border-blue-500" />
-          <input value={year} onChange={(e) => setYear(e.target.value)} placeholder="Year" className="w-20 rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-2 text-sm text-gray-100 outline-none focus:border-blue-500" />
-          <button type="submit" className={btn}><Search size={14} /> Search</button>
-        </form>
-        {results === null && <p className="text-sm text-gray-500">Searching TMDB…</p>}
-        {results?.length === 0 && <p className="text-sm text-gray-500">Nothing found. Try another spelling or no year.</p>}
-        <div className="space-y-2">
-          {results?.map((r) => (
-            <button
-              key={r.tmdbId}
-              type="button"
-              disabled={busy}
-              onClick={() => void choose(r.tmdbId)}
-              className={`flex w-full gap-3 rounded-xl border p-2 text-left hover:bg-gray-800 ${title.matchedTmdbId === r.tmdbId ? 'border-blue-500' : 'border-gray-800'}`}
-            >
-              {r.poster ? <img src={r.poster} alt="" className="h-20 w-14 shrink-0 rounded object-cover" loading="lazy" /> : <div className="h-20 w-14 shrink-0 rounded bg-gray-800" />}
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-gray-100">
-                  {r.title} {r.year && <span className="font-normal text-gray-400">({r.year})</span>}
-                </div>
-                <p className="mt-1 line-clamp-2 text-xs text-gray-500">{r.overview}</p>
-                <p className="mt-1 text-[11px] text-gray-600">TMDB {r.tmdbId}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-        {title.locked && (
-          <button type="button" className={`${btn} mt-4`} disabled={busy} onClick={() => void choose(null)}>
-            Forget my choice (match automatically)
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
+      return tmdbId ? 'Match saved' : 'Back to automatic matching';
+    }}
+    onClose={onClose}
+  />
+);
 
 const Titles: React.FC<{ lib: LocalLibrary }> = ({ lib }) => {
   const [filter, setFilter] = useState<'unmatched' | 'all' | 'missing'>(lib.counts.unmatched ? 'unmatched' : 'all');
