@@ -190,6 +190,27 @@ export const resetSetting = async (key: string): Promise<SettingsResponse> =>
 export const sendTestEmail = async (to?: string): Promise<{ ok: boolean; to: string }> =>
   (await api.post<{ ok: boolean; to: string }>('/admin/settings/test-email', { to })).data!;
 
+// ---- Title words (per portal profile) ----
+// The default lists title cleaning uses and one profile's changes to them (server
+// content/titleWords.ts). Words are lowercase, as people write them ("dual audio", "hum tv").
+export interface TitleWordEdits {
+  languages: { add: { spelling: string; language: string }[]; remove: string[] };
+  tags: { add: string[]; remove: string[] };
+  channels: { add: string[]; remove: string[] };
+}
+export interface TitleWords {
+  profileId: number;
+  active: boolean;
+  defaults: { languages: { language: string; spellings: string[] }[]; tags: string[]; channels: string[] };
+  edits: TitleWordEdits;
+}
+
+export const getTitleWords = async (profileId: number): Promise<TitleWords> =>
+  (await api.get<TitleWords>(`/admin/title-words/${profileId}`)).data!;
+
+export const saveTitleWords = async (profileId: number, edits: TitleWordEdits): Promise<TitleWords> =>
+  (await api.put<TitleWords>(`/admin/title-words/${profileId}`, edits)).data!;
+
 // ---- Background jobs ----
 export const getJobs = async (): Promise<BackgroundJob[]> =>
   (await api.get<{ items: BackgroundJob[] }>('/admin/jobs')).data?.items ?? [];

@@ -6,6 +6,8 @@ interface ProfileCardProps {
   onDelete: (profile: ConfigProfile) => void;
   onToggleEnabled: (profile: ConfigProfile) => void;
   onDuplicate: (profile: ConfigProfile) => void;
+  /** Opens the portal's title words (languages, tags, channel names). */
+  onTitleWords: (profile: ConfigProfile) => void;
 }
 
 const ProfileCard: React.FC<ProfileCardProps> = ({
@@ -14,6 +16,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   onDelete,
   onToggleEnabled,
   onDuplicate,
+  onTitleWords,
 }) => {
   return (
     <div
@@ -87,6 +90,13 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           }`}
         >
           {profile.isEnabled ? 'Disable' : 'Enable'}
+        </button>
+        <button
+          onClick={() => onTitleWords(profile)}
+          data-focusable="true"
+          className="rounded-lg border border-gray-600/30 bg-gray-700/50 px-3 py-1.5 text-xs font-bold text-gray-300 hover:bg-gray-600/80 active:scale-95"
+        >
+          Title words
         </button>
         <button
           onClick={() => onDuplicate(profile)}

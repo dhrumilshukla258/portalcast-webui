@@ -1,10 +1,15 @@
+import { useCallback, useState } from 'react';
 import { useProfileManager } from '@/hooks/useProfileManager';
+import type { ConfigProfile } from '@/hooks/useProfileManager';
 import ConfirmationModal from '@/components/molecules/ConfirmationModal';
 import ProfileCard from './profile-manager/ProfileCard';
 import CreateProfileModal from './profile-manager/CreateProfileModal';
+import TitleWordsModal from './profile-manager/TitleWordsModal';
 
 const ProfileManager = () => {
   const pm = useProfileManager();
+  const [wordsOf, setWordsOf] = useState<ConfigProfile | null>(null);
+  const closeWords = useCallback(() => setWordsOf(null), []);
 
   if (pm.loading) {
     return (
@@ -53,9 +58,12 @@ const ProfileManager = () => {
             onDelete={pm.handleDeleteProfile}
             onToggleEnabled={pm.handleToggleEnabled}
             onDuplicate={pm.handleDuplicateProfile}
+            onTitleWords={setWordsOf}
           />
         ))}
       </div>
+
+      {wordsOf && <TitleWordsModal profileId={wordsOf.id} profileName={wordsOf.name} onClose={closeWords} />}
 
       {pm.showCreateModal && (
         <CreateProfileModal
