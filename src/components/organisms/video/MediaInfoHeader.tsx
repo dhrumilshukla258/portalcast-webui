@@ -82,7 +82,8 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
   const people = React.useMemo(() => {
     if (!details) return [];
     const list: { person: PersonCredit; line: string | null }[] = [
-      ...details.cast.slice(0, 16).map((c) => ({ person: c, line: c.role || null })),
+      // ?? []: a partial answer (an older server, a title not matched yet) must not crash the page.
+      ...(details.cast ?? []).slice(0, 16).map((c) => ({ person: c, line: c.role || null })),
       ...(details.creators ?? []).map((c) => ({ person: c, line: 'Creator' })),
       ...(details.directors ?? []).map((c) => ({ person: c, line: 'Director' })),
       ...(details.writersPeople ?? []).slice(0, 4).map((c) => ({ person: c, line: c.role || 'Writer' })),

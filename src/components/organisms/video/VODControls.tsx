@@ -127,7 +127,9 @@ export const VODControls = React.memo(() => {
     >
       <Controls.Group className="w-full">
         {title && (
-          <div className="mb-2 max-w-3xl md:mb-4">
+          // text-left: the player's own styles centre text. The space below is the buttons' labels
+          // (shown above a focused or hovered button), so they never cover the subtitle.
+          <div className="mb-9 max-w-3xl text-left md:mb-10">
             <h2 className="truncate text-lg font-semibold text-white md:text-3xl">{title}</h2>
             {subtitle && <p className="truncate text-sm text-gray-300 md:text-base">{subtitle}</p>}
           </div>
@@ -313,8 +315,9 @@ export const VODControls = React.memo(() => {
 
         <div className="flex items-center justify-between font-mono text-xs text-gray-200 md:text-sm">
           <Time type="current" />
-          <span className="text-gray-400">
-            <Time type="current" remainder /> · <Time type="duration" />
+          {/* One line: each <Time> is a block of its own. */}
+          <span className="flex items-center gap-1.5 whitespace-nowrap text-gray-400">
+            <Time type="current" remainder /> <span>·</span> <Time type="duration" />
           </span>
         </div>
       </Controls.Group>
