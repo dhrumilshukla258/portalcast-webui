@@ -78,7 +78,16 @@ const AdminOverview: React.FC<{ onOpen: (t: AdminTarget) => void }> = ({ onOpen 
         </span>
         <span className="text-gray-400">IPTV {data.health.iptv === 'online' ? 'online' : 'offline'}</span>
         <span className="text-gray-500">Up {uptime(data.health.uptimeSeconds)}</span>
-        <span className="text-gray-500">{data.health.memoryMb} MB memory</span>
+        <span
+          className="text-gray-500"
+          title={data.health.memory
+            ? `JS heap ${data.health.memory.heapUsedMb} of ${data.health.memory.heapTotalMb} MB · buffers ${data.health.memory.buffersMb} MB`
+              + (data.health.catalog ? ` (catalog ${data.health.catalog.sizeMb} MB)` : '')
+              + ` · other native ${data.health.memory.nativeMb} MB · resident ${data.health.memory.residentMb} MB (with program files)`
+            : undefined}
+        >
+          {data.health.memoryMb} MB {data.health.memory ? 'in use' : 'memory'}
+        </span>
         {data.runningJobs.length > 0 && <span className="text-gray-500">Working on: {data.runningJobs.join(', ')}</span>}
       </section>
 

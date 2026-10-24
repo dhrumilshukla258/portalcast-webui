@@ -259,7 +259,11 @@ export const setPortalTitleMatch = async (contentId: string, tmdbId: number | nu
 // ---- Overview (Admin front page) ----
 export interface AdminOverview {
   health: {
-    iptv: 'online' | 'offline'; iptvSince: string; uptimeSeconds: number; memoryMb: number;
+    iptv: 'online' | 'offline'; iptvSince: string; uptimeSeconds: number;
+    /** Memory in use (what a container limit counts); older servers sent the resident size. */
+    memoryMb: number;
+    /** Where it is (servers from 1.5): JS heap used of reserved, buffers (the catalog), resident. */
+    memory?: { inUseMb: number; residentMb: number; heapUsedMb: number; heapTotalMb: number; buffersMb: number; nativeMb: number };
     /** The in-memory catalog, when on: version, size and the shadow check against the database. */
     catalog?: { version: number; sizeMb: number; checked: number; differed: number };
   };
