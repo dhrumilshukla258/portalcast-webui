@@ -1,11 +1,42 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import legacy from '@vitejs/plugin-legacy';
+import browserslist from 'browserslist';
+import { browserslistToTargets } from 'lightningcss';
 import path from 'path';
+
+/**
+ * The oldest browsers the web app supports (owner, 2026-10-24: devices from 2018 on): Chrome and
+ * Android WebView 69 (Samsung Tizen 5.5 TVs from 2019, Android phones), Safari / iOS 12,
+ * Firefox 78, Edge 79. The JavaScript is compiled down to them with only the polyfills the code
+ * uses, and the CSS is lowered (postcss.config.mjs, css.lightningcss below). Checked in a real
+ * Chromium 69: before this the app did not start there at all ("Unexpected token ?").
+ */
+const SUPPORTED = ['chrome >= 69', 'and_chr >= 69', 'safari >= 12', 'ios_saf >= 12', 'firefox >= 78', 'edge >= 79', 'samsung >= 10'];
+const ESBUILD_TARGETS = ['chrome69', 'safari12', 'ios12', 'firefox78', 'edge79'];
 
 export default defineConfig({
   plugins: [
     react(),
+    // Modern (ES module) chunks only, compiled for SUPPORTED, plus the core-js polyfills they need
+    // there (Array.prototype.at, structuredClone, Promise.allSettled...). Every SUPPORTED browser
+    // runs ES modules, so no separate legacy bundle is built.
+    legacy({ modernTargets: SUPPORTED, modernPolyfills: true, renderLegacyChunks: false }),
+    // The polyfills (48 KB gzipped) only where something is missing: a current browser has the
+    // newest features they cover (iterator helpers, Set methods: Chrome 122, Safari 18.4,
+    // Firefox 131) and skips them. Written in while the page is parsed, so they still run before
+    // the app's module (deferred scripts run in document order).
+    {
+      name: 'polyfills-only-when-needed',
+      enforce: 'post',
+      transformIndexHtml: {
+        order: 'post',
+        handler: (html) =>
+          html.replace(/<script type="module" crossorigin src="([^"]*polyfills-[^"]*)"><\/script>/, (_tag, src) =>
+            `<script>if (!(window.Iterator && Iterator.prototype && Iterator.prototype.toArray && Set.prototype.union && window.structuredClone && Array.prototype.findLast)) document.write('<script type="module" crossorigin src="${src}"><\\/script>');</script>`),
+      },
+    },
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
@@ -117,10 +148,14 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  css: {
+    // Colours (oklch), logical properties (padding-inline...) and inset lowered for SUPPORTED.
+    lightningcss: { targets: browserslistToTargets(browserslist(SUPPORTED)) },
+  },
   build: {
-    // Every browser the webui runs on (desktop, phones, smart TVs since ~2020) supports ES2020:
-    // no down-levelled syntax or helpers, a smaller bundle.
-    target: 'es2020',
+    target: ESBUILD_TARGETS,
+    cssTarget: ESBUILD_TARGETS,
+    cssMinify: 'lightningcss',
   },
   base: './',
   server: {
