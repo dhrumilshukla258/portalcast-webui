@@ -326,10 +326,6 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
             Clear all
           </button>
         )}
-        {/* At the top of the sheet (owner, 2026-10-24); picks never close it. */}
-        <button data-focusable="true" onClick={close} className="h-9 shrink-0 rounded-full bg-white px-4 text-sm font-bold text-[#0A0F1C]">
-          Show titles
-        </button>
       </div>
       <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {dim === null ? (
@@ -440,7 +436,15 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
         <ChevronDown className="h-4 w-4" />
       </button>
       )}
-      {sheet && createPortal(sheetNode, document.body)}
+      {sheet && createPortal(
+        <>
+          {/* Wider screens: a click beside the panel closes it (the filters stay set), and never
+              reaches the page under it. Phones: the sheet is the whole screen. */}
+          <div className="fixed inset-0 z-[99] hidden sm:block" onClick={close} aria-hidden="true" />
+          {sheetNode}
+        </>,
+        document.body
+      )}
     </>
   );
 };

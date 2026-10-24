@@ -91,7 +91,8 @@ const SportsView: React.FC<SportsViewProps> = ({ onPlayChannel, onFindChannel })
           Choose sports
         </button>
         <a href={answer.source.url} target="_blank" rel="noopener noreferrer" className="ml-auto text-xs text-gray-500 hover:text-gray-300">
-          Schedule: {answer.source.name}
+          {/* The games come from the free schedule AND the server's IPTV guide (owner, 2026-10-24). */}
+          Schedule: {answer.source.name}{answer.guide ? ' and your TV guide' : ''}
         </a>
       </div>
       {sports.length > 1 && (
