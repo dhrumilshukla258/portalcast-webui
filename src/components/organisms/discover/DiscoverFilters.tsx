@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronLeft, ChevronRight, X, Check, SlidersHorizontal } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, X, Check, Ban, SlidersHorizontal } from 'lucide-react';
 import type { DiscoverFacets } from '@/api/endpoints/discover';
 
 export type DiscoverFilterKey = 'genre' | 'country' | 'language' | 'network' | 'theme';
@@ -12,6 +12,7 @@ export type SingleFilterKey = Exclude<DiscoverFilterKey, 'genre'>;
 // makes the filter useful at that volume; country/language/theme don't have
 // the same volume problem and stay simple single-pick.
 export interface ActiveDiscoverFilters {
+  /** Genres a title must have; "-Horror" means it must not have Horror. */
   genre?: string[];
   country?: string;
   language?: string;
@@ -19,6 +20,23 @@ export interface ActiveDiscoverFilters {
   network?: string;
   theme?: string;
 }
+
+/** A genre's next state on a press, as in the TV app: required, then excluded, then off. */
+export function cycleGenre(current: string[], value: string): string[] {
+  if (current.includes(value)) return [...current.filter((v) => v !== value), `-${value}`];
+  if (current.includes(`-${value}`)) return current.filter((v) => v !== `-${value}`);
+  return [...current, value];
+}
+
+/** The API's genre (all required) and notGenre (none of these) parameters. */
+export function genreParams(genres: string[] | undefined): { genre?: string; notGenre?: string } {
+  const all = genres ?? [];
+  const yes = all.filter((v) => !v.startsWith('-'));
+  const no = all.filter((v) => v.startsWith('-')).map((v) => v.slice(1));
+  return { genre: yes.length ? yes.join(',') : undefined, notGenre: no.length ? no.join(',') : undefined };
+}
+
+const genreLabel = (v: string) => (v.startsWith('-') ? `not ${v.slice(1)}` : v);
 
 export function hasAnyActiveFilter(activeFilters: ActiveDiscoverFilters): boolean {
   return (
@@ -119,7 +137,7 @@ function summaryFor(dimension: DiscoverFilterKey, activeFilters: ActiveDiscoverF
   if (dimension === 'genre') {
     const genres = activeFilters.genre || [];
     if (genres.length === 0) return DIMENSION_LABELS.genre;
-    if (genres.length <= 2) return genres.join(', ');
+    if (genres.length <= 2) return genres.map(genreLabel).join(', ');
     return `${genres.length} selected`;
   }
   const value = activeFilters[dimension];
@@ -141,7 +159,8 @@ const ValueList: React.FC<{
   onToggle?: (value: string) => void;
 }> = ({ dimension, values, activeValue, activeValues, onSelect, onToggle }) => {
   const multi = dimension === 'genre';
-  const isActiveValue = (value: string) => (multi ? !!activeValues?.includes(value) : activeValue === value);
+  const isExcluded = (value: string) => multi && !!activeValues?.includes(`-${value}`);
+  const isActiveValue = (value: string) => (multi ? !!activeValues?.includes(value) || isExcluded(value) : activeValue === value);
   const anyActive = multi ? (activeValues?.length ?? 0) > 0 : !!activeValue;
 
   // Scrolls the first currently-selected value into view as soon as this
@@ -176,8 +195,10 @@ const ValueList: React.FC<{
         <span>Any {DIMENSION_LABELS[dimension]}</span>
         {!anyActive && <Check className="h-4 w-4" />}
       </button>
+      {multi && <p className="px-4 pb-1 pt-2 text-xs text-gray-500">Press a genre once to include it, again to leave it out.</p>}
       {values.map(({ value, count }) => {
         const isActive = isActiveValue(value);
+        const excluded = isExcluded(value);
         const assignRef = isActive && !scrolledToRef;
         if (assignRef) scrolledToRef = true;
         return (
@@ -188,13 +209,13 @@ const ValueList: React.FC<{
             data-selected={isActive ? 'true' : 'false'}
             onClick={() => (multi ? onToggle?.(value) : onSelect?.(isActive ? undefined : value))}
             className={`flex w-full items-center justify-between rounded-full px-4 py-3 text-left text-sm font-bold transition-all focus:outline-hidden [&.focused]:bg-linear-to-r [&.focused]:from-sky-400/20 [&.focused]:to-blue-500/20 [&.focused]:text-sky-400 ${
-              isActive ? 'bg-linear-to-r from-sky-400/20 to-blue-500/20 text-sky-400' : 'text-gray-300 hover:bg-white/5'
+              excluded ? 'bg-rose-500/15 text-rose-300' : isActive ? 'bg-linear-to-r from-sky-400/20 to-blue-500/20 text-sky-400' : 'text-gray-300 hover:bg-white/5'
             }`}
           >
-            <span className="truncate">{displayLabel(dimension, value)}</span>
+            <span className="truncate">{excluded ? `Not ${displayLabel(dimension, value)}` : displayLabel(dimension, value)}</span>
             <span className="flex items-center gap-2 shrink-0">
               <span className="text-xs font-semibold text-gray-500">{count}</span>
-              {isActive && <Check className="h-4 w-4" />}
+              {excluded ? <Ban className="h-4 w-4" /> : isActive && <Check className="h-4 w-4" />}
             </span>
           </button>
         );
@@ -279,10 +300,7 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
   const dims = DIMENSION_ORDER.filter((d) => valuesFor(facets, d).length > 0);
   if (dims.length === 0 && !types && !links?.length) return null;
   const count = activeCount(activeFilters) + (types && types.movie !== types.series ? 1 : 0);
-  const toggleGenre = (value: string) => {
-    const current = activeFilters.genre || [];
-    onGenresChange(current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
-  };
+  const toggleGenre = (value: string) => onGenresChange(cycleGenre(activeFilters.genre || [], value));
   const clearAll = () => {
     if (activeFilters.genre?.length) onGenresChange([]);
     (['country', 'language', 'network', 'theme'] as const).forEach((k) => { if (activeFilters[k]) onFilterChange(k, undefined); });
@@ -308,8 +326,12 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
             Clear all
           </button>
         )}
+        {/* At the top of the sheet (owner, 2026-10-24); picks never close it. */}
+        <button data-focusable="true" onClick={close} className="h-9 shrink-0 rounded-full bg-white px-4 text-sm font-bold text-[#0A0F1C]">
+          Show titles
+        </button>
       </div>
-      <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-3">
+      <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {dim === null ? (
           <div className="space-y-1">
             {types && (
@@ -385,11 +407,6 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
           />
         )}
       </div>
-      <div className="shrink-0 border-t border-white/10 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <button data-focusable="true" onClick={close} className="h-12 w-full rounded-xl bg-white text-base font-bold text-[#0A0F1C]">
-          Show titles
-        </button>
-      </div>
     </div>
   );
 
@@ -451,10 +468,7 @@ const RowFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onF
   if (dims.length === 0) return null;
 
   const isSet = (dim: DiscoverFilterKey) => (dim === 'genre' ? (activeFilters.genre?.length ?? 0) > 0 : !!activeFilters[dim]);
-  const toggleGenre = (value: string) => {
-    const current = activeFilters.genre || [];
-    onGenresChange(current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
-  };
+  const toggleGenre = (value: string) => onGenresChange(cycleGenre(activeFilters.genre || [], value));
   const clearAll = () => {
     if (activeFilters.genre?.length) onGenresChange([]);
     (['country', 'language', 'network', 'theme'] as const).forEach((k) => { if (activeFilters[k]) onFilterChange(k, undefined); });

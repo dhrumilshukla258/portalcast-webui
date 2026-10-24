@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import MediaCard from '@/components/molecules/MediaCard';
 import MediaCardRow from '@/components/organisms/browse/MediaCardRow';
 import RecommendedRow from '@/components/organisms/browse/RecommendedRow';
-import DiscoverFilters, { hasAnyActiveFilter, type ActiveDiscoverFilters, type SingleFilterKey } from '@/components/organisms/discover/DiscoverFilters';
+import DiscoverFilters, { hasAnyActiveFilter, genreParams, type ActiveDiscoverFilters, type SingleFilterKey } from '@/components/organisms/discover/DiscoverFilters';
 import { getDiscoverBrowse, type HomeRow } from '@/api/endpoints/discover';
 import { useDiscover } from '@/hooks/useDiscover';
 import { useAnswersUpdated } from '@/hooks/useAnswersUpdated';
@@ -194,7 +194,8 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
         // server already does across genre/country/theme (see
         // routes/discover/index.ts's tagFilters).
         const response = await getDiscoverBrowse({
-          genre: filters.genre?.length ? filters.genre.join(',') : undefined,
+          // Required genres and "not" genres ("-Horror" client-side).
+          ...genreParams(filters.genre),
           country: filters.country,
           language: filters.language,
           theme: filters.theme,
