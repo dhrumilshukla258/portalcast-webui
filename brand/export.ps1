@@ -4,8 +4,8 @@ function Render-Svg($svg,$png,$w,$h){ & $c --headless=new --disable-gpu --hide-s
 Render-Svg "portalcast-icon.svg" "portalcast-icon-1024.png" 1024 1024
 Render-Svg "portalcast-icon-maskable.svg" "portalcast-icon-maskable-1024.png" 1024 1024
 Render-Svg "portalcast-symbol.svg" "portalcast-symbol-1024.png" 860 1024
-Render-Svg "portalcast-logo.svg" "portalcast-logo-1928.png" 1928 424
-Render-Svg "portalcast-logo-on-light.svg" "portalcast-logo-on-light-1928.png" 1928 424
+Render-Svg "portalcast-logo.svg" "portalcast-logo-1592.png" 1592 384
+Render-Svg "portalcast-logo-on-light.svg" "portalcast-logo-on-light-1592.png" 1592 384
 Render-Svg "portalcast-tv-banner.svg" "portalcast-tv-banner-1280.png" 1280 720
 Add-Type -AssemblyName System.Drawing
 function Scale-Png($src,$dst,$w,$h){ $i=[System.Drawing.Image]::FromFile("$k\png\$src"); $b=New-Object System.Drawing.Bitmap $w,$h; $g=[System.Drawing.Graphics]::FromImage($b); $g.InterpolationMode='HighQualityBicubic'; $g.SmoothingMode='HighQuality'; $g.PixelOffsetMode='HighQuality'; $g.CompositingQuality='HighQuality'; $g.DrawImage($i,0,0,$w,$h); $b.Save("$k\png\$dst",[System.Drawing.Imaging.ImageFormat]::Png); $g.Dispose(); $b.Dispose(); $i.Dispose() }
