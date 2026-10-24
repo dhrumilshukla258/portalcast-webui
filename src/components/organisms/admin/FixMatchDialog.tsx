@@ -136,8 +136,10 @@ export const PortalFixMatch: React.FC<{ contentId: string; onClose: () => void; 
       onChoose={async (tmdbId) => {
         const r = await setPortalTitleMatch(contentId, tmdbId);
         onChanged();
-        if (tmdbId) return 'Match saved. Reopen the title to see its new poster and description.';
-        return r.tmdbId ? 'Matched automatically again' : 'Back to automatic matching (TMDB found nothing)';
+        // Every version of the title goes with it (server 1.5).
+        const all = r.versions && r.versions > 1 ? ` for all ${r.versions} versions` : '';
+        if (tmdbId) return `Match saved${all}. Reopen the title to see its new poster and description.`;
+        return r.tmdbId ? `Matched automatically again${all}` : 'Back to automatic matching (TMDB found nothing)';
       }}
       onClose={onClose}
     />

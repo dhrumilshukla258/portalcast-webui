@@ -253,8 +253,8 @@ export const setTitleMatch = async (itemId: number, tmdbId: number | null): Prom
 export const getPortalTitleMatch = async (contentId: string): Promise<PortalTitleMatch> =>
   (await api.get<PortalTitleMatch>(`/admin/titles/${encodeURIComponent(contentId)}/match`)).data!;
 
-export const setPortalTitleMatch = async (contentId: string, tmdbId: number | null): Promise<{ tmdbId: number | null; locked: boolean }> =>
-  (await api.post<{ tmdbId: number | null; locked: boolean }>(`/admin/titles/${encodeURIComponent(contentId)}/match`, { tmdbId })).data!;
+export const setPortalTitleMatch = async (contentId: string, tmdbId: number | null): Promise<{ tmdbId: number | null; locked: boolean; versions?: number }> =>
+  (await api.post<{ tmdbId: number | null; locked: boolean; versions?: number }>(`/admin/titles/${encodeURIComponent(contentId)}/match`, { tmdbId })).data!;
 
 // ---- Overview (Admin front page) ----
 export interface AdminOverview {
