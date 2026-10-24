@@ -86,6 +86,7 @@ export function useAppNavigation(
     isFromContinueWatching,
     pushFrame,
     handleBack,
+    backTargets,
   } = useNavigationHistory({
     context,
     items,
@@ -693,5 +694,6 @@ export function useAppNavigation(
     pushFrame,
     startPlayback,
     episodeSnapshot,
+    backTargets,
   };
 }

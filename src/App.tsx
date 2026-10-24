@@ -1,7 +1,7 @@
 import IptvOfflineBanner from '@/components/atoms/IptvOfflineBanner';
 import { lazyImport } from '@/utils/staleBuild';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '@/App.css';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
@@ -149,6 +149,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     focusedIndex,
     setFocusedIndex,
     episodeSnapshot,
+    backTargets,
   } = useAppNavigation(
     context,
     items,
@@ -204,8 +205,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   const handleContentTypeChange = useCallback(
     (type: 'movie' | 'series' | 'tv') => {
-      // A tab (Live TV): a fresh Back history (see resetHistory).
-      resetHistory();
+      // A tab (Live TV): a fresh Back history, Back goes Home (see resetHistory).
+      resetHistory(true);
       setDetailItem(null);
       setShowDiscover(false);
       handleContentTypeChangeRaw(type);
@@ -251,12 +252,40 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   // Phones: Movies · Series · People are chips at the top of Home and those pages (the bottom
   // bar is Home, Live TV, Sports, Search, My List).
   const openSection = useCallback((sec: HomeSection) => {
-    resetHistory();
+    resetHistory(sec !== 'home');
     setDetailItem(null);
     setCurrentSeriesItem(null);
     setOverlayPage(sec === 'movie' ? 'movies' : sec === 'series' ? 'series' : sec === 'people' ? 'people' : 'discover');
     setShowDiscover(true);
   }, [setDetailItem, setCurrentSeriesItem, setShowDiscover, resetHistory]);
+  const goHome = useCallback(() => {
+    resetHistory(false);
+    setDetailItem(null);
+    // A series detail left open (currentSeriesItem) kept its dark tint over Home's rows.
+    setCurrentSeriesItem(null);
+    setOverlayPage('discover');
+    setShowDiscover(true);
+  }, [setDetailItem, setCurrentSeriesItem, setShowDiscover, resetHistory]);
+  // Back with nothing open, as in the TV app: another tab goes Home; on Home a TV asks for a
+  // second press within 2 s to exit (a browser leaves the page by itself).
+  const isHome = showDiscover && overlayPage === 'discover';
+  const lastRootBack = React.useRef(0);
+  useEffect(() => {
+    backTargets.current = {
+      home: goHome,
+      root: () => {
+        if (!isHome) { goHome(); return; }
+        if (!isTizen) return;
+        const now = Date.now();
+        if (now - lastRootBack.current < 2000) {
+          try { (window as any).tizen?.application?.getCurrentApplication()?.exit(); } catch { /* not a Tizen app */ }
+          return;
+        }
+        lastRootBack.current = now;
+        toast.info('Press Back again to exit', { autoClose: 2000, toastId: 'exit-back' });
+      },
+    };
+  }, [backTargets, goHome, isHome, isTizen]);
   const activeSection: HomeSection = typedHome ?? (overlayPage === 'people' ? 'people' : 'home');
   const sectionChips = (filterButton: React.ReactNode) => (
     <SectionChips active={activeSection} onSelect={openSection} trailing={filterButton} />
@@ -495,21 +524,21 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
               isMyListActive={isMyListPage}
               typedHome={typedHome}
               onSelectTypedHome={(t) => {
-                resetHistory();
+                resetHistory(true);
                 setDetailItem(null);
                 setCurrentSeriesItem(null);
                 setOverlayPage(t === 'movie' ? 'movies' : 'series');
                 setShowDiscover(true);
               }}
               onSelectMyList={() => {
-                resetHistory();
+                resetHistory(true);
                 setDetailItem(null);
                 setCurrentSeriesItem(null);
                 setOverlayPage('mylist');
                 setShowDiscover(true);
               }}
               onSelectSearch={() => {
-                resetHistory();
+                resetHistory(true);
                 setDetailItem(null);
                 setCurrentSeriesItem(null);
                 setSearchLiveQuery(undefined);
@@ -520,25 +549,13 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
               onSelectPeople={() => openSection('people')}
               isSportsActive={isSportsPage}
               onSelectSports={() => {
-                resetHistory();
+                resetHistory(true);
                 setDetailItem(null);
                 setCurrentSeriesItem(null);
                 setOverlayPage('sports');
                 setShowDiscover(true);
               }}
-              onSelectDiscover={() => {
-                resetHistory();
-                setDetailItem(null);
-                // A series detail left open (currentSeriesItem) wasn't being
-                // cleared here — the dark tint/overlay condition below checks
-                // it too, so jumping to Discover straight from a series
-                // detail left that tint permanently on, darkening Discover's
-                // own rows like a stuck modal even though nothing was
-                // actually open there.
-                setCurrentSeriesItem(null);
-                setOverlayPage('discover');
-                setShowDiscover(true);
-              }}
+              onSelectDiscover={goHome}
               sort={context.sort}
               cycleSort={cycleSort}
               showAdmin={false}

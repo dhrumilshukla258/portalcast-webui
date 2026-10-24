@@ -256,10 +256,22 @@ export function useNavigationHistory({
     popHistoryFrame();
   }, [streamUrl, popHistoryFrame, setStreamUrl, setRawStreamUrl, setCurrentItem, setResumePlaybackState, setCwRefreshKey]);
 
+  /**
+   * Back as in the TV app: what is open closes; on another tab, Back goes Home; on Home the
+   * app decides (backTargets.root: a TV asks for a second press to exit).
+   */
+  const backTargets = useRef<{ home?: () => void; root?: () => void }>({});
+  // The depth-0 entry of the current view is a tab's own entry, with Home's entry under it.
+  const onTabEntry = useRef(false);
+  // A history move of our own (resetHistory): its popstate only runs `then`.
+  const quietPop = useRef<(() => void) | null>(null);
+
   const handleBack = useCallback(() => {
-    if (streamUrl || history.length > 0) {
+    if (streamUrl || history.length > 0 || onTabEntry.current) {
       window.history.back();
+      return;
     }
+    backTargets.current.root?.();
   }, [streamUrl, history.length]);
 
   const restorePreviousFrameRef = useRef(restorePreviousFrame);
@@ -296,6 +308,19 @@ export function useNavigationHistory({
         return;
       }
       const stateDepth = state && typeof state.depth === 'number' ? state.depth : 0;
+      const quiet = quietPop.current;
+      if (quiet) {
+        quietPop.current = null;
+        prevNavDepth.current = stateDepth;
+        quiet();
+        return;
+      }
+      // Back from a tab's own entry lands on Home's.
+      if (state?.homeBase && onTabEntry.current && prevNavDepth.current === 0) {
+        onTabEntry.current = false;
+        backTargets.current.home?.();
+        return;
+      }
       const wentBack = stateDepth < prevNavDepth.current;
       // Sync synchronously, right here, instead of waiting for the separate
       // depth-tracking effect to catch up on a later render — that gap let a
@@ -324,12 +349,34 @@ export function useNavigationHistory({
    * "went back" into one of them, reopening an old title's page or version picker (owner:
    * "it randomly opens the pop-up of the previous title").
    */
-  const resetHistory = useCallback(() => {
+  const resetHistory = useCallback((away?: boolean) => {
     setHistory([]);
     setFuture([]);
     isFromContinueWatching.current = false;
+    const frames = prevNavDepth.current;
     prevNavDepth.current = 0;
-    try { window.history.replaceState({ ...(window.history.state ?? {}), depth: 0 }, ''); } catch { /* not allowed: fine */ }
+    const mark = (flags: object) => {
+      try { window.history.replaceState({ ...(window.history.state ?? {}), depth: 0, ...flags }, ''); } catch { /* not allowed: fine */ }
+    };
+    if (away === undefined) { mark({}); return; }
+    // The browser keeps Home's entry and, on another tab, that tab's entry above it (Back from
+    // a tab goes Home, as in the TV app). Pages opened since are dropped first.
+    const steps = frames + (onTabEntry.current && !away ? 1 : 0);
+    const land = () => {
+      if (away && !onTabEntry.current) {
+        mark({ homeBase: 1, tabAway: 0 });
+        try { window.history.pushState({ depth: 0, tabAway: 1 }, ''); } catch { /* fine */ }
+      } else mark(away ? { tabAway: 1 } : { homeBase: 1, tabAway: 0 });
+      onTabEntry.current = away;
+    };
+    if (steps === 0) { land(); return; }
+    quietPop.current = land;
+    window.history.go(-steps);
+  }, []);
+
+  // The app opens on Home: this entry is Home's.
+  useEffect(() => {
+    try { window.history.replaceState({ ...(window.history.state ?? {}), depth: 0, homeBase: 1 }, ''); } catch { /* fine */ }
   }, []);
 
   return {
@@ -343,5 +390,6 @@ export function useNavigationHistory({
     redoNextFrame,
     restorePreviousFrame,
     handleBack,
+    backTargets,
   };
 }
