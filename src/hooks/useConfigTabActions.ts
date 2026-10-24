@@ -25,7 +25,10 @@ export type Config = {
   proxy: boolean;
   tokens: string[];
   playCensored: boolean;
-  providerType: 'stalker' | 'xtream';
+  providerType: 'stalker' | 'xtream' | 'm3u';
+  /** M3U profiles: the playlist link, and an optional XMLTV guide link. */
+  m3uUrl?: string;
+  xmltvUrl?: string;
   username?: string;
   password?: string;
 };

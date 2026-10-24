@@ -39,15 +39,15 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
         </div>
 
         <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-950 p-1">
-            {['stalker', 'xtream'].map((type) => (
+          <div className="grid grid-cols-3 gap-2 rounded-xl bg-gray-950 p-1">
+            {['stalker', 'xtream', 'm3u'].map((type) => (
               <button
                 key={type}
                 type="button"
                 onClick={() =>
                   setConfig((p) => ({
                     ...p,
-                    providerType: type as 'stalker' | 'xtream',
+                    providerType: type as 'stalker' | 'xtream' | 'm3u',
                   }))
                 }
                 className={`rounded-lg py-2 text-xs font-black uppercase transition-all ${
@@ -61,6 +61,39 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
             ))}
           </div>
 
+          {config.providerType === 'm3u' ? (
+            <div className="space-y-4">
+              <div>
+                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                  Playlist link (M3U)
+                </label>
+                <input
+                  name="m3uUrl"
+                  type="url"
+                  value={config.m3uUrl ?? ''}
+                  onChange={handleInputChange}
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="http://provider.example/get.php?username=…&type=m3u_plus"
+                />
+              </div>
+              <div>
+                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                  Guide link (XMLTV, optional)
+                </label>
+                <input
+                  name="xmltvUrl"
+                  type="url"
+                  value={config.xmltvUrl ?? ''}
+                  onChange={handleInputChange}
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="Empty: the guide link inside the playlist"
+                />
+              </div>
+              <p className="ml-1 text-xs text-gray-500">
+                Live channels, movies and series are read from the playlist (refreshed daily); stored encrypted.
+              </p>
+            </div>
+          ) : (
           <div className="space-y-4">
             <div>
               <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
@@ -101,6 +134,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
             </div>
           </div>
 
+          )}
           <div className="flex gap-6 border-t border-gray-800 pt-5">
             <label className="flex cursor-pointer items-center gap-3">
               <input
@@ -130,6 +164,8 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
         </div>
       </section>
 
+      {/* M3U: the playlist link carries the account; no portal credentials. */}
+      {config.providerType !== 'm3u' && (
       <section className="rounded-3xl border border-gray-800 bg-gray-900/30 p-6 backdrop-blur-md">
         <div className="mb-6 flex items-center gap-2">
           <ShieldCheck className="text-blue-500" size={20} />
@@ -230,6 +266,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
           </div>
         )}
       </section>
+      )}
     </div>
   );
 };

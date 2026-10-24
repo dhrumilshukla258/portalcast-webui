@@ -27,7 +27,7 @@ export type ConfigProfile = {
     proxy: boolean;
     tokens: string[];
     playCensored: boolean;
-    providerType?: 'stalker' | 'xtream';
+    providerType?: 'stalker' | 'xtream' | 'm3u';
     username?: string;
     password?: string;
   };
@@ -56,8 +56,10 @@ export function useProfileManager() {
   const [newProfileName, setNewProfileName] = useState('');
   const [newProfileDescription, setNewProfileDescription] = useState('');
   const [newProfileProviderType, setNewProfileProviderType] = useState<
-    'stalker' | 'xtream'
+    'stalker' | 'xtream' | 'm3u'
   >('stalker');
+  const [newProfileM3uUrl, setNewProfileM3uUrl] = useState('');
+  const [newProfileXmltvUrl, setNewProfileXmltvUrl] = useState('');
 
   const duplicateNameRef = useRef('');
   const [newProfileUsername, setNewProfileUsername] = useState('');
@@ -171,7 +173,14 @@ export function useProfileManager() {
           newProfileProviderType === 'xtream'
             ? newProfilePassword
             : currentConfig.password,
+        ...(newProfileProviderType === 'm3u'
+          ? { m3uUrl: newProfileM3uUrl.trim(), xmltvUrl: newProfileXmltvUrl.trim() }
+          : {}),
       };
+      if (newProfileProviderType === 'm3u' && !/^https?:\/\//i.test(newProfileM3uUrl.trim())) {
+        toast.error('Enter the playlist link (http:// or https://)');
+        return;
+      }
 
       await createProfile({
         name: safeName,
@@ -183,6 +192,8 @@ export function useProfileManager() {
       setNewProfileName('');
       setNewProfileDescription('');
       setNewProfileProviderType('stalker');
+      setNewProfileM3uUrl('');
+      setNewProfileXmltvUrl('');
       setNewProfileUsername('');
       setNewProfilePassword('');
       loadProfiles();
@@ -240,6 +251,10 @@ export function useProfileManager() {
     setNewProfileDescription,
     newProfileProviderType,
     setNewProfileProviderType,
+    newProfileM3uUrl,
+    setNewProfileM3uUrl,
+    newProfileXmltvUrl,
+    setNewProfileXmltvUrl,
     newProfileUsername,
     setNewProfileUsername,
     newProfilePassword,

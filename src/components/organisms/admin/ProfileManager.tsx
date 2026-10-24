@@ -73,6 +73,10 @@ const ProfileManager = () => {
           setNewProfileDescription={pm.setNewProfileDescription}
           newProfileProviderType={pm.newProfileProviderType}
           setNewProfileProviderType={pm.setNewProfileProviderType}
+          newProfileM3uUrl={pm.newProfileM3uUrl}
+          setNewProfileM3uUrl={pm.setNewProfileM3uUrl}
+          newProfileXmltvUrl={pm.newProfileXmltvUrl}
+          setNewProfileXmltvUrl={pm.setNewProfileXmltvUrl}
           newProfileUsername={pm.newProfileUsername}
           setNewProfileUsername={pm.setNewProfileUsername}
           newProfilePassword={pm.newProfilePassword}

@@ -3,8 +3,12 @@ interface CreateProfileModalProps {
   setNewProfileName: (v: string) => void;
   newProfileDescription: string;
   setNewProfileDescription: (v: string) => void;
-  newProfileProviderType: 'stalker' | 'xtream';
-  setNewProfileProviderType: (v: 'stalker' | 'xtream') => void;
+  newProfileProviderType: 'stalker' | 'xtream' | 'm3u';
+  setNewProfileProviderType: (v: 'stalker' | 'xtream' | 'm3u') => void;
+  newProfileM3uUrl: string;
+  setNewProfileM3uUrl: (v: string) => void;
+  newProfileXmltvUrl: string;
+  setNewProfileXmltvUrl: (v: string) => void;
   newProfileUsername: string;
   setNewProfileUsername: (v: string) => void;
   newProfilePassword: string;
@@ -20,6 +24,10 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
   setNewProfileDescription,
   newProfileProviderType,
   setNewProfileProviderType,
+  newProfileM3uUrl,
+  setNewProfileM3uUrl,
+  newProfileXmltvUrl,
+  setNewProfileXmltvUrl,
   newProfileUsername,
   setNewProfileUsername,
   newProfilePassword,
@@ -92,8 +100,54 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
                   Xtream Codes
                 </span>
               </label>
+              <label className="group flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="newProfileProviderType"
+                  value="m3u"
+                  data-focusable="true"
+                  checked={newProfileProviderType === 'm3u'}
+                  onChange={() => setNewProfileProviderType('m3u')}
+                  className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-300 transition-colors group-hover:text-white">
+                  M3U playlist
+                </span>
+              </label>
             </div>
           </div>
+
+          {newProfileProviderType === 'm3u' && (
+            <div className="space-y-3 rounded-xl border border-gray-700/50 bg-gray-800/30 p-4">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-400">
+                  Playlist link (M3U)
+                </label>
+                <input
+                  type="url"
+                  data-focusable="true"
+                  className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-sm text-white focus:border-blue-500 focus:outline-hidden"
+                  placeholder="http://provider.example/get.php?username=…&type=m3u_plus"
+                  value={newProfileM3uUrl}
+                  onChange={(e) => setNewProfileM3uUrl(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-400">
+                  Guide link (XMLTV, optional)
+                </label>
+                <input
+                  type="url"
+                  data-focusable="true"
+                  className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-sm text-white focus:border-blue-500 focus:outline-hidden"
+                  placeholder="Empty: the guide link inside the playlist"
+                  value={newProfileXmltvUrl}
+                  onChange={(e) => setNewProfileXmltvUrl(e.target.value)}
+                />
+              </div>
+              <p className="text-xs text-gray-500">Stored encrypted; the link usually holds your account. Refreshed daily.</p>
+            </div>
+          )}
 
           {newProfileProviderType === 'xtream' && (
             <div className="space-y-3 rounded-xl border border-gray-700/50 bg-gray-800/30 p-4">
