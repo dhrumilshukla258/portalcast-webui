@@ -23,6 +23,7 @@ import { TopBar } from '@/components/organisms/layout/TopBar';
 import { TVControls } from '@/components/organisms/video/TVControls';
 import { VODControls } from '@/components/organisms/video/VODControls';
 import { useVideoContext } from '@/context/video';
+import { PlayPauseFlash } from '@/components/molecules/PlayPauseFlash';
 import { useVideoQuality } from '@/hooks/useVideoQuality';
 import { bindSubtitleDelay, applySubtitleDelay } from '@/utils/subtitleDelay';
 import { useTVRemoteNavigation } from '@/components/organisms/video/hooks/useTVRemoteNavigation';
@@ -259,6 +260,9 @@ const VideoPlayerContent: React.FC = () => {
                 : 'bottom-10 md:bottom-12'
             }`}
           />
+
+          {/* Outside the fading controls: it shows whether they are up or not. */}
+          {contentType !== 'tv' && <PlayPauseFlash />}
 
           <div
             className={`pointer-events-none absolute inset-0 z-20 transition-opacity duration-300 ${controlsVisible ? 'opacity-100' : 'opacity-0'} ${seekOverlay?.isLeftRight ? 'seek-bar-only' : ''}`}
