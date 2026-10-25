@@ -73,7 +73,8 @@ const PeopleView: React.FC<PeopleViewProps> = ({ sectionChips }) => {
   }, [query]);
 
   const first = pages[0];
-  const people = hits ?? pages.flatMap((p) => p.data);
+  // ?? []: an answer without a list (an older or failing server) must not take the page down.
+  const people = hits ?? pages.flatMap((p) => p?.data ?? []);
   const total = first?.total ?? 0;
   const hasMore = !hits && people.length < total;
 
@@ -93,7 +94,7 @@ const PeopleView: React.FC<PeopleViewProps> = ({ sectionChips }) => {
   const roles = ROLES.filter((r) => !counts || r.id === 'all' || counts[r.id] > 0);
 
   return (
-    <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 overflow-y-auto px-3 pb-10 sm:px-6">
+    <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 overflow-y-auto px-3 pb-10 sm:px-6 tv-page">
       <div className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-[#05080F] px-3 pb-2 pt-2 sm:-mx-6 sm:px-6">
         {sectionChips?.(null)}
         <div className="mt-2 flex items-baseline gap-3 sm:mt-0">

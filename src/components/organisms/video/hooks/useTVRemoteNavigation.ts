@@ -4,6 +4,9 @@ import type { useMediaRemote } from '@vidstack/react';
 import type { TvChannelListRef } from '@/components/organisms/channels/TvChannelList';
 import type { EpisodeOverlayRef } from '@/components/organisms/video/EpisodeOverlay';
 import { useVideoContext } from '@/context/video';
+import { isTvApp } from '@/utils/helpers';
+
+const TV_APP = isTvApp();
 
 // Owns the TV remote/keyboard navigation state machine: a synchronous ref
 // mirror of 3 pieces of context state (`navRef` — kept in sync by 3 small
@@ -407,6 +410,12 @@ export function useTVRemoteNavigation(
 
           if (document.fullscreenElement) {
             remote.toggleFullscreen();
+            return;
+          }
+
+          // The TV apps leave the player on one Back, as the Android TV app does.
+          if (TV_APP) {
+            onBack();
             return;
           }
 

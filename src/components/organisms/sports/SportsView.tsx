@@ -79,7 +79,7 @@ const SportsView: React.FC<SportsViewProps> = ({ onPlayChannel, onFindChannel })
   const count = days.reduce((n, d) => n + d.games.length, 0);
 
   return (
-    <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 overflow-y-auto px-3 pb-8 pt-3 sm:px-6 sm:pt-5">
+    <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 overflow-y-auto px-3 pb-8 pt-3 sm:px-6 sm:pt-5 tv-page">
       <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="text-xl font-bold text-white sm:text-2xl">Sports</h2>
         <span className="text-sm text-gray-400">{count} {count === 1 ? 'game' : 'games'} in the next 30 days</span>

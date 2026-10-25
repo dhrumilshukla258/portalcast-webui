@@ -83,3 +83,16 @@ html.tv.tv-zoom .h-screen {
 html.tv .tv-fade-in {
   animation: tv-fade-in 300ms ease-out both;
 }
+
+/* Search, Sports, My List, Cast: the Android TV app's 48 side margin, text from the left. */
+html.tv .tv-page {
+  padding-left: 48px !important;
+  padding-right: 48px !important;
+  text-align: left;
+}
+html.tv .tv-page > .sticky {
+  margin-left: -48px !important;
+  margin-right: -48px !important;
+  padding-left: 48px !important;
+  padding-right: 48px !important;
+}
