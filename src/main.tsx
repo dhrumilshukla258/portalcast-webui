@@ -12,6 +12,7 @@ import { webPlatformAdapter } from '@/api/platform';
 import { setPlatformAdapter } from '@/api/config';
 import { installStaleBuildHandler, installServiceWorkerUpdates } from '@/utils/staleBuild';
 import { setClientPlatformAdapter } from '@/api/client';
+import { isTvApp } from '@/utils/helpers';
 
 // After a deploy, reload into the new build instead of failing on the old one's files.
 installStaleBuildHandler();
@@ -23,6 +24,19 @@ installServiceWorkerUpdates();
 // native client port would call these with its own adapter instead.
 setPlatformAdapter(webPlatformAdapter);
 setClientPlatformAdapter(webPlatformAdapter);
+
+// The TV apps (Samsung, LG) draw at 1280x720 and scale up, as the Android TV app does (1.5x on a
+// 1080p TV): the LG app asks webOS for it (platforms/webos/appinfo.json); where the page is wider
+// anyway, it is zoomed. tv/tv.css styles under html.tv.
+if (isTvApp()) {
+  document.documentElement.classList.add('tv');
+  if (window.innerWidth > 1400) {
+    const z = window.innerWidth / 1280;
+    (document.documentElement.style as CSSStyleDeclaration & { zoom: string }).zoom = String(z);
+    document.documentElement.classList.add('tv-zoom');
+    document.documentElement.style.setProperty('--tv-h', `${window.innerHeight / z}px`);
+  }
+}
 
 /** Tells the intro (index.html) the app's first screen is drawn: its logo fades out then. */
 function IntroDone() {

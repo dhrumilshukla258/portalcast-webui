@@ -2,6 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import MediaCard from '@/components/molecules/MediaCard';
 import type { MediaItem } from '@/types';
+import { isTvApp } from '@/utils/helpers';
+
+const TV = isTvApp();
 
 interface MediaCardRowProps {
   title: string;
@@ -30,6 +33,11 @@ const ROW_WIDTHS = {
   normal: 'w-[31%] sm:w-[23%] md:w-[18.5%] lg:w-[15.3%] xl:w-[13%]',
   large: 'w-[44%] sm:w-[31%] md:w-[23%] lg:w-[18.5%] xl:w-[15.3%]',
 } as const;
+/** The TV apps: the Android TV app's poster width (130, design-system.md), every row alike. */
+const TV_WIDTHS = { normal: 'w-[130px]', large: 'w-[130px]' } as const;
+/** Row heading and strip in the TV apps: rowTitle 20 semibold, 12 to the cards, 16 between cards, 24 between rows. */
+const TV_ROW = 'mb-6';
+const TV_TITLE = 'mb-3 text-left text-[20px] font-semibold text-slate-100';
 
 const MediaCardRow: React.FC<MediaCardRowProps> = ({
   title,
@@ -43,7 +51,7 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
   size = 'normal',
   renderItem,
 }) => {
-  const widths = ROW_WIDTHS[size];
+  const widths = (TV ? TV_WIDTHS : ROW_WIDTHS)[size];
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -145,11 +153,11 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
   // until the new fetch overwrites it mid-frame.
   if (loading) {
     return (
-      <div className="content-transition group/row relative mb-6 px-2 sm:mb-8 sm:px-0">
-        <h2 className="mb-2 text-left text-lg font-bold text-white sm:mb-4 sm:text-2xl">
+      <div className={TV ? TV_ROW : 'content-transition group/row relative mb-6 px-2 sm:mb-8 sm:px-0'} data-tv-section="">
+        <h2 className={TV ? TV_TITLE : 'mb-2 text-left text-lg font-bold text-white sm:mb-4 sm:text-2xl'}>
           {title}
         </h2>
-        <div className="flex gap-2 overflow-hidden sm:gap-4">
+        <div className={TV ? 'flex gap-4 overflow-hidden' : 'flex gap-2 overflow-hidden sm:gap-4'}>
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
@@ -162,12 +170,12 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
   }
 
   return (
-    <div className="content-transition group/row relative mb-6 px-2 sm:mb-8 sm:px-0">
-      <h2 className="mb-2 text-left text-lg font-bold text-white sm:mb-4 sm:text-2xl">
+    <div className={TV ? `relative ${TV_ROW}` : 'content-transition group/row relative mb-6 px-2 sm:mb-8 sm:px-0'} data-tv-section="">
+      <h2 className={TV ? TV_TITLE : 'mb-2 text-left text-lg font-bold text-white sm:mb-4 sm:text-2xl'}>
         {title}
       </h2>
 
-      {canScrollLeft && (
+      {canScrollLeft && !TV && (
         <button
           onClick={() => scrollBy(-1)}
           aria-label="Scroll left"
@@ -188,7 +196,8 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
         // (invisible) vertical scroll range — wheel-down gets consumed
         // scrolling that sliver internally instead of bubbling to the page,
         // while wheel-up still bubbles fine since scrollTop's already 0.
-        className="hide-scrollbar row-content-fade-in flex gap-2 overflow-x-auto overflow-y-hidden scroll-smooth pb-1 sm:gap-4"
+        className={TV ? 'hide-scrollbar flex gap-4 overflow-x-auto overflow-y-hidden' : 'hide-scrollbar row-content-fade-in flex gap-2 overflow-x-auto overflow-y-hidden scroll-smooth pb-1 sm:gap-4'}
+        data-tv-group="row"
       >
         {/* Percentage widths matching MainContentGrid/the filtered Discover
             grid's own grid-cols-3/4/5/6/7 columns at each breakpoint (see
@@ -208,7 +217,7 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
         )}
       </div>
 
-      {canScrollRight && (
+      {canScrollRight && !TV && (
         <button
           onClick={() => scrollBy(1)}
           aria-label="Scroll right"

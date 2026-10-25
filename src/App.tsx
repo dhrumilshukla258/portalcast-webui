@@ -12,6 +12,8 @@ import Verify from '@/components/pages/Verify';
 import { Loader2 } from 'lucide-react';
 
 import { Header } from '@/components/organisms/layout/Header';
+import TvHeader from '@/tv/TvHeader';
+import '@/tv/tv.css';
 // Lazy — admin-only, rarely visited, and it's a large component tree
 // (stats/users/content/settings/logs/API-reference tabs all live
 // here). Eagerly bundling it meant every session paid its parse/download
@@ -56,6 +58,7 @@ import { type DiscoverVariant } from '@/api/endpoints/discover';
 
 function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   const isTizen = isTvApp(); // Samsung or LG
+  const AppHeader = isTizen ? TvHeader : Header;
   const { user, updatePreferences } = useAuth();
   // Cleaned for display too, so fragments saved by older builds disappear at once.
   const recentSearches = useMemo(() => cleanRecentSearches(user?.preferences?.recentSearches || []), [user?.preferences?.recentSearches]);
@@ -515,7 +518,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
       ) : (
         <div className="flex h-screen flex-col overflow-hidden app-bg font-sans text-gray-200">
           <div className="flex min-h-0 w-full flex-1 flex-col pb-16 sm:pb-0">
-            <Header
+            <AppHeader
               currentTitle={currentTitle}
               contentType={contentType}
               handleContentTypeChange={handleContentTypeChange}
@@ -626,7 +629,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                     sectionChips={sectionChips}
                     continueWatching={
                       <>
-                        <ContinueHero progressRecords={homeProgress} onResume={handleItemClick} />
+                        {/* TV apps: Home's own hero shows the last title (tv/TvHero). */}
+                        {!isTizen && <ContinueHero progressRecords={homeProgress} onResume={handleItemClick} />}
                         <ContinueWatching
                           onClick={handleItemClick}
                           skipFirst
@@ -684,7 +688,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                 <div className="fixed inset-0 z-40 bg-black/90 animate-in fade-in duration-300" />
               )}
               {(!showDiscover || !!detailItem || (!!currentSeriesItem && contentType === 'series')) && (
-              <div className={showDiscover ? 'absolute inset-0 z-40' : 'h-full'}>
+              <div className={showDiscover ? 'absolute inset-0 z-40' : 'h-full'} data-tv-layer={showDiscover ? '' : undefined}>
               <MainContentGrid
                 items={items}
                 currentSeriesItem={currentSeriesItem}

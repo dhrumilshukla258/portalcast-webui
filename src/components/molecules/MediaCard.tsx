@@ -7,6 +7,10 @@ import type { MediaItem } from '@/types';
 import ChannelBadge from '@/components/atoms/ChannelBadge';
 import { cardPoster } from '@/utils/imageSize';
 import { ratingLabel } from '@/utils/titleFormat';
+import { isTvApp } from '@/utils/helpers';
+import { useTvFocusedItem } from '@/tv/TvHeroContext';
+
+const TV = isTvApp();
 
 interface MediaCardProps {
   item: MediaItem;
@@ -79,6 +83,53 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
   // DOM.
 
   const iptvOffline = useIptvOffline();
+  const reportFocus = useTvFocusedItem();
+  if (TV) {
+    // The TV apps' poster (design-system.md, Cards): the art, the rating top right, the title
+    // under it in caption size; the remote's ring and 6 % growth on the poster (tv/tv.css).
+    return (
+      <div className={iptvOffline && String(item.is_local) !== '1' && item.category_id !== 'local' ? 'opacity-35' : ''}>
+        <div
+          className="tv-card relative aspect-2/3 w-full overflow-hidden rounded-lg bg-[#121A2B]"
+          onClick={() => { if (!isLoading) onClick(item); }}
+          onFocus={reportFocus ? () => reportFocus(item) : undefined}
+          {...hold}
+          data-focusable="true"
+          tabIndex={-1}
+        >
+          {imageUrl && !imageError ? (
+            <img {...cardPoster(imageUrl)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" onError={() => setImageError(true)} />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <span className="select-none text-4xl font-bold text-white/30">{displayTitle?.charAt(0).toUpperCase() || '?'}</span>
+            </div>
+          )}
+          {isLoading && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/70">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            </div>
+          )}
+          {String(item.is_local) === '1' ? (
+            <span className="absolute right-1.5 top-1.5 rounded-md bg-sky-500/90 px-1.5 py-0.5 text-[11px] font-bold text-white">
+              {item.quality?.includes('4K') ? 'Local · 4K' : 'Local'}
+            </span>
+          ) : rating && !isCompleted ? (
+            <span className="absolute right-1.5 top-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[12px] font-semibold text-white">
+              <span className="text-amber-400">★</span> {rating}
+            </span>
+          ) : null}
+          {isCompleted && <span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-green-500" />}
+          {displayProgress !== undefined && displayProgress > 0 && (
+            <div className="absolute inset-x-0 bottom-0 h-[3px] bg-white/25">
+              <div className="h-full bg-sky-400" style={{ width: `${Math.min(100, displayProgress)}%` }} />
+            </div>
+          )}
+        </div>
+        <p className="tv-card-caption mt-2 truncate text-[13px] font-medium text-slate-400">{displayTitle}</p>
+        {categoryLabel && <p className="truncate text-[12px] text-slate-500">{categoryLabel}</p>}
+      </div>
+    );
+  }
   return (
     <div
       // IPTV offline (utils/iptvHealth.ts): IPTV cards dim, local-library titles stay bright.

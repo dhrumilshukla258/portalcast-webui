@@ -1,0 +1,85 @@
+/* The TV apps (Samsung, LG): html.tv (main.tsx). The Android TV app's look (docs/design-system.md):
+   a white 2 px ring on what the remote is on, posters grow 6 %, nothing else moves. Only transform
+   and box-shadow change on focus, so a TV's GPU draws it without relaying the page. */
+
+html.tv,
+html.tv body {
+  background: #05080f;
+}
+
+/* No hover effects: LG's pointer resting on something, or the remote's focus, must not start them. */
+html.tv .group:hover img,
+html.tv [data-focusable='true']:hover {
+  transform: none;
+}
+
+html.tv .focused {
+  outline: none !important;
+}
+
+/* What the remote is on: the ring, no scale, no coloured glow (App.css styles the browser's). */
+html.tv [data-focusable='true'].focused,
+html.tv [data-focusable='true']:not([type='search']).focused {
+  transform: none !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 0 2px #fff !important;
+  transition: box-shadow 120ms ease-out, transform 120ms ease-out;
+}
+
+/* Posters: grow 6 %, ring 2 (design-system.md, Cards). */
+html.tv .tv-card {
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+}
+html.tv .tv-card.focused {
+  transform: scale(1.06) !important;
+  z-index: 10;
+}
+html.tv .tv-card.focused + .tv-card-caption {
+  color: #f1f5f9;
+}
+
+/* Tabs: the text lights up, no ring (the underline marks the current one). */
+html.tv [data-focusable='true'].tv-tab.focused {
+  box-shadow: none !important;
+  color: #fff !important;
+}
+html.tv .tv-tab.focused::after {
+  content: '';
+  position: absolute;
+  inset: -4px -10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  z-index: -1;
+}
+
+/* Round icon buttons and chips: filled when focused. */
+html.tv .tv-icon-button.focused {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+/* Buttons that are a white pill when chosen keep it; focused ones get the ring. */
+html.tv [role='dialog'] [data-focusable='true'].focused {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Rows scroll by the remote only: no bars, and room for the focused poster's growth and ring. */
+html.tv [data-tv-group='row'] {
+  padding: 10px 48px !important;
+  margin: -10px -48px !important;
+}
+
+/* Zoomed (main.tsx): viewport units are the unzoomed screen's, so full-height boxes use the
+   zoomed height main.tsx sets. */
+html.tv.tv-zoom .h-screen {
+  height: var(--tv-h) !important;
+}
+
+/* The hero's picture changes with a 300 ms crossfade (design-system.md, Motion). */
+@keyframes tv-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+html.tv .tv-fade-in {
+  animation: tv-fade-in 300ms ease-out both;
+}

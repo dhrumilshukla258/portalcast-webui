@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { isTvApp } from '@/utils/helpers';
+import { useTvRemote } from '@/tv/useTvRemote';
 import type { MediaItem } from '@/types';
 
 interface TVFocusProps {
@@ -114,6 +115,7 @@ export function useTVFocus({
   }, [focusedIndex]);
 
   useEffect(() => {
+    if (isTizen) return; // tv/remote.ts follows layers itself
     if (isDetailOpen || isConfirmingDelete || isCategoriesOpen) {
       savedGridIndex.current = latestFocusedIndex.current;
       // document.activeElement, not a re-derived getFocusableElements()[index]
@@ -146,7 +148,7 @@ export function useTVFocus({
         savedGridEl.current = null;
       }
     }
-  }, [isDetailOpen, isConfirmingDelete, isCategoriesOpen, getFocusableElements, setFocusedIndex]);
+  }, [isTizen, isDetailOpen, isConfirmingDelete, isCategoriesOpen, getFocusableElements, setFocusedIndex]);
 
   useEffect(() => {
     if (isTizen) {
@@ -224,7 +226,11 @@ export function useTVFocus({
     [contentType, handlePageChange]
   );
 
+  // The TV apps move with tv/remote.ts (useTvRemote below): these handlers are the browser's.
+  useTvRemote(isTizen, { onBack: handleBack, playerOpen: !!streamUrl, onNearEnd: () => { if (contentType !== 'tv') handlePageChange(1); } });
+
   useEffect(() => {
+    if (isTizen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (streamUrl) return;
 
@@ -502,7 +508,7 @@ export function useTVFocus({
   ]);
 
   useEffect(() => {
-    if (streamUrl || (isTizen && isSearchActive)) return;
+    if (isTizen || streamUrl) return;
 
     const timer = setTimeout(() => {
       const focusable = getFocusableElements();

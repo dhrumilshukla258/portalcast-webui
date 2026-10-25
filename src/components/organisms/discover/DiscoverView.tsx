@@ -9,6 +9,11 @@ import { getDiscoverBrowse, type HomeRow } from '@/api/endpoints/discover';
 import { useDiscover } from '@/hooks/useDiscover';
 import { useAnswersUpdated } from '@/hooks/useAnswersUpdated';
 import type { MediaItem } from '@/types';
+import { isTvApp } from '@/utils/helpers';
+import TvHero from '@/tv/TvHero';
+import { TvFocusedItemContext } from '@/tv/TvHeroContext';
+
+const TV = isTvApp();
 
 const TOP_GENRE_COUNT = 10;
 // Recommendations aren't paginated server-side (no "page" param on that
@@ -320,6 +325,17 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     return { home, rec, news, genres };
   }, [homeRows, recommendations, whatsNew.items, genreRows, hiddenTitles]);
 
+  // TV apps: the hero shows the title the remote rests on (400 ms of rest, so moving fast does not
+  // flicker), the first title of the first row until then.
+  const [tvHero, setTvHero] = useState<MediaItem | null>(null);
+  const tvHeroTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onTvFocusItem = useCallback((item: MediaItem) => {
+    if (tvHeroTimer.current) clearTimeout(tvHeroTimer.current);
+    tvHeroTimer.current = setTimeout(() => { tvHeroTimer.current = null; setTvHero(item); }, 400);
+  }, []);
+  useEffect(() => () => { if (tvHeroTimer.current) clearTimeout(tvHeroTimer.current); }, []);
+  const tvDefaultHero = uniqueRows.home.find((r) => r.data.length)?.data[0] ?? uniqueRows.rec[0] ?? uniqueRows.news[0] ?? null;
+
   const backdropItems = useMemo(() => {
     if (hasActiveFilter) return filteredItems;
     return [
@@ -474,6 +490,40 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     }
   };
 
+  const filterButton = (
+    <DiscoverFilters
+      variant="phone"
+      iconOnly
+      facets={facets}
+      activeFilters={activeFilters}
+      onFilterChange={handleFilterChange}
+      onGenresChange={handleGenresChange}
+      types={fixedType ? undefined : { movie: showMovies, series: showSeries, onToggle: toggleType }}
+      links={libraryLinks}
+    />
+  );
+
+  if (TV) {
+    // The Android TV app's Home: the hero over the top half (chips row on it), the rows below;
+    // the focused row is brought to the top of the rows (tv/remote.ts, data-tv-scroll="rows").
+    return (
+      <TvFocusedItemContext.Provider value={onTvFocusItem}>
+        <div className="flex h-full min-h-0 flex-1 flex-col">
+          <div className="relative h-[52%] shrink-0">
+            <TvHero item={tvHero ?? tvDefaultHero}>
+              <div className="pt-4">{sectionChips?.(filterButton)}</div>
+            </TvHero>
+          </div>
+          <div id="app-content-scroll" data-tv-scroll="rows" className="hide-scrollbar min-h-0 flex-1 overflow-y-auto px-12 pt-2">
+            <div key={contentKey}>{contentNode}</div>
+            {/* Room under the last row, so it can come to the top too. */}
+            <div className="h-[360px]" aria-hidden="true" />
+          </div>
+        </div>
+      </TvFocusedItemContext.Provider>
+    );
+  }
+
   return (
     <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 flex-1 overflow-y-auto content-transition px-3 sm:px-6">
       {/* No backdrop-blur-sm anywhere in this bar (or its buttons) on purpose —
@@ -484,18 +534,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           caused the sticky-bar flicker — there's no backdrop-filter left
           here to nest. */}
       <div className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-[#05080F] px-3 py-2 sm:-mx-6 sm:px-6">
-        {sectionChips?.(
-          <DiscoverFilters
-            variant="phone"
-            iconOnly
-            facets={facets}
-            activeFilters={activeFilters}
-            onFilterChange={handleFilterChange}
-            onGenresChange={handleGenresChange}
-            types={fixedType ? undefined : { movie: showMovies, series: showSeries, onToggle: toggleType }}
-            links={libraryLinks}
-          />
-        )}
+        {sectionChips?.(filterButton)}
       </div>
 
       <div key={contentKey} className="content-transition">

@@ -1,4 +1,7 @@
 import React from 'react';
+import { isTvApp } from '@/utils/helpers';
+
+const TV = isTvApp();
 
 export type HomeSection = 'home' | 'movie' | 'series' | 'people';
 
@@ -19,13 +22,14 @@ const SectionChips: React.FC<{ active: HomeSection; onSelect: (s: HomeSection) =
   onSelect,
   trailing,
 }) => (
-  <div className="flex items-center gap-2" data-focus-group="section-chips">
+  <div className={`flex items-center ${TV ? 'gap-3' : 'gap-2'}`} data-focus-group="section-chips" data-tv-group="chips">
     {CHIPS.map((c) => (
       <button
         key={c.id}
         data-focusable="true"
+        data-active={active === c.id ? 'true' : undefined}
         onClick={() => onSelect(active === c.id ? 'home' : c.id)}
-        className={`h-9 shrink-0 rounded-full px-4 text-sm font-bold transition-colors ${
+        className={`${TV ? 'h-[38px] px-5 text-[15px]' : 'h-9 px-4 text-sm'} shrink-0 rounded-full font-bold transition-colors ${
           active === c.id ? 'bg-white text-[#05080F]' : 'border border-white/25 text-gray-200'
         }`}
       >
