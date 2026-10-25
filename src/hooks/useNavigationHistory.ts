@@ -322,12 +322,19 @@ export function useNavigationHistory({
         return;
       }
       const wentBack = stateDepth < prevNavDepth.current;
+      const sameDepth = stateDepth === prevNavDepth.current;
       // Sync synchronously, right here, instead of waiting for the separate
       // depth-tracking effect to catch up on a later render — that gap let a
       // second, rapid Back press read a still-stale prevNavDepth and get
       // silently swallowed by the old equality guard, so the first press
       // appeared to do nothing.
       prevNavDepth.current = stateDepth;
+      // The same depth: an entry of something open on this page (Filters, Browse by category,
+      // Choose sports) that keeps the page's state, not a page change. Those handle their own
+      // entries, but this listener can run before theirs, so it must not take the move as
+      // Forward: that restored whatever Back last closed (owner: close a title's version picker,
+      // open Filters, pick a genre, Back, and the picker was there again).
+      if (sameDepth) return;
       if (!wentBack) {
         // Forward (browser Forward button) — restore whatever Back most
         // recently popped, if anything. Previously this fell through to
