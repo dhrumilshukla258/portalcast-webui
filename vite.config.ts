@@ -23,6 +23,23 @@ export default defineConfig({
     // there (Array.prototype.at, structuredClone, Promise.allSettled...). Every SUPPORTED browser
     // runs ES modules, so no separate legacy bundle is built.
     legacy({ modernTargets: SUPPORTED, modernPolyfills: true, renderLegacyChunks: false }),
+    // The app's code runs once the intro is on screen and moving: as a plain module script it
+    // ran right after the page was read, often before its first frame, holding the main thread
+    // ~0.85 s, so the intro's first frame came with its clock already past the slide (owner,
+    // 2026-10-24: "webui shows no animation"). The file still downloads at once (modulepreload);
+    // index.html's intro calls window.__pcStartApp two frames after it is drawn, or at once.
+    {
+      name: 'app-after-intro-frame',
+      enforce: 'post',
+      transformIndexHtml: {
+        order: 'post',
+        handler: (html) =>
+          html.replace(/<script type="module" crossorigin src="([^"]*assets\/index-[^"]*\.js)"><\/script>/, (_tag, src) =>
+            `<link rel="modulepreload" crossorigin href="${src}">` +
+            `<script>window.__pcStartApp = function () { if (window.__pcAppStarted) return; window.__pcAppStarted = 1; ` +
+            `var s = document.createElement('script'); s.type = 'module'; s.crossOrigin = ''; s.src = '${src}'; document.head.appendChild(s); };</script>`),
+      },
+    },
     // The polyfills (48 KB gzipped) only where something is missing: a current browser has the
     // newest features they cover (iterator helpers, Set methods: Chrome 122, Safari 18.4,
     // Firefox 131) and skips them. Written in while the page is parsed, so they still run before

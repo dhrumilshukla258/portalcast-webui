@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@/index.css';
 // Catalog reads carry the server's answer version (cached for a year at that address).
@@ -24,11 +24,18 @@ installServiceWorkerUpdates();
 setPlatformAdapter(webPlatformAdapter);
 setClientPlatformAdapter(webPlatformAdapter);
 
+/** Tells the intro (index.html) the app's first screen is drawn: its logo fades out then. */
+function IntroDone() {
+  useEffect(() => { (window as unknown as { __pcIntroDone?: () => void }).__pcIntroDone?.(); }, []);
+  return null;
+}
+
 // The intro (index.html) holds the first render until its logo has stopped moving: drawing the
 // app on the main thread made the slide jump. No intro (reduced motion, Cast): at once.
 const introGate: Promise<void> = (window as unknown as { __pcIntroGate?: Promise<void> }).__pcIntroGate ?? Promise.resolve();
 introGate.then(() => createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <IntroDone />
     <ErrorBoundary>
       <AuthProvider>
         <SocketProvider>
