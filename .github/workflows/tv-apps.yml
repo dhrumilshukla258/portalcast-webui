@@ -1,0 +1,40 @@
+# Builds the LG TV app (platforms/README.md) when its files change, and on demand: the .ipk is
+# attached to the run (Actions -> TV apps -> the run -> Artifacts). Install it with ares-install
+# on a TV in Developer Mode. The Samsung .wgt needs the owner's signing certificate, so it is
+# packaged on the PC (platforms/README.md).
+
+name: TV apps
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'platforms/**'
+      - 'scripts/tv-apps.mjs'
+      - '.github/workflows/tv-apps.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lg:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: App folder (dist-tv/webos)
+        run: node scripts/tv-apps.mjs
+
+      - name: LG package (.ipk)
+        run: npx --yes -p @webos-tools/cli@3.2.6 ares-package dist-tv/webos -o dist-tv/lg --no-minify
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: portalcast-lg-ipk
+          path: dist-tv/lg/*.ipk
+          if-no-files-found: error
