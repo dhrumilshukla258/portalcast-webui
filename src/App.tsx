@@ -50,12 +50,12 @@ import { cleanRecentSearches } from '@/hooks/useSearchController';
 import SearchView from '@/components/organisms/search/SearchView';
 import { useTVFocus } from '@/hooks/useTVFocus';
 import { useCastReceiver } from '@/hooks/useCastReceiver';
-import { isTizenDevice } from './utils/helpers';
+import { isTvApp, exitTvApp } from './utils/helpers';
 import type { MediaItem } from '@/types';
 import { type DiscoverVariant } from '@/api/endpoints/discover';
 
 function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
-  const isTizen = isTizenDevice();
+  const isTizen = isTvApp(); // Samsung or LG
   const { user, updatePreferences } = useAuth();
   // Cleaned for display too, so fragments saved by older builds disappear at once.
   const recentSearches = useMemo(() => cleanRecentSearches(user?.preferences?.recentSearches || []), [user?.preferences?.recentSearches]);
@@ -278,7 +278,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
         if (!isTizen) return;
         const now = Date.now();
         if (now - lastRootBack.current < 2000) {
-          try { (window as any).tizen?.application?.getCurrentApplication()?.exit(); } catch { /* not a Tizen app */ }
+          exitTvApp();
           return;
         }
         lastRootBack.current = now;
@@ -783,7 +783,7 @@ function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
   }
 
   if (!isLoggedIn) {
-    const dest = isTizenDevice() ? '/login' : '/home';
+    const dest = isTvApp() ? '/login' : '/home';
     return <Navigate to={dest} replace />;
   }
 

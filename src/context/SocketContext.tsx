@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState, type ReactNode } from
 import { io, Socket } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
 import { URL_PATHS } from '@/api/config';
-import { isTizenDevice } from '@/utils/helpers';
+import { isTvApp } from '@/utils/helpers';
 import { SocketContext } from '@/context/useSocket';
 import type { Device } from '@/context/SocketContextTypes';
 import { useAuth } from '@/context/AuthContext';
@@ -17,7 +17,7 @@ function getSocketUrl(): string {
   return host === '/' ? window.location.origin : host;
 }
 const getIsReceiver = () => {
-  const isTizen = isTizenDevice();
+  const isTizen = isTvApp(); // Samsung or LG
   const searchParams = new URLSearchParams(window.location.search);
   return isTizen || searchParams.get('device') === 'receiver';
 };

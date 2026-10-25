@@ -33,3 +33,6 @@ dist-ssr
 .env.production
 !.env.example
 /.claude
+
+# LG app packages (platforms/webos)
+dist-webos/

@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-toastify';
 import { Loader2, RefreshCw, KeyRound, Mail, ShieldAlert, User } from 'lucide-react';
-import { isTizenDevice } from '@/utils/helpers';
+import { isTvApp } from '@/utils/helpers';
 import { PasswordStrengthChecklist } from '@/components/molecules/PasswordStrengthChecklist';
 import { useLoginForm } from '@/hooks/useLoginForm';
 import { useTVDeviceFlow } from '@/hooks/useTVDeviceFlow';
@@ -25,7 +25,7 @@ export default function Login() {
 
   // State to toggle between Web Credentials and TV QR login flows
   const [activeTab, setActiveTab] = useState<'web' | 'tv' | 'forgot' | 'reset'>(
-    isVerifyRedirect ? 'web' : isTizenDevice() ? 'tv' : 'web'
+    isVerifyRedirect ? 'web' : isTvApp() ? 'tv' : 'web'
   );
 
   const {

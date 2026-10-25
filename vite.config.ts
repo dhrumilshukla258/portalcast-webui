@@ -7,14 +7,15 @@ import { browserslistToTargets } from 'lightningcss';
 import path from 'path';
 
 /**
- * The oldest browsers the web app supports (owner, 2026-10-24: devices from 2018 on): Chrome and
- * Android WebView 69 (Samsung Tizen 5.5 TVs from 2019, Android phones), Safari / iOS 12,
+ * The oldest browsers the web app supports (owner, 2026-10-24: devices from 2018 on): Chrome 68
+ * (LG webOS 5 TVs from 2020; owner, 2026-10-25: 2018-2019 LG sets, Chromium 53 without ES modules,
+ * are not supported), Android WebView 69 (Samsung Tizen 5.5 TVs from 2019, Android phones), Safari / iOS 12,
  * Firefox 78, Edge 79. The JavaScript is compiled down to them with only the polyfills the code
  * uses, and the CSS is lowered (postcss.config.mjs, css.lightningcss below). Checked in a real
  * Chromium 69: before this the app did not start there at all ("Unexpected token ?").
  */
-const SUPPORTED = ['chrome >= 69', 'and_chr >= 69', 'safari >= 12', 'ios_saf >= 12', 'firefox >= 78', 'edge >= 79', 'samsung >= 10'];
-const ESBUILD_TARGETS = ['chrome69', 'safari12', 'ios12', 'firefox78', 'edge79'];
+const SUPPORTED = ['chrome >= 68', 'and_chr >= 69', 'safari >= 12', 'ios_saf >= 12', 'firefox >= 78', 'edge >= 79', 'samsung >= 10'];
+const ESBUILD_TARGETS = ['chrome68', 'safari12', 'ios12', 'firefox78', 'edge79'];
 
 export default defineConfig({
   plugins: [

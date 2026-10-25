@@ -126,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // isTizenDevice() (see @/api/platform) rather than the previous
       // inline window.tizen/viewport heuristic. The wire value sent to the
       // server ('tv' | 'web') is preserved.
-      const clientType = webPlatformAdapter.clientType === 'tizen' ? 'tv' : 'web';
+      const clientType = webPlatformAdapter.clientType === 'web' ? 'web' : 'tv';
       const data = await apiLoginWithGoogle(idToken, clientType);
 
       if (data) {

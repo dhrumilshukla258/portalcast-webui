@@ -9,7 +9,7 @@ import GridFooter from './main-content-grid/GridFooter';
 import CategorySidebar from './main-content-grid/CategorySidebar';
 import MobileCategoryDrawer from './main-content-grid/MobileCategoryDrawer';
 import { useResizableWidth } from '@/hooks/useResizableWidth';
-import { isTizenDevice } from '@/utils/helpers';
+import { isTvApp } from '@/utils/helpers';
 import type { MediaItem, ContextType, ChannelGroup } from '@/types';
 import type { ProgressRecord } from '@/api/types/user';
 
@@ -92,7 +92,7 @@ const MainContentGrid = React.memo(
     hideCategorySidebar = false,
     onBackdropItemsChange,
   }: MainContentGridProps) => {
-    const isTizen = isTizenDevice();
+    const isTizen = isTvApp(); // Samsung or LG
     const { width: sidebarWidth, onMouseDown: onSidebarResizeStart } =
       useResizableWidth(`vodSidebarWidth_${providerKey}_${contentType}`, 220, 160, 420);
     const [showMobileCategoryDrawer, setShowMobileCategoryDrawer] =

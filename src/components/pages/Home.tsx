@@ -2,14 +2,14 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Play, Shield, Tv, Sparkles, ChevronRight, Bug, Rocket } from 'lucide-react';
-import { isTizenDevice } from '@/utils/helpers';
+import { isTvApp } from '@/utils/helpers';
 
 export default function Home() {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isTizenDevice()) {
+    if (isTvApp()) {
       navigate('/login');
     }
   }, [navigate]);

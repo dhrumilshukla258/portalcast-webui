@@ -9,7 +9,7 @@ import { getSeries } from '@/api/endpoints/series';
 import { getUserProgress } from '@/api/endpoints/user';
 import { URL_PATHS } from '@/api/config';
 import type { MediaItem, ContextType } from '@/types';
-import { isTizenDevice } from '@/utils/helpers';
+import { isTvApp } from '@/utils/helpers';
 import { initialContext } from './useMediaLibrary';
 import { resolveStreamUrl } from './resolveStreamUrl';
 import { useNavigationHistory } from './useNavigationHistory';
@@ -46,7 +46,7 @@ export function useAppNavigation(
   onSetContentType?: (type: 'movie' | 'series' | 'tv') => void
 ) {
   const { user, updatePreferences } = useAuth();
-  const isTizen = isTizenDevice();
+  const isTizen = isTvApp(); // Samsung or LG
 
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [rawStreamUrl, setRawStreamUrl] = useState<string | null>(null);

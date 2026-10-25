@@ -50,13 +50,13 @@ const PersonPage: React.FC<PersonPageProps> = ({ id, onClose, onOpenTitle, loadi
     return () => ctrl.abort();
   }, [id]);
 
-  // Back (TV remote 10009, Backspace) and Escape close the page before the app's own Back
+  // Back (TV remote: Samsung 10009, LG 461; Backspace) and Escape close the page before the app's own Back
   // handling sees them; the browser Back button closes it too.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const el = document.activeElement;
       const typing = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
-      if (e.key === 'Escape' || e.keyCode === 10009 || (e.keyCode === 8 && !typing)) {
+      if (e.key === 'Escape' || e.keyCode === 10009 || e.keyCode === 461 || (e.keyCode === 8 && !typing)) {
         e.preventDefault();
         e.stopPropagation();
         onClose();

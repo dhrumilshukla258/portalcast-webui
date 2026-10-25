@@ -39,7 +39,7 @@ const EpisodeOverlay = forwardRef<EpisodeOverlayRef, EpisodeOverlayProps>(
 
     const handleKeyDown = useCallback(
       (e: KeyboardEvent) => {
-        const activeKeys = [38, 40, 13, 0, 10009, 8, 10073];
+        const activeKeys = [38, 40, 13, 0, 10009, 461, 8, 10073];
         if (!activeKeys.includes(e.keyCode)) {
           return;
         }
@@ -61,6 +61,7 @@ const EpisodeOverlay = forwardRef<EpisodeOverlayRef, EpisodeOverlayProps>(
             break;
           case 0:
           case 10009:
+          case 461: // LG Back
           case 8: // Back
           case 10073:
             onBack();

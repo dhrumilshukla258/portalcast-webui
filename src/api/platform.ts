@@ -1,4 +1,4 @@
-import { isTizenDevice } from '@/utils/helpers';
+import { isTizenDevice, isWebOSDevice } from '@/utils/helpers';
 
 /**
  * Minimal key/value persistence abstraction so the networking layer isn't
@@ -12,7 +12,7 @@ export interface TokenStorage {
   remove(key: string): void;
 }
 
-export type ClientType = 'web' | 'tizen';
+export type ClientType = 'web' | 'tizen' | 'webos';
 
 /**
  * Everything the API layer needs from the host platform: where to persist
@@ -36,5 +36,5 @@ const localStorageTokenStorage: TokenStorage = {
 // per-request viewport sniffing that used to live inline in AuthContext.
 export const webPlatformAdapter: PlatformAdapter = {
   storage: localStorageTokenStorage,
-  clientType: isTizenDevice() ? 'tizen' : 'web',
+  clientType: isTizenDevice() ? 'tizen' : isWebOSDevice() ? 'webos' : 'web',
 };

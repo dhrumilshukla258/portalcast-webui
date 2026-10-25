@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { isTizenDevice } from '@/utils/helpers';
+import { isTvApp } from '@/utils/helpers';
 import type { MediaItem } from '@/types';
 
 interface TVFocusProps {
@@ -33,7 +33,7 @@ export function useTVFocus({
   focusedIndex,
   setFocusedIndex,
 }: TVFocusProps) {
-  const isTizen = isTizenDevice();
+  const isTizen = isTvApp(); // Samsung or LG
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [isSearchTyping, setIsSearchTyping] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -240,7 +240,7 @@ export function useTVFocus({
 
       if (isTizen && isSearchActive) {
         if (e.keyCode === 13) return;
-        if (e.keyCode === 0 || e.keyCode === 10009 || e.keyCode === 8) {
+        if (e.keyCode === 0 || e.keyCode === 10009 || e.keyCode === 461 || e.keyCode === 8) {
           e.preventDefault();
           setIsSearchActive(false);
         }
@@ -459,6 +459,7 @@ export function useTVFocus({
           break;
         case 0:
         case 10009:
+        case 461: // LG Back
         case 8:
           if (isInput) return;
           e.preventDefault();

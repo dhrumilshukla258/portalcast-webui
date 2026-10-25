@@ -12,7 +12,7 @@ import { clearUserProgress, getUserProgress } from '@/api/endpoints/user';
 import type { ProgressRecord } from '@/api/types/user';
 import type { MediaItem, ContextType, EPG_List, ChannelGroup } from '@/types';
 import type { PaginatedResponse } from '@/api/types/channels';
-import { isTizenDevice } from '@/utils/helpers';
+import { isTvApp } from '@/utils/helpers';
 import { useInfiniteScroll } from './useInfiniteScroll';
 
 const EPG_WINDOW_HOURS = 6;
@@ -105,7 +105,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
   const [playLastTvChannel, setPlayLastTvChannel] = useState<string | null>(
     null
   );
-  const isTizen = isTizenDevice();
+  const isTizen = isTvApp(); // Samsung or LG
 
   const [vodCategories, setVodCategories] = useState<ChannelGroup[]>([]);
   const [loadingCategories, setLoadingCategories] = useState<boolean>(false);

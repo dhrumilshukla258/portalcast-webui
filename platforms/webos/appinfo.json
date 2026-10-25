@@ -1,0 +1,14 @@
+{
+  "id": "com.portalcast.tv",
+  "version": "1.0.0",
+  "vendor": "PortalCast",
+  "type": "web",
+  "main": "index.html",
+  "title": "PortalCast",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgColor": "#05080F",
+  "iconColor": "#05080F",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true
+}

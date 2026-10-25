@@ -236,7 +236,7 @@ export function useChannelListNav({
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      const activeKeys = [37, 38, 39, 40, 13, 0, 10009, 8, 10073];
+      const activeKeys = [37, 38, 39, 40, 13, 0, 10009, 461, 8, 10073];
       if (!activeKeys.includes(e.keyCode)) {
         return;
       }
@@ -285,6 +285,7 @@ export function useChannelListNav({
           break;
         case 0:
         case 10009:
+        case 461: // LG Back
         case 8:
         case 10073:
           if (isMobile && showChannelsList) {

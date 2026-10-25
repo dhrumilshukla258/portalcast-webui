@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PortalCast</title>
+<!--
+  The LG TV app (platforms/webos/README.md): asks once for the PortalCast server's address, then
+  opens the web app from that server, so the TV always runs the server's own version. Opening
+  again shows "Connecting" for a moment; any key there changes the server.
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: #05080F; color: #fff; font-family: "LG Smart UI", Roboto, Arial, sans-serif; }
+  body { display: flex; align-items: center; justify-content: center; }
+  .card { width: 900px; text-align: center; }
+  .logo { display: block; width: 560px; height: auto; margin: 0 auto 48px; }
+  p { font-size: 30px; color: #9ca3af; margin: 0 0 40px; }
+  input { box-sizing: border-box; width: 100%; height: 88px; padding: 0 28px; font-size: 34px; color: #fff; background: #0b1120;
+    border: 3px solid rgba(255,255,255,.2); border-radius: 18px; outline: none; }
+  button { margin-top: 28px; height: 84px; min-width: 360px; padding: 0 40px; font-size: 32px; font-weight: 700; color: #fff;
+    background: #1e293b; border: 3px solid transparent; border-radius: 42px; outline: none; }
+  input:focus, button:focus { border-color: #38bdf8; }
+  button:focus { background: linear-gradient(90deg, #38bdf8, #3b82f6); }
+  .error { color: #f87171; min-height: 40px; font-size: 28px; margin: 24px 0 0; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <img class="logo" src="logo.svg" alt="PortalCast">
+  <div id="connecting" class="hidden">
+    <p id="connecting-text">Connecting…</p>
+    <button id="change">Change server</button>
+  </div>
+  <div id="setup" class="hidden">
+    <p>Enter your PortalCast server's address</p>
+    <input id="url" type="url" placeholder="http://192.168.1.10:3000" autocomplete="off" spellcheck="false">
+    <button id="connect">Connect</button>
+    <div id="error" class="error"></div>
+  </div>
+</div>
+<script>
+(function () {
+  var KEY = 'pc-server';
+  var BACK = 461;
+  var $ = function (id) { return document.getElementById(id); };
+  var store = {
+    get: function () { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } },
+    set: function (v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+  };
+
+  // "192.168.1.10:3000" or "http://host:3000/" -> "http://host:3000"; null if it is not one.
+  function normalize(text) {
+    var t = String(text || '').trim();
+    if (!t || /\s/.test(t)) return null;
+    if (!/^https?:\/\//i.test(t)) t = 'http://' + t;
+    var a = document.createElement('a');
+    a.href = t;
+    if (!/^https?:$/.test(a.protocol) || !/^([a-z0-9-]+\.)*[a-z0-9-]+$|^\[[0-9a-f:.]+\]$/i.test(a.hostname)) return null;
+    return a.protocol + '//' + a.host + a.pathname.replace(/\/+$/, '');
+  }
+
+  // Resolves when the server answers at all (no-cors: any answer counts), else rejects.
+  function reachable(base) {
+    return new Promise(function (resolve, reject) {
+      var timer = setTimeout(function () { reject(new Error('timeout')); }, 8000);
+      fetch(base + '/manifest.webmanifest', { mode: 'no-cors', cache: 'no-store' }).then(function () {
+        clearTimeout(timer); resolve();
+      }, function (e) { clearTimeout(timer); reject(e); });
+    });
+  }
+
+  function open(base) { window.location.replace(base + '/'); }
+
+  var leaving = null;
+  function showSetup(message, value) {
+    if (leaving) { clearTimeout(leaving); leaving = null; }
+    $('connecting').className = 'hidden';
+    $('setup').className = '';
+    $('error').textContent = message || '';
+    $('url').value = value || store.get();
+    $('url').focus();
+  }
+
+  function connect() {
+    var base = normalize($('url').value);
+    if (!base) { $('error').textContent = 'That is not a server address.'; return; }
+    $('error').textContent = 'Connecting…';
+    reachable(base).then(function () { store.set(base); open(base); }, function () {
+      $('error').textContent = "Can't reach " + base + '. Check the address and that the TV is on the same network (or VPN).';
+    });
+  }
+
+  $('connect').onclick = connect;
+  $('change').onclick = function () { showSetup(); };
+  document.addEventListener('keydown', function (e) {
+    var k = e.keyCode;
+    if (k === BACK) { e.preventDefault(); if (!$('setup').className && leaving === null && store.get()) { start(); } else { window.close(); } return; }
+    if ($('setup').className) return; // the connecting screen handles its own button
+    if (k === 13 && document.activeElement === $('url')) { e.preventDefault(); connect(); }
+    if (k === 40 && document.activeElement === $('url')) { e.preventDefault(); $('connect').focus(); }
+    if (k === 38 && document.activeElement === $('connect')) { e.preventDefault(); $('url').focus(); }
+  });
+
+  function start() {
+    var saved = store.get();
+    if (!saved) { showSetup(); return; }
+    $('setup').className = 'hidden';
+    $('connecting').className = '';
+    $('connecting-text').textContent = 'Connecting to ' + saved + '…';
+    $('change').focus();
+    // A moment to press "Change server" (any key stops the countdown), then the server.
+    var stop = function () { if (leaving) { clearTimeout(leaving); leaving = null; } document.removeEventListener('keydown', stop, true); };
+    document.addEventListener('keydown', stop, true);
+    leaving = setTimeout(function () {
+      leaving = null;
+      document.removeEventListener('keydown', stop, true);
+      reachable(saved).then(function () { open(saved); }, function () {
+        showSetup("Can't reach " + saved + '. Check that the server is on, or change it.', saved);
+      });
+    }, 1500);
+  }
+  start();
+})();
+</script>
+</body>
+</html>

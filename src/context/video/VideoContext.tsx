@@ -7,7 +7,7 @@ import React, {
   useMemo,
   type ReactNode,
 } from 'react';
-import { isTizenDevice } from '@/utils/helpers';
+import { isTizenDevice, isTvApp } from '@/utils/helpers';
 import type { VideoFitMode } from '@/types';
 import {
   VideoContext,
@@ -96,7 +96,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
     refreshReceivers,
 }) => {
   const { user, updatePreferences } = useAuth();
-  const isTizen = isTizenDevice();
+  const isTizen = isTvApp(); // Samsung or LG
 
   // --- Refs ---
   const playerContainerRef = useRef<HTMLDivElement>(null);
@@ -108,6 +108,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
   // --- App & UI States ---
   const [controlsVisible, setControlsVisible] = useState(true);
   const [cursorVisible, setCursorVisible] = useState(true);
+  // Samsung plays the portal's links directly; LG goes through the server like a browser.
   const [useProxy, setUseProxy] = useState(!isTizenDevice());
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);

@@ -350,12 +350,14 @@ export function useTVRemoteNavigation(
           contentType === 'tv' ? onNextChannel?.() : handleSkipButtonClick(30);
           break;
         case 427: // Channel Down
+        case 34: // LG Channel Down
         case 10232: // MediaTrackPrevious
           e.preventDefault();
           if (contentType === 'tv') onPrevChannel?.();
           else if (contentType === 'series') playPrevEpisode?.();
           break;
         case 428: // Channel Up
+        case 33: // LG Channel Up
         case 10233: // MediaTrackNext
           e.preventDefault();
           if (contentType === 'tv') onNextChannel?.();
@@ -363,6 +365,7 @@ export function useTVRemoteNavigation(
           break;
         case 0:
         case 10009:
+        case 461: // LG Back
         case 8: // Back/Return
           e.preventDefault();
           e.stopPropagation();
