@@ -1,13 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useAnswersUpdated } from '@/hooks/useAnswersUpdated';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Play, Layers } from 'lucide-react';
 import type { MediaItem } from '@/types';
 import type { ProgressRecord } from '@/api/types/user';
 import { URL_PATHS } from '@/api/config';
 import { MediaInfoHeader } from '@/components/organisms/video/MediaInfoHeader';
-import { getSeries } from '@/api/endpoints/series';
 import EpisodeAccordionRow from '@/components/molecules/EpisodeAccordionRow';
-import { findResumeEpisode } from '@/utils/resumeEpisode';
+import { useSeasonEpisodes } from '@/hooks/useSeasonEpisodes';
 
 interface SeriesOverviewPageProps {
   seriesItem: MediaItem;
@@ -46,113 +44,19 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
   onContinueWatching,
 }) => {
   const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
-  const [episodes, setEpisodes] = useState<MediaItem[]>([]);
-  const [loadingEpisodes, setLoadingEpisodes] = useState(false);
-  const [loadingMoreEpisodes, setLoadingMoreEpisodes] = useState(false);
-  const [episodePage, setEpisodePage] = useState(1);
-  const [hasMoreEpisodes, setHasMoreEpisodes] = useState(false);
+  const {
+    selectedSeasonId,
+    setSelectedSeasonId,
+    episodes,
+    loadingEpisodes,
+    loadingMoreEpisodes,
+    hasMoreEpisodes,
+    loadMore,
+    continueRecord,
+    resumeEpisode,
+    progressByMediaId,
+  } = useSeasonEpisodes(seriesItem, seasons, progressRecords);
   const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
-  // A stored copy of the episodes was shown and the server's differs: load them again.
-  const episodesUpdated = useAnswersUpdated('/v2/series');
-  const episodesUpdatedRef = useRef(0);
-
-  // The series' own progress row: the episode the viewer is in the middle of.
-  const continueRecord = useMemo(() => {
-    const record = progressRecords.find((r) => String(r.mediaId) === String(seriesItem.id));
-    return record && !record.completed ? record : null;
-  }, [progressRecords, seriesItem.id]);
-
-  // Open on the season being watched (else the first), rather than requiring a click
-  // before any episodes show — the same as the TV app.
-  useEffect(() => {
-    if (selectedSeasonId || seasons.length === 0) return;
-    const watching = continueRecord?.meta?.seasonId;
-    const match = watching ? seasons.find((s) => String(s.id) === String(watching)) : undefined;
-    setSelectedSeasonId((match ?? seasons[0]).id);
-  }, [seasons, selectedSeasonId, continueRecord]);
-
-  // Loads just the first page when a season tab is picked, so the opening
-  // episodes show up immediately instead of waiting on every page of a long
-  // season — more pages load as the user scrolls (see the sentinel/observer
-  // effect below), matching the old season-page flow's scroll pagination.
-  useEffect(() => {
-    if (!selectedSeasonId) return;
-    let cancelled = false;
-    // A refresh (episodesUpdated) keeps the list on screen; a new season shows loading.
-    const refreshing = episodesUpdatedRef.current !== episodesUpdated;
-    episodesUpdatedRef.current = episodesUpdated;
-    if (!refreshing) setLoadingEpisodes(true);
-    setEpisodePage(1);
-
-    getSeries({
-      movieId: seriesItem.id,
-      seasonId: selectedSeasonId,
-      page: 1,
-      pageAtaTime: 1,
-      category: seriesItem.category_id ? String(seriesItem.category_id) : '*',
-    })
-      .then((res) => {
-        if (cancelled) return;
-        const pageData = res.data || [];
-        // These episodes are fetched locally (bypassing the shared
-        // context/fetchData navigation used by the old season-page flow), so
-        // context.seasonId is never set. startPlayback's episode branch reads
-        // seasonId from the item itself first for exactly this reason — tag
-        // it here so Play still resolves the right season's stream.
-        const withSeason = pageData.map((ep) => ({ ...ep, season_id: selectedSeasonId }));
-        setEpisodes(withSeason);
-        const total = res.total_items;
-        setHasMoreEpisodes(
-          pageData.length > 0 && (typeof total !== 'number' || withSeason.length < total)
-        );
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setEpisodes([]);
-          setHasMoreEpisodes(false);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingEpisodes(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedSeasonId, seriesItem.id, episodesUpdated]);
-
-  // Guards against the observer firing again (e.g. a second intersection
-  // event) while a "load more" request is still in flight.
-  const loadingMoreRef = useRef(false);
-
-  const loadMoreEpisodes = useRef(async () => {});
-  loadMoreEpisodes.current = async () => {
-    if (loadingMoreRef.current || !hasMoreEpisodes || !selectedSeasonId) return;
-    loadingMoreRef.current = true;
-    setLoadingMoreEpisodes(true);
-    const nextPage = episodePage + 1;
-    try {
-      const res = await getSeries({
-        movieId: seriesItem.id,
-        seasonId: selectedSeasonId,
-        page: nextPage,
-        pageAtaTime: 1,
-        category: seriesItem.category_id ? String(seriesItem.category_id) : '*',
-      });
-      const pageData = res.data || [];
-      const withSeason = pageData.map((ep) => ({ ...ep, season_id: selectedSeasonId }));
-      setEpisodes((prev) => [...prev, ...withSeason]);
-      setEpisodePage(nextPage);
-      const total = res.total_items;
-      const newTotalLoaded = episodes.length + withSeason.length;
-      setHasMoreEpisodes(pageData.length > 0 && (typeof total !== 'number' || newTotalLoaded < total));
-    } catch {
-      setHasMoreEpisodes(false);
-    } finally {
-      loadingMoreRef.current = false;
-      setLoadingMoreEpisodes(false);
-    }
-  };
 
   // Scroll-triggered "load more" — the episode list lives inside the page's
   // own scroll (not a fixed-height list of its own), so a sentinel element
@@ -165,35 +69,17 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) loadMoreEpisodes.current();
+        if (entries[0]?.isIntersecting) void loadMore();
       },
       { rootMargin: '400px' }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMoreEpisodes, loadingEpisodes]);
 
-  // Built once instead of a .find() per rendered episode row.
-  const progressByMediaId = useMemo(() => {
-    const map = new Map<string, ProgressRecord>();
-    for (const record of progressRecords) map.set(String(record.mediaId), record);
-    return map;
-  }, [progressRecords]);
-
-  // The episode being resumed, once its page is loaded: marked, scrolled to and focused.
-  // Portals list newest first, so it is often not on page 1 — keep loading pages (bounded)
-  // until it shows up.
-  const resumeEpisode = useMemo(
-    () => (continueRecord && String(continueRecord.meta?.seasonId ?? '') === String(selectedSeasonId ?? '') ? findResumeEpisode(continueRecord, episodes) : null),
-    [continueRecord, episodes, selectedSeasonId],
-  );
   const resumeRowRef = useRef<HTMLButtonElement | null>(null);
   const scrolledToResume = useRef<string | null>(null);
-  useEffect(() => {
-    const wantsMore = continueRecord && !resumeEpisode && hasMoreEpisodes && !loadingEpisodes && !loadingMoreEpisodes &&
-      String(continueRecord.meta?.seasonId ?? '') === String(selectedSeasonId ?? '') && episodePage < 15;
-    if (wantsMore) loadMoreEpisodes.current();
-  }, [continueRecord, resumeEpisode, hasMoreEpisodes, loadingEpisodes, loadingMoreEpisodes, selectedSeasonId, episodePage]);
   useEffect(() => {
     if (!resumeEpisode || scrolledToResume.current === String(resumeEpisode.id)) return;
     scrolledToResume.current = String(resumeEpisode.id);

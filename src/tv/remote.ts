@@ -99,8 +99,18 @@ export class TvRemote {
     document.addEventListener('keydown', this.onKeyDown);
     document.addEventListener('keyup', this.onKeyUp);
     document.addEventListener('mouseover', this.onPointer, true);
-    this.observer = new MutationObserver(this.queueCheck);
-    this.observer.observe(document.body, { childList: true, subtree: true });
+    this.observer = new MutationObserver((records) => {
+      for (const r of records) {
+        // React rewrites className when a focused element re-renders (a chosen tab, a season):
+        // put the ring back at once.
+        if (r.type === 'attributes') {
+          if (r.target === this.current && !this.current.classList.contains('focused')) this.current.classList.add('focused');
+        } else {
+          this.queueCheck();
+        }
+      }
+    });
+    this.observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
     this.queueCheck();
     return () => {
       document.removeEventListener('keydown', this.onKeyDown);
@@ -199,7 +209,7 @@ export class TvRemote {
       if ((s.overflowY === 'auto' || s.overflowY === 'scroll') && p.scrollHeight > p.clientHeight + 1) {
         if (p.getAttribute('data-tv-scroll') === 'rows') {
           const section = (el.closest('[data-tv-section]') as HTMLElement | null) ?? el;
-          const top = section.getBoundingClientRect().top - box.top;
+          const top = section.getBoundingClientRect().top - box.top - 16 * k;
           if (Math.abs(top) > 2) p.scrollTo({ top: p.scrollTop + top / k, behavior: 'smooth' });
         } else {
           const pad = Math.min(80, box.height * 0.12);

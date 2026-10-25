@@ -1,6 +1,7 @@
 import React from 'react';
 import LoadingSpinner from '@/components/atoms/LoadingSpinner';
 import TvChannelList from '@/components/organisms/channels/TvChannelList';
+import { TvMovieDetail, TvSeriesDetail } from '@/tv/TvTitlePage';
 import MovieDetailPage from '@/components/organisms/browse/MovieDetailPage';
 import SeriesOverviewPage from '@/components/organisms/browse/SeriesOverviewPage';
 import SeasonEpisodesPage from '@/components/organisms/browse/SeasonEpisodesPage';
@@ -250,6 +251,20 @@ const MainContentGrid = React.memo(
             // (detail open/close, back, category switch) but not on incidental
             // re-renders like a silent background refresh patching item fields.
             const viewKey = `${contentType}_${context.category ?? ''}_${context.movieId ?? ''}_${context.seasonId ?? ''}_${context.search ?? ''}`;
+
+            // The TV apps: the Android TV app's title pages (tv/TvTitlePage).
+            if (isTizen && isMovieDetail) return <TvMovieDetail item={detailItem as MediaItem} onPlay={onPlayDetailItem} progressRecords={progressRecords} />;
+            if (isTizen && isSeriesOverview) {
+              return (
+                <TvSeriesDetail
+                  seriesItem={currentSeriesItem as MediaItem}
+                  seasons={items}
+                  loadingSeasons={loading}
+                  progressRecords={progressRecords}
+                  onPlayEpisode={onPlayDetailItem}
+                />
+              );
+            }
 
             const mainBody = isMovieDetail ? (
               <MovieDetailPage item={detailItem as MediaItem} onPlay={onPlayDetailItem} onBack={onCloseDetail} />
