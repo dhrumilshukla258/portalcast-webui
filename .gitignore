@@ -34,5 +34,6 @@ dist-ssr
 !.env.example
 /.claude
 
-# LG app packages (platforms/webos)
+# LG and Samsung app folders and packages (platforms/README.md)
 dist-webos/
+dist-tv/

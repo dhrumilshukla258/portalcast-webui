@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PortalCast</title>
 <!--
-  The LG TV app (platforms/webos/README.md): asks once for the PortalCast server's address, then
+  The LG and Samsung TV apps' first page (platforms/README.md): asks once for the PortalCast server's address, then
   opens the web app from that server, so the TV always runs the server's own version. Opening
   again shows "Connecting" for a moment; any key there changes the server.
 -->
@@ -42,7 +42,11 @@
 <script>
 (function () {
   var KEY = 'pc-server';
-  var BACK = 461;
+  var BACK = [461, 10009]; // LG, Samsung
+  function exitApp() {
+    try { if (window.tizen) { tizen.application.getCurrentApplication().exit(); return; } } catch (e) {}
+    window.close();
+  }
   var $ = function (id) { return document.getElementById(id); };
   var store = {
     get: function () { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } },
@@ -95,7 +99,7 @@
   $('change').onclick = function () { showSetup(); };
   document.addEventListener('keydown', function (e) {
     var k = e.keyCode;
-    if (k === BACK) { e.preventDefault(); if (!$('setup').className && leaving === null && store.get()) { start(); } else { window.close(); } return; }
+    if (BACK.indexOf(k) >= 0) { e.preventDefault(); if (!$('setup').className && leaving === null && store.get()) { start(); } else { exitApp(); } return; }
     if ($('setup').className) return; // the connecting screen handles its own button
     if (k === 13 && document.activeElement === $('url')) { e.preventDefault(); connect(); }
     if (k === 40 && document.activeElement === $('url')) { e.preventDefault(); $('connect').focus(); }

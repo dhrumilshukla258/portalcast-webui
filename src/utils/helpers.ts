@@ -19,7 +19,10 @@ export const isTizenDevice = (): boolean => {
     return true;
   }
 
-  return !!(window as Window & { tizen?: unknown }).tizen;
+  if ((window as Window & { tizen?: unknown }).tizen) return true;
+  // The Samsung app opens this page from the server (platforms/tizen), where Tizen's own objects
+  // are not given to the page: its browser says "SMART-TV ... Tizen".
+  return /SMART-TV/i.test(navigator.userAgent) && /Tizen/i.test(navigator.userAgent);
 };
 
 /**

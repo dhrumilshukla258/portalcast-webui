@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "tv-apps": "node scripts/tv-apps.mjs",
     "postbuild": "node scripts/sync-dist.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
