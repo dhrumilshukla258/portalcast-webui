@@ -78,6 +78,11 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
   updateScrollButtonsRef.current = () => {
     const el = scrollRef.current;
     if (!el) return;
+    if (TV) {
+      // No arrows on a TV: only load more near the end, never re-render the row while it scrolls.
+      if (el.scrollWidth - (el.scrollLeft + el.clientWidth) < NEAR_END_PX && hasMore && !loadingMore) setTimeout(() => onLoadMore?.(), 0);
+      return;
+    }
     setCanScrollLeft(el.scrollLeft > 4);
     const distanceFromEnd = el.scrollWidth - (el.scrollLeft + el.clientWidth);
     setCanScrollRight(distanceFromEnd > 4 || hasMore);

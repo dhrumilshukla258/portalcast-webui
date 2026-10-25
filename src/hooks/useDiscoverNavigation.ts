@@ -6,6 +6,15 @@ import { getDiscoverVariants, type DiscoverVariant } from '@/api/endpoints/disco
 import { initialContext } from '@/hooks/useMediaLibrary';
 import type { MediaItem, ContextType } from '@/types';
 
+/** The fields of a title's card that are the title's own (rating, IMDb id, art), when it has them. */
+const OWN_FIELDS = ['rating_best', 'rating_source', 'imdb_id', 'rt_rating', 'metascore', 'backdrop_path', 'backdrop_hd_path', 'trailer_key'] as const;
+function titleOwnFields(item: MediaItem): Partial<MediaItem> {
+  const src = item as unknown as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const k of OWN_FIELDS) if (src[k] != null && src[k] !== '') out[k] = src[k];
+  return out as Partial<MediaItem>;
+}
+
 interface UseDiscoverNavigationArgs {
   pushFrame: () => void;
   fetchData: (context: ContextType, typeOverride?: 'movie' | 'series' | 'tv') => void;
@@ -164,6 +173,10 @@ export function useDiscoverNavigation({
             // file entry.
             actors: res.data[0]?.actors || item.actors,
             director: res.data[0]?.director || item.director,
+            // The title's own rating, IMDb id and art (the card's), not the file entry's: on
+            // Stalker a file has its own id, and servers before 2026-10-25 gave it whichever
+            // other title had that id (owner: The Matrix opened with a 4.8 film's IMDb).
+            ...titleOwnFields(item),
             category_id: resolveCategory,
             catalogId: item.id,
             is_playable_movie: true,

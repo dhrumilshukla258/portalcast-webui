@@ -31,12 +31,12 @@ const REPEAT_GAP_MS = 70; // a held arrow moves about 14 times a second, never f
 
 const LAYERS = '[role="dialog"], [data-tv-layer], .detail-modal-container, .categories-modal-container';
 
+// Speed (owner: "fast as hell"): a press reads the boxes of a few dozen elements at most, never
+// every card on the page, and no computed styles (a hidden element has an empty box).
 function visible(el: HTMLElement): boolean {
-  if (el.getAttribute('aria-hidden') === 'true' || (el as HTMLButtonElement).disabled) return false;
+  if ((el as HTMLButtonElement).disabled || el.getAttribute('aria-hidden') === 'true') return false;
   const r = el.getBoundingClientRect();
-  if (r.width < 1 || r.height < 1) return false;
-  const s = getComputedStyle(el);
-  return s.visibility !== 'hidden' && s.display !== 'none';
+  return r.width >= 1 && r.height >= 1;
 }
 
 /** The open layer focus belongs to (the last one in the page), else the page. */
@@ -222,15 +222,31 @@ export class TvRemote {
 
   move(dir: Dir) {
     const scope = currentScope();
-    const all = focusablesIn(scope);
-    const cur = this.current && this.current.isConnected && all.includes(this.current) ? this.current : null;
+    const cur = this.current && this.current.isConnected && (scope === document || (scope as Element).contains(this.current)) && visible(this.current) ? this.current : null;
     if (!cur) { this.land(scope); return; }
-    let next = nearest(cur.getBoundingClientRect(), dir, all, cur);
-    if (!next) return;
+    const from = cur.getBoundingClientRect();
+    // 1. Within the current row or list (a row's cards Left / Right, a list's items Up / Down).
+    const own = cur.parentElement?.closest('[data-tv-group]') ?? null;
+    let next: HTMLElement | null = own ? nearest(from, dir, focusablesIn(own), cur) : null;
+    if (!next) {
+      // 2. Elsewhere: each row or list counts as one box, plus the loose elements; the best of those,
+      //    then inside a chosen group its best element (remembered / active / nearest, below).
+      const units: HTMLElement[] = [];
+      for (const g of Array.from(scope.querySelectorAll<HTMLElement>('[data-tv-group]'))) {
+        if (g !== own && !g.contains(cur) && !g.parentElement?.closest('[data-tv-group]') && visible(g)) units.push(g);
+      }
+      for (const el of Array.from(scope.querySelectorAll<HTMLElement>('[data-focusable="true"]'))) {
+        if (el !== cur && !el.parentElement?.closest('[data-tv-group]') && visible(el)) units.push(el);
+      }
+      const unit = nearest(from, dir, units, cur);
+      if (!unit) return;
+      next = unit.hasAttribute('data-tv-group') ? nearest(from, dir, focusablesIn(unit), cur) ?? focusablesIn(unit)[0] ?? null : unit;
+      if (!next) return;
+    }
     // Up from the content stops at the chips row before the tabs (Android TV app).
     if (dir === 'up' && next.closest('header, [data-tv-group="tabs"]') && !cur.closest('header, [data-tv-group="chips"]')) {
-      const chips = all.find((el) => el.closest('[data-tv-group="chips"]'));
-      if (chips && chips.getBoundingClientRect().bottom <= cur.getBoundingClientRect().top + 1) next = chips;
+      const chips = scope.querySelector<HTMLElement>('[data-tv-group="chips"] [data-focusable="true"]');
+      if (chips && visible(chips) && chips.getBoundingClientRect().bottom <= from.top + 1) next = chips;
     }
     // Into a row, the tabs or the chips from outside: where it was left, else its active element.
     const group = next.closest('[data-tv-group]');
