@@ -9,7 +9,6 @@ import { getSeries } from '@/api/endpoints/series';
 import { getUserProgress } from '@/api/endpoints/user';
 import { URL_PATHS } from '@/api/config';
 import type { MediaItem, ContextType } from '@/types';
-import { isTvApp } from '@/utils/helpers';
 import { initialContext } from './useMediaLibrary';
 import { resolveStreamUrl } from './resolveStreamUrl';
 import { useNavigationHistory } from './useNavigationHistory';
@@ -29,8 +28,6 @@ export function useAppNavigation(
   ) => void,
   isPortal: boolean,
   addToRecentChannels: (item: MediaItem) => void,
-  playLastTvChannel: string | null,
-  setPlayLastTvChannel: (value: string | null) => void,
   setItems: React.Dispatch<React.SetStateAction<MediaItem[]>>,
   setContext: React.Dispatch<React.SetStateAction<ContextType>>,
   setTotalItemsCount: React.Dispatch<React.SetStateAction<number>>,
@@ -46,7 +43,6 @@ export function useAppNavigation(
   onSetContentType?: (type: 'movie' | 'series' | 'tv') => void
 ) {
   const { user, updatePreferences } = useAuth();
-  const isTizen = isTvApp(); // Samsung or LG
 
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [rawStreamUrl, setRawStreamUrl] = useState<string | null>(null);
@@ -649,29 +645,6 @@ export function useAppNavigation(
     }
     setFocusedIndex(null);
   }, [context.category, context.movieId, context.seasonId, context.search, contentType, isRestoringFromHistory]);
-
-  useEffect(() => {
-    if (
-      !playLastTvChannel ||
-      items.length === 0 ||
-      contentType !== 'tv' ||
-      !isTizen
-    )
-      return;
-    const channel =
-      playLastTvChannel === '__play_first__'
-        ? items[0]
-        : (items.find((i) => i.id === playLastTvChannel) ?? items[0]);
-    if (channel) handleItemClick(channel);
-    setPlayLastTvChannel(null);
-  }, [
-    items,
-    playLastTvChannel,
-    contentType,
-    handleItemClick,
-    isTizen,
-    setPlayLastTvChannel,
-  ]);
 
   return {
     history,

@@ -12,7 +12,6 @@ import { clearUserProgress, getUserProgress } from '@/api/endpoints/user';
 import type { ProgressRecord } from '@/api/types/user';
 import type { MediaItem, ContextType, EPG_List, ChannelGroup } from '@/types';
 import type { PaginatedResponse } from '@/api/types/channels';
-import { isTvApp } from '@/utils/helpers';
 import { useInfiniteScroll } from './useInfiniteScroll';
 
 const EPG_WINDOW_HOURS = 6;
@@ -102,10 +101,6 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
   const [epgData, setEpgData] = useState<Record<string, EPG_List[]>>({});
   const [channelGroups, setChannelGroups] = useState<ChannelGroup[]>([]);
   const [cwRefreshKey, setCwRefreshKey] = useState(0);
-  const [playLastTvChannel, setPlayLastTvChannel] = useState<string | null>(
-    null
-  );
-  const isTizen = isTvApp(); // Samsung or LG
 
   const [vodCategories, setVodCategories] = useState<ChannelGroup[]>([]);
   const [loadingCategories, setLoadingCategories] = useState<boolean>(false);
@@ -504,13 +499,11 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
     if (contentType !== 'tv') {
       fetchVodCategories(contentType as 'movie' | 'series');
     } else {
+      // The TV apps open Live TV on its channel list, as the Android TV app does (they used to
+      // start the last channel at once).
       loadEpgData();
-      if (isTizen) {
-        const lastPlayedId = user?.preferences?.lastSelectedCategory?.['lastPlayedTvChannelId'];
-        setPlayLastTvChannel(lastPlayedId || '__play_first__');
-      }
     }
-  }, [contentType, providerKey, fetchVodCategories, loadEpgData, isTizen, user?.preferences?.lastSelectedCategory?.['lastPlayedTvChannelId']]);
+  }, [contentType, providerKey, fetchVodCategories, loadEpgData]);
 
   // Warms the channel-list cache in the background while the user is
   // browsing Movies/Series, so the *first* switch to the TV tab each
@@ -604,13 +597,8 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
         fetchVodCategories(type);
       }
 
-      if (type === 'tv') {
-        loadEpgData();
-        const lastPlayedId = user?.preferences?.lastSelectedCategory?.['lastPlayedTvChannelId'];
-        setPlayLastTvChannel(lastPlayedId || '__play_first__');
-      } else {
-        setPlayLastTvChannel(null);
-      }
+      // Live TV opens on its channel list (the TV apps used to start the last channel at once).
+      if (type === 'tv') loadEpgData();
     },
     [contentType, fetchData, loadEpgData, fetchVodCategories, user, updatePreferences, providerKey]
   );
@@ -771,8 +759,6 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
     handleClearWatched,
     setCwRefreshKey,
     addToRecentChannels,
-    playLastTvChannel,
-    setPlayLastTvChannel,
     vodCategories,
     loadingCategories,
     fetchVodCategories,

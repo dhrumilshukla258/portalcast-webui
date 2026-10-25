@@ -13,6 +13,7 @@ import { Loader2 } from 'lucide-react';
 
 import { Header } from '@/components/organisms/layout/Header';
 import TvHeader from '@/tv/TvHeader';
+import TvLiveScreen from '@/tv/TvLiveScreen';
 import '@/tv/tv.css';
 // Lazy — admin-only, rarely visited, and it's a large component tree
 // (stats/users/content/settings/logs/API-reference tabs all live
@@ -103,8 +104,6 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     setCwRefreshKey,
     isPortal,
     addToRecentChannels,
-    playLastTvChannel,
-    setPlayLastTvChannel,
 
     setItems,
     setContext,
@@ -161,8 +160,6 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     fetchData,
     isPortal,
     addToRecentChannels,
-    playLastTvChannel,
-    setPlayLastTvChannel,
     setItems,
     setContext,
     setTotalItemsCount,
@@ -687,7 +684,19 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
               {showDiscover && (!!detailItem || (!!currentSeriesItem && contentType === 'series')) && (
                 <div className="fixed inset-0 z-40 bg-black/90 animate-in fade-in duration-300" />
               )}
-              {(!showDiscover || !!detailItem || (!!currentSeriesItem && contentType === 'series')) && (
+              {/* The TV apps' Live TV (the Android TV app's screen): groups, channels, what's on. */}
+              {isTizen && !showDiscover && contentType === 'tv' && (
+                <TvLiveScreen
+                  channels={items}
+                  groups={channelGroups}
+                  epg={epgData}
+                  favorites={favorites}
+                  recentChannels={recentChannels}
+                  onPlay={handleItemClick}
+                  onToggleFavorite={toggleFavorite}
+                />
+              )}
+              {!(isTizen && !showDiscover && contentType === 'tv') && (!showDiscover || !!detailItem || (!!currentSeriesItem && contentType === 'series')) && (
               <div className={showDiscover ? 'absolute inset-0 z-40' : 'h-full'} data-tv-layer={showDiscover ? '' : undefined}>
               <MainContentGrid
                 items={items}
