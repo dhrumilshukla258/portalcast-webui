@@ -14,6 +14,7 @@ import type { User } from '@/api/types/user';
 import {
   getUserProfile,
   loginWithCredentials as apiLoginWithCredentials,
+  loginWithJellyfin as apiLoginWithJellyfin,
   loginWithGoogle as apiLoginWithGoogle,
   updateUserPreferences,
   syncUserProgress,
@@ -30,6 +31,7 @@ interface AuthContextType {
   loading: boolean;
   loginWithGoogle: (idToken: string) => Promise<void>;
   loginWithCredentials: (email: string, password: string) => Promise<void>;
+  loginWithJellyfin: (username: string, password: string) => Promise<void>;
   logout: () => void;
   updatePreferences: (
     newPrefs: Partial<User['preferences']>
@@ -174,6 +176,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
+  const loginWithJellyfin = useCallback(async (username: string, password: string) => {
+    const clientType = webPlatformAdapter.clientType === 'tizen' ? 'tv' : 'web';
+    const data = await apiLoginWithJellyfin(username, password, clientType);
+    if (!data) return;
+    const { accessToken, refreshToken: newRefreshToken, user: userData } = data;
+    setToken(accessToken);
+    setRefreshToken(newRefreshToken);
+    setUser(userData);
+    authStorage.set('auth_token', accessToken);
+    authStorage.set('refresh_token', newRefreshToken);
+    authStorage.set('auth_user', JSON.stringify(userData));
+  }, []);
+
   const logout = useCallback(() => {
     setToken(null);
     setRefreshToken(null);
@@ -249,6 +264,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       loading,
       loginWithGoogle,
       loginWithCredentials,
+      loginWithJellyfin,
       logout,
       updatePreferences,
       syncProgress,
@@ -262,6 +278,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       loading,
       loginWithGoogle,
       loginWithCredentials,
+      loginWithJellyfin,
       logout,
       updatePreferences,
       syncProgress,

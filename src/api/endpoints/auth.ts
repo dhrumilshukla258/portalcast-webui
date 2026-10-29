@@ -26,6 +26,20 @@ export const loginWithCredentials = async (
     })
   ).data;
 
+/** Sign in with a Jellyfin account (servers from 2026-10-29). */
+export const loginWithJellyfin = async (
+  username: string,
+  password: string,
+  clientType: LoginClientType
+): Promise<AuthResponse> =>
+  (
+    await api.post<AuthResponse>('/auth/jellyfin', {
+      username,
+      password,
+      clientType,
+    })
+  ).data;
+
 export const getUserProfile = async (): Promise<User> =>
   (await api.get<User>('/user/profile')).data;
 

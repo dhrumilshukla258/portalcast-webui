@@ -1,3 +1,4 @@
+import JellyfinSignIn from '@/components/molecules/JellyfinSignIn';
 import FirstStartSetup from '@/components/organisms/auth/FirstStartSetup';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '@/api/client';
@@ -424,6 +425,8 @@ export default function Login() {
                 )}
               </>
             )}
+
+            {!isSignUp && <JellyfinSignIn onSignedIn={() => navigate(redirectPath, { replace: true })} />}
           </div>
         )}
 

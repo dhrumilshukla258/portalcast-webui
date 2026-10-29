@@ -47,7 +47,8 @@ export function useSubtitles(
 
     // A library file (folder or Jellyfin) is asked even when it plays as HLS (the browser
     // fallback): the server knows its tracks and the subtitle files beside it.
-    const isLibrary = streamUrl.includes('/api/local/');
+    // `lib=1`: a Jellyfin file played straight from Jellyfin (it still carries this server's token).
+    const isLibrary = streamUrl.includes('/api/local/') || /[?&]lib=1(&|$)/.test(streamUrl);
     if (!isProgressive && !isLibrary) {
       setSubtitles([]);
       return;
