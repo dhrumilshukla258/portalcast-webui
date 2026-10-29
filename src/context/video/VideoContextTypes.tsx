@@ -22,7 +22,7 @@ export interface VideoContextType {
   seekOverlay: SeekOverlayData | null;
   fitMode: VideoFitMode;
   isSettingsMenuOpen: boolean;
-  activeSettingsMenu: 'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast';
+  activeSettingsMenu: 'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast' | 'external';
   showSettingsButton: boolean;
   showNextEpisodeButton: boolean;
 
@@ -88,7 +88,7 @@ export interface VideoContextType {
   showControlsAndCursor: () => void;
   cycleFitMode: () => void;
   setActiveSettingsMenu: (
-    menu: 'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast'
+    menu: 'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast' | 'external'
   ) => void;
   setIsSettingsMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setUseProxy: (v: boolean) => void;

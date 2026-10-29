@@ -127,7 +127,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
 
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const [activeSettingsMenu, setActiveSettingsMenu] = useState<
-    'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast'
+    'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast' | 'external'
   >('main');
 
   // --- Live TV States ---

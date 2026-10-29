@@ -7,8 +7,10 @@ import {
   useCaptionOptions,
   GoogleCastButton,
 } from '@vidstack/react';
-import { ChevronRightIcon, CheckIcon, ChevronLeftIcon, X } from 'lucide-react';
+import { ChevronRightIcon, CheckIcon, ChevronLeftIcon, X, ExternalLink } from 'lucide-react';
 import { FaChromecast } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import { absoluteStreamUrl, externalChoices, playlistFile, playlistName, type ExternalChoice } from '@/utils/externalPlayer';
 
 export const SettingsMenu = React.memo(() => {
   const {
@@ -26,7 +28,43 @@ export const SettingsMenu = React.memo(() => {
     addOnlineSubtitle,
     addLocalSubtitleFile,
     clearSubtitleSearch,
+    streamUrl,
+    item,
+    seriesItem,
+    channelInfo,
+    playerRef,
   } = useVideoContext();
+
+  const title: string = String(item?.title || item?.name || channelInfo?.name || seriesItem?.name || 'PortalCast');
+  const externalUrl = streamUrl ? absoluteStreamUrl(streamUrl) : null;
+
+  /** "Open in…": pauses here, then hands the same stream link to the chosen player. */
+  const openExternal = async (choice: ExternalChoice) => {
+    if (!externalUrl) return;
+    if (choice.action === 'copy') {
+      try {
+        await navigator.clipboard.writeText(externalUrl);
+        toast.success('Stream link copied. It works on this network until 6 hours after its last use.');
+      } catch {
+        window.prompt('Copy the stream link:', externalUrl);
+      }
+      return;
+    }
+    try { playerRef.current?.pause?.(); } catch { /* not ready */ }
+    if (choice.action === 'playlist') {
+      const blob = new Blob([playlistFile(externalUrl, title)], { type: 'audio/x-mpegurl' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = playlistName(title);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+    } else if (choice.href) {
+      window.location.href = choice.href;
+    }
+    setIsSettingsMenuOpen(false);
+  };
 
   const localSubtitleInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -61,7 +99,7 @@ export const SettingsMenu = React.memo(() => {
 
   // Helper function to handle menu changes smoothly
   const handleMenuChange = (
-    menuName: 'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast'
+    menuName: 'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast' | 'external'
   ) => {
     setActiveSettingsMenu(menuName);
     setFocusedIndex(0);
@@ -123,6 +161,21 @@ export const SettingsMenu = React.memo(() => {
             </div>
           </button>
 
+          {externalUrl && (
+            <button
+              data-focusable="true"
+              data-control="settings-item"
+              onClick={() => handleMenuChange('external')}
+              className="flex items-center justify-between rounded-sm px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
+            >
+              <span>Open in…</span>
+              <div className="flex items-center text-gray-400">
+                <ExternalLink className="mr-1 h-4 w-4" />
+                <ChevronRightIcon className="h-4 w-4" />
+              </div>
+            </button>
+          )}
+
           <button
             data-focusable="true"
             data-control="settings-close"
@@ -132,6 +185,35 @@ export const SettingsMenu = React.memo(() => {
             <span>Close Menu</span>
             <X className="h-4 w-4" />
           </button>
+        </div>
+      )}
+
+      {/* OPEN IN ANOTHER PLAYER */}
+      {activeSettingsMenu === 'external' && externalUrl && (
+        <div className="flex flex-col space-y-1">
+          <button
+            data-focusable="true"
+            data-control="settings-item"
+            onClick={() => handleMenuChange('main')}
+            className="flex items-center rounded-sm px-3 py-2 text-gray-300 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
+          >
+            <ChevronLeftIcon className="mr-2 h-4 w-4" />
+            <span>Open in…</span>
+          </button>
+          {externalChoices(externalUrl, title).map((c) => (
+            <button
+              key={c.id}
+              data-focusable="true"
+              data-control="settings-item"
+              onClick={() => void openExternal(c)}
+              className="flex items-center rounded-sm px-3 py-2 text-left transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden"
+            >
+              <span>{c.label}</span>
+            </button>
+          ))}
+          <p className="px-3 pt-1 text-[11px] leading-snug text-gray-500">
+            The other player gets this stream only, never your provider's address. Progress there is not saved here.
+          </p>
         </div>
       )}
 
