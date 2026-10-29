@@ -261,8 +261,10 @@ const LibrariesTab: React.FC = () => {
     <div className="space-y-6 pb-16">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-2xl text-sm text-gray-400">
-          Movies and series from your NAS, shown as <span className="font-semibold text-gray-200">My Library</span> in Movies and Series and
-          alongside IPTV in Discover. Folders must be under the media roots ({data?.roots.join(', ') || '…'}), set in Settings.
+          Your movies and series, shown as <span className="font-semibold text-gray-200">My Library</span> in Movies and Series and
+          alongside IPTV in Discover. Connect your Jellyfin server in <span className="font-semibold text-gray-200">Settings › Jellyfin</span>:
+          its libraries appear here and Jellyfin keeps doing the scanning and transcoding. Folder libraries (under the media roots,{' '}
+          {data?.roots.join(', ') || '…'}) still work without Jellyfin.
         </p>
         <div className="flex gap-2">
           <button type="button" className={btn} disabled={data?.scanning} onClick={() => void scan('all')}>
@@ -288,6 +290,9 @@ const LibrariesTab: React.FC = () => {
               <h2 className="text-base font-black text-white">
                 {lib.name}
                 <span className="ml-2 rounded bg-gray-800 px-1.5 py-0.5 text-[10px] font-bold uppercase text-gray-400">{lib.kind === 'series' ? 'Series' : 'Movies'}</span>
+                {lib.source === 'jellyfin' && (
+                  <span className="ml-2 rounded bg-purple-900/60 px-1.5 py-0.5 text-[10px] font-bold uppercase text-purple-200">Jellyfin</span>
+                )}
                 {!lib.enabled && <span className="ml-2 text-xs font-semibold text-gray-500">(off)</span>}
               </h2>
               {lib.folders.map((f) => (
@@ -302,7 +307,16 @@ const LibrariesTab: React.FC = () => {
               </div>
               {lib.lastScanSummary?.includes('skipped') && (
                 <p className="mt-1 flex items-center gap-1 text-xs text-amber-300">
-                  <AlertTriangle size={12} /> A folder was not reachable on the last scan; its titles were left as they were.
+                  <AlertTriangle size={12} />
+                  {lib.source === 'jellyfin'
+                    ? ' Jellyfin was not reachable on the last sync; its titles were left as they were.'
+                    : ' A folder was not reachable on the last scan; its titles were left as they were.'}
+                </p>
+              )}
+              {lib.source !== 'jellyfin' && lib.lastScanSummary?.includes('Jellyfin is connected') && (
+                <p className="mt-1 text-xs text-gray-400">
+                  Not scanned while Jellyfin is connected: Jellyfin takes over these files (watch history and lists stay). Remove this library once
+                  everything shows from Jellyfin.
                 </p>
               )}
             </div>
@@ -313,9 +327,11 @@ const LibrariesTab: React.FC = () => {
               <button type="button" className={btn} onClick={() => setOpenTitles(openTitles === lib.id ? null : lib.id)}>
                 <Film size={14} /> Titles
               </button>
-              <button type="button" className={btn} onClick={() => setEditing(lib)}>
-                <Pencil size={14} /> Edit
-              </button>
+              {lib.source !== 'jellyfin' && (
+                <button type="button" className={btn} onClick={() => setEditing(lib)}>
+                  <Pencil size={14} /> Edit
+                </button>
+              )}
               <button
                 type="button"
                 className={btn}
@@ -334,10 +350,14 @@ const LibrariesTab: React.FC = () => {
                 type="button"
                 className={`${btn} text-red-400`}
                 onClick={async () => {
-                  if (!window.confirm(`Remove "${lib.name}" from PortalCast? Your files stay where they are; watch history is kept.`)) return;
+                  const fromJellyfin = lib.source === 'jellyfin';
+                  const question = fromJellyfin
+                    ? `Empty "${lib.name}" and switch it off? Nothing changes in Jellyfin; turn it on to read it again. Watch history is kept.`
+                    : `Remove "${lib.name}" from PortalCast? Your files stay where they are; watch history is kept.`;
+                  if (!window.confirm(question)) return;
                   try {
                     await deleteLibrary(lib.id);
-                    toast.success('Library removed');
+                    toast.success(fromJellyfin ? 'Library emptied and switched off' : 'Library removed');
                     void load();
                   } catch (err) {
                     toast.error(errorText(err, 'Could not remove the library'));

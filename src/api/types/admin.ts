@@ -175,6 +175,8 @@ export interface LocalLibrary {
   id: number;
   name: string;
   kind: string;
+  /** "jellyfin": read from the connected Jellyfin server (servers from 2026-10-28). */
+  source?: 'folders' | 'jellyfin';
   folders: string[];
   enabled: boolean;
   lastScanAt: string | null;

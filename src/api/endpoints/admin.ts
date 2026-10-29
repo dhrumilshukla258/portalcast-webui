@@ -219,6 +219,17 @@ export const getJobs = async (): Promise<BackgroundJob[]> =>
 export const runJob = async (name: string): Promise<{ started: boolean; items: BackgroundJob[] }> =>
   (await api.post<{ started: boolean; items: BackgroundJob[] }>(`/admin/jobs/${encodeURIComponent(name)}/run`)).data!;
 
+// ---- Jellyfin ----
+export interface JellyfinTest {
+  ok: boolean;
+  error?: string;
+  server?: string;
+  version?: string;
+  libraries?: { name: string; kind: string }[];
+}
+export const testJellyfin = async (): Promise<JellyfinTest> =>
+  (await api.get<JellyfinTest>('/admin/jellyfin/test')).data!;
+
 // ---- Local libraries ----
 export const getLibraries = async (): Promise<LibrariesResponse> =>
   (await api.get<LibrariesResponse>('/admin/libraries')).data!;

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { RefreshCw, RotateCcw, Save, Send, Lock, Play } from 'lucide-react';
-import { getSettings, saveSetting, resetSetting, sendTestEmail, getJobs, runJob } from '@/api/endpoints/admin';
+import { getSettings, saveSetting, resetSetting, sendTestEmail, getJobs, runJob, testJellyfin } from '@/api/endpoints/admin';
 import type { ServerSetting, SettingsResponse, BackgroundJob } from '@/api/types/admin';
 import { formatAgo } from '@/hooks/useStreamFailures';
 
@@ -191,6 +191,43 @@ const TestEmail: React.FC = () => {
   );
 };
 
+/** Settings › Jellyfin: reaches the server with the saved address and key, and lists what it will read. */
+const TestJellyfin: React.FC = () => {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const run = async () => {
+    setBusy(true);
+    try {
+      const r = await testJellyfin();
+      if (!r.ok) {
+        setResult(null);
+        toast.error(r.error || 'Could not reach Jellyfin');
+        return;
+      }
+      const libs = (r.libraries ?? []).map((l) => `${l.name} (${l.kind === 'series' ? 'shows' : 'movies'})`).join(', ');
+      setResult(`Connected to ${r.server}${r.version ? ` ${r.version}` : ''}. ${libs ? `Reads: ${libs}.` : 'It has no movie or show library yet.'}`);
+    } catch (err) {
+      toast.error(errorText(err, 'Could not test Jellyfin (older server?)'));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="flex flex-col gap-2 border-t border-gray-800/70 pt-4 sm:flex-row sm:items-center">
+      <button
+        type="button"
+        onClick={() => void run()}
+        disabled={busy}
+        className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-700 px-3 py-2 text-xs font-bold text-gray-200 hover:bg-gray-800 disabled:opacity-50"
+        data-focusable="true"
+      >
+        {busy ? 'Testing…' : 'Test connection'}
+      </button>
+      {result && <p className="text-xs text-emerald-300">{result} Its libraries appear in Admin › Libraries.</p>}
+    </div>
+  );
+};
+
 const Jobs: React.FC = () => {
   const [jobs, setJobs] = useState<BackgroundJob[]>([]);
   const load = useCallback(async () => {
@@ -303,6 +340,7 @@ const SettingsTab: React.FC = () => {
             <SettingRow key={s.key} s={s} onSaved={setData} />
           ))}
           {group === 'Email' && <TestEmail />}
+          {group === 'Jellyfin' && <TestJellyfin />}
         </section>
       ))}
 
