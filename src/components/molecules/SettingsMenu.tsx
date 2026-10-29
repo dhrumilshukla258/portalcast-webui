@@ -97,6 +97,13 @@ export const SettingsMenu = React.memo(() => {
       episode: isEpisode && item?.episode_num != null ? String(item.episode_num) : '',
     }));
   }, [defaultTitle, isEpisode, item?.year, item?.series_number, item?.episode_num]);
+  const subField = 'w-full rounded-md border border-gray-700 bg-gray-950/70 px-2 py-1.5 text-sm text-gray-100 outline-none focus:border-blue-500';
+
+  const qualities = useVideoQualityOptions({ auto: true, sort: 'ascending' });
+  const audioOptions = useAudioOptions();
+  const captionOptions = useCaptionOptions();
+  const subtitleDelay = React.useSyncExternalStore(subscribeSubtitleDelay, getSubtitleDelay);
+
   // "Best match": the top result (made for this file first, Jellyfin's first) is added and
   // switched on as soon as the player has loaded it.
   const [pendingLabel, setPendingLabel] = React.useState<string | null>(null);
@@ -123,12 +130,6 @@ export const SettingsMenu = React.memo(() => {
       setBestBusy(false);
     }
   };
-  const subField = 'w-full rounded-md border border-gray-700 bg-gray-950/70 px-2 py-1.5 text-sm text-gray-100 outline-none focus:border-blue-500';
-
-  const qualities = useVideoQualityOptions({ auto: true, sort: 'ascending' });
-  const audioOptions = useAudioOptions();
-  const captionOptions = useCaptionOptions();
-  const subtitleDelay = React.useSyncExternalStore(subscribeSubtitleDelay, getSubtitleDelay);
 
   // Close menu on click outside
   React.useEffect(() => {
