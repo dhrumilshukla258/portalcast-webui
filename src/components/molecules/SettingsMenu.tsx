@@ -426,7 +426,7 @@ export const SettingsMenu = React.memo(() => {
                 >
                   <span className="truncate text-sm">{result.releaseName}</span>
                   <span className="text-xs uppercase text-gray-400">
-                    {result.language} · {result.source === 'subdl' ? 'SubDL' : 'OpenSubtitles'}
+                    {result.language} · {result.source === 'subdl' ? 'SubDL' : result.source === 'gestdown' ? 'Gestdown' : 'OpenSubtitles'}
                   </span>
                 </button>
               ))}
