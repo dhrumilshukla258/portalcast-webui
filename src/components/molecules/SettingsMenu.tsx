@@ -97,6 +97,32 @@ export const SettingsMenu = React.memo(() => {
       episode: isEpisode && item?.episode_num != null ? String(item.episode_num) : '',
     }));
   }, [defaultTitle, isEpisode, item?.year, item?.series_number, item?.episode_num]);
+  // "Best match": the top result (made for this file first, Jellyfin's first) is added and
+  // switched on as soon as the player has loaded it.
+  const [pendingLabel, setPendingLabel] = React.useState<string | null>(null);
+  const [bestBusy, setBestBusy] = React.useState(false);
+  React.useEffect(() => {
+    if (!pendingLabel) return;
+    const opt = captionOptions.find((o) => o.label === pendingLabel);
+    if (opt) {
+      opt.select();
+      setPendingLabel(null);
+    }
+  }, [captionOptions, pendingLabel]);
+  const addBestMatch = async () => {
+    if (bestBusy) return;
+    setBestBusy(true);
+    try {
+      const results = (await searchOnlineSubtitles?.(subQuery)) ?? [];
+      const best = results[0];
+      if (!best) return;
+      const label = addOnlineSubtitle?.(best);
+      if (label) setPendingLabel(label);
+      setIsSettingsMenuOpen(false);
+    } finally {
+      setBestBusy(false);
+    }
+  };
   const subField = 'w-full rounded-md border border-gray-700 bg-gray-950/70 px-2 py-1.5 text-sm text-gray-100 outline-none focus:border-blue-500';
 
   const qualities = useVideoQualityOptions({ auto: true, sort: 'ascending' });
@@ -458,6 +484,15 @@ export const SettingsMenu = React.memo(() => {
               <button
                 data-focusable="true"
                 data-control="settings-item"
+                onClick={() => void addBestMatch()}
+                disabled={subtitleSearchLoading || bestBusy}
+                className="flex items-center justify-between rounded-sm px-3 py-2 font-semibold text-blue-300 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden disabled:opacity-50"
+              >
+                <span>{bestBusy ? 'Finding the best match…' : 'Best match (one tap)'}</span>
+              </button>
+              <button
+                data-focusable="true"
+                data-control="settings-item"
                 onClick={() => void searchOnlineSubtitles?.(subQuery)}
                 disabled={subtitleSearchLoading}
                 className="flex items-center justify-between rounded-sm px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden disabled:opacity-50"
@@ -490,7 +525,7 @@ export const SettingsMenu = React.memo(() => {
                 >
                   <span className="truncate text-sm">{result.releaseName}</span>
                   <span className="text-xs uppercase text-gray-400">
-                    {result.language} · {result.source === 'subdl' ? 'SubDL' : result.source === 'gestdown' ? 'Gestdown' : 'OpenSubtitles'}
+                    {result.exactMatch ? '✓ Exact match · ' : ''}{result.language} · {result.source === 'subdl' ? 'SubDL' : result.source === 'gestdown' ? 'Gestdown' : result.source === 'jellyfin' ? 'Jellyfin' : 'OpenSubtitles'}
                   </span>
                 </button>
               ))}

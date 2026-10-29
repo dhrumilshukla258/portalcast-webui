@@ -45,7 +45,10 @@ export function useSubtitles(
       streamUrl.toLowerCase().includes('m3u8')
     );
 
-    if (!isProgressive) {
+    // A library file (folder or Jellyfin) is asked even when it plays as HLS (the browser
+    // fallback): the server knows its tracks and the subtitle files beside it.
+    const isLibrary = streamUrl.includes('/api/local/');
+    if (!isProgressive && !isLibrary) {
       setSubtitles([]);
       return;
     }
@@ -62,18 +65,22 @@ export function useSubtitles(
         const b64url = btoa(rawStreamUrl!);
         const data = await probeStreamSubtitles(rawStreamUrl!, streamToken);
         if (!data) return;
-        if (data.subtitles && Array.isArray(data.subtitles)) {
-          const mapped = data.subtitles.map((sub: any, idx: number) => {
-            const hostPart = getBaseUrl().replace("/api", "");
-            return {
-              src: `${hostPart}/api/media/subtitle?url=${b64url}&track=${sub.index}&t=${streamToken}`,
-              label: sub.title || sub.language || `Track ${idx + 1}`,
-              srclang: sub.language || 'und',
-              id: sub.index,
-            };
-          });
-          setSubtitles(mapped);
-        }
+        const hostPart = getBaseUrl().replace("/api", "");
+        // The file's own subtitle files first (Jellyfin's external subtitles, a folder's
+        // .srt; servers from 2026-10-29), then the ones inside the video.
+        const external = (Array.isArray(data.external) ? data.external : []).map((sub: any, idx: number) => ({
+          src: `${hostPart}${sub.url}`,
+          label: sub.label || sub.language || `Subtitle ${idx + 1}`,
+          srclang: sub.language || 'und',
+          id: `ext_${idx}`,
+        }));
+        const embedded = (Array.isArray(data.subtitles) ? data.subtitles : []).map((sub: any, idx: number) => ({
+          src: `${hostPart}/api/media/subtitle?url=${b64url}&track=${sub.index}&t=${streamToken}`,
+          label: sub.title || sub.language || `Track ${idx + 1}`,
+          srclang: sub.language || 'und',
+          id: sub.index,
+        }));
+        setSubtitles([...external, ...embedded]);
       } catch (err) {
         console.error("Failed to fetch subtitles:", err);
       }
@@ -84,11 +91,11 @@ export function useSubtitles(
 
   // A language code (older callers), or what the viewer typed in the search form: anything
   // left out is taken from the title playing.
-  const searchOnlineSubtitles = useCallback(async (query?: string | SubtitleQuery) => {
+  const searchOnlineSubtitles = useCallback(async (query?: string | SubtitleQuery): Promise<any[]> => {
     const q: SubtitleQuery = typeof query === 'string' ? { language: query } : (query ?? {});
     const seriesName = seriesItem?.name || seriesItem?.title || '';
     const title = (q.title ?? '').trim() || (item?.is_episode ? (seriesName || item?.title || item?.name || '') : (item?.title || item?.name || ''));
-    if (!title) return;
+    if (!title) return [];
     const year = q.year ?? (item?.year ? String(item.year) : '');
     const season = q.season ?? (item?.is_episode && item?.series_number !== undefined ? String(item.series_number) : '');
     const episode = q.episode ?? (item?.is_episode && item?.episode_num !== undefined ? String(item.episode_num) : '');
@@ -100,17 +107,23 @@ export function useSubtitles(
       if (/^\d{1,4}$/.test(season)) params.set('season', season);
       if (/^\d{1,4}$/.test(episode)) params.set('episode', episode);
       if (q.language) params.set('lang', q.language);
+      // What is playing: the server hashes the file (exact matches first) and, for a
+      // Jellyfin title, also asks Jellyfin's subtitle search.
+      const playingToken = streamUrl ? new URL(streamUrl, window.location.origin).searchParams.get('t') : null;
+      if (playingToken) params.set('t', playingToken);
 
       const data = await apiSearchOnlineSubtitles(params);
       setOnlineSubtitleResults(data?.results || []);
       if (!data?.results?.length) toast.info('No subtitles found.');
+      return data?.results || [];
     } catch (err) {
       console.error('Subtitle search failed:', err);
       toast.error('Subtitle search failed.');
+      return [];
     } finally {
       setSubtitleSearchLoading(false);
     }
-  }, [item, seriesItem]);
+  }, [item, seriesItem, streamUrl]);
 
   const addOnlineSubtitle = useCallback((result: { fileId: number; downloadId?: string; language: string; releaseName: string }) => {
     const hostPart = getBaseUrl().replace('/api', '');
@@ -127,6 +140,7 @@ export function useSubtitles(
     setSubtitles((prev) => [...prev.filter((t) => t.id !== track.id), track]);
     setOnlineSubtitleResults([]);
     toast.success('Subtitle added — select it from the Subtitles menu.');
+    return track.label;
   }, []);
 
   const clearSubtitleSearch = useCallback(() => {

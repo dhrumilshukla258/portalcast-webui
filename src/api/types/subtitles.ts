@@ -25,7 +25,9 @@ export interface OnlineSubtitleResult {
   fileId: number;
   /** "os:<fileId>" | "subdl:<path>" (servers from 2026-10-19). */
   downloadId?: string;
-  source?: 'opensubtitles' | 'subdl' | 'gestdown';
+  source?: 'opensubtitles' | 'subdl' | 'gestdown' | 'jellyfin';
+  /** Made for exactly the file playing (servers from 2026-10-29). */
+  exactMatch?: boolean;
   language: string;
   releaseName: string;
   [key: string]: any;

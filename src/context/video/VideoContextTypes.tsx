@@ -106,8 +106,8 @@ export interface VideoContextType {
   handleCast: (deviceId: string) => void;
   handleCopyLink: () => void;
   handleDownload: () => void;
-  searchOnlineSubtitles: (query?: string | import('./useSubtitles').SubtitleQuery) => Promise<void>;
-  addOnlineSubtitle: (result: { fileId: number; language: string; releaseName: string }) => void;
+  searchOnlineSubtitles: (query?: string | import('./useSubtitles').SubtitleQuery) => Promise<any[]>;
+  addOnlineSubtitle: (result: { fileId: number; language: string; releaseName: string }) => string;
   addLocalSubtitleFile: (file: File) => Promise<void>;
   clearSubtitleSearch: () => void;
 }
