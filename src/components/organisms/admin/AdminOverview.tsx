@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import { getOverview, type AdminOverview as Overview } from '@/api/endpoints/admin';
 import { useVisiblePoll } from '@/hooks/useVisiblePoll';
+import SetupGuide from '@/components/organisms/admin/SetupGuide';
 import { formatDuration } from '@/hooks/useAdminStats';
 
 /** Where a "Needs you" row leads: an Admin section and page. */
@@ -70,6 +71,7 @@ const AdminOverview: React.FC<{ onOpen: (t: AdminTarget) => void }> = ({ onOpen 
 
   return (
     <div className="space-y-10">
+      <SetupGuide onOpen={onOpen} />
       {/* Health: one line */}
       <section className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
         <span className="flex items-center gap-2 font-semibold text-white">

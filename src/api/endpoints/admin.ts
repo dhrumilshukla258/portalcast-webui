@@ -305,3 +305,22 @@ export interface AdminOverview {
 /** Everything the Overview shows, one request (server caches its counts for 15 s). */
 export const getOverview = async (signal?: AbortSignal): Promise<AdminOverview> =>
   (await api.get<AdminOverview>('/admin/overview', { signal })).data!;
+
+// ---- Setup guide (Admin › Overview, servers from 2026-10-29) ----
+export interface SetupGuide {
+  dismissed: boolean;
+  steps: {
+    admin: boolean; provider: boolean; jellyfin: boolean; jellyfinSignIn: boolean; libraries: boolean;
+    tmdb: boolean; subtitles: boolean; users: boolean;
+  };
+}
+export const getSetupGuide = async (): Promise<SetupGuide | null> => {
+  try {
+    return (await api.get<SetupGuide>('/admin/setup-guide')).data ?? null;
+  } catch {
+    return null; // older server: no guide
+  }
+};
+export const setSetupGuideDismissed = async (dismissed: boolean): Promise<void> => {
+  await api.put('/admin/setup-guide', { dismissed });
+};
