@@ -10,7 +10,7 @@ interface MovieDetailPageProps {
 
 const MovieDetailPage: React.FC<MovieDetailPageProps> = ({ item, onPlay }) => {
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
+    <div className="w-full">
       <MediaInfoHeader item={item} onPlay={() => onPlay(item)} playLabel="Play Movie" />
     </div>
   );

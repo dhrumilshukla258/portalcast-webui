@@ -104,7 +104,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
   }, [continueEntry, baseUrl]);
 
   return (
-    <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-4">
+    <div className="relative flex w-full flex-col gap-4">
       <MediaInfoHeader
         item={seriesItem}
         creditLabel="Created by"

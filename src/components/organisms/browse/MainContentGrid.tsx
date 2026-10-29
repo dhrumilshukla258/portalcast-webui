@@ -302,6 +302,10 @@ const MainContentGrid = React.memo(
               </>
             );
 
+            // A title opened from Home: the page fills App's TitlePageLayer, which scrolls it,
+            // edge to edge (no padded pane of its own).
+            if (hideCategorySidebar && !isTizen && (isMovieDetail || isSeriesOverview || isSeasonEpisodes)) return mainBody;
+
             if (showVodBrowser && vodCategories.length > 1) {
               return (
                 <div className="flex min-h-0 flex-1 items-stretch overflow-hidden">

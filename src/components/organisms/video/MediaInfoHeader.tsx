@@ -117,30 +117,27 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
   }, [item.backdrop_hd_path, item.backdrop_path, baseUrl]);
 
   return (
-    // This card IS the modal/panel and is meant to read as a distinct
-    // surface — that's different from the earlier bug, which was a SECOND,
-    // separate translucent rectangle (App.tsx's overlay wrapper) sitting
-    // behind this one. The backdrop banner below sits INSIDE this panel,
-    // under a gradient that fades to the panel's own bg-black/70 toward the
-    // bottom so the meta/poster content stays readable — it doesn't
-    // reintroduce that second-rectangle bug since there's still only one
-    // surface here.
-    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/70 shadow-2xl">
+    // The title's page (owner 2026-10-29: its own page, like the Android TV app's): the
+    // backdrop edge to edge across the top, fading into the page, with the poster, buttons and
+    // details over its lower part; everything below in one centred column.
+    <div className="relative">
       {backdropUrl && (
-        <>
+        <div className="absolute inset-x-0 top-0 z-0 h-[48vh] min-h-64 overflow-hidden sm:h-[66vh]">
           <img
+            key={backdropUrl}
             src={backdropUrl}
             alt=""
             aria-hidden="true"
-            loading="lazy"
             decoding="async"
-            className="absolute inset-0 z-0 h-64 w-full object-cover sm:h-80"
+            onLoad={(e) => { e.currentTarget.style.opacity = '1'; }}
+            style={{ opacity: 0 }}
+            className="h-full w-full object-cover transition-opacity duration-500"
           />
-          <div className="absolute inset-x-0 top-0 z-0 h-64 bg-linear-to-t from-black/70 via-black/40 to-black/10 sm:h-80" />
-          <div className="absolute inset-x-0 top-0 z-0 h-64 bg-linear-to-b from-black/10 via-transparent to-black/70 sm:h-80" />
-        </>
+          <div className="absolute inset-0 bg-linear-to-t from-[#05080F] via-[#05080F]/60 to-[#05080F]/10" />
+          <div className="absolute inset-0 hidden bg-linear-to-r from-[#05080F]/80 via-[#05080F]/20 to-transparent md:block" />
+        </div>
       )}
-      <div className={`relative z-1 flex flex-col gap-6 p-4 sm:p-6 md:flex-row md:gap-8 ${backdropUrl ? 'pt-40 sm:pt-56' : 'pt-6'}`}>
+      <div className={`relative z-1 mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-8 md:flex-row md:gap-8 ${backdropUrl ? 'pt-[26vh] sm:pt-[38vh]' : 'pt-20'}`}>
         {/* Poster Column */}
         <div className="flex w-full shrink-0 flex-col items-center justify-start md:w-48 lg:w-56">
           <div className="relative aspect-2/3 w-44 overflow-hidden rounded-2xl border border-white/10 bg-black/30 shadow-2xl md:w-full">
@@ -393,7 +390,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
       )}
 
       {showTrailer && trailerKey && (
-        <div className="aspect-video w-full overflow-hidden border-t border-white/10 bg-black">
+        <div className="mx-auto mt-6 aspect-video w-full max-w-6xl overflow-hidden bg-black sm:rounded-xl">
           <iframe
             className="h-full w-full"
             src={`https://www.youtube.com/embed/${trailerKey}`}
@@ -405,10 +402,12 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
       )}
 
       {children && (
-        <div className="border-t border-white/10 p-4 sm:p-6">{children}</div>
+        <div className="mx-auto mt-6 max-w-6xl px-4 sm:px-8">{children}</div>
       )}
 
-      <MoreLikeThis contentId={detailsKey} />
+      <div className="mx-auto mt-4 max-w-6xl sm:px-2">
+        <MoreLikeThis contentId={detailsKey} />
+      </div>
     </div>
   );
 };

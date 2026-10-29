@@ -27,6 +27,7 @@ const VideoPlayer = React.lazy(lazyImport(() => import('@/components/organisms/v
 import ConfirmationModal from '@/components/molecules/ConfirmationModal';
 import VariantPickerModal from '@/components/molecules/VariantPickerModal';
 import MainContentGrid from '@/components/organisms/browse/MainContentGrid';
+import TitlePageLayer from '@/components/organisms/browse/TitlePageLayer';
 import ContinueWatching from '@/components/organisms/browse/ContinueWatching';
 import SportsView from '@/components/organisms/sports/SportsView';
 import CategoryBrowseView from '@/components/organisms/browse/CategoryBrowseView';
@@ -466,6 +467,45 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     [contentType, fetchData]
   );
 
+  // The title pages and the per-category grid (one component: see MainContentGrid).
+  const titleGrid = (
+    <MainContentGrid
+      items={items}
+      currentSeriesItem={currentSeriesItem}
+      loading={loading}
+      error={error}
+      paginationError={paginationError}
+      context={context}
+      contentType={contentType}
+      totalItemsCount={totalItemsCount}
+      handleItemClick={handleItemClick}
+      handlePageChange={handlePageChange}
+      channelGroups={channelGroups}
+      handleBack={handleBack}
+      cwRefreshKey={cwRefreshKey}
+      setCwRefreshKey={setCwRefreshKey}
+      fetchData={fetchData}
+      isRestoringFromHistory={isRestoringFromHistory.current}
+      vodCategories={vodCategories}
+      loadingCategories={loadingCategories}
+      onSelectCategory={onSelectCategory}
+      favorites={favorites}
+      recentChannels={recentChannels}
+      progressRecords={progressRecords}
+      providerKey={providerKey}
+      isCategoriesOpen={isCategoriesOpen}
+      setIsCategoriesOpen={setIsCategoriesOpen}
+      openCategoryDrawer={openCategoryDrawer}
+      onCategoryDrawerOpened={onCategoryDrawerOpened}
+      detailItem={detailItem}
+      onCloseDetail={handleBack}
+      onPlayDetailItem={startPlayback}
+      hideCategorySidebar={showDiscover}
+      onBackdropItemsChange={mergeBackdropItems}
+    />
+  );
+  const titleOpenOnHome = showDiscover && (!!detailItem || (!!currentSeriesItem && contentType === 'series'));
+
   return (
     <PersonPageContext.Provider value={setPersonId}>
     <TitleMenuContext.Provider value={openTitleMenu}>
@@ -681,9 +721,17 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                   entire time Discover was open, even while just browsing its
                   rows with no detail open, darkening the whole page like it
                   was permanently behind a modal. */}
-              {showDiscover && (!!detailItem || (!!currentSeriesItem && contentType === 'series')) && (
-                <div className="fixed inset-0 z-40 bg-black/90 animate-in fade-in duration-300" />
+              {/* Phones and computers: the title's own page over everything (TitlePageLayer). */}
+              {showDiscover && !isTizen && (
+                <TitlePageLayer
+                  open={titleOpenOnHome}
+                  pageKey={detailItem ? `movie:${detailItem.id}` : `series:${currentSeriesItem?.id ?? ''}:${context.seasonId ?? ''}`}
+                  onBack={handleBack}
+                >
+                  {titleOpenOnHome ? titleGrid : null}
+                </TitlePageLayer>
               )}
+              {isTizen && titleOpenOnHome && <div className="fixed inset-0 z-40 bg-black/90 animate-in fade-in duration-300" />}
               {/* The TV apps' Live TV (the Android TV app's screen): groups, channels, what's on. */}
               {isTizen && !showDiscover && contentType === 'tv' && (
                 <TvLiveScreen
@@ -696,42 +744,9 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                   onToggleFavorite={toggleFavorite}
                 />
               )}
-              {!(isTizen && !showDiscover && contentType === 'tv') && (!showDiscover || !!detailItem || (!!currentSeriesItem && contentType === 'series')) && (
+              {!(isTizen && !showDiscover && contentType === 'tv') && (!showDiscover || (isTizen && titleOpenOnHome)) && (
               <div className={showDiscover ? 'absolute inset-0 z-40' : 'h-full'} data-tv-layer={showDiscover ? '' : undefined}>
-              <MainContentGrid
-                items={items}
-                currentSeriesItem={currentSeriesItem}
-                loading={loading}
-                error={error}
-                paginationError={paginationError}
-                context={context}
-                contentType={contentType}
-                totalItemsCount={totalItemsCount}
-                handleItemClick={handleItemClick}
-                handlePageChange={handlePageChange}
-                channelGroups={channelGroups}
-                handleBack={handleBack}
-                cwRefreshKey={cwRefreshKey}
-                setCwRefreshKey={setCwRefreshKey}
-                fetchData={fetchData}
-                isRestoringFromHistory={isRestoringFromHistory.current}
-                vodCategories={vodCategories}
-                loadingCategories={loadingCategories}
-                onSelectCategory={onSelectCategory}
-                favorites={favorites}
-                recentChannels={recentChannels}
-                progressRecords={progressRecords}
-                providerKey={providerKey}
-                isCategoriesOpen={isCategoriesOpen}
-                setIsCategoriesOpen={setIsCategoriesOpen}
-                openCategoryDrawer={openCategoryDrawer}
-                onCategoryDrawerOpened={onCategoryDrawerOpened}
-                detailItem={detailItem}
-                onCloseDetail={handleBack}
-                onPlayDetailItem={startPlayback}
-                hideCategorySidebar={showDiscover}
-                onBackdropItemsChange={mergeBackdropItems}
-              />
+              {titleGrid}
               </div>
               )}
             </main>
