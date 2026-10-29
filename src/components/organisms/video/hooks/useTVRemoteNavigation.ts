@@ -151,6 +151,11 @@ export function useTVRemoteNavigation(
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || (!e.isTrusted && e.keyCode === 0)) return;
+      // Typing in a field (the subtitle search): keys are the field's, so Space, Enter and
+      // Left/Right edit the text; Up/Down still move between fields (and out, on a remote).
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)
+        && e.keyCode !== 38 && e.keyCode !== 40) return;
       const wereControlsHidden = !navRef.current.isControlsVisible;
 
       e.stopPropagation();

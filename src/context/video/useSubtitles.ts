@@ -6,6 +6,15 @@ import { probeStreamSubtitles, searchOnlineSubtitles as apiSearchOnlineSubtitles
 
 // Owns subtitle track discovery (embedded-track probing for progressive VOD,
 // online search, and manual add) — extracted from VideoContext.tsx.
+/** What a viewer can change in the subtitle search (Settings › Captions › Add). */
+export interface SubtitleQuery {
+  title?: string;
+  year?: string;
+  season?: string;
+  episode?: string;
+  language?: string;
+}
+
 export function useSubtitles(
   streamUrl: string | null | undefined,
   rawStreamUrl: string | null | undefined,
@@ -73,18 +82,24 @@ export function useSubtitles(
     fetchSubtitles();
   }, [streamUrl, rawStreamUrl, contentType]);
 
-  const searchOnlineSubtitles = useCallback(async (language?: string) => {
+  // A language code (older callers), or what the viewer typed in the search form: anything
+  // left out is taken from the title playing.
+  const searchOnlineSubtitles = useCallback(async (query?: string | SubtitleQuery) => {
+    const q: SubtitleQuery = typeof query === 'string' ? { language: query } : (query ?? {});
     const seriesName = seriesItem?.name || seriesItem?.title || '';
-    const title = item?.is_episode ? (seriesName || item?.title || item?.name || '') : (item?.title || item?.name || '');
+    const title = (q.title ?? '').trim() || (item?.is_episode ? (seriesName || item?.title || item?.name || '') : (item?.title || item?.name || ''));
     if (!title) return;
+    const year = q.year ?? (item?.year ? String(item.year) : '');
+    const season = q.season ?? (item?.is_episode && item?.series_number !== undefined ? String(item.series_number) : '');
+    const episode = q.episode ?? (item?.is_episode && item?.episode_num !== undefined ? String(item.episode_num) : '');
 
     setSubtitleSearchLoading(true);
     try {
-      const params = new URLSearchParams({ title });
-      if (item?.year) params.set('year', String(item.year));
-      if (item?.is_episode && item?.series_number !== undefined) params.set('season', String(item.series_number));
-      if (item?.is_episode && item?.episode_num !== undefined) params.set('episode', String(item.episode_num));
-      if (language) params.set('lang', language);
+      const params = new URLSearchParams({ title: title.slice(0, 200) });
+      if (/^\d{1,4}$/.test(year)) params.set('year', year);
+      if (/^\d{1,4}$/.test(season)) params.set('season', season);
+      if (/^\d{1,4}$/.test(episode)) params.set('episode', episode);
+      if (q.language) params.set('lang', q.language);
 
       const data = await apiSearchOnlineSubtitles(params);
       setOnlineSubtitleResults(data?.results || []);

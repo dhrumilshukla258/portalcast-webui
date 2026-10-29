@@ -12,6 +12,16 @@ import { FaChromecast } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { absoluteStreamUrl, externalChoices, playlistFile, playlistName, type ExternalChoice } from '@/utils/externalPlayer';
 
+/** Languages offered in the subtitle search (ISO 639-1). */
+const SUBTITLE_LANGUAGES: [string, string][] = [
+  ['en', 'English'], ['hi', 'Hindi'], ['ta', 'Tamil'], ['te', 'Telugu'], ['ml', 'Malayalam'], ['kn', 'Kannada'],
+  ['bn', 'Bengali'], ['mr', 'Marathi'], ['gu', 'Gujarati'], ['pa', 'Punjabi'], ['ur', 'Urdu'], ['ar', 'Arabic'],
+  ['es', 'Spanish'], ['pt', 'Portuguese'], ['fr', 'French'], ['de', 'German'], ['it', 'Italian'], ['nl', 'Dutch'],
+  ['pl', 'Polish'], ['ru', 'Russian'], ['tr', 'Turkish'], ['el', 'Greek'], ['he', 'Hebrew'], ['fa', 'Persian'],
+  ['zh', 'Chinese'], ['ja', 'Japanese'], ['ko', 'Korean'], ['th', 'Thai'], ['vi', 'Vietnamese'], ['id', 'Indonesian'],
+  ['ms', 'Malay'], ['sv', 'Swedish'], ['no', 'Norwegian'], ['da', 'Danish'], ['fi', 'Finnish'], ['ro', 'Romanian'],
+];
+
 export const SettingsMenu = React.memo(() => {
   const {
     isSettingsMenuOpen,
@@ -67,6 +77,27 @@ export const SettingsMenu = React.memo(() => {
   };
 
   const localSubtitleInputRef = React.useRef<HTMLInputElement>(null);
+
+  // The online subtitle search, prefilled from the title playing; the viewer can change any of it.
+  const isEpisode = Boolean(item?.is_episode);
+  const defaultTitle = String((isEpisode ? seriesItem?.name || seriesItem?.title : item?.title || item?.name) || item?.name || '');
+  const [subQuery, setSubQuery] = React.useState({
+    title: defaultTitle,
+    year: item?.year ? String(item.year) : '',
+    season: isEpisode && item?.series_number != null ? String(item.series_number) : '',
+    episode: isEpisode && item?.episode_num != null ? String(item.episode_num) : '',
+    language: (navigator.language || 'en').slice(0, 2).toLowerCase(),
+  });
+  React.useEffect(() => {
+    setSubQuery((q) => ({
+      ...q,
+      title: defaultTitle,
+      year: item?.year ? String(item.year) : '',
+      season: isEpisode && item?.series_number != null ? String(item.series_number) : '',
+      episode: isEpisode && item?.episode_num != null ? String(item.episode_num) : '',
+    }));
+  }, [defaultTitle, isEpisode, item?.year, item?.series_number, item?.episode_num]);
+  const subField = 'w-full rounded-md border border-gray-700 bg-gray-950/70 px-2 py-1.5 text-sm text-gray-100 outline-none focus:border-blue-500';
 
   const qualities = useVideoQualityOptions({ auto: true, sort: 'ascending' });
   const audioOptions = useAudioOptions();
@@ -391,10 +422,43 @@ export const SettingsMenu = React.memo(() => {
 
           {!onlineSubtitleResults?.length && (
             <>
+              <form
+                className="mb-1 flex flex-col gap-1.5 px-1"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void searchOnlineSubtitles?.(subQuery);
+                }}
+              >
+                <input
+                  data-focusable="true"
+                  aria-label="Title to search"
+                  placeholder="Title"
+                  value={subQuery.title}
+                  onChange={(e) => setSubQuery({ ...subQuery, title: e.target.value })}
+                  className={subField}
+                />
+                <div className="flex gap-1.5">
+                  {isEpisode ? (
+                    <>
+                      <input data-focusable="true" aria-label="Season" placeholder="S" inputMode="numeric" value={subQuery.season}
+                        onChange={(e) => setSubQuery({ ...subQuery, season: e.target.value.replace(/\D/g, '').slice(0, 4) })} className={subField} />
+                      <input data-focusable="true" aria-label="Episode" placeholder="E" inputMode="numeric" value={subQuery.episode}
+                        onChange={(e) => setSubQuery({ ...subQuery, episode: e.target.value.replace(/\D/g, '').slice(0, 4) })} className={subField} />
+                    </>
+                  ) : (
+                    <input data-focusable="true" aria-label="Year" placeholder="Year" inputMode="numeric" value={subQuery.year}
+                      onChange={(e) => setSubQuery({ ...subQuery, year: e.target.value.replace(/\D/g, '').slice(0, 4) })} className={subField} />
+                  )}
+                  <select data-focusable="true" aria-label="Language" value={subQuery.language}
+                    onChange={(e) => setSubQuery({ ...subQuery, language: e.target.value })} className={subField}>
+                    {SUBTITLE_LANGUAGES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+                  </select>
+                </div>
+              </form>
               <button
                 data-focusable="true"
                 data-control="settings-item"
-                onClick={() => searchOnlineSubtitles?.()}
+                onClick={() => void searchOnlineSubtitles?.(subQuery)}
                 disabled={subtitleSearchLoading}
                 className="flex items-center justify-between rounded-sm px-3 py-2 transition-colors hover:bg-white/20 focus:bg-white/20 focus:outline-hidden disabled:opacity-50"
               >
