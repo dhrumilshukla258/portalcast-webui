@@ -6,6 +6,7 @@ import MediaCardRow from '@/components/organisms/browse/MediaCardRow';
 import RecommendedRow from '@/components/organisms/browse/RecommendedRow';
 import DiscoverFilters, { hasAnyActiveFilter, genreParams, type ActiveDiscoverFilters, type SingleFilterKey } from '@/components/organisms/discover/DiscoverFilters';
 import { getDiscoverBrowse, type HomeRow } from '@/api/endpoints/discover';
+import { setSharedDiscoverFilters, sharedDiscoverFiltersFor } from '@/utils/sharedDiscoverFilters';
 import { useDiscover } from '@/hooks/useDiscover';
 import { useAnswersUpdated } from '@/hooks/useAnswersUpdated';
 import type { MediaItem } from '@/types';
@@ -101,7 +102,8 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   const [showSeries, setShowSeries] = useState(true);
   const activeType = fixedType ?? (showMovies === showSeries ? undefined : showMovies ? 'movie' : 'series');
 
-  const [activeFilters, setActiveFilters] = useState<ActiveDiscoverFilters>({});
+  // Starts from the filters set last on Home, Movies or Series (utils/sharedDiscoverFilters.ts).
+  const [activeFilters, setActiveFilters] = useState<ActiveDiscoverFilters>(() => sharedDiscoverFiltersFor(fixedType));
   // The viewer's Not interested titles are left out of every row here (utils/hiddenTitles.ts).
   const hiddenTitles = useHiddenTitles();
   const notHidden = (item: MediaItem) => {
@@ -239,6 +241,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   const applyNextFilters = useCallback(
     (next: ActiveDiscoverFilters) => {
       setActiveFilters(next);
+      setSharedDiscoverFilters(next);
       const anyActive = hasAnyActiveFilter(next);
       if (anyActive) {
         runFilteredBrowse(next, 1);

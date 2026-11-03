@@ -289,7 +289,12 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   }, [backTargets, goHome, isHome, isTizen]);
   const activeSection: HomeSection = typedHome ?? (overlayPage === 'people' ? 'people' : 'home');
   const sectionChips = (filterButton: React.ReactNode) => (
-    <SectionChips active={activeSection} onSelect={openSection} trailing={filterButton} />
+    <SectionChips
+      active={activeSection}
+      onSelect={openSection}
+      trailing={filterButton}
+      included={discoverActiveType ? [discoverActiveType] : ['movie', 'series']}
+    />
   );
   // Continue Watching on Home; the Movies / Series tabs show only that type's titles.
   const homeProgress = React.useMemo(
