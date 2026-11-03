@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAnswersUpdated } from '@/hooks/useAnswersUpdated';
 import { getSeries } from '@/api/endpoints/series';
 import { findResumeEpisode } from '@/utils/resumeEpisode';
+import { seasonMatches } from '@/utils/seasonIds';
 import type { MediaItem } from '@/types';
 import type { ProgressRecord } from '@/api/types/user';
 
@@ -32,7 +33,7 @@ export function useSeasonEpisodes(seriesItem: MediaItem, seasons: MediaItem[], p
   useEffect(() => {
     if (selectedSeasonId || seasons.length === 0) return;
     const watching = continueRecord?.meta?.seasonId;
-    const match = watching ? seasons.find((s) => String(s.id) === String(watching)) : undefined;
+    const match = watching ? seasons.find((s) => String(s.id) === String(watching)) ?? seasons.find((s) => seasonMatches(s.id, watching)) : undefined;
     setSelectedSeasonId((match ?? seasons[0]).id);
   }, [seasons, selectedSeasonId, continueRecord]);
 
@@ -108,12 +109,12 @@ export function useSeasonEpisodes(seriesItem: MediaItem, seasons: MediaItem[], p
   // The episode being resumed, once its page is loaded. Portals list newest first, so it is
   // often not on page 1: keep loading pages (bounded) until it shows up.
   const resumeEpisode = useMemo(
-    () => (continueRecord && String(continueRecord.meta?.seasonId ?? '') === String(selectedSeasonId ?? '') ? findResumeEpisode(continueRecord, episodes) : null),
+    () => (continueRecord && seasonMatches(selectedSeasonId, continueRecord.meta?.seasonId) ? findResumeEpisode(continueRecord, episodes) : null),
     [continueRecord, episodes, selectedSeasonId],
   );
   useEffect(() => {
     const wantsMore = continueRecord && !resumeEpisode && hasMoreEpisodes && !loadingEpisodes && !loadingMoreEpisodes &&
-      String(continueRecord.meta?.seasonId ?? '') === String(selectedSeasonId ?? '') && episodePage < 15;
+      seasonMatches(selectedSeasonId, continueRecord.meta?.seasonId) && episodePage < 15;
     if (wantsMore) void loadMore.current();
   }, [continueRecord, resumeEpisode, hasMoreEpisodes, loadingEpisodes, loadingMoreEpisodes, selectedSeasonId, episodePage]);
 
