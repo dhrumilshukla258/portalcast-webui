@@ -27,6 +27,8 @@ export interface DiscoverFacets {
   languages: FacetValue[];
   /** TV channels shows air on (only ones in Live TV). Absent on older servers. */
   networks?: FacetValue[];
+  /** IMDb rating: "8" = titles rated 8+, with how many. Absent on older servers. */
+  imdbRatings?: FacetValue[];
 }
 
 export interface DiscoverBrowseParams {
@@ -36,6 +38,8 @@ export interface DiscoverBrowseParams {
   language?: string;
   theme?: string;
   network?: string;
+  /** Rated at least this on IMDb ("7"). */
+  minImdb?: string;
   page?: number;
   [key: string]: unknown;
 }

@@ -11,6 +11,7 @@ import { ChevronRightIcon, CheckIcon, ChevronLeftIcon, X, ExternalLink } from 'l
 import { FaChromecast } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { absoluteStreamUrl, externalChoices, playlistFile, playlistName, type ExternalChoice } from '@/utils/externalPlayer';
+import { subtitleDownloads } from '@/utils/subtitleDownload';
 
 /** Languages offered in the subtitle search (ISO 639-1). */
 const SUBTITLE_LANGUAGES: [string, string][] = [
@@ -121,8 +122,15 @@ export const SettingsMenu = React.memo(() => {
     setBestBusy(true);
     try {
       const results = (await searchOnlineSubtitles?.(subQuery)) ?? [];
-      const best = results[0];
-      if (!best) return;
+      // The first of the top five that downloads (the TV app does the same).
+      let best: (typeof results)[number] | undefined;
+      for (const r of results.slice(0, 5)) {
+        if (await subtitleDownloads(r)) { best = r; break; }
+      }
+      if (!best) {
+        if (results.length) toast.error("Couldn't load a subtitle. Try one from the list.");
+        return;
+      }
       const label = addOnlineSubtitle?.(best);
       if (label) setPendingLabel(label);
       setIsSettingsMenuOpen(false);

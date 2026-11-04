@@ -39,7 +39,10 @@ const ANDROID_APPS: { id: string; label: string; pkg: string }[] = [
 function androidIntent(url: string, title: string, pkg?: string): string {
   const u = new URL(url);
   const rest = url.slice(u.protocol.length + 2); // without "https://"
-  const type = /m3u8/i.test(url) ? 'application/x-mpegURL' : 'video/*';
+  // HLS as a video/ type: VLC opens its video screen only for a type starting "video" and
+  // played "application/x-mpegURL" with no picture; players registered for video/ only could
+  // not be opened at all (owner 2026-11-04). Same as the TV app (playback/ExternalPlayer.kt).
+  const type = /m3u8/i.test(url) ? 'video/x-mpegURL' : 'video/*';
   const extras = [`S.title=${encodeURIComponent(title)}`, pkg ? `package=${pkg}` : ''].filter(Boolean).join(';');
   return `intent://${rest}#Intent;scheme=${u.protocol.replace(':', '')};action=android.intent.action.VIEW;type=${type};${extras};end`;
 }

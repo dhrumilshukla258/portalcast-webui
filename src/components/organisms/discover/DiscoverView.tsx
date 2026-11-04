@@ -125,7 +125,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
   // Comedy (same combo, different click order).
   const filterCacheKeyOf = useCallback(
     (filters: ActiveDiscoverFilters) =>
-      `${activeType ?? 'all'}:${[...(filters.genre || [])].sort().join('+')}:${filters.country || ''}:${filters.language || ''}:${filters.network || ''}:${filters.theme || ''}`,
+      `${activeType ?? 'all'}:${[...(filters.genre || [])].sort().join('+')}:${filters.country || ''}:${filters.language || ''}:${filters.network || ''}:${filters.theme || ''}:${filters.imdb || ''}`,
     [activeType]
   );
   const [filteredCache, setFilteredCache] = useState<
@@ -207,6 +207,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           language: filters.language,
           theme: filters.theme,
           network: filters.network,
+          minImdb: filters.imdb,
           type: activeType,
           page,
         });
@@ -473,14 +474,12 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
 
   // My library (the NAS files) and IPTV categories (the provider's lists), from Filters: for this
   // page's type on Movies / Series, for both on Home.
-  const libraryLinks = (fixedType ? [fixedType] : (['movie', 'series'] as const)).flatMap((t) => {
-    const what = t === 'movie' ? 'Movies' : 'Series';
-    const both = !fixedType;
-    return [
-      ...(onOpenMyLibrary ? [{ label: both ? `My library · ${what}` : 'My library', note: 'Only the files on your NAS', onClick: () => onOpenMyLibrary(t) }] : []),
-      ...(onOpenCategories ? [{ label: both ? `IPTV categories · ${what}` : 'IPTV categories', note: "The provider's own lists", onClick: () => onOpenCategories(t) }] : []),
-    ];
-  });
+  const sourceTypes = fixedType ? [fixedType] : (['movie', 'series'] as const);
+  const typeName = (t: 'movie' | 'series') => (fixedType ? '' : ` · ${t === 'movie' ? 'Movies' : 'Series'}`);
+  const libraryLinks = [
+    ...(onOpenMyLibrary ? sourceTypes.map((t) => ({ label: `My library${typeName(t)}`, note: 'Only the files on your NAS', onClick: () => onOpenMyLibrary(t) })) : []),
+    ...(onOpenCategories ? sourceTypes.map((t) => ({ label: `IPTV categories${typeName(t)}`, note: "The provider's own lists", onClick: () => onOpenCategories(t) })) : []),
+  ];
 
   // Movies / Series on Home: at least one stays on ("neither" means nothing here).
   const toggleType = (t: 'movie' | 'series') => {

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronDown, ChevronLeft, ChevronRight, X, Check, Ban, SlidersHorizontal } from 'lucide-react';
 import type { DiscoverFacets } from '@/api/endpoints/discover';
 
-export type DiscoverFilterKey = 'genre' | 'country' | 'language' | 'network' | 'theme';
+export type DiscoverFilterKey = 'genre' | 'country' | 'language' | 'network' | 'theme' | 'imdb';
 export type SingleFilterKey = Exclude<DiscoverFilterKey, 'genre'>;
 
 // Genre is multi-select (AND — a title must carry every selected genre), the
@@ -19,7 +19,12 @@ export interface ActiveDiscoverFilters {
   /** Channel / Platform ("Zee TV", "Zee5", "Urdu TV"): Live TV channels plus streaming platforms. */
   network?: string;
   theme?: string;
+  /** Rated at least this on IMDb ("7" = 7+). */
+  imdb?: string;
 }
+
+/** The one-value filters, for counting and clearing. */
+const SINGLE_KEYS = ['country', 'language', 'network', 'theme', 'imdb'] as const;
 
 /** A genre's next state on a press, as in the TV app: required, then excluded, then off. */
 export function cycleGenre(current: string[], value: string): string[] {
@@ -44,7 +49,8 @@ export function hasAnyActiveFilter(activeFilters: ActiveDiscoverFilters): boolea
     !!activeFilters.country ||
     !!activeFilters.language ||
     !!activeFilters.network ||
-    !!activeFilters.theme
+    !!activeFilters.theme ||
+    !!activeFilters.imdb
   );
 }
 
@@ -62,7 +68,7 @@ interface DiscoverFiltersProps {
   iconOnly?: boolean;
   /** 'phone', Home: Movies / Series inside the picker (at least one stays on). */
   types?: { movie: boolean; series: boolean; onToggle: (t: 'movie' | 'series') => void };
-  /** 'phone': pages to open from the picker (My library, IPTV categories), before the selectors. */
+  /** 'phone': where titles come from (My library, IPTV categories), under "Sources" after the selectors. */
   links?: { label: string; note: string; onClick: () => void }[];
 }
 
@@ -72,10 +78,11 @@ const DIMENSION_LABELS: Record<DiscoverFilterKey, string> = {
   country: 'Country',
   network: 'Channel / Platform',
   theme: 'Mood',
+  imdb: 'IMDb rating',
 };
 
 // Same selectors, same order as the TV app (Letterboxd's "Browse by" line).
-const DIMENSION_ORDER: DiscoverFilterKey[] = ['genre', 'language', 'country', 'network', 'theme'];
+const DIMENSION_ORDER: DiscoverFilterKey[] = ['genre', 'language', 'country', 'network', 'theme', 'imdb'];
 
 // TMDB's originalLanguage is an ISO 639-1 code (e.g. "hi", "ta") — display the
 // full name instead of the raw code. Only holds overrides Intl.DisplayNames
@@ -120,6 +127,7 @@ function languageName(code: string): string {
 }
 
 function displayLabel(dimension: DiscoverFilterKey, value: string): string {
+  if (dimension === 'imdb') return `${value}+`;
   return dimension === 'language' ? languageName(value) : value;
 }
 
@@ -130,6 +138,7 @@ function valuesFor(facets: DiscoverFacets, dimension: DiscoverFilterKey) {
     case 'country': return facets.countries;
     case 'network': return facets.networks ?? [];
     case 'theme': return facets.themes;
+    case 'imdb': return facets.imdbRatings ?? [];
   }
 }
 
@@ -235,7 +244,7 @@ export const DiscoverFilters: React.FC<DiscoverFiltersProps> = (props) =>
 
 /** How many filters are set (each genre counts). */
 function activeCount(f: ActiveDiscoverFilters): number {
-  return (f.genre?.length ?? 0) + (['country', 'language', 'network', 'theme'] as const).filter((k) => !!f[k]).length;
+  return (f.genre?.length ?? 0) + SINGLE_KEYS.filter((k) => !!f[k]).length;
 }
 
 /**
@@ -303,7 +312,7 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
   const toggleGenre = (value: string) => onGenresChange(cycleGenre(activeFilters.genre || [], value));
   const clearAll = () => {
     if (activeFilters.genre?.length) onGenresChange([]);
-    (['country', 'language', 'network', 'theme'] as const).forEach((k) => { if (activeFilters[k]) onFilterChange(k, undefined); });
+    SINGLE_KEYS.forEach((k) => { if (activeFilters[k]) onFilterChange(k, undefined); });
     if (types && !types.movie) types.onToggle('movie');
     if (types && !types.series) types.onToggle('series');
   };
@@ -353,20 +362,6 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
                 </div>
               </div>
             )}
-            {links?.map((l) => (
-              <button
-                key={l.label}
-                data-focusable="true"
-                onClick={() => { afterClose.current = l.onClick; close(); }}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-4 text-left hover:bg-white/5"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block text-base font-bold text-white">{l.label}</span>
-                  <span className="block truncate text-sm text-gray-500">{l.note}</span>
-                </span>
-                <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" />
-              </button>
-            ))}
             {dims.map((d) => {
               const set = d === 'genre' ? (activeFilters.genre?.length ?? 0) > 0 : !!activeFilters[d];
               return (
@@ -386,6 +381,27 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
                 </button>
               );
             })}
+            {/* Where titles come from, after the filters (owner 2026-11-04: they sat first and
+                read as filters). Same as the TV app's Filters panel. */}
+            {!!links?.length && (
+              <div className="mt-3 border-t border-white/10 pt-3">
+                <span className="block px-4 pb-1 text-xs font-bold uppercase tracking-wider text-gray-500">Sources</span>
+                {links.map((l) => (
+                  <button
+                    key={l.label}
+                    data-focusable="true"
+                    onClick={() => { afterClose.current = l.onClick; close(); }}
+                    className="flex w-full items-center gap-3 rounded-xl px-4 py-4 text-left hover:bg-white/5"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-base font-bold text-white">{l.label}</span>
+                      <span className="block truncate text-sm text-gray-500">{l.note}</span>
+                    </span>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ) : dim === 'genre' ? (
           <ValueList
@@ -475,7 +491,7 @@ const RowFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onF
   const toggleGenre = (value: string) => onGenresChange(cycleGenre(activeFilters.genre || [], value));
   const clearAll = () => {
     if (activeFilters.genre?.length) onGenresChange([]);
-    (['country', 'language', 'network', 'theme'] as const).forEach((k) => { if (activeFilters[k]) onFilterChange(k, undefined); });
+    SINGLE_KEYS.forEach((k) => { if (activeFilters[k]) onFilterChange(k, undefined); });
     setOpen(null);
   };
 

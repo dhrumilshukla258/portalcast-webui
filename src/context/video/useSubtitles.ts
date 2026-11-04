@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { getBaseUrl } from '@/api/config';
+import { subtitleDownloadUrl } from '@/utils/subtitleDownload';
 import { probeStreamSubtitles, searchOnlineSubtitles as apiSearchOnlineSubtitles } from '@/api/endpoints/subtitles';
 
 // Owns subtitle track discovery (embedded-track probing for progressive VOD,
@@ -127,13 +128,9 @@ export function useSubtitles(
   }, [item, seriesItem, streamUrl]);
 
   const addOnlineSubtitle = useCallback((result: { fileId: number; downloadId?: string; language: string; releaseName: string }) => {
-    const hostPart = getBaseUrl().replace('/api', '');
-    // New servers read `id` (OpenSubtitles or SubDL); older ones only `fileId`.
     const id = result.downloadId || `os:${result.fileId}`;
-    const query = new URLSearchParams({ id });
-    if (result.fileId) query.set('fileId', String(result.fileId));
     const track = {
-      src: `${hostPart}/api/v2/subtitles/download?${query.toString()}`,
+      src: subtitleDownloadUrl(result),
       label: `${result.language?.toUpperCase() || 'Subtitle'} — ${result.releaseName}`,
       srclang: result.language || 'und',
       id: `sub_${id}`,
