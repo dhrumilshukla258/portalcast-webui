@@ -11,7 +11,7 @@ import { ChevronRightIcon, CheckIcon, ChevronLeftIcon, X, ExternalLink } from 'l
 import { FaChromecast } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { absoluteStreamUrl, externalChoices, playlistFile, playlistName, type ExternalChoice } from '@/utils/externalPlayer';
-import { subtitleDownloads } from '@/utils/subtitleDownload';
+import { subtitleDownloads, subtitleFailureText } from '@/utils/subtitleDownload';
 
 /** Languages offered in the subtitle search (ISO 639-1). */
 const SUBTITLE_LANGUAGES: [string, string][] = [
@@ -526,7 +526,13 @@ export const SettingsMenu = React.memo(() => {
                   key={result.downloadId || result.fileId}
                   data-focusable="true"
                   data-control="settings-item"
-                  onClick={() => {
+                  onClick={async () => {
+                    // Added only when it downloads: a failed file used to be added (and announced)
+                    // as an empty track (owner 2026-11-04).
+                    if (!(await subtitleDownloads(result))) {
+                      toast.error(subtitleFailureText(result));
+                      return;
+                    }
                     addOnlineSubtitle?.(result);
                     handleMenuChange('subtitles');
                   }}

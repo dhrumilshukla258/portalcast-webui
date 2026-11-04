@@ -3,6 +3,14 @@ import { getBaseUrl } from '@/api/config';
 export interface OnlineSubtitleRef {
   fileId: number;
   downloadId?: string;
+  source?: string;
+}
+
+/** What a pick that did not download says (the same words as the TV app). */
+export function subtitleFailureText(result: OnlineSubtitleRef): string {
+  return result.source === 'opensubtitles' || (!result.downloadId && result.fileId)
+    ? "OpenSubtitles didn't send that file. Try another one."
+    : "That subtitle didn't load. Try another one.";
 }
 
 /** The address of an online subtitle (the server's download, as WebVTT). */
