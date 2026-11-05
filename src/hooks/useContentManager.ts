@@ -4,6 +4,7 @@ import {
   getGenres,
   getGenreItems,
   updateGenre,
+  setCategoryHolds,
   deleteGenre,
   createGenre,
   reorderGenres,
@@ -21,6 +22,13 @@ export interface Category {
   display_name?: string | null;
   hidden?: boolean;
   count?: number;
+  /** Movies / Series (servers from 2026-11-04): what this provider category holds, as set in
+   *  Admin for the active profile; null = decided from its titles. */
+  holds?: 'movie' | 'series' | 'both' | null;
+  /** Its titles of each type (the server's catalog). */
+  titles?: { movie: number; series: number };
+  /** Whether it is listed under this type now. */
+  listed?: boolean;
 }
 
 export interface Item {
@@ -131,6 +139,17 @@ export function useContentManager() {
   const toggleCatHidden = async (cat: Category) => {
     try {
       await updateGenre(type, cat.id, { display_name: cat.display_name ?? null, hidden: !cat.hidden });
+      await loadCategories(type);
+    } catch {
+      toast.error('Failed to update category');
+    }
+  };
+
+  // What a provider category holds, for the active provider profile (Movies / Series / Both,
+  // or "auto": from its titles). One choice for both lists.
+  const setCatHolds = async (cat: Category, holds: 'movie' | 'series' | 'both' | 'auto') => {
+    try {
+      await setCategoryHolds(type, cat.id, holds);
       await loadCategories(type);
     } catch {
       toast.error('Failed to update category');
@@ -331,6 +350,7 @@ export function useContentManager() {
     startCatEdit,
     saveCatEdit,
     toggleCatHidden,
+    setCatHolds,
     resetCat,
     submitAddCat,
     moveCat,

@@ -42,6 +42,13 @@ export interface Category {
   display_name?: string | null;
   hidden?: boolean;
   count?: number;
+  /** Movies / Series (servers from 2026-11-04): what this provider category holds, as set in
+   *  Admin for the active profile; null = decided from its titles. */
+  holds?: 'movie' | 'series' | 'both' | null;
+  /** Its titles of each type (the server's catalog). */
+  titles?: { movie: number; series: number };
+  /** Whether it is listed under this type now. */
+  listed?: boolean;
 }
 
 export interface Item {

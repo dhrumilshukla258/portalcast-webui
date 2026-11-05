@@ -16,6 +16,8 @@ interface CategoriesPanelProps {
   saveCatEdit: (cat: Category) => void;
   setEditingCatId: (id: string | null) => void;
   toggleCatHidden: (cat: Category) => void;
+  /** Movies / Series: what a provider category holds (servers from 2026-11-04). */
+  setCatHolds?: (cat: Category, holds: 'movie' | 'series' | 'both' | 'auto') => void;
   resetCat: (cat: Category) => void;
   moveCat: (id: string, direction: -1 | 1) => void;
   sortCatsAlpha: () => void;
@@ -42,6 +44,7 @@ const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
   saveCatEdit,
   setEditingCatId,
   toggleCatHidden,
+  setCatHolds,
   resetCat,
   moveCat,
   sortCatsAlpha,
@@ -125,7 +128,29 @@ const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
                       {isVirtual(cat.id) && <span className="ml-1.5 text-[10px] text-blue-400">custom</span>}
                     </div>
                     {showOriginal && <div className="truncate text-[11px] text-gray-500">{cat.title}</div>}
+                    {cat.titles && (
+                      // What the provider put in it, and whether it shows under this tab (owner
+                      // 2026-11-04: providers send films and shows in the same lists).
+                      <div className={`truncate text-[11px] ${cat.listed === false ? 'text-amber-400/80' : 'text-gray-500'}`}>
+                        {cat.titles.movie.toLocaleString()} {cat.titles.movie === 1 ? 'film' : 'films'} · {cat.titles.series.toLocaleString()} {cat.titles.series === 1 ? 'show' : 'shows'}
+                        {cat.listed === false ? ' · not listed here' : ''}
+                      </div>
+                    )}
                   </div>
+                  {cat.titles && setCatHolds && (
+                    <select
+                      title="What this category holds (this provider)"
+                      value={cat.holds ?? 'auto'}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => setCatHolds(cat, e.target.value as 'movie' | 'series' | 'both' | 'auto')}
+                      className="shrink-0 rounded-md border border-gray-800 bg-gray-950 px-1.5 py-1 text-[11px] text-gray-300 outline-hidden focus:border-blue-500"
+                    >
+                      <option value="auto">Auto</option>
+                      <option value="movie">Movies</option>
+                      <option value="series">Series</option>
+                      <option value="both">Both</option>
+                    </select>
+                  )}
                   {cat.count !== undefined && <span className="shrink-0 text-[11px] text-gray-500">{cat.count}</span>}
                   <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <button title="Move up" disabled={!isFilteringCats ? idx === 0 : true} onClick={() => moveCat(cat.id, -1)} className="rounded-sm p-1 text-gray-500 hover:bg-gray-700 hover:text-gray-200 disabled:opacity-20">

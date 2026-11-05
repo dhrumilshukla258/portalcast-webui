@@ -80,6 +80,18 @@ export const deleteUser = async (userId: number): Promise<void> => {
 export const getGenres = async (type: ContentType): Promise<Category[]> =>
   (await api.get<Category[]>('/admin/genres', { params: { type } })).data;
 
+/**
+ * What a provider category holds for the active profile: "movie" | "series" | "both", or
+ * "auto" (decided from its titles). Servers from 2026-11-04.
+ */
+export const setCategoryHolds = async (
+  type: ContentType,
+  categoryId: string,
+  holds: 'movie' | 'series' | 'both' | 'auto'
+): Promise<void> => {
+  await api.put(`/admin/genres/${type}/${categoryId}`, { holds });
+};
+
 export const getGenreItems = async (
   type: ContentType,
   categoryId: string

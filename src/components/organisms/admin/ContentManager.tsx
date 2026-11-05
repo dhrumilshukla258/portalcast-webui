@@ -39,6 +39,7 @@ const ContentManager: React.FC = () => {
           saveCatEdit={cm.saveCatEdit}
           setEditingCatId={cm.setEditingCatId}
           toggleCatHidden={cm.toggleCatHidden}
+          setCatHolds={cm.setCatHolds}
           resetCat={cm.resetCat}
           moveCat={cm.moveCat}
           sortCatsAlpha={cm.sortCatsAlpha}
