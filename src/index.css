@@ -143,12 +143,13 @@ body {
   .pc-row[data-selected='true'] { background-color: rgba(255, 255, 255, 0.05); }
   .pc-muted { color: #94a3b8; }
   .pc-set { color: #38bdf8; }
-  /* Focused (the remote's .focused, a keyboard's :focus-visible): the accent fill of every button. */
-  .pc-row.focused { background-color: #38bdf8; color: #082f49; transform: scale(1.02); }
-  .pc-row.focused .pc-muted, .pc-row.focused .pc-set { color: rgba(8, 47, 73, 0.78); }
-  .pc-row:focus-visible { background-color: #38bdf8; color: #082f49; transform: scale(1.02); }
-  .pc-row:focus-visible .pc-muted { color: rgba(8, 47, 73, 0.78); }
-  .pc-row:focus-visible .pc-set { color: rgba(8, 47, 73, 0.78); }
+  /* Focused (the remote's .focused, a keyboard's :focus-visible): white with dark text, like
+     Home's chips and the Play button (owner 2026-11-05: the accent fill washed out on a TV). */
+  .pc-row.focused { background-color: #f1f5f9; color: #05080f; transform: scale(1.02); }
+  .pc-row.focused .pc-muted, .pc-row.focused .pc-set { color: rgba(5, 8, 15, 0.7); }
+  .pc-row:focus-visible { background-color: #f1f5f9; color: #05080f; transform: scale(1.02); }
+  .pc-row:focus-visible .pc-muted { color: rgba(5, 8, 15, 0.7); }
+  .pc-row:focus-visible .pc-set { color: rgba(5, 8, 15, 0.7); }
 }
 @media (min-width: 640px) {
   .pc-panel { border-top-left-radius: 16px; border-bottom-left-radius: 16px; }
