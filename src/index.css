@@ -94,3 +94,65 @@ body {
     scrollbar-width: none;
   }
 }
+
+/* Side panels: Filters and the player's settings (owner 2026-11-04: they had a hard border and
+   simply appeared; the same as the TV app's SidePanel). Only transform and opacity animate, so
+   the compositor runs it, and nothing here is newer than Chrome 68 (LG webOS 5, Tizen 2019):
+   plain gradients, no flex gap, and :focus-visible in a rule of its own (an old browser drops a
+   whole rule whose selector it cannot read). */
+@keyframes pc-panel-in {
+  from { opacity: 0; transform: translate3d(48px, 0, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pc-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@layer components {
+  /* What is behind darkens towards the panel, with no hard edge. */
+  .pc-shade {
+    background: linear-gradient(to right, rgba(5, 8, 15, 0) 0%, rgba(5, 8, 15, 0.35) 55%, rgba(5, 8, 15, 0.78) 100%);
+    animation: pc-fade-in 240ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  .pc-panel {
+    background: linear-gradient(to bottom, #111a2d 0%, #0a1120 50%, #05080f 100%);
+    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.08), -24px 0 48px rgba(0, 0, 0, 0.45);
+    animation: pc-panel-in 240ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  /* Moving between levels (Filters and a selector's values): the content fades in place. */
+  .pc-swap-in {
+    animation: pc-fade-in 140ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  .pc-section {
+    display: block;
+    padding: 18px 12px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #94a3b8;
+  }
+  .pc-row {
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: #f1f5f9;
+    outline: none;
+    transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
+  }
+  .pc-row:hover { background-color: rgba(255, 255, 255, 0.06); }
+  .pc-row[data-selected='true'] { background-color: rgba(255, 255, 255, 0.05); }
+  .pc-muted { color: #94a3b8; }
+  .pc-set { color: #38bdf8; }
+  /* Focused (the remote's .focused, a keyboard's :focus-visible): the accent fill of every button. */
+  .pc-row.focused { background-color: #38bdf8; color: #082f49; transform: scale(1.02); }
+  .pc-row.focused .pc-muted, .pc-row.focused .pc-set { color: rgba(8, 47, 73, 0.78); }
+  .pc-row:focus-visible { background-color: #38bdf8; color: #082f49; transform: scale(1.02); }
+  .pc-row:focus-visible .pc-muted { color: rgba(8, 47, 73, 0.78); }
+  .pc-row:focus-visible .pc-set { color: rgba(8, 47, 73, 0.78); }
+}
+@media (min-width: 640px) {
+  .pc-panel { border-top-left-radius: 16px; border-bottom-left-radius: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-panel, .pc-shade, .pc-swap-in { animation: none; }
+}

@@ -197,14 +197,13 @@ const ValueList: React.FC<{
         // handled by the caller passing a dedicated clear-all onToggle('')
         // sentinel would be fragile, so genre's Any button is wired directly
         // in DiscoverFilters below instead of through this generic handler.
-        className={`flex w-full items-center justify-between rounded-full px-4 py-3 text-left text-sm font-bold transition-all focus:outline-hidden ${
-          !anyActive ? 'bg-linear-to-r from-sky-400/20 to-blue-500/20 text-sky-400' : 'text-gray-300 hover:bg-white/5'
-        }`}
+        data-selected={!anyActive ? 'true' : 'false'}
+        className="pc-row flex w-full items-center justify-between text-left text-sm font-semibold"
       >
-        <span>Any {DIMENSION_LABELS[dimension]}</span>
+        <span className={!anyActive ? 'pc-set' : ''}>Any {DIMENSION_LABELS[dimension]}</span>
         {!anyActive && <Check className="h-4 w-4" />}
       </button>
-      {multi && <p className="px-4 pb-1 pt-2 text-xs text-gray-500">Press a genre once to include it, again to leave it out.</p>}
+      {multi && <p className="pc-muted px-3 pb-1 pt-2 text-xs">Press a genre once to include it, again to leave it out.</p>}
       {values.map(({ value, count }) => {
         const isActive = isActiveValue(value);
         const excluded = isExcluded(value);
@@ -217,13 +216,11 @@ const ValueList: React.FC<{
             data-focusable="true"
             data-selected={isActive ? 'true' : 'false'}
             onClick={() => (multi ? onToggle?.(value) : onSelect?.(isActive ? undefined : value))}
-            className={`flex w-full items-center justify-between rounded-full px-4 py-3 text-left text-sm font-bold transition-all focus:outline-hidden [&.focused]:bg-linear-to-r [&.focused]:from-sky-400/20 [&.focused]:to-blue-500/20 [&.focused]:text-sky-400 ${
-              excluded ? 'bg-rose-500/15 text-rose-300' : isActive ? 'bg-linear-to-r from-sky-400/20 to-blue-500/20 text-sky-400' : 'text-gray-300 hover:bg-white/5'
-            }`}
+            className="pc-row flex w-full items-center justify-between text-left text-sm font-semibold"
           >
-            <span className="truncate">{excluded ? `Not ${displayLabel(dimension, value)}` : displayLabel(dimension, value)}</span>
+            <span className={`truncate ${excluded ? 'text-rose-300' : isActive ? 'pc-set' : ''}`}>{excluded ? `Not ${displayLabel(dimension, value)}` : displayLabel(dimension, value)}</span>
             <span className="flex items-center gap-2 shrink-0">
-              <span className="text-xs font-semibold text-gray-500">{count}</span>
+              <span className="pc-muted text-xs font-semibold">{count}</span>
               {excluded ? <Ban className="h-4 w-4" /> : isActive && <Check className="h-4 w-4" />}
             </span>
           </button>
@@ -318,9 +315,10 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
   };
 
   const sheetNode = (
-    // Phones: the whole screen; wider screens: a full-height panel on the right.
-    <div className="fixed inset-0 z-[100] flex flex-col bg-[#05080F] sm:left-auto sm:w-[420px] sm:border-l sm:border-white/10 sm:shadow-2xl" role="dialog" aria-modal="true" data-focus-group="discover-phone-filters">
-      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-white/10 px-2 pt-[env(safe-area-inset-top)]">
+    // Phones: the whole screen; wider screens: a full-height panel on the right (pc-panel in
+    // index.css, the same as the TV app's side panel).
+    <div className="pc-panel fixed inset-0 z-[100] flex flex-col sm:left-auto sm:w-[440px]" role="dialog" aria-modal="true" data-focus-group="discover-phone-filters">
+      <div className="flex h-16 shrink-0 items-center gap-2 px-3 pt-[env(safe-area-inset-top)]">
         <button
           data-focusable="true"
           onClick={dim ? back : close}
@@ -329,14 +327,15 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
         >
           {dim ? <ChevronLeft className="h-6 w-6" /> : <X className="h-6 w-6" />}
         </button>
-        <h2 className="flex-1 truncate text-lg font-bold text-white">{dim ? DIMENSION_LABELS[dim] : 'Filters'}</h2>
+        <h2 className="flex-1 truncate text-xl font-semibold text-white">{dim ? DIMENSION_LABELS[dim] : 'Filters'}</h2>
         {count > 0 && !dim && (
           <button data-focusable="true" onClick={clearAll} className="rounded-full px-3 py-2 text-sm font-bold text-gray-300 hover:bg-white/10">
             Clear all
           </button>
         )}
       </div>
-      <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="mx-5 h-px shrink-0 bg-white/[0.06]" />
+      <div key={dim ?? 'menu'} className="pc-swap-in custom-scrollbar min-h-0 flex-1 overflow-y-auto p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {dim === null ? (
           <div className="space-y-1">
             {types && (
@@ -369,35 +368,35 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
                   key={d}
                   data-focusable="true"
                   onClick={() => openDim(d)}
-                  className="flex w-full items-center gap-3 rounded-xl px-4 py-4 text-left hover:bg-white/5"
+                  className="pc-row flex w-full items-center gap-3 text-left"
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="block text-base font-bold text-white">{DIMENSION_LABELS[d]}</span>
-                    <span className={`block truncate text-sm ${set ? 'text-sky-400' : 'text-gray-500'}`}>
+                    <span className="block text-base font-semibold">{DIMENSION_LABELS[d]}</span>
+                    <span className={`block truncate text-sm ${set ? 'pc-set' : 'pc-muted'}`}>
                       {set ? summaryFor(d, activeFilters) : `Any ${DIMENSION_LABELS[d].toLowerCase()}`}
                     </span>
                   </span>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" />
+                  <ChevronRight className="pc-muted h-5 w-5 shrink-0" />
                 </button>
               );
             })}
             {/* Where titles come from, after the filters (owner 2026-11-04: they sat first and
                 read as filters). Same as the TV app's Filters panel. */}
             {!!links?.length && (
-              <div className="mt-3 border-t border-white/10 pt-3">
-                <span className="block px-4 pb-1 text-xs font-bold uppercase tracking-wider text-gray-500">Sources</span>
+              <div className="mt-1">
+                <span className="pc-section">Sources</span>
                 {links.map((l) => (
                   <button
                     key={l.label}
                     data-focusable="true"
                     onClick={() => { afterClose.current = l.onClick; close(); }}
-                    className="flex w-full items-center gap-3 rounded-xl px-4 py-4 text-left hover:bg-white/5"
+                    className="pc-row flex w-full items-center gap-3 text-left"
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block text-base font-bold text-white">{l.label}</span>
-                      <span className="block truncate text-sm text-gray-500">{l.note}</span>
+                      <span className="block text-base font-semibold">{l.label}</span>
+                      <span className="pc-muted block truncate text-sm">{l.note}</span>
                     </span>
-                    <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" />
+                    <ChevronRight className="pc-muted h-5 w-5 shrink-0" />
                   </button>
                 ))}
               </div>
@@ -456,7 +455,7 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
         <>
           {/* Wider screens: a click beside the panel closes it (the filters stay set), and never
               reaches the page under it. Phones: the sheet is the whole screen. */}
-          <div className="fixed inset-0 z-[99] hidden sm:block" onClick={close} aria-hidden="true" />
+          <div className="pc-shade fixed inset-0 z-[99] hidden sm:block" onClick={close} aria-hidden="true" />
           {sheetNode}
         </>,
         document.body

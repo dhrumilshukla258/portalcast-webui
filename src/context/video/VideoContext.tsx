@@ -126,6 +126,8 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
   }, [user]);
 
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const settingsOpenRef = useRef(false);
+  settingsOpenRef.current = isSettingsMenuOpen;
   const [activeSettingsMenu, setActiveSettingsMenu] = useState<
     'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast' | 'external'
   >('main');
@@ -229,11 +231,17 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     if (cursorTimeoutRef.current) clearTimeout(cursorTimeoutRef.current);
     controlsTimeoutRef.current = setTimeout(
-      () => setControlsVisible(false),
+      // The settings panel lives in the controls: they stay while it is open.
+      () => { if (!settingsOpenRef.current) setControlsVisible(false); },
       5000
     );
     cursorTimeoutRef.current = setTimeout(() => setCursorVisible(false), 5000);
   }, []);
+
+  // Closing the settings panel starts the usual 5 s before the controls hide again.
+  useEffect(() => {
+    if (!isSettingsMenuOpen) showControlsAndCursor();
+  }, [isSettingsMenuOpen, showControlsAndCursor]);
 
   useEffect(() => {
     showControlsAndCursor();
