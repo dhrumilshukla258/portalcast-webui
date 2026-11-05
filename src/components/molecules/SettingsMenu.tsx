@@ -540,7 +540,7 @@ export const SettingsMenu = React.memo(() => {
                 >
                   <span className="truncate text-sm">{result.releaseName}</span>
                   <span className="text-xs uppercase text-gray-400">
-                    {result.exactMatch ? '✓ Exact match · ' : ''}{result.language} · {result.source === 'subdl' ? 'SubDL' : result.source === 'gestdown' ? 'Gestdown' : result.source === 'jellyfin' ? 'Jellyfin' : 'OpenSubtitles'}
+                    {result.kept ? `Kept on by ${result.kept} ${result.kept === 1 ? 'viewer' : 'viewers'} · ` : ''}{result.exactMatch ? '✓ Exact match · ' : ''}{result.language} · {result.source === 'subdl' ? 'SubDL' : result.source === 'gestdown' ? 'Gestdown' : result.source === 'jellyfin' ? 'Jellyfin' : 'OpenSubtitles'}
                   </span>
                 </button>
               ))}

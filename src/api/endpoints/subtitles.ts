@@ -1,5 +1,5 @@
 import { getBaseUrl } from '@/api/config';
-import { authFetch } from '@/api/client';
+import { api, authFetch } from '@/api/client';
 import type {
   SubtitleProbeResponse,
   OnlineSubtitleSearchResponse,
@@ -36,4 +36,20 @@ export const searchOnlineSubtitles = async (
     `${getBaseUrl()}/v2/subtitles/search?${params.toString()}`
   );
   return response.json();
+};
+
+export interface SubtitleKeptReport {
+  /** The download id ("gd:…", "os:…"). */
+  id: string;
+  lang: string;
+  delayMs: number;
+  label?: string | null;
+}
+
+/**
+ * An online subtitle kept on while watching (utils/subtitleKept.ts). `t` is the playing stream's
+ * token: the server takes the movie or episode from it. Servers from 2026-11-04; older ones 404.
+ */
+export const reportSubtitleKept = async (t: string, body: SubtitleKeptReport): Promise<void> => {
+  await api.post(`/v2/subtitles/kept?t=${encodeURIComponent(t)}`, body).catch(() => undefined);
 };

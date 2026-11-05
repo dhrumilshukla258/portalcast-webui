@@ -25,7 +25,8 @@ import { VODControls } from '@/components/organisms/video/VODControls';
 import { useVideoContext } from '@/context/video';
 import { PlayPauseFlash } from '@/components/molecules/PlayPauseFlash';
 import { useVideoQuality } from '@/hooks/useVideoQuality';
-import { bindSubtitleDelay, applySubtitleDelay } from '@/utils/subtitleDelay';
+import { bindSubtitleDelay, applySubtitleDelay, getSubtitleDelay } from '@/utils/subtitleDelay';
+import { createKeptTracker, onlineSubtitleKey } from '@/utils/subtitleKept';
 import { useTVRemoteNavigation } from '@/components/organisms/video/hooks/useTVRemoteNavigation';
 import { useTouchGestures } from '@/components/organisms/video/hooks/useTouchGestures';
 
@@ -109,6 +110,31 @@ const VideoPlayerContent: React.FC = () => {
     const t = window.setInterval(applySubtitleDelay, 1500);
     return () => { window.clearInterval(t); bindSubtitleDelay(null, null); };
   }, [qualityItemType, qualityItemId, playerRef, reloadTrigger]);
+
+  // The online subtitle kept on is reported to the server (utils/subtitleKept.ts), which then
+  // lists it first for everyone watching this movie or episode. Checked once a second.
+  useEffect(() => {
+    if (!qualityItemType || !streamUrl) return;
+    let token: string | null = null;
+    try { token = new URL(streamUrl, window.location.origin).searchParams.get('t'); } catch { token = null; }
+    const tracker = createKeptTracker();
+    const timer = window.setInterval(() => {
+      const player: any = playerRef.current;
+      if (!player) return;
+      const list: any = player.textTracks;
+      const tracks: any[] = !list ? [] : typeof list.toArray === 'function' ? list.toArray() : Array.from(list as ArrayLike<unknown>);
+      const showing = tracks.find((tr) => tr?.mode === 'showing');
+      const seconds = Number(player.duration);
+      tracker.tick({
+        key: onlineSubtitleKey(showing?.src),
+        playing: player.paused === false,
+        durationMs: Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : 0,
+        delayMs: getSubtitleDelay(),
+        token,
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [qualityItemType, streamUrl, playerRef]);
   const tvChannelListRef = useRef<TvChannelListRef>(null);
   const episodeOverlayRef = useRef<EpisodeOverlayRef>(null);
   const speedBannerRef = useRef<HTMLDivElement>(null);

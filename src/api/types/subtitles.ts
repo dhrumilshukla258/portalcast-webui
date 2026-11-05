@@ -28,6 +28,10 @@ export interface OnlineSubtitleResult {
   source?: 'opensubtitles' | 'subdl' | 'gestdown' | 'jellyfin';
   /** Made for exactly the file playing (servers from 2026-10-29). */
   exactMatch?: boolean;
+  /** Viewers who kept it on for this very movie or episode (servers from 2026-11-04): listed first. */
+  kept?: number;
+  /** The timing they used, in ms (+ later): applied when this viewer has none of their own. */
+  keptDelayMs?: number;
   language: string;
   releaseName: string;
   [key: string]: any;

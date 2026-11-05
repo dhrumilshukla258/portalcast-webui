@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { getBaseUrl } from '@/api/config';
 import { subtitleDownloadUrl } from '@/utils/subtitleDownload';
+import { noteOnlineSubtitle } from '@/utils/subtitleKept';
+import { getSubtitleDelay, setSubtitleDelay } from '@/utils/subtitleDelay';
 import { probeStreamSubtitles, searchOnlineSubtitles as apiSearchOnlineSubtitles } from '@/api/endpoints/subtitles';
 
 // Owns subtitle track discovery (embedded-track probing for progressive VOD,
@@ -26,6 +28,8 @@ export function useSubtitles(
   const [subtitles, setSubtitles] = useState<any[]>([]);
   const [onlineSubtitleResults, setOnlineSubtitleResults] = useState<any[]>([]);
   const [subtitleSearchLoading, setSubtitleSearchLoading] = useState(false);
+  // The language of the last search (what a kept subtitle is filed under on the server).
+  const searchLang = useRef('en');
 
   useEffect(() => {
     if (!streamUrl || contentType === 'tv') {
@@ -109,6 +113,7 @@ export function useSubtitles(
       if (/^\d{1,4}$/.test(season)) params.set('season', season);
       if (/^\d{1,4}$/.test(episode)) params.set('episode', episode);
       if (q.language) params.set('lang', q.language);
+      searchLang.current = q.language || 'en';
       // What is playing: the server hashes the file (exact matches first) and, for a
       // Jellyfin title, also asks Jellyfin's subtitle search.
       const playingToken = streamUrl ? new URL(streamUrl, window.location.origin).searchParams.get('t') : null;
@@ -127,8 +132,11 @@ export function useSubtitles(
     }
   }, [item, seriesItem, streamUrl]);
 
-  const addOnlineSubtitle = useCallback((result: { fileId: number; downloadId?: string; language: string; releaseName: string }) => {
+  const addOnlineSubtitle = useCallback((result: { fileId: number; downloadId?: string; language: string; releaseName: string; kept?: number; keptDelayMs?: number }) => {
     const id = result.downloadId || `os:${result.fileId}`;
+    noteOnlineSubtitle(id, searchLang.current, result.releaseName || null);
+    // The timing viewers who kept this one on used, unless this viewer set one for the title.
+    if (result.kept && result.keptDelayMs && getSubtitleDelay() === 0) setSubtitleDelay(result.keptDelayMs);
     const track = {
       src: subtitleDownloadUrl(result),
       label: `${result.language?.toUpperCase() || 'Subtitle'} — ${result.releaseName}`,
