@@ -226,6 +226,37 @@ export interface TmdbCandidate {
 }
 
 /** A portal title's current match, for "Fix match" on its detail page. */
+/** A title merged into another by an admin ("Merge with…", servers from 2026-11-05). */
+export interface TitleMerge {
+  type: 'movie' | 'series';
+  /** The group merged away, and the one it joined. */
+  from: string;
+  to: string;
+  fromName: string;
+  toName: string;
+  at: string;
+}
+
+export interface TitleMerges {
+  id: string;
+  type: 'movie' | 'series';
+  name: string;
+  /** This title was merged into another. */
+  mergedInto: TitleMerge | null;
+  /** Titles merged into this one. */
+  mergedHere: TitleMerge[];
+}
+
+export interface MergeCandidate {
+  id: string;
+  name: string;
+  year: string | null;
+  poster: string | null;
+  /** On the NAS (My library). */
+  local: boolean;
+  group: string;
+}
+
 export interface PortalTitleMatch {
   id: string;
   kind: 'movie' | 'series';

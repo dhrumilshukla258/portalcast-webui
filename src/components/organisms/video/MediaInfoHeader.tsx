@@ -1,10 +1,11 @@
 import { getTitleDetails, type PersonCredit, type TitleDetails } from '@/api/endpoints/discover';
 import { useOpenPerson } from '@/context/PersonPageContext';
 import React, { useMemo } from 'react';
-import { Play, Clock, Star, Calendar, Globe2, Film, Image as ImageIcon, Link2 } from 'lucide-react';
+import { Play, Clock, Star, Calendar, Globe2, Film, Image as ImageIcon, Link2, Merge } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import EditImagesDialog from '@/components/organisms/admin/EditImagesDialog';
 import { PortalFixMatch } from '@/components/organisms/admin/FixMatchDialog';
+import MergeTitleDialog from '@/components/organisms/admin/MergeTitleDialog';
 import type { MediaItem } from '@/types';
 import { URL_PATHS } from '@/api/config';
 import { MoreLikeThis, MyListButton } from '@/components/molecules/TitleExtras';
@@ -73,6 +74,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
   const isAdmin = user?.role === 'admin';
   const [editingImages, setEditingImages] = React.useState(false);
   const [fixingMatch, setFixingMatch] = React.useState(false);
+  const [merging, setMerging] = React.useState(false);
   const logo = details?.logo || item.logo_path;
   const tagline = details?.tagline || item.tagline;
   const facts = [details?.studios || item.studios, details?.collection || item.collection].filter(Boolean) as string[];
@@ -211,6 +213,15 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                     <Link2 size={13} /> Fix match
                   </button>
                 )}
+                {/* Titles that are one film or show but do not show as versions (owner 2026-11-05). */}
+                <button
+                  type="button"
+                  onClick={() => setMerging(true)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs font-semibold text-gray-400 hover:bg-white/10 hover:text-gray-200"
+                  data-focusable="true"
+                >
+                  <Merge size={13} /> Merge with…
+                </button>
               </div>
             )}
             {item.director && (
@@ -376,6 +387,14 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
         <PortalFixMatch
           contentId={detailsKey}
           onClose={() => setFixingMatch(false)}
+          onChanged={() => void getTitleDetails({ id: detailsKey }).then(setDetails)}
+        />
+      )}
+
+      {merging && (
+        <MergeTitleDialog
+          contentId={detailsKey}
+          onClose={() => setMerging(false)}
           onChanged={() => void getTitleDetails({ id: detailsKey }).then(setDetails)}
         />
       )}

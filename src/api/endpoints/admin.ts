@@ -24,6 +24,8 @@ import type {
   LibraryTitle,
   TmdbCandidate,
   PortalTitleMatch,
+  TitleMerges,
+  MergeCandidate,
 } from '@/api/types/admin';
 
 // --- Server config ---
@@ -278,6 +280,20 @@ export const getPortalTitleMatch = async (contentId: string): Promise<PortalTitl
 
 export const setPortalTitleMatch = async (contentId: string, tmdbId: number | null): Promise<{ tmdbId: number | null; locked: boolean; versions?: number }> =>
   (await api.post<{ tmdbId: number | null; locked: boolean; versions?: number }>(`/admin/titles/${encodeURIComponent(contentId)}/match`, { tmdbId })).data!;
+
+// ---- Merge with… (titles that are one film or show; servers from 2026-11-05) ----
+export const getTitleMerges = async (contentId: string): Promise<TitleMerges> =>
+  (await api.get<TitleMerges>(`/admin/titles/${encodeURIComponent(contentId)}/merges`)).data!;
+
+export const searchMergeTitles = async (type: 'movie' | 'series', q: string): Promise<MergeCandidate[]> =>
+  (await api.get<{ results: MergeCandidate[] }>('/admin/titles/merge-search', { params: { type, q } })).data?.results ?? [];
+
+/** Every copy of [contentId]'s title joins [into]'s title as versions. */
+export const mergeTitle = async (contentId: string, into: string): Promise<{ moved: number }> =>
+  (await api.post<{ moved: number }>(`/admin/titles/${encodeURIComponent(contentId)}/merge`, { into })).data!;
+
+export const undoTitleMerge = async (from: string): Promise<{ moved: number }> =>
+  (await api.delete<{ moved: number }>('/admin/title-merges', { params: { from } })).data!;
 
 // ---- Overview (Admin front page) ----
 export interface AdminOverview {
