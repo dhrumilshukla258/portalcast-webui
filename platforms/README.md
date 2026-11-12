@@ -42,6 +42,9 @@ npm run tv-apps        # dist-tv/webos and dist-tv/tizen
 Needs LG's CLI (`npm i -g @webos-tools/cli`) and, on the TV, the **Developer Mode** app from the
 LG Content Store, signed in with an LG developer account (free), Dev Mode on.
 
+A ready `.ipk` is on each GitHub release of this repo (`portalcast-lg-<version>.ipk`, built by
+`.github/workflows/tv-apps.yml` from a `v*` tag, with the server's version); to build it yourself:
+
 ```sh
 ares-package dist-tv/webos -o dist-tv              # dist-tv/com.portalcast.tv_1.0.0_all.ipk
 ares-setup-device                                   # add the TV: its IP, port 9922, user prisoner

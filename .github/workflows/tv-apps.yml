@@ -2,12 +2,18 @@
 # attached to the run (Actions -> TV apps -> the run -> Artifacts). Install it with ares-install
 # on a TV in Developer Mode. The Samsung .wgt needs the owner's signing certificate, so it is
 # packaged on the PC (platforms/README.md).
+#
+#   git tag v1.6.0 && git push origin v1.6.0  -> the .ipk (version 1.6.0) on a GitHub Release,
+#                                               the same version as the server it opens
+#   git tag v1.7.0-beta.1 ...                  -> the same, as a pre-release
 
 name: TV apps
 
 on:
   push:
     branches: [main]
+    # GitHub never applies path filters to tags: every v* tag builds.
+    tags: ["v*"]
     paths:
       - 'platforms/**'
       - 'scripts/tv-apps.mjs'
@@ -28,13 +34,45 @@ jobs:
           node-version: 22
 
       - name: App folder (dist-tv/webos)
-        run: node scripts/tv-apps.mjs
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then export PORTALCAST_VERSION="${GITHUB_REF_NAME#v}"; fi
+          node scripts/tv-apps.mjs
 
       - name: LG package (.ipk)
         run: npx --yes -p @webos-tools/cli@3.2.6 ares-package dist-tv/webos -o dist-tv/lg --no-minify
+
+      - name: Release name
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          cd dist-tv/lg
+          for f in *.ipk; do mv "$f" "portalcast-lg-${GITHUB_REF_NAME#v}.ipk"; done
+          ls -l
 
       - uses: actions/upload-artifact@v4
         with:
           name: portalcast-lg-ipk
           path: dist-tv/lg/*.ipk
           if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: lg
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: portalcast-lg-ipk
+          path: assets
+      - name: Checksums
+        run: cd assets && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: assets/*
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          body: |
+            **LG TV app** (webOS 5 / 2020 sets and later): `portalcast-lg-*.ipk`. It opens the web UI from your PortalCast server, so the TV always runs the server's version; install with `ares-install` on a TV in Developer Mode (platforms/README.md).
+
+            The web UI itself ships inside PortalCast Server (Docker image and server packages). The Samsung app is signed with your own Samsung certificate on your PC (platforms/README.md).
