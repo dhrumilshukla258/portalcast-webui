@@ -66,8 +66,6 @@ interface DiscoverFiltersProps {
   fullWidth?: boolean;
   /** 'phone': a round icon button (the phone's chips row), with how many filters are set. */
   iconOnly?: boolean;
-  /** 'phone', Home: Movies / Series inside the picker (at least one stays on). */
-  types?: { movie: boolean; series: boolean; onToggle: (t: 'movie' | 'series') => void };
   /** 'phone': where titles come from (My library, IPTV categories), under "Sources" after the selectors. */
   links?: { label: string; note: string; onClick: () => void }[];
 }
@@ -252,7 +250,7 @@ function activeCount(f: ActiveDiscoverFilters): number {
  * steps back a level and then closes it: each level is a browser history entry, consumed
  * here before the app's own Back handling sees it.
  */
-const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange, fullWidth = false, types, links, iconOnly = false }) => {
+const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onFilterChange, onGenresChange, fullWidth = false, links, iconOnly = false }) => {
   const [sheet, setSheet] = useState(false);
   const [dim, setDim] = useState<DiscoverFilterKey | null>(null);
   // History entries this sheet pushed (1 open, 2 with a selector open).
@@ -304,14 +302,12 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
 
   if (!facets) return null;
   const dims = DIMENSION_ORDER.filter((d) => valuesFor(facets, d).length > 0);
-  if (dims.length === 0 && !types && !links?.length) return null;
-  const count = activeCount(activeFilters) + (types && types.movie !== types.series ? 1 : 0);
+  if (dims.length === 0 && !links?.length) return null;
+  const count = activeCount(activeFilters);
   const toggleGenre = (value: string) => onGenresChange(cycleGenre(activeFilters.genre || [], value));
   const clearAll = () => {
     if (activeFilters.genre?.length) onGenresChange([]);
     SINGLE_KEYS.forEach((k) => { if (activeFilters[k]) onFilterChange(k, undefined); });
-    if (types && !types.movie) types.onToggle('movie');
-    if (types && !types.series) types.onToggle('series');
   };
 
   const sheetNode = (
@@ -338,29 +334,6 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
       <div key={dim ?? 'menu'} className="pc-swap-in custom-scrollbar min-h-0 flex-1 overflow-y-auto p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {dim === null ? (
           <div className="space-y-1">
-            {types && (
-              <div className="px-4 pb-3 pt-1">
-                <span className="mb-2 block text-base font-bold text-white">Show</span>
-                <div className="flex gap-2">
-                  {(['movie', 'series'] as const).map((t) => {
-                    const on = types[t];
-                    return (
-                      <button
-                        key={t}
-                        data-focusable="true"
-                        onClick={() => types.onToggle(t)}
-                        className={`flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full border text-sm font-bold ${
-                          on ? 'border-transparent bg-linear-to-r from-sky-400 to-blue-500 text-white' : 'border-white/15 text-gray-300'
-                        }`}
-                      >
-                        {on && <Check className="h-4 w-4" />}
-                        {t === 'movie' ? 'Movies' : 'Series'}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
             {dims.map((d) => {
               const set = d === 'genre' ? (activeFilters.genre?.length ?? 0) > 0 : !!activeFilters[d];
               return (

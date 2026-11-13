@@ -89,18 +89,10 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     beginGenreRefresh,
   } = useDiscover();
 
-  // Movie/Series toggle — separate from activeFilters (genre/country/language/
-  // theme) since it narrows every row's content rather than switching to the
-  // single filtered-grid view those do. Both on by default (the "show
-  // everything" state) — independently toggleable with a checkmark rather
-  // than a single-select pill, so a user can pick "just Series" or "just
-  // Movies" as well as the default "both". Only one type filters the
-  // underlying fetch (undefined = no type filter = both), so both-on and
-  // both-off collapse to the same "show everything" behavior rather than
-  // both-off showing nothing.
-  const [showMovies, setShowMovies] = useState(true);
-  const [showSeries, setShowSeries] = useState(true);
-  const activeType = fixedType ?? (showMovies === showSeries ? undefined : showMovies ? 'movie' : 'series');
+  // The type shown: Home shows both; the Movies / Series chips (SectionChips) open one type
+  // alone (owner 2026-11-13: the chips are the switch; Home's Filters no longer has its own
+  // Show Movies / Series).
+  const activeType = fixedType;
 
   // Starts from the filters set last on Home, Movies or Series (utils/sharedDiscoverFilters.ts).
   const [activeFilters, setActiveFilters] = useState<ActiveDiscoverFilters>(() => sharedDiscoverFiltersFor(fixedType));
@@ -481,17 +473,6 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     ...(onOpenCategories ? sourceTypes.map((t) => ({ label: `IPTV categories${typeName(t)}`, note: "The provider's own lists", onClick: () => onOpenCategories(t) })) : []),
   ];
 
-  // Movies / Series on Home: at least one stays on ("neither" means nothing here).
-  const toggleType = (t: 'movie' | 'series') => {
-    if (t === 'movie') {
-      if (showMovies && !showSeries) return;
-      setShowMovies((v) => !v);
-    } else {
-      if (showSeries && !showMovies) return;
-      setShowSeries((v) => !v);
-    }
-  };
-
   const filterButton = (
     <DiscoverFilters
       variant="phone"
@@ -500,7 +481,6 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
       activeFilters={activeFilters}
       onFilterChange={handleFilterChange}
       onGenresChange={handleGenresChange}
-      types={fixedType ? undefined : { movie: showMovies, series: showSeries, onToggle: toggleType }}
       links={libraryLinks}
     />
   );

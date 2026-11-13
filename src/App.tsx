@@ -293,7 +293,6 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
       active={activeSection}
       onSelect={openSection}
       trailing={filterButton}
-      included={discoverActiveType ? [discoverActiveType] : ['movie', 'series']}
     />
   );
   // Continue Watching on Home; the Movies / Series tabs show only that type's titles.
