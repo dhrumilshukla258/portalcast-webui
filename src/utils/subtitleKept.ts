@@ -5,10 +5,14 @@ import { reportSubtitleKept } from '@/api/endpoints/subtitles';
 // for a minute, the server is told (POST /api/v2/subtitles/kept); its search then lists that file
 // first for everyone watching the same movie or episode. Same rule as the TV app.
 
-/** How long it stays on, playing: a quarter of the title, 3–10 minutes (10 when unknown). */
+/**
+ * How long it stays on, playing: at least a quarter of the title (owner 2026-11-13; it was capped
+ * at 10 minutes), never under 3 minutes; 10 minutes when the length is unknown (or endless), as a
+ * quarter cannot be measured then.
+ */
 export function keptThresholdMs(durationMs: number): number {
-  if (!(durationMs > 0)) return 10 * 60_000;
-  return Math.min(10 * 60_000, Math.max(3 * 60_000, durationMs / 4));
+  if (!(durationMs > 0) || !Number.isFinite(durationMs)) return 10 * 60_000;
+  return Math.max(3 * 60_000, durationMs / 4);
 }
 
 /** A changed timing counts once it has been left alone this long while playing. */
