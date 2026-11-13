@@ -32,16 +32,16 @@
 
 - **The same app everywhere** — five tabs (Home, Live TV, Sports, Search, My List) and Movies · Series · Cast chips on PC, phone and TV browsers, in one black-blue page from edge to edge.
 - **Home made for each viewer** — your last title to resume up top, Continue Watching, "Because you watched", top picks and trending, built from what this profile watched. One card per title across all its language and quality versions. It opens on the Home you saw last, at once.
-- **Filters** — genre, language, country, channel or platform and mood, plus the provider's own **IPTV categories** and **My library** (your own files) as separate choices.
+- **Filters** — genre, language, country, channel or platform and mood, plus the provider's own **IPTV categories** and **My library** (your Jellyfin's films and shows) as separate choices.
 - **Title menu** — hold a card (right-click or ⋯ on PC) to add it to My List, mark it watched, say "Not interested" (it leaves every Home row) or remove it from Continue Watching. **My List** keeps My List, Watched, Not interested and favourite channels, so anything can be undone.
 - **Title pages** — backdrop, tagline, ratings, cast and crew with photos, and More Like This. Series open on the episode you are watching, with TMDB episode stills and air dates.
 - **Cast** — actors, actresses, directors, creators and writers with photos, ranked by what the profile watches; a person's page lists every title of theirs you have.
 - **Sports** — the next 30 days of the sports and leagues each viewer chooses (football, cricket, NBA, F1, tennis…), with the channel showing each match from your provider's TV guide.
 - **Live TV** with the guide, catch-up, favourites and recent channels synced live across devices.
 - **Search** across every movie, series, channel and person at once.
-- **Player** — subtitles (online search, embedded tracks, your own file) with per-title timing, real resolution and frame rate, next-episode prompt.
+- **Player** — subtitles (OpenSubtitles, SubDL, Gestdown and Jellyfin's, embedded tracks, your own file) with per-title timing, real resolution and frame rate, next-episode prompt, and "Open in…" another player (VLC, Infuse, mpv…).
 - **Admin** — users, profiles, settings, content manager, broken streams, security log, live viewers and server logs.
-- Runs in any modern browser and Samsung/LG TV browsers; installable as a PWA.
+- Runs in any modern browser (from 2018 on) and installs as a PWA. On TVs: LG from 2020 as an app (a ready `.ipk` is on each release, see [platforms/](platforms/README.md)) and Samsung in the TV's browser, both in the Android TV app's design.
 
 ## Get started
 
