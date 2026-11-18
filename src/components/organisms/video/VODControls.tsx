@@ -50,7 +50,7 @@ const IconButton: React.FC<{
     className={`group/btn relative flex h-10 w-10 items-center justify-center rounded-full text-fg transition hover:bg-white/15 focus-visible:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus md:h-11 md:w-11 ${className}`}
   >
     {children}
-    <span className="pointer-events-none absolute bottom-full mb-2 whitespace-nowrap rounded-md bg-black/80 px-2 py-0.5 text-xs font-semibold opacity-0 transition-opacity group-hover/btn:opacity-100 group-focus-visible/btn:opacity-100 group-[.focused]/btn:opacity-100">
+    <span className="pointer-events-none absolute bottom-full mb-2 whitespace-nowrap rounded-md ui-tip-label px-2 py-0.5 text-xs font-semibold opacity-0 transition-opacity group-hover/btn:opacity-100 group-focus-visible/btn:opacity-100 group-[.focused]/btn:opacity-100">
       {label}
     </span>
   </button>
@@ -145,7 +145,7 @@ export const VODControls = React.memo(() => {
               className="group/btn relative flex h-10 w-10 items-center justify-center rounded-full text-fg transition hover:bg-white/15 focus-visible:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus md:h-11 md:w-11"
             >
               {isPaused ? <PlayIcon className={`${ICON} fill-current`} /> : <PauseIcon className={`${ICON} fill-current`} />}
-              <span className="pointer-events-none absolute bottom-full mb-2 whitespace-nowrap rounded-md bg-black/80 px-2 py-0.5 text-xs font-semibold opacity-0 transition-opacity group-hover/btn:opacity-100 group-focus-visible/btn:opacity-100">
+              <span className="pointer-events-none absolute bottom-full mb-2 whitespace-nowrap rounded-md ui-tip-label px-2 py-0.5 text-xs font-semibold opacity-0 transition-opacity group-hover/btn:opacity-100 group-focus-visible/btn:opacity-100">
                 {isPaused ? 'Play' : 'Pause'}
               </span>
             </PlayButton>
@@ -206,7 +206,7 @@ export const VODControls = React.memo(() => {
                 className="group/btn relative flex h-10 w-10 items-center justify-center rounded-full text-fg transition hover:bg-white/15 focus-visible:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus md:h-11 md:w-11"
               >
                 {isFullscreen ? <MinimizeIcon className={ICON} /> : <MaximizeIcon className={ICON} />}
-                <span className="pointer-events-none absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md bg-black/80 px-2 py-0.5 text-xs font-semibold opacity-0 transition-opacity group-hover/btn:opacity-100 group-focus-visible/btn:opacity-100">
+                <span className="pointer-events-none absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md ui-tip-label px-2 py-0.5 text-xs font-semibold opacity-0 transition-opacity group-hover/btn:opacity-100 group-focus-visible/btn:opacity-100">
                   {isFullscreen ? 'Exit full screen' : 'Full screen'}
                 </span>
               </FullscreenButton>
@@ -299,7 +299,7 @@ export const VODControls = React.memo(() => {
 
             {showTooltip && (
               <div
-                className="pointer-events-none absolute bottom-full mb-4 -translate-x-1/2 rounded-md bg-black/80 px-2.5 py-1 text-sm font-semibold text-fg shadow-md"
+                className="pointer-events-none absolute bottom-full mb-4 -translate-x-1/2 rounded-md ui-tip-label px-2.5 py-1 text-sm font-semibold text-fg shadow-md"
                 style={{ left: 'var(--slider-fill)' }}
               >
                 {tooltipText}

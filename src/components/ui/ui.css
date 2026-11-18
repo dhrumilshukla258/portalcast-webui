@@ -30,6 +30,12 @@
     --ui-player-button-bg: rgb(17 24 39 / 0.7);
     --ui-player-button-hover-bg: rgb(31 41 55 / 0.9);
     --ui-player-button-border: rgb(55 65 81 / 0.5);
+    /* Tooltips: data-tip="..." on a button (the player's icons), .ui-tip-label for a label of
+       its own (the movie player's). */
+    --ui-tip-bg: rgb(0 0 0 / 0.8);
+    --ui-tip-fg: #fff;
+    --ui-tip-blur: none;
+    --ui-tip-radius: 0.375rem;
     /* Search fields (SearchField.tsx). */
     /* Pick chips (Chip variant="pick": several on at once). */
     --ui-pick-bg: transparent;
@@ -151,6 +157,38 @@
   .ui-chip[data-variant='toggle'] {
     border-color: var(--color-line-strong);
     background-color: transparent;
+  }
+  [data-tip] {
+    position: relative;
+  }
+  [data-tip]::after,
+  .ui-tip-label {
+    border-radius: var(--ui-tip-radius);
+    background-color: var(--ui-tip-bg);
+    color: var(--ui-tip-fg);
+    -webkit-backdrop-filter: var(--ui-tip-blur);
+    backdrop-filter: var(--ui-tip-blur);
+  }
+  [data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 0.625rem);
+    left: 50%;
+    z-index: 60;
+    padding: 0.125rem 0.5rem;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, 0.25rem);
+    transition: opacity var(--ui-duration) var(--ui-ease), transform var(--ui-duration) var(--ui-ease);
+  }
+  [data-tip]:hover::after,
+  [data-tip]:focus-visible::after,
+  [data-tip].focused::after {
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
   .ui-player-panel {
     border: 1px solid var(--ui-player-panel-border);

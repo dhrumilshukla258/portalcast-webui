@@ -49,6 +49,10 @@
     --ui-player-button-bg: rgb(30 30 32 / 0.55);
     --ui-player-button-hover-bg: rgb(60 60 64 / 0.7);
     --ui-player-button-border: transparent;
+    --ui-tip-bg: rgb(30 30 32 / 0.8);
+    --ui-tip-fg: #f5f5f7;
+    --ui-tip-blur: blur(20px) saturate(1.6);
+    --ui-tip-radius: 0.5rem;
     --ui-field-bg: rgb(255 255 255 / 0.08);
     --ui-field-border: transparent;
     --ui-panel-radius: 0.875rem;
@@ -540,4 +544,16 @@ html[data-theme='minimal'] .more-options-menu {
   background-color: var(--ui-glass-bg);
   -webkit-backdrop-filter: var(--ui-glass-blur);
   backdrop-filter: var(--ui-glass-blur);
+}
+
+/* The player's floating boxes (the channel number while zapping, no signal, "Press BACK again",
+   Next Episode): the same glass as its panel. */
+html[data-theme='minimal'] .ui-player-float {
+  border-color: var(--ui-player-panel-border);
+  background-color: var(--ui-player-panel-bg);
+  -webkit-backdrop-filter: var(--ui-player-panel-blur);
+  backdrop-filter: var(--ui-player-panel-blur);
+}
+html[data-theme='minimal'] .ui-player-float:not(.rounded-full) {
+  border-radius: 1.5rem;
 }

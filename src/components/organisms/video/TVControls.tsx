@@ -157,6 +157,8 @@ export const TVControls = React.memo(() => {
             <button
               data-focusable="true"
               data-control="play-pause"
+              data-tip={isPaused ? 'Play' : 'Pause'}
+              aria-label={isPaused ? 'Play' : 'Pause'}
               onClick={() => (isPaused ? remote.play() : remote.pause())}
               className="text-fg hover:text-accent"
             >
@@ -169,6 +171,8 @@ export const TVControls = React.memo(() => {
             <button
               data-focusable="true"
               onClick={onToggleChannelList}
+              data-tip="Channels"
+              aria-label="Channels"
               className="text-fg hover:text-accent"
             >
               <ListIcon className="h-4 w-4 md:h-6 md:w-6" />
@@ -180,7 +184,8 @@ export const TVControls = React.memo(() => {
               data-focusable="true"
               className="hidden md:block text-fg hover:text-accent"
               onClick={() => setUseProxy(!useProxy)}
-              title="Proxy"
+              data-tip={useProxy ? 'Proxy on' : 'Proxy off'}
+              aria-label="Proxy"
             >
               {!useProxy ? <ShieldX /> : <ShieldCheck />}
             </button>
@@ -188,7 +193,8 @@ export const TVControls = React.memo(() => {
               data-focusable="true"
               onClick={onCycleFitMode}
               className="hidden md:block text-fg hover:text-accent"
-              title="Video Scale"
+              data-tip={`Scale: ${fitMode === 'contain' ? 'fit' : fitMode === 'cover' ? 'fill' : 'stretch'}`}
+              aria-label="Video scale"
             >
               {fitMode === 'contain' && (
                 <Shrink className="h-5 w-5 md:h-6 md:w-6" />
@@ -214,6 +220,8 @@ export const TVControls = React.memo(() => {
                       onActiveSettingsMenuChange('cast');
                     }
                   }}
+                  data-tip="Cast"
+                  aria-label="Cast"
                   className="hidden md:block mr-1 text-fg hover:text-accent md:mr-2"
                 >
                   <FaChromecast className="h-4 w-4 md:h-6 md:w-6" />
@@ -224,6 +232,8 @@ export const TVControls = React.memo(() => {
                   <button
                     data-focusable="true"
                     onClick={() => onSetIsSettingsMenuOpen((v) => !v)}
+                    data-tip="Settings"
+                    aria-label="Settings"
                     className="hidden md:block text-fg hover:text-accent"
                   >
                     <SettingsIcon className="h-4 w-4 md:h-6 md:w-6" />
@@ -237,6 +247,8 @@ export const TVControls = React.memo(() => {
             <button
               data-focusable="true"
               onClick={() => onToggleFavorite(activeChannel)}
+              data-tip={isFavorite ? 'Remove from favourites' : 'Add to favourites'}
+              aria-label={isFavorite ? 'Remove from favourites' : 'Add to favourites'}
               className="text-fg hover:text-yellow-400"
             >
               {isFavorite ? (
@@ -254,6 +266,8 @@ export const TVControls = React.memo(() => {
                 <button
                   data-focusable="true"
                   onClick={() => remote.toggleFullscreen()}
+                  data-tip={isFullscreen ? 'Exit full screen' : 'Full screen'}
+                  aria-label={isFullscreen ? 'Exit full screen' : 'Full screen'}
                   className="text-fg hover:text-accent"
                 >
                   {isFullscreen ? (

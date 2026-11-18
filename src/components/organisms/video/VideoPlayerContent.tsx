@@ -382,7 +382,7 @@ const VideoPlayerContent: React.FC = () => {
 
           {streamError && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-black pointer-events-none">
-              <div className="w-[90%] max-w-md p-6 rounded-xl border border-zinc-800 bg-zinc-900/95 text-center shadow-2xl shadow-black/80 space-y-3">
+              <div className="ui-player-float w-[90%] max-w-md p-6 rounded-xl border border-zinc-800 bg-zinc-900/95 text-center shadow-2xl shadow-black/80 space-y-3">
                 <h3 className="text-lg font-bold text-red-500 tracking-wide">
                   Error 404: Signal Not Found
                 </h3>
@@ -395,7 +395,7 @@ const VideoPlayerContent: React.FC = () => {
 
           {previewChannelInfo && (
             <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
-              <div className="rounded-lg bg-black bg-opacity-75 p-6 shadow-xl">
+              <div className="ui-player-float rounded-lg bg-black bg-opacity-75 p-6 shadow-xl">
                 <h2 className="text-center text-5xl font-bold text-fg">
                   {previewChannelInfo.number}
                 </h2>
@@ -407,7 +407,7 @@ const VideoPlayerContent: React.FC = () => {
           )}
 
           {showExitToast && (
-            <div className="pointer-events-none absolute bottom-20 left-1/2 z-100 -translate-x-1/2 rounded-full border border-gray-700 bg-black/90 px-6 py-3 text-fg shadow-xl backdrop-blur-md transition-all duration-300">
+            <div className="ui-player-float pointer-events-none absolute bottom-20 left-1/2 z-100 -translate-x-1/2 rounded-full border border-gray-700 bg-black/90 px-6 py-3 text-fg shadow-xl backdrop-blur-md transition-all duration-300">
               <span className="text-sm font-medium tracking-wide">
                 Press BACK again to exit
               </span>
@@ -423,7 +423,7 @@ const VideoPlayerContent: React.FC = () => {
                   setShowNextEpisodeButton(false);
                   playNextEpisode?.();
                 }}
-                className="flex items-center gap-2 px-5 py-3 rounded-lg border border-line bg-black/80 text-fg font-semibold shadow-lg backdrop-blur-md hover:bg-white/20 transition-all duration-200 outline-hidden focus:ring-2 focus:ring-focus focus:[background:var(--ui-selected-bg)] focus:border-focus"
+                className="ui-player-float flex items-center gap-2 px-5 py-3 rounded-lg border border-line bg-black/80 text-fg font-semibold shadow-lg backdrop-blur-md hover:bg-white/20 transition-all duration-200 outline-hidden focus:ring-2 focus:ring-focus focus:[background:var(--ui-selected-bg)] focus:border-focus"
               >
                 <span>Next Episode</span>
                 <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">

@@ -13,7 +13,7 @@ export const VolumeControl = React.memo(() => {
     <div className="group/volume flex items-center">
       <button
         onClick={() => remote.toggleMuted()}
-        className="text-white transition-colors hover:text-blue-400 focus:outline-hidden"
+        className="text-white transition-colors hover:text-accent focus:outline-hidden"
         title={isActuallyMuted ? 'Unmute' : 'Mute'}
       >
         {isActuallyMuted ? (
@@ -32,7 +32,7 @@ export const VolumeControl = React.memo(() => {
           step="0.05"
           value={isActuallyMuted ? 0 : volume}
           onChange={(e) => remote.changeVolume(parseFloat(e.target.value))}
-          className="h-1 w-24 cursor-pointer accent-blue-500"
+          className="h-1 w-24 cursor-pointer accent-accent"
         />
       </div>
     </div>
