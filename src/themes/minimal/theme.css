@@ -425,7 +425,8 @@ html[data-theme='minimal'] [data-ui='episode-thumb'] {
   border-radius: 0.75rem;
 }
 
-/* Cast (PeopleView): round faces, as many to a row as fit, names centred under them. */
+/* Cast (PeopleView): as many people to a row as fit, each photo whole (2:3, rounded, uncropped;
+   a circle can only show a square from these tight headshots), names centred under them. */
 html[data-theme='minimal'] [data-ui='people-grid'] {
   grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
   gap: 1.5rem 1rem;
@@ -434,14 +435,9 @@ html[data-theme='minimal'] [data-ui='person-card'] {
   text-align: center;
 }
 html[data-theme='minimal'] [data-ui='person-photo'] {
-  aspect-ratio: 1;
   border: 0;
-  border-radius: 9999px;
-  corner-shape: round;
+  border-radius: 0.875rem;
 }
-/* The photos are portraits (2:3) with the face in the upper part: the circle takes its square
-   from the top, so the whole head shows (the middle cut foreheads off). No zoom on hover. */
 html[data-theme='minimal'] [data-ui='person-photo'] > img {
-  object-position: 50% 0%;
   transform: none;
 }
