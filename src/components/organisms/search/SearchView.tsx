@@ -226,7 +226,7 @@ const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearche
 
   return (
     <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 flex-1 overflow-y-auto px-3 pt-3 sm:px-6 sm:pt-5 tv-page">
-      <div className="sticky top-0 z-30 mb-4 rounded-2xl bg-page/80 px-2 py-2">
+      <div data-ui="search-bar" className="sticky top-0 z-30 mb-4 rounded-2xl bg-page/80 px-2 py-2">
         <form onSubmit={(e) => { e.preventDefault(); remember(query); run(query); }}>
           <SearchField
             ref={inputRef}
@@ -389,7 +389,7 @@ const RecentSearches: React.FC<{ recent: string[]; onPick: (t: string) => void; 
       <h2 className="ui-label mb-3">Recent searches</h2>
       <div className="flex flex-wrap gap-2">
         {recent.map((t) => (
-          <span key={t} className="flex items-center rounded-full border border-line bg-panel/85">
+          <span key={t} data-ui="recent-search" className="flex items-center rounded-full border border-line bg-panel/85">
             <button data-focusable="true" onClick={() => onPick(t)} className="py-1.5 pl-4 pr-2 text-sm font-bold text-fg-soft hover:text-fg">{t}</button>
             <button data-focusable="true" aria-label={`Remove ${t}`} onClick={() => onRemove(t)} className="py-1.5 pl-1 pr-3 text-fg-subtle hover:text-fg">
               <X className="h-3.5 w-3.5" />

@@ -34,6 +34,8 @@
     --ui-chip-hover-bg: rgb(255 255 255 / 0.08);
     --ui-chip-on-bg: rgb(255 255 255 / 0.15);
     --ui-chip-on-fg: #f5f5f7;
+    --ui-field-bg: rgb(255 255 255 / 0.08);
+    --ui-field-border: transparent;
     --ui-panel-radius: 0.875rem;
     --ui-label-size: var(--text-xl);
     --ui-label-weight: 600;
@@ -456,8 +458,6 @@ html[data-theme='minimal'] [data-ui='page-title'] {
 }
 html[data-theme='minimal'] [data-ui='page-search'] .ui-field-input {
   padding-block: 0.5rem;
-  border-color: transparent;
-  background-color: rgb(255 255 255 / 0.08);
   font-size: var(--text-sm);
 }
 @media (min-width: 640px) {
@@ -471,4 +471,22 @@ html[data-theme='minimal'] [data-ui='page-search'] .ui-field-input {
     width: 18rem;
     margin: 0 0 0 auto;
   }
+}
+
+/* Search (SearchView): the field and its filters on the page, not in a box; recent searches as
+   soft pills without outlines. */
+html[data-theme='minimal'] [data-ui='search-bar'] {
+  margin-inline: -0.75rem;
+  border-radius: 0;
+  padding: 0.75rem;
+}
+@media (min-width: 640px) {
+  html[data-theme='minimal'] [data-ui='search-bar'] {
+    margin-inline: -1.5rem;
+    padding-inline: 1.5rem;
+  }
+}
+html[data-theme='minimal'] [data-ui='recent-search'] {
+  border-color: transparent;
+  background-color: rgb(255 255 255 / 0.08);
 }

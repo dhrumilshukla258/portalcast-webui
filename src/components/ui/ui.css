@@ -18,6 +18,9 @@
     --ui-chip-hover-bg: var(--ui-chip-bg);
     --ui-chip-on-bg: var(--color-accent);
     --ui-chip-on-fg: var(--color-on-accent);
+    /* Search fields (SearchField.tsx). */
+    --ui-field-bg: var(--color-panel);
+    --ui-field-border: var(--color-line);
     --ui-panel-radius: 0.75rem;
     --ui-label-size: var(--text-sm);
     --ui-label-weight: 700;
@@ -189,9 +192,9 @@
   .ui-field-input {
     width: 100%;
     padding: 0.625rem 2.5rem;
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--ui-field-border);
     border-radius: var(--ui-control-radius);
-    background-color: var(--color-panel);
+    background-color: var(--ui-field-bg);
     color: var(--color-fg);
     font-size: var(--text-base);
     transition: box-shadow var(--ui-duration) var(--ui-ease);
@@ -272,7 +275,7 @@
       background-color: color-mix(in oklab, var(--ui-chip-bg) 85%, transparent);
     }
     .ui-field-input {
-      background-color: color-mix(in oklab, var(--color-panel) 85%, transparent);
+      background-color: color-mix(in oklab, var(--ui-field-bg) 85%, transparent);
     }
     .ui-row {
       background-color: color-mix(in oklab, var(--color-panel-raised) 85%, transparent);
