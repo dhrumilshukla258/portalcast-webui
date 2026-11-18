@@ -82,6 +82,9 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
               ? 'tv'
               : 'home';
   const typed = p.onSelectTypedHome;
+  // Sort orders the provider's own lists (IPTV categories, My library, Live TV's channels).
+  // Home, Movies, Shows, Cast, Search, My List and Sports keep their own order: not shown there.
+  const sortable = !onHome && !p.isSearchActive && !p.isMyListActive && !p.isSportsActive;
 
   const tabs: { id: Tab; label: string; icon: typeof House; onClick?: () => void }[] = [
     { id: 'home', label: 'Home', icon: House, onClick: p.onSelectDiscover },
@@ -159,19 +162,21 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
                   <Search className="h-[18px] w-[18px]" />
                 </button>
               )}
-              {/* The page's Filters (Home, Movies, Shows), shown here by MinimalSectionRow; just its
-                  icon (and count) until there is room for the word beside the seven tabs. */}
-              <span ref={setHeaderSlot} className="contents [&_button>span:not(.absolute)]:hidden lg:[&_button>span:not(.absolute)]:inline" />
-              <button
-                onClick={p.cycleSort}
-                className={iconButton}
-                data-focusable="true"
-                data-control="sort"
-                tabIndex={-1}
-                title={`Sort: ${p.sort === 'alphabetic' ? 'A-Z' : p.sort === 'oldest' ? 'Oldest' : 'Latest'}`}
-              >
-                <SortIcon className="h-[18px] w-[18px]" strokeWidth={1.75} />
-              </button>
+              {/* The page's Filters (Home, Movies, Shows), shown here by MinimalSectionRow: just its
+                  icon (and the count when some are set), like the other buttons here. */}
+              <span ref={setHeaderSlot} className="contents [&_button]:border-transparent [&_button>span:not(.absolute)]:hidden" />
+              {sortable && (
+                <button
+                  onClick={p.cycleSort}
+                  className={iconButton}
+                  data-focusable="true"
+                  data-control="sort"
+                  tabIndex={-1}
+                  title={`Sort: ${p.sort === 'alphabetic' ? 'A-Z' : p.sort === 'oldest' ? 'Oldest' : 'Latest'}`}
+                >
+                  <SortIcon className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                </button>
+              )}
 
               {user && (
                 <div className="relative ml-1" ref={menuRef}>
