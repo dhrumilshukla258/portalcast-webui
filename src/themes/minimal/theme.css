@@ -440,7 +440,8 @@ html[data-theme='minimal'] [data-ui='person-photo'] {
   corner-shape: round;
 }
 /* The photos are portraits (2:3) with the face in the upper part: the circle takes its square
-   from there, not from the middle (which cut foreheads off). */
+   from the top, so the whole head shows (the middle cut foreheads off). No zoom on hover. */
 html[data-theme='minimal'] [data-ui='person-photo'] > img {
-  object-position: 50% 18%;
+  object-position: 50% 0%;
+  transform: none;
 }
