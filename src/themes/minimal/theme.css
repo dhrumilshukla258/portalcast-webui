@@ -439,3 +439,8 @@ html[data-theme='minimal'] [data-ui='person-photo'] {
   border-radius: 9999px;
   corner-shape: round;
 }
+/* The photos are portraits (2:3) with the face in the upper part: the circle takes its square
+   from there, not from the middle (which cut foreheads off). */
+html[data-theme='minimal'] [data-ui='person-photo'] > img {
+  object-position: 50% 18%;
+}
