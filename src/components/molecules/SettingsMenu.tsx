@@ -98,7 +98,7 @@ export const SettingsMenu = React.memo(() => {
       episode: isEpisode && item?.episode_num != null ? String(item.episode_num) : '',
     }));
   }, [defaultTitle, isEpisode, item?.year, item?.series_number, item?.episode_num]);
-  const subField = 'w-full rounded-md border border-gray-700 bg-gray-950/70 px-2 py-1.5 text-sm text-gray-100 outline-none focus:border-blue-500';
+  const subField = 'w-full rounded-md border border-gray-700 bg-gray-950/70 px-2 py-1.5 text-sm text-gray-100 outline-none focus:border-focus';
 
   const qualities = useVideoQualityOptions({ auto: true, sort: 'ascending' });
   const audioOptions = useAudioOptions();
@@ -289,7 +289,7 @@ export const SettingsMenu = React.memo(() => {
               <span>{c.label}</span>
             </button>
           ))}
-          <p className="px-3 pt-1 text-[11px] leading-snug text-gray-500">
+          <p className="px-3 pt-1 text-2xs leading-snug text-gray-500">
             The other player gets this stream only, never your provider's address. Progress there is not saved here.
           </p>
         </div>
@@ -577,7 +577,7 @@ export const SettingsMenu = React.memo(() => {
             className="pc-row mb-1 flex w-full items-center justify-between text-left"
           >
             <div className="flex items-center space-x-2">
-              <FaChromecast className="h-4 w-4 text-blue-400" />
+              <FaChromecast className="h-4 w-4 text-accent" />
               <span>Google Cast (Chromecast)</span>
             </div>
           </GoogleCastButton>

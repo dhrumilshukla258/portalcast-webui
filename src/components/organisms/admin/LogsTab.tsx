@@ -68,7 +68,7 @@ const LogsTab: React.FC = () => {
           </button>
         </div>
       </div>
-      <div className="custom-scrollbar h-[600px] overflow-y-auto rounded-2xl border border-gray-800 bg-[#050505] p-6 font-mono text-[11px] leading-relaxed shadow-2xl">
+      <div className="custom-scrollbar h-[600px] overflow-y-auto rounded-2xl border border-gray-800 bg-surface-1 p-6 font-mono text-2xs leading-relaxed shadow-2xl">
         {serverLogs.length === 0 ? (
           <div className="flex h-full items-center justify-center italic text-gray-600">
             No incoming logs...

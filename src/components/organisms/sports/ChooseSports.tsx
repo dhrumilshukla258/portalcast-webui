@@ -71,7 +71,7 @@ const ChooseSports: React.FC<{ onClose: (saved: boolean) => void }> = ({ onClose
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex flex-col bg-[#05080F]" role="dialog" aria-modal="true" data-focus-group="choose-sports">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-surface-2" role="dialog" aria-modal="true" data-focus-group="choose-sports">
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-white/10 px-2 pt-[env(safe-area-inset-top)] sm:px-6">
         <button data-focusable="true" onClick={() => window.history.back()} aria-label="Close" className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/10">
           <X className="h-6 w-6" />
@@ -94,7 +94,7 @@ const ChooseSports: React.FC<{ onClose: (saved: boolean) => void }> = ({ onClose
                     data-focusable="true"
                     onClick={() => toggle(l.id)}
                     className={`flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-colors ${
-                      on ? 'bg-sky-400 text-[#082F49]' : 'border border-white/15 text-gray-200 hover:border-white/30'
+                      on ? 'bg-sky-400 text-on-accent' : 'border border-white/15 text-gray-200 hover:border-white/30'
                     }`}
                   >
                     {on && <Check className="h-4 w-4" />}
@@ -111,7 +111,7 @@ const ChooseSports: React.FC<{ onClose: (saved: boolean) => void }> = ({ onClose
           data-focusable="true"
           onClick={() => void save()}
           disabled={saving || !data || chosen.length === 0}
-          className="h-12 w-full rounded-xl bg-white text-base font-bold text-[#0A0F1C] disabled:opacity-50"
+          className="h-12 w-full rounded-xl bg-white text-base font-bold text-surface-3 disabled:opacity-50"
         >
           {saving ? 'Saving…' : chosen.length === 0 ? 'Pick at least one' : `Show ${chosen.length} ${chosen.length === 1 ? 'league' : 'leagues'}`}
         </button>

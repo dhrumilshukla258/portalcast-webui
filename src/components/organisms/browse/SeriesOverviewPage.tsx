@@ -6,6 +6,7 @@ import { URL_PATHS } from '@/api/config';
 import { MediaInfoHeader } from '@/components/organisms/video/MediaInfoHeader';
 import EpisodeAccordionRow from '@/components/molecules/EpisodeAccordionRow';
 import { useSeasonEpisodes } from '@/hooks/useSeasonEpisodes';
+import { seasonLabel, seasonNumberOf } from '@/utils/seasonNumber';
 
 interface SeriesOverviewPageProps {
   seriesItem: MediaItem;
@@ -16,17 +17,6 @@ interface SeriesOverviewPageProps {
   onPlayEpisode: (episode: MediaItem) => void;
   onContinueWatching?: () => void;
   onBack: () => void;
-}
-
-// Derives a clean "Season N" label from whatever number appears in the
-// season's own title/name, instead of trusting that field verbatim — some
-// providers return season entries whose title already has the series name
-// baked in (e.g. "Season 1. The Apartment Job - Hindi"), which read fine as
-// a one-off but look wrong repeated across every tab/chip.
-function seasonLabelFor(season: MediaItem, index: number): string {
-  const raw = season.title || season.name || '';
-  const num = season.number ?? raw.match(/^\D*(\d+)/)?.[1];
-  return `Season ${num || index + 1}`;
 }
 
 // Uses the same MediaInfoHeader as the movie detail page — everything
@@ -110,28 +100,29 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
         creditLabel="Created by"
         trailerKey={seriesItem.trailer_key}
         metaExtra={
-          <span className="text-gray-400">
+          <span className="text-fg-muted">
             {seasons.length || 0} season{seasons.length === 1 ? '' : 's'}
           </span>
         }
       >
-        <h3 className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-wider text-gray-500">
+        <h3 className="ui-label mb-3 flex items-center gap-2">
           <Layers size={13} />
           Seasons
         </h3>
 
         {seasons.length === 0 && loadingSeasons ? (
           <div className="flex w-full justify-center py-6">
-            <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-t-2 border-blue-500" />
+            <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-t-2 border-accent" />
           </div>
         ) : seasons.length === 0 ? (
-          <p className="py-2 text-sm text-gray-500">No seasons found.</p>
+          <p className="py-2 text-sm text-fg-subtle">No seasons found.</p>
         ) : (
           <>
             {/* Season tabs — picking one loads its episodes below, inline. */}
             <div className="flex flex-wrap gap-2">
               {seasons.map((season, index) => {
                 const isActive = season.id === selectedSeasonId;
+                const number = seasonNumberOf(season, index);
                 return (
                   <button
                     key={`${season.id}-${index}`}
@@ -139,8 +130,8 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
                     data-focusable="true"
                     className={`flex items-center gap-2 rounded-xl border py-2 pl-2 pr-3.5 text-left transition-colors ${
                       isActive
-                        ? 'border-blue-500/60 bg-blue-500/10'
-                        : 'border-white/10 bg-white/5 hover:border-blue-500/40 hover:bg-white/10'
+                        ? 'border-accent/60 bg-accent/10'
+                        : 'border-line bg-white/5 hover:border-focus/40 hover:bg-white/10'
                     }`}
                   >
                     <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-black/30">
@@ -157,13 +148,13 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-blue-500/20 to-transparent">
                           <span className="select-none text-xs font-black text-white/50">
-                            S{seasonLabelFor(season, index).replace('Season ', '')}
+                            {number === 0 ? 'SP' : `S${number}`}
                           </span>
                         </div>
                       )}
                     </div>
-                    <span className={`truncate text-sm font-bold ${isActive ? 'text-white' : 'text-gray-200'}`}>
-                      {seasonLabelFor(season, index)}
+                    <span className={`truncate text-sm font-bold ${isActive ? 'text-fg' : 'text-fg-soft'}`}>
+                      {seasonLabel(number)}
                     </span>
                   </button>
                 );
@@ -180,7 +171,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
               }`}
             >
               {episodes.length === 0 && !loadingEpisodes ? (
-                <p className="py-4 text-center text-sm text-gray-500">No episodes found for this season.</p>
+                <p className="py-4 text-center text-sm text-fg-subtle">No episodes found for this season.</p>
               ) : (
                 episodes.map((ep, index) => {
                   const record = progressByMediaId.get(String(ep.id));
@@ -203,13 +194,13 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
               )}
               {episodes.length === 0 && loadingEpisodes && (
                 <div className="flex w-full justify-center py-8">
-                  <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-t-2 border-blue-500" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-t-2 border-accent" />
                 </div>
               )}
               {hasMoreEpisodes && !loadingEpisodes && (
                 <div ref={loadMoreSentinelRef} className="flex w-full justify-center py-4">
                   {loadingMoreEpisodes && (
-                    <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-t-2 border-blue-500" />
+                    <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-t-2 border-accent" />
                   )}
                 </div>
               )}
@@ -222,7 +213,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
         <button
           onClick={onContinueWatching}
           data-focusable="true"
-          className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 text-left transition-colors hover:bg-white/10 sm:w-96"
+          className="flex w-full items-center gap-3 rounded-xl border border-line bg-white/5 p-3 text-left transition-colors hover:bg-white/10 sm:w-96"
         >
           <div className="relative flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-black/30">
             {continueImageUrl ? (
@@ -232,12 +223,12 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="truncate text-sm font-bold text-white">
+            <h4 className="truncate text-sm font-bold text-fg">
               {continueEntry.meta?.episodeTitle || continueEntry.meta?.name || 'Continue'}
             </h4>
             <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/10">
               <div
-                className="h-full rounded-full bg-blue-500"
+                className="ui-accent h-full rounded-full"
                 style={{ width: `${continueEntry.meta?.progressPercent || 0}%` }}
               />
             </div>

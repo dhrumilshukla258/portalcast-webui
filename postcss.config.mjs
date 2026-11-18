@@ -7,7 +7,10 @@ import legacyFallbacks from './postcss/legacy-fallbacks.mjs';
 // Lightning CSS when the CSS is minified (vite.config.ts css.lightningcss).
 export default {
   plugins: [
-    (await import('@tailwindcss/postcss')).default(),
+    // optimize: flatten Tailwind's nested @supports before cascadeLayers, which drops nested
+    // at-rules. Production does this by default; without it the dev server loses every
+    // `color/opacity` utility's var() form, so themes cannot recolour them.
+    (await import('@tailwindcss/postcss')).default({ optimize: { minify: false } }),
     cascadeLayers(),
     legacyFallbacks(),
   ],

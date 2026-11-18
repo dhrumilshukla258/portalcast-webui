@@ -64,7 +64,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
           {config.providerType === 'm3u' ? (
             <div className="space-y-4">
               <div>
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                <label className="ml-1 text-3xs font-black uppercase tracking-widest text-gray-500">
                   Playlist link (M3U)
                 </label>
                 <input
@@ -72,12 +72,12 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                   type="url"
                   value={config.m3uUrl ?? ''}
                   onChange={handleInputChange}
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-focus focus:ring-1 focus:ring-focus"
                   placeholder="http://provider.example/get.php?username=…&type=m3u_plus"
                 />
               </div>
               <div>
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                <label className="ml-1 text-3xs font-black uppercase tracking-widest text-gray-500">
                   Guide link (XMLTV, optional)
                 </label>
                 <input
@@ -85,7 +85,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                   type="url"
                   value={config.xmltvUrl ?? ''}
                   onChange={handleInputChange}
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-focus focus:ring-1 focus:ring-focus"
                   placeholder="Empty: the guide link inside the playlist"
                 />
               </div>
@@ -96,38 +96,38 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
           ) : (
           <div className="space-y-4">
             <div>
-              <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+              <label className="ml-1 text-3xs font-black uppercase tracking-widest text-gray-500">
                 Server Hostname
               </label>
               <input
                 name="hostname"
                 value={config.hostname}
                 onChange={handleInputChange}
-                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-focus focus:ring-1 focus:ring-focus"
                 placeholder="portal.example.com"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                <label className="ml-1 text-3xs font-black uppercase tracking-widest text-gray-500">
                   Port
                 </label>
                 <input
                   name="port"
                   value={config.port}
                   onChange={handleInputChange}
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden focus:border-focus"
                 />
               </div>
               <div>
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                <label className="ml-1 text-3xs font-black uppercase tracking-widest text-gray-500">
                   Context
                 </label>
                 <input
                   name="contextPath"
                   value={config.contextPath}
                   onChange={handleInputChange}
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden focus:border-focus"
                   placeholder="/c/"
                 />
               </div>
@@ -177,18 +177,18 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
         {config.providerType === 'xtream' ? (
           <div className="space-y-4">
             <div>
-              <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+              <label className="ml-1 text-3xs font-black uppercase tracking-widest text-gray-500">
                 Username
               </label>
               <input
                 name="username"
                 value={config.username}
                 onChange={handleInputChange}
-                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500"
+                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-focus"
               />
             </div>
             <div>
-              <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+              <label className="ml-1 text-3xs font-black uppercase tracking-widest text-gray-500">
                 Password
               </label>
               <input
@@ -196,14 +196,14 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                 type="text"
                 value={config.password}
                 onChange={handleInputChange}
-                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500"
+                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-focus"
               />
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+              <label className="ml-1 text-3xs font-black uppercase tracking-widest text-gray-500">
                 MAC Address
               </label>
               <input
@@ -211,12 +211,12 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                 value={config.mac}
                 onChange={handleInputChange}
                 placeholder="00:1A:79:..."
-                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 font-mono text-sm outline-hidden transition-all focus:border-blue-500"
+                className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 font-mono text-sm outline-hidden transition-all focus:border-focus"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                <label className="ml-1 text-3xs font-black uppercase tracking-widest text-gray-500">
                   STB Model
                 </label>
                 <input
@@ -224,42 +224,42 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({
                   value={config.stbType}
                   onChange={handleInputChange}
                   placeholder="MAG250"
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-focus"
                 />
               </div>
               <div>
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                <label className="ml-1 text-3xs font-black uppercase tracking-widest text-gray-500">
                   Serial Number
                 </label>
                 <input
                   name="serialNumber"
                   value={config.serialNumber}
                   onChange={handleInputChange}
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-hidden transition-all focus:border-focus"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                <label className="ml-1 text-3xs font-black uppercase tracking-widest text-gray-500">
                   Device ID 1
                 </label>
                 <input
                   name="deviceId1"
                   value={config.deviceId1}
                   onChange={handleInputChange}
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-xs outline-hidden transition-all focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-xs outline-hidden transition-all focus:border-focus"
                 />
               </div>
               <div>
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                <label className="ml-1 text-3xs font-black uppercase tracking-widest text-gray-500">
                   Device ID 2
                 </label>
                 <input
                   name="deviceId2"
                   value={config.deviceId2}
                   onChange={handleInputChange}
-                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-xs outline-hidden transition-all focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-xs outline-hidden transition-all focus:border-focus"
                 />
               </div>
             </div>

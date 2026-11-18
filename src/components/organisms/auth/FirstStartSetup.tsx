@@ -50,8 +50,8 @@ const FirstStartSetup: React.FC<Props> = ({ minPasswordLength, onCreated }) => {
   return (
     <form onSubmit={submit} className="flex w-full flex-col gap-3">
       <div className="mb-1 text-center">
-        <h1 className="text-xl font-black text-white">Welcome to PortalCast</h1>
-        <p className="mt-1 text-sm text-gray-400">Create the admin account to finish setting up this server.</p>
+        <h1 className="text-xl font-black text-fg">Welcome to PortalCast</h1>
+        <p className="mt-1 text-sm text-fg-muted">Create the admin account to finish setting up this server.</p>
       </div>
       <input className={input} placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
       <input
@@ -85,11 +85,11 @@ const FirstStartSetup: React.FC<Props> = ({ minPasswordLength, onCreated }) => {
       <button
         type="submit"
         disabled={busy}
-        className="mt-1 w-full rounded-xl bg-linear-to-r from-indigo-500 to-violet-600 py-3 text-sm font-bold text-white disabled:opacity-60"
+        className="mt-1 w-full rounded-xl ui-brand py-3 text-sm font-bold disabled:opacity-60"
       >
         {busy ? 'Creating…' : 'Create admin account'}
       </button>
-      <p className="text-center text-xs text-gray-500">
+      <p className="text-center text-xs text-fg-subtle">
         API keys, email and everything else are set afterwards in Admin › Settings.
       </p>
     </form>

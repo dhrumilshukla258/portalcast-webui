@@ -1,5 +1,6 @@
 import React from 'react';
 import { isTvApp } from '@/utils/helpers';
+import Chip from '@/components/ui/Chip';
 
 const TV = isTvApp();
 
@@ -43,18 +44,16 @@ const SectionChips: React.FC<{
     {CHIPS.map((c) => {
       const on = sectionOn(active, c.id);
       return (
-        <button
+        <Chip
           key={c.id}
-          data-focusable="true"
+          variant="toggle"
+          selected={on}
           data-active={active === c.id ? 'true' : undefined}
-          aria-pressed={on}
           onClick={() => onSelect(nextSection(active, c.id))}
-          className={`${TV ? 'h-[38px] px-5 text-[15px]' : 'h-9 px-4 text-sm'} shrink-0 rounded-full border font-bold transition-colors ${
-            on ? 'border-white/40 bg-white/15 text-white' : 'border-white/25 text-gray-200'
-          }`}
+          className={TV ? 'h-[38px] px-5 text-[15px]' : ''}
         >
           {c.label}
-        </button>
+        </Chip>
       );
     })}
     {trailing && <div className="ml-auto">{trailing}</div>}

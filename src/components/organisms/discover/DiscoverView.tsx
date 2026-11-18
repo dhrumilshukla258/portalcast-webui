@@ -459,6 +459,11 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           hasMore={row.hasMore}
           loadingMore={row.loadingMore}
           onLoadMore={() => loadMoreGenreRow(genre, activeType)}
+          onTitleClick={() => {
+            // The row's title adds its genre to Filters; the results start at the top.
+            handleGenresChange([...new Set([...(activeFilters.genre ?? []), genre])]);
+            document.getElementById('app-content-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
         />
       ))}
     </>
@@ -515,7 +520,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           eliminates Chromium's nested-backdrop-filter compositing bug that
           caused the sticky-bar flicker — there's no backdrop-filter left
           here to nest. */}
-      <div className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-[#05080F] px-3 py-2 sm:-mx-6 sm:px-6">
+      <div className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-surface-2 px-3 py-2 sm:-mx-6 sm:px-6">
         {sectionChips?.(filterButton)}
       </div>
 

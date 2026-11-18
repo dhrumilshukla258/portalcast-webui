@@ -44,9 +44,9 @@ export const MyListButton: React.FC<{ contentId: string }> = ({ contentId }) => 
       onClick={() => void toggle()}
       data-focusable="true"
       aria-pressed={inList}
-      className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 font-bold text-gray-200 transition-colors hover:bg-white/10"
+      className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-white/5 py-3 font-bold text-fg-soft transition-colors hover:bg-white/10"
     >
-      {inList ? <Check size={18} className="text-sky-400" /> : <Plus size={18} />}
+      {inList ? <Check size={18} className="text-accent" /> : <Plus size={18} />}
       <span>{inList ? 'In My List' : 'Add to My List'}</span>
     </button>
   );
@@ -69,8 +69,8 @@ export const MoreLikeThis: React.FC<{ contentId: string }> = ({ contentId }) => 
   }, [contentId]);
   if (!openTitle || items.length === 0) return null;
   return (
-    <div className="space-y-3 border-t border-white/10 p-4 sm:p-6">
-      <h3 className="text-lg font-bold text-white">More Like This</h3>
+    <div className="space-y-3 border-t border-line p-4 sm:p-6">
+      <h3 className="text-lg font-bold text-fg">More Like This</h3>
       <div className="flex gap-3 overflow-x-auto px-1 pb-2 pt-1 custom-scrollbar sm:gap-4" data-focus-group="more-like-this">
         {items.map((item) => (
           <div key={String(item.id)} className="w-28 shrink-0 sm:w-36">

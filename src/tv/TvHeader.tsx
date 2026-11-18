@@ -40,7 +40,7 @@ const TvHeader: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="tv-header relative z-50 flex h-[72px] shrink-0 items-center gap-12 bg-[#05080F] px-12">
+    <header className="tv-header relative z-50 flex h-[72px] shrink-0 items-center gap-12 bg-surface-2 px-12">
       <img src="/portalcast-logo.svg" alt="PortalCast" className="h-[26px] w-auto select-none" draggable={false} />
       <nav className="flex items-center gap-8" data-tv-group="tabs">
         {tabs.filter((t) => t.onSelect).map((t) => (
@@ -96,7 +96,7 @@ const TvSettingsPanel: React.FC<{ onClose: () => void; onSubtitles: () => void; 
   const item = 'flex w-full items-center gap-4 rounded-[10px] px-5 py-4 text-left text-[17px] font-semibold text-slate-100';
   return (
     <div className="fixed inset-0 z-[100] flex justify-end bg-black/60" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label="Settings" className="flex h-full w-[400px] flex-col gap-2 border-l border-white/10 bg-[#0B1120] p-8" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label="Settings" className="flex h-full w-[400px] flex-col gap-2 border-l border-white/10 bg-surface-5 p-8" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-[26px] font-bold text-white">Settings</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="tv-icon-button flex h-10 w-10 items-center justify-center rounded-full text-slate-300" data-focusable="true" tabIndex={-1}>

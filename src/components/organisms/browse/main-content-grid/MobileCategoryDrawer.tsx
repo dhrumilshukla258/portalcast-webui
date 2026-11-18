@@ -25,15 +25,15 @@ const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex md:hidden">
       <div className="absolute inset-0 bg-black/85" onClick={onClose} />
-      <div className="animate-in slide-in-from-left relative flex h-full w-full flex-col bg-[#05080F] p-3 pt-[max(0.75rem,env(safe-area-inset-top))] duration-200">
+      <div className="animate-in slide-in-from-left relative flex h-full w-full flex-col bg-page p-3 pt-[max(0.75rem,env(safe-area-inset-top))] duration-200">
         <div className="mb-2 flex items-center justify-between px-1">
-          <span className="text-xs font-black uppercase tracking-tight text-white/60">
+          <span className="ui-label text-xs font-black">
             Browse
           </span>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1.5 text-gray-400 hover:bg-white/10 hover:text-white"
+            className="rounded-full p-1.5 text-fg-muted hover:bg-white/10 hover:text-fg"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

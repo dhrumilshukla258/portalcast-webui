@@ -23,7 +23,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen app-bg text-gray-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen app-bg text-gray-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-fg">
       {/* Top Navbar */}
       <header className="px-6 py-5 border-b border-gray-800/40 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between">
         <div className="flex items-center">
@@ -39,7 +39,7 @@ export default function Home() {
           {isLoggedIn ? (
             <button
               onClick={() => navigate('/')}
-              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition-all duration-300 shadow-md shadow-indigo-600/10 hover:shadow-indigo-500/20 hover:scale-[1.02] flex items-center space-x-2"
+              className="px-5 py-2.5 rounded-xl ui-brand hover:brightness-110 font-medium text-sm transition-all duration-300 shadow-md shadow-indigo-600/10 hover:shadow-indigo-500/20 hover:scale-[1.02] flex items-center space-x-2"
             >
               <span>TV Portal</span>
               <ChevronRight className="w-4 h-4" />
@@ -47,7 +47,7 @@ export default function Home() {
           ) : (
             <button
               onClick={() => navigate('/login')}
-              className="px-5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700/80 text-gray-200 font-medium text-sm transition-all duration-300 border border-gray-700/50 hover:scale-[1.02]"
+              className="px-5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700/80 text-fg-soft font-medium text-sm transition-all duration-300 border border-gray-700/50 hover:scale-[1.02]"
             >
               Sign In
             </button>
@@ -66,19 +66,19 @@ export default function Home() {
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
               A Premium Hub for{' '}
-              <span className="bg-linear-to-r from-indigo-400 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+              <span className="ui-brand-text">
                 Portalcast Streams
               </span>
             </h1>
 
-            <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
+            <p className="text-fg-muted text-lg leading-relaxed max-w-xl">
               Connect your Stalker middleware or Xtream codes provider and enjoy seamless live television, high-definition movies, and serials in a responsive, gorgeous, and dynamic interface optimized for both Web and Smart TVs.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <button
                 onClick={handleLaunch}
-                className="px-8 py-4 rounded-2xl bg-linear-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold text-base transition-all duration-300 shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:scale-[1.03] flex items-center justify-center space-x-3 cursor-pointer"
+                className="px-8 py-4 rounded-2xl ui-brand hover:brightness-110 font-semibold text-base transition-all duration-300 shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:scale-[1.03] flex items-center justify-center space-x-3 cursor-pointer"
               >
                 <Play className="w-5 h-5 fill-current" />
                 <span>{isLoggedIn ? 'Launch TV Portal' : 'Start Watching Now'}</span>
@@ -87,7 +87,7 @@ export default function Home() {
               {!isLoggedIn && (
                 <button
                   onClick={() => navigate('/verify')}
-                  className="px-8 py-4 rounded-2xl bg-gray-900/60 hover:bg-gray-800/80 text-gray-200 font-semibold text-base transition-all duration-300 border border-gray-850 hover:scale-[1.02] flex items-center justify-center space-x-2 cursor-pointer"
+                  className="px-8 py-4 rounded-2xl bg-gray-900/60 hover:bg-gray-800/80 text-fg-soft font-semibold text-base transition-all duration-300 border border-gray-850 hover:scale-[1.02] flex items-center justify-center space-x-2 cursor-pointer"
                   title="For entering a pairing code shown on a TV — not for logging this device in via a code"
                 >
                   <span>Have a TV Pairing Code?</span>
@@ -97,7 +97,7 @@ export default function Home() {
           </div>
 
           <div className="md:col-span-5 relative hidden md:block">
-            <div className="absolute -inset-1 rounded-3xl bg-linear-to-r from-indigo-500 to-violet-600 opacity-20 blur-2xl"></div>
+            <div className="absolute -inset-1 rounded-3xl ui-brand opacity-20 blur-2xl"></div>
             <div className="relative border border-gray-800 bg-gray-900/60 backdrop-blur-md rounded-3xl p-6 shadow-2xl overflow-hidden aspect-4/3 flex flex-col justify-between">
               <div className="flex items-center justify-between border-b border-gray-850 pb-4">
                 <div className="flex space-x-2">
@@ -114,11 +114,11 @@ export default function Home() {
                     <Tv className="w-8 h-8" />
                   </div>
                   <div className="text-sm font-semibold tracking-wide text-gray-300">Smart TV Ready</div>
-                  <div className="text-xs text-gray-500 max-w-[200px]">Optimized keyboard and remote controller navigation.</div>
+                  <div className="text-xs text-fg-subtle max-w-[200px]">Optimized keyboard and remote controller navigation.</div>
                 </div>
               </div>
 
-              <div className="border-t border-gray-850 pt-4 flex justify-between items-center text-xs text-gray-500">
+              <div className="border-t border-gray-850 pt-4 flex justify-between items-center text-xs text-fg-subtle">
                 <span>Cloud Sync Enabled</span>
                 <span>Active Profile</span>
               </div>
@@ -135,7 +135,7 @@ export default function Home() {
               <Sparkles className="w-6 h-6" />
             </div>
             <h3 className="font-bold text-lg">Cloud Synchronization</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
+            <p className="text-fg-muted text-sm leading-relaxed">
               Your favorites list, channel recents, and watch progress are synced on the fly to your personal user account.
             </p>
           </div>
@@ -145,7 +145,7 @@ export default function Home() {
               <Tv className="w-6 h-6" />
             </div>
             <h3 className="font-bold text-lg">QR Device Authorization</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
+            <p className="text-fg-muted text-sm leading-relaxed">
               No tedious passwords typing on TV screens. Simply scan the generated QR code with your mobile device and log in instantly.
             </p>
           </div>
@@ -155,7 +155,7 @@ export default function Home() {
               <Shield className="w-6 h-6" />
             </div>
             <h3 className="font-bold text-lg">Unified Media Center</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
+            <p className="text-fg-muted text-sm leading-relaxed">
               Consolidate your Stalker middleware and Xtream Codes TV streams and VOD libraries in one single, high-performance platform.
             </p>
           </div>
@@ -176,7 +176,7 @@ export default function Home() {
             </div>
             
             <div className="space-y-3.5">
-              <p className="text-sm text-gray-400 leading-normal italic">
+              <p className="text-sm text-fg-muted leading-normal italic">
                 No known issues at this time. Recently resolved: Continue Watching cache staleness, incomplete history reset, cross-device category desync, Google sign-in messaging for pending accounts, and autoplay from Continue Watching.
               </p>
             </div>
@@ -194,26 +194,26 @@ export default function Home() {
             <div className="space-y-4">
               <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
                 <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
-                <h4 className="text-sm font-semibold text-gray-200">Expanded TV Browser Support</h4>
-                <p className="text-xs text-gray-400 leading-relaxed">Optimizing responsive controls and layouts for generic internal web applications on smart televisions.</p>
+                <h4 className="text-sm font-semibold text-fg-soft">Expanded TV Browser Support</h4>
+                <p className="text-xs text-fg-muted leading-relaxed">Optimizing responsive controls and layouts for generic internal web applications on smart televisions.</p>
               </div>
 
               <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
                 <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
-                <h4 className="text-sm font-semibold text-gray-200">User Feature Request Pipeline</h4>
-                <p className="text-xs text-gray-400 leading-relaxed">Direct community implementation board allowing viewers to submit and upvote client modifications.</p>
+                <h4 className="text-sm font-semibold text-fg-soft">User Feature Request Pipeline</h4>
+                <p className="text-xs text-fg-muted leading-relaxed">Direct community implementation board allowing viewers to submit and upvote client modifications.</p>
               </div>
 
               <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
                 <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
-                <h4 className="text-sm font-semibold text-gray-200">Centralized Bug Report Collection</h4>
-                <p className="text-xs text-gray-400 leading-relaxed">Automated exception logging to capture interface issues and improve application stability.</p>
+                <h4 className="text-sm font-semibold text-fg-soft">Centralized Bug Report Collection</h4>
+                <p className="text-xs text-fg-muted leading-relaxed">Automated exception logging to capture interface issues and improve application stability.</p>
               </div>
 
               <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
                 <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
-                <h4 className="text-sm font-semibold text-gray-200">Push Notification Engine</h4>
-                <p className="text-xs text-gray-400 leading-relaxed">Real-time inside-app banners and notifications regarding admin approvals, maintenance logs, or fresh updates.</p>
+                <h4 className="text-sm font-semibold text-fg-soft">Push Notification Engine</h4>
+                <p className="text-xs text-fg-muted leading-relaxed">Real-time inside-app banners and notifications regarding admin approvals, maintenance logs, or fresh updates.</p>
               </div>
             </div>
           </div>
@@ -222,7 +222,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-6 border-t border-gray-900 text-center text-xs text-gray-500 bg-gray-950">
+      <footer className="py-6 border-t border-gray-900 text-center text-xs text-fg-subtle bg-gray-950">
         <p>&copy; {new Date().getFullYear()} Portalcast. All Rights Reserved.</p>
       </footer>
     </div>

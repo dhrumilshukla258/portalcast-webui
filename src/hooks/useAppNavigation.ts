@@ -260,33 +260,41 @@ export function useAppNavigation(
     [context, fetchData, focusedIndex, items, totalItemsCount, detailItem, showDiscover, variantPickerItem, variantPickerOptions, setHistory, isFromContinueWatching]
   );
 
+  const playChannel = useCallback(
+    (item: MediaItem, startTime?: number, endTime?: number) => {
+      if (!item.cmd) {
+        toast.error('Channel has no command to play.');
+        return false;
+      }
+      const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
+      let channelUrl = item.cmd;
+      if (channelUrl.startsWith('/')) {
+        channelUrl = `${baseUrl}${channelUrl}`;
+      }
+      if (startTime && endTime) {
+        // item.cmd is already a full /live.m3u8?t=<token>&id=...&proxy=1
+        // URL from the backend (the token carries the real channel + our
+        // identity) — just append the catchup window, don't re-wrap it.
+        channelUrl = `${channelUrl}&start_time=${startTime}&end_time=${endTime}`;
+      }
+
+      updatePreferences({
+        lastSelectedCategory: {
+          ...(user?.preferences?.lastSelectedCategory || {}),
+          lastPlayedTvChannelId: item.id.toString(),
+        },
+      });
+      addToRecentChannels(item);
+      openPlayer(item, channelUrl, channelUrl);
+      return true;
+    },
+    [addToRecentChannels, openPlayer, updatePreferences, user?.preferences?.lastSelectedCategory]
+  );
+
   const startPlayback = useCallback(
     async (item: MediaItem, startTime?: number, endTime?: number) => {
       if (contentType === 'tv') {
-        if (!item.cmd) {
-          toast.error('Channel has no command to play.');
-          return;
-        }
-        const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
-        let channelUrl = item.cmd;
-        if (channelUrl.startsWith('/')) {
-          channelUrl = `${baseUrl}${channelUrl}`;
-        }
-        if (startTime && endTime) {
-          // item.cmd is already a full /live.m3u8?t=<token>&id=...&proxy=1
-          // URL from the backend (the token carries the real channel + our
-          // identity) — just append the catchup window, don't re-wrap it.
-          channelUrl = `${channelUrl}&start_time=${startTime}&end_time=${endTime}`;
-        }
-
-        updatePreferences({
-          lastSelectedCategory: {
-            ...(user?.preferences?.lastSelectedCategory || {}),
-            lastPlayedTvChannelId: item.id.toString(),
-          },
-        });
-        addToRecentChannels(item);
-        openPlayer(item, channelUrl, channelUrl);
+        playChannel(item, startTime, endTime);
         return;
       }
 
@@ -428,11 +436,9 @@ export function useAppNavigation(
     [
       contentType,
       isPortal,
-      addToRecentChannels,
+      playChannel,
       openPlayer,
       context,
-      updatePreferences,
-      user?.preferences?.lastSelectedCategory,
       currentSeriesItem,
     ]
   );
@@ -666,6 +672,7 @@ export function useAppNavigation(
     playCastedMedia,
     pushFrame,
     startPlayback,
+    playChannel,
     episodeSnapshot,
     backTargets,
   };

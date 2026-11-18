@@ -24,27 +24,27 @@ const typeColor: Record<StreamFailureItemType, string> = {
 function StateBadge({ row }: { row: StreamFailure }) {
   if (row.autoHidden) {
     return (
-      <span className="rounded-sm bg-red-900/30 px-2 py-0.5 text-[10px] font-black uppercase text-red-400">
+      <span className="rounded-sm bg-red-900/30 px-2 py-0.5 text-3xs font-black uppercase text-red-400">
         Auto-hidden
       </span>
     );
   }
   if (row.dismissed) {
     return (
-      <span className="rounded-sm bg-gray-800 px-2 py-0.5 text-[10px] font-black uppercase text-gray-500">
+      <span className="rounded-sm bg-gray-800 px-2 py-0.5 text-3xs font-black uppercase text-gray-500">
         Dismissed
       </span>
     );
   }
   if (row.failureCount === 0) {
     return (
-      <span className="rounded-sm bg-green-900/30 px-2 py-0.5 text-[10px] font-black uppercase text-green-400">
+      <span className="rounded-sm bg-green-900/30 px-2 py-0.5 text-3xs font-black uppercase text-green-400">
         Recovered
       </span>
     );
   }
   return (
-    <span className="rounded-sm bg-yellow-900/30 px-2 py-0.5 text-[10px] font-black uppercase text-yellow-400">
+    <span className="rounded-sm bg-yellow-900/30 px-2 py-0.5 text-3xs font-black uppercase text-yellow-400">
       Watching
     </span>
   );
@@ -122,10 +122,10 @@ const BrokenStreams: React.FC = () => {
                         <div className="truncate text-xs text-gray-200" title={row.title ?? row.itemId}>
                           {row.title ?? <span className="italic text-gray-600">Unknown ({row.itemId})</span>}
                         </div>
-                        <div className="truncate text-[11px] text-gray-500">{row.category ?? '—'}</div>
+                        <div className="truncate text-2xs text-gray-500">{row.category ?? '—'}</div>
                       </td>
                       <td className="py-2 pr-4">
-                        <span className={`rounded-sm px-2 py-0.5 text-[10px] font-black uppercase ${typeColor[row.itemType]}`}>
+                        <span className={`rounded-sm px-2 py-0.5 text-3xs font-black uppercase ${typeColor[row.itemType]}`}>
                           {typeLabel[row.itemType]}
                         </span>
                       </td>
@@ -194,7 +194,7 @@ const BrokenStreams: React.FC = () => {
                         </div>
                         {result && (
                           <div
-                            className={`mt-1.5 flex items-start gap-1 text-[11px] ${
+                            className={`mt-1.5 flex items-start gap-1 text-2xs ${
                               result.ok ? 'text-green-400' : 'text-red-400'
                             }`}
                           >

@@ -61,7 +61,7 @@ const SettingRow: React.FC<{ s: ServerSetting; onSaved: (r: SettingsResponse) =>
 
   const input = (() => {
     const base =
-      'w-full rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-2 text-sm text-gray-100 outline-none focus:border-blue-500 disabled:opacity-50';
+      'w-full rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-2 text-sm text-gray-100 outline-none focus:border-focus disabled:opacity-50';
     if (s.type === 'boolean') {
       const on = Boolean(s.value);
       return (
@@ -110,15 +110,15 @@ const SettingRow: React.FC<{ s: ServerSetting; onSaved: (r: SettingsResponse) =>
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-semibold text-gray-100">{s.label}</span>
-          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${SOURCE_STYLE[s.source]}`}>
+          <span className={`rounded-full border px-2 py-0.5 text-2xs font-semibold ${SOURCE_STYLE[s.source]}`}>
             {SOURCE_LABEL[s.source]}
           </span>
           {s.apply === 'restart' && (
-            <span className="rounded-full border border-gray-600/50 px-2 py-0.5 text-[11px] text-gray-400">After restart</span>
+            <span className="rounded-full border border-gray-600/50 px-2 py-0.5 text-2xs text-gray-400">After restart</span>
           )}
         </div>
         {s.help && <p className="mt-1 text-xs leading-relaxed text-gray-500">{s.help}</p>}
-        {s.env && <p className="mt-1 font-mono text-[11px] text-gray-600">{s.env}</p>}
+        {s.env && <p className="mt-1 font-mono text-2xs text-gray-600">{s.env}</p>}
         {lockedByEnv && (
           <p className="mt-1 flex items-center gap-1 text-xs text-amber-400/80">
             <Lock size={12} /> Set in the environment, which always wins for this setting.
@@ -176,7 +176,7 @@ const TestEmail: React.FC = () => {
         value={to}
         onChange={(e) => setTo(e.target.value)}
         placeholder="Send a test to (empty: the admin email)"
-        className="w-full rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-2 text-sm text-gray-100 outline-none focus:border-blue-500 sm:max-w-sm"
+        className="w-full rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-2 text-sm text-gray-100 outline-none focus:border-focus sm:max-w-sm"
       />
       <button
         type="button"

@@ -64,30 +64,30 @@ const EpisodeAccordionRow = forwardRef<HTMLButtonElement, EpisodeAccordionRowPro
       className={`group flex w-full items-center gap-3 rounded-xl border text-left transition-colors focus:outline-hidden ${
         compact ? 'px-3 py-2' : 'p-2.5'
       } ${
-        isResume ? 'border-sky-400/40 bg-sky-400/10' : 'border-transparent hover:bg-white/10'
+        isResume ? 'border-accent/40 bg-accent/10' : 'border-transparent hover:bg-white/10'
       } focus:border-white/80 focus:bg-white/15 [&.focused]:border-white/80 [&.focused]:bg-white/15`}
     >
-      <span className="w-9 shrink-0 text-center text-lg font-bold text-gray-400 group-hover:text-white group-[.focused]:text-white">
+      <span className="w-9 shrink-0 text-center text-lg font-bold text-fg-muted group-hover:text-fg group-[.focused]:text-fg">
         {number}
       </span>
       {imageUrl && (
         <span className="relative aspect-video w-36 shrink-0 overflow-hidden rounded-md bg-white/5 sm:w-40">
           <img src={imageUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
           <span className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60"><Play size={16} className="fill-white text-white" /></span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60"><Play size={16} className="fill-white text-fg" /></span>
           </span>
           {progressPercent !== undefined && progressPercent > 0 && (
             <span className="absolute inset-x-1.5 bottom-1.5 h-1 overflow-hidden rounded-full bg-white/25">
-              <span className="block h-full bg-sky-400" style={{ width: `${Math.min(100, progressPercent)}%` }} />
+              <span className="block h-full bg-accent" style={{ width: `${Math.min(100, progressPercent)}%` }} />
             </span>
           )}
         </span>
       )}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-bold text-white sm:text-base">{title}</span>
-        {sub && <span className="mt-0.5 block truncate text-xs text-gray-400">{sub}</span>}
+        <span className="block truncate text-sm font-bold text-fg sm:text-base">{title}</span>
+        {sub && <span className="mt-0.5 block truncate text-xs text-fg-muted">{sub}</span>}
         {overview && (
-          <span className="mt-1 line-clamp-2 text-sm leading-snug text-gray-400 group-hover:line-clamp-4 group-[.focused]:line-clamp-4">
+          <span className="mt-1 line-clamp-2 text-sm leading-snug text-fg-muted group-hover:line-clamp-4 group-[.focused]:line-clamp-4">
             {overview}
           </span>
         )}

@@ -1,7 +1,8 @@
 import IptvOfflineBanner from '@/components/atoms/IptvOfflineBanner';
 import { lazyImport } from '@/utils/staleBuild';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
+import Toaster from '@/components/ui/Toaster';
 import 'react-toastify/dist/ReactToastify.css';
 import '@/App.css';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
@@ -57,10 +58,13 @@ import { useCastReceiver } from '@/hooks/useCastReceiver';
 import { isTvApp, exitTvApp } from './utils/helpers';
 import type { MediaItem } from '@/types';
 import { type DiscoverVariant } from '@/api/endpoints/discover';
+import { usePart } from '@/themes/registry';
 
 function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   const isTizen = isTvApp(); // Samsung or LG
-  const AppHeader = isTizen ? TvHeader : Header;
+  const ThemedHeader = usePart('Header', Header);
+  const AppHeader = isTizen ? TvHeader : ThemedHeader;
+  const AppHero = usePart('Hero', ContinueHero);
   const { user, updatePreferences } = useAuth();
   // Cleaned for display too, so fragments saved by older builds disappear at once.
   const recentSearches = useMemo(() => cleanRecentSearches(user?.preferences?.recentSearches || []), [user?.preferences?.recentSearches]);
@@ -148,6 +152,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     handlePrevChannel,
     playCastedMedia,
     pushFrame,
+    playChannel,
     startPlayback,
     focusedIndex,
     setFocusedIndex,
@@ -372,7 +377,10 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     [openPersonTitle, discoverLoadingItemId]
   );
 
-  const searchPlayChannel = useCallback((channel: MediaItem) => { startPlayback(channel); }, [startPlayback]);
+  const searchPlayChannel = useCallback((channel: MediaItem) => {
+    // Sports, Search and My List can tune a channel from any browsing tab.
+    if (playChannel(channel)) handleContentTypeChangeRaw('tv', false);
+  }, [playChannel, handleContentTypeChangeRaw]);
   const setRecentSearches = useCallback(
     (list: string[]) => updatePreferences({ recentSearches: list }),
     [updatePreferences]
@@ -475,6 +483,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   const titleGrid = (
     <MainContentGrid
       items={items}
+      epgData={epgData}
       currentSeriesItem={currentSeriesItem}
       loading={loading}
       error={error}
@@ -671,7 +680,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                     continueWatching={
                       <>
                         {/* TV apps: Home's own hero shows the last title (tv/TvHero). */}
-                        {!isTizen && <ContinueHero progressRecords={homeProgress} onResume={handleItemClick} />}
+                        {!isTizen && <AppHero progressRecords={homeProgress} onResume={handleItemClick} />}
                         <ContinueWatching
                           onClick={handleItemClick}
                           skipFirst
@@ -864,25 +873,7 @@ export default function App() {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={4000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-        toastClassName={(context) =>
-          "relative flex p-1 min-h-[60px] rounded-2xl justify-between overflow-hidden cursor-pointer bg-[#0b0f19] border border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.4)] text-gray-200 mb-3 " +
-          (context?.type === 'success' ? 'border-l-4 border-l-emerald-500' : 
-           context?.type === 'error' ? 'border-l-4 border-l-red-500' : 
-           'border-l-4 border-l-[#3b82f6]') // Matching your app's electric blue
-        }
-        bodyClassName={() => "text-sm font-medium p-3 flex items-start text-gray-300"}
-      />
+      <Toaster />
     </>
   );
 }

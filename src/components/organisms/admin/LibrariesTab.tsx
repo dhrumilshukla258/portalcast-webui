@@ -10,6 +10,8 @@ import {
 import type { LibrariesResponse, LocalLibrary, FolderListing, LibraryTitle } from '@/api/types/admin';
 import { formatAgo } from '@/hooks/useStreamFailures';
 import FixMatchDialog from '@/components/organisms/admin/FixMatchDialog';
+import Dialog from '@/components/ui/Dialog';
+import Button from '@/components/ui/Button';
 
 const errorText = (err: unknown, fallback: string) =>
   (err as { response?: { data?: { error?: string } } })?.response?.data?.error || fallback;
@@ -90,65 +92,63 @@ const LibraryEditor: React.FC<{ lib?: LocalLibrary; onClose: () => void; onSaved
     }
   };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-black text-white">{lib ? 'Edit library' : 'Add a library'}</h2>
-          <button type="button" onClick={onClose} className="rounded p-1 text-gray-400 hover:bg-gray-800" aria-label="Close">
-            <X size={18} />
-          </button>
-        </div>
-        {!lib && (
-          <div className="mb-4 flex gap-2">
-            {(['movies', 'series'] as const).map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => {
-                  setKind(k);
-                  if (name === 'Movies' || name === 'Series') setName(k === 'movies' ? 'Movies' : 'Series');
-                }}
-                className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${kind === k ? 'bg-blue-600 text-white' : 'border border-gray-700 text-gray-300 hover:bg-gray-800'}`}
-              >
-                {k === 'movies' ? 'Movies' : 'Series'}
-              </button>
-            ))}
-          </div>
-        )}
-        <label className="mb-1 block text-xs font-semibold text-gray-400">Name</label>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="mb-4 w-full rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-2 text-sm text-gray-100 outline-none focus:border-blue-500"
-        />
-        <label className="mb-1 block text-xs font-semibold text-gray-400">Folders</label>
-        <div className="mb-3 space-y-1">
-          {folders.length === 0 && <p className="text-xs text-gray-500">No folder yet: pick one below.</p>}
-          {folders.map((f) => (
-            <div key={f} className="flex items-center justify-between gap-2 rounded-lg bg-gray-950/60 px-3 py-2">
-              <span className="truncate font-mono text-xs text-gray-300">{f}</span>
-              <button type="button" onClick={() => setFolders(folders.filter((x) => x !== f))} className="text-gray-500 hover:text-red-400" aria-label="Remove folder">
-                <X size={14} />
-              </button>
-            </div>
+    <Dialog open onClose={onClose} labelledBy="library-editor-title" className="max-h-[90vh] max-w-2xl p-5" dismissOnBackdrop={false}>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 id="library-editor-title" className="text-lg font-black text-white">{lib ? 'Edit library' : 'Add a library'}</h2>
+        <button type="button" onClick={onClose} className="rounded p-1 text-gray-400 hover:bg-gray-800" aria-label="Close">
+          <X size={18} />
+        </button>
+      </div>
+      {!lib && (
+        <div className="mb-4 flex gap-2">
+          {(['movies', 'series'] as const).map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => {
+                setKind(k);
+                if (name === 'Movies' || name === 'Series') setName(k === 'movies' ? 'Movies' : 'Series');
+              }}
+              className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${kind === k ? 'bg-blue-600 text-white' : 'border border-gray-700 text-gray-300 hover:bg-gray-800'}`}
+            >
+              {k === 'movies' ? 'Movies' : 'Series'}
+            </button>
           ))}
         </div>
-        <FolderBrowser onPick={(p) => !folders.includes(p) && setFolders([...folders, p])} />
-        <p className="mt-2 text-xs text-gray-500">
-          Folders named like Jellyfin's work as they are:{' '}
-          <span className="font-mono">
-            {kind === 'series' ? 'Show (2005)/Season 01/Show S01E02.mkv' : 'Movie (2010) [tmdbid-123]/Movie (2010) - 1080p.mkv'}
-          </span>.
-          Your files are only read, never changed.
-        </p>
-        <div className="mt-5 flex justify-end gap-2">
-          <button type="button" className={btn} onClick={onClose}>Cancel</button>
-          <button type="button" className={primaryBtn} disabled={busy || !name.trim() || folders.length === 0} onClick={() => void save()}>
-            {lib ? 'Save' : 'Add and scan'}
-          </button>
-        </div>
+      )}
+      <label className="mb-1 block text-xs font-semibold text-gray-400">Name</label>
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="mb-4 w-full rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-2 text-sm text-gray-100 outline-none focus:border-focus"
+      />
+      <label className="mb-1 block text-xs font-semibold text-gray-400">Folders</label>
+      <div className="mb-3 space-y-1">
+        {folders.length === 0 && <p className="text-xs text-gray-500">No folder yet: pick one below.</p>}
+        {folders.map((f) => (
+          <div key={f} className="flex items-center justify-between gap-2 rounded-lg bg-gray-950/60 px-3 py-2">
+            <span className="truncate font-mono text-xs text-gray-300">{f}</span>
+            <button type="button" onClick={() => setFolders(folders.filter((x) => x !== f))} className="text-gray-500 hover:text-red-400" aria-label="Remove folder">
+              <X size={14} />
+            </button>
+          </div>
+        ))}
       </div>
-    </div>
+      <FolderBrowser onPick={(p) => !folders.includes(p) && setFolders([...folders, p])} />
+      <p className="mt-2 text-xs text-gray-500">
+        Folders named like Jellyfin's work as they are:{' '}
+        <span className="font-mono">
+          {kind === 'series' ? 'Show (2005)/Season 01/Show S01E02.mkv' : 'Movie (2010) [tmdbid-123]/Movie (2010) - 1080p.mkv'}
+        </span>.
+        Your files are only read, never changed.
+      </p>
+      <div className="mt-5 flex justify-end gap-2">
+        <Button variant="secondary" onClick={onClose}>Cancel</Button>
+        <Button variant="accent" disabled={busy || !name.trim() || folders.length === 0} onClick={() => void save()}>
+          {lib ? 'Save' : 'Add and scan'}
+        </Button>
+      </div>
+    </Dialog>
   );
 };
 
@@ -198,7 +198,7 @@ const Titles: React.FC<{ lib: LocalLibrary }> = ({ lib }) => {
             {f === 'unmatched' ? `Unmatched (${lib.counts.unmatched})` : f === 'missing' ? `Missing (${lib.counts.missing})` : `All (${lib.counts.titles})`}
           </button>
         ))}
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter by name or folder" className="ml-auto w-full rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-1.5 text-sm text-gray-100 outline-none focus:border-blue-500 sm:w-64" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter by name or folder" className="ml-auto w-full rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-1.5 text-sm text-gray-100 outline-none focus:border-focus sm:w-64" />
       </div>
       {items === null && <p className="text-sm text-gray-500">Loading…</p>}
       {items?.length === 0 && <p className="text-sm text-gray-500">Nothing here.</p>}
@@ -209,11 +209,11 @@ const Titles: React.FC<{ lib: LocalLibrary }> = ({ lib }) => {
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold text-gray-100">
                 {t.matchedTitle || t.name} {(t.matchedYear || t.year) && <span className="font-normal text-gray-400">({t.matchedYear || t.year})</span>}
-                {t.locked && <span className="ml-2 rounded bg-blue-500/15 px-1.5 py-0.5 text-[10px] font-bold text-blue-300">fixed</span>}
-                {!t.matchedTmdbId && <span className="ml-2 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">unmatched</span>}
-                {t.missingSince && <span className="ml-2 rounded bg-red-500/15 px-1.5 py-0.5 text-[10px] font-bold text-red-300">missing</span>}
+                {t.locked && <span className="ml-2 rounded bg-blue-500/15 px-1.5 py-0.5 text-3xs font-bold text-blue-300">fixed</span>}
+                {!t.matchedTmdbId && <span className="ml-2 rounded bg-amber-500/15 px-1.5 py-0.5 text-3xs font-bold text-amber-300">unmatched</span>}
+                {t.missingSince && <span className="ml-2 rounded bg-red-500/15 px-1.5 py-0.5 text-3xs font-bold text-red-300">missing</span>}
               </div>
-              <div className="truncate font-mono text-[11px] text-gray-500">{t.folder}</div>
+              <div className="truncate font-mono text-2xs text-gray-500">{t.folder}</div>
             </div>
             <button type="button" className={btn} onClick={() => setFixing(t)}>Fix match</button>
           </div>
@@ -289,9 +289,9 @@ const LibrariesTab: React.FC = () => {
             <div className="min-w-0">
               <h2 className="text-base font-black text-white">
                 {lib.name}
-                <span className="ml-2 rounded bg-gray-800 px-1.5 py-0.5 text-[10px] font-bold uppercase text-gray-400">{lib.kind === 'series' ? 'Series' : 'Movies'}</span>
+                <span className="ml-2 rounded bg-gray-800 px-1.5 py-0.5 text-3xs font-bold uppercase text-gray-400">{lib.kind === 'series' ? 'Series' : 'Movies'}</span>
                 {lib.source === 'jellyfin' && (
-                  <span className="ml-2 rounded bg-purple-900/60 px-1.5 py-0.5 text-[10px] font-bold uppercase text-purple-200">Jellyfin</span>
+                  <span className="ml-2 rounded bg-purple-900/60 px-1.5 py-0.5 text-3xs font-bold uppercase text-purple-200">Jellyfin</span>
                 )}
                 {!lib.enabled && <span className="ml-2 text-xs font-semibold text-gray-500">(off)</span>}
               </h2>

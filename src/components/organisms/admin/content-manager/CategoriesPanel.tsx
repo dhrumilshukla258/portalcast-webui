@@ -67,7 +67,7 @@ const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
             value={catSearch}
             onChange={(e) => setCatSearch(e.target.value)}
             placeholder="Search categories..."
-            className="w-full rounded-lg border border-gray-800 bg-gray-950 py-1.5 pl-8 pr-2 text-xs text-white outline-hidden focus:border-blue-500"
+            className="w-full rounded-lg border border-gray-800 bg-gray-950 py-1.5 pl-8 pr-2 text-xs text-white outline-hidden focus:border-focus"
           />
         </div>
         <button title="Sort A-Z" onClick={sortCatsAlpha} className="rounded-lg bg-gray-800 p-1.5 text-gray-400 hover:bg-gray-700 hover:text-gray-200">
@@ -94,7 +94,7 @@ const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
               if (e.key === 'Escape') setAddingCat(false);
             }}
             placeholder="Category name..."
-            className="flex-1 rounded-lg border border-gray-800 bg-gray-950 px-3 py-1.5 text-xs text-white outline-hidden focus:border-blue-500"
+            className="flex-1 rounded-lg border border-gray-800 bg-gray-950 px-3 py-1.5 text-xs text-white outline-hidden focus:border-focus"
           />
           <button onClick={submitAddCat} className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-500">Create</button>
           <button onClick={() => setAddingCat(false)} className="text-gray-500 hover:text-white"><X size={16} /></button>
@@ -125,13 +125,13 @@ const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm text-gray-200">
                       {displayName}
-                      {isVirtual(cat.id) && <span className="ml-1.5 text-[10px] text-blue-400">custom</span>}
+                      {isVirtual(cat.id) && <span className="ml-1.5 text-3xs text-blue-400">custom</span>}
                     </div>
-                    {showOriginal && <div className="truncate text-[11px] text-gray-500">{cat.title}</div>}
+                    {showOriginal && <div className="truncate text-2xs text-gray-500">{cat.title}</div>}
                     {cat.titles && (
                       // What the provider put in it, and whether it shows under this tab (owner
                       // 2026-11-04: providers send films and shows in the same lists).
-                      <div className={`truncate text-[11px] ${cat.listed === false ? 'text-amber-400/80' : 'text-gray-500'}`}>
+                      <div className={`truncate text-2xs ${cat.listed === false ? 'text-amber-400/80' : 'text-gray-500'}`}>
                         {cat.titles.movie.toLocaleString()} {cat.titles.movie === 1 ? 'film' : 'films'} · {cat.titles.series.toLocaleString()} {cat.titles.series === 1 ? 'show' : 'shows'}
                         {cat.listed === false ? ' · not listed here' : ''}
                       </div>
@@ -143,7 +143,7 @@ const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
                       value={cat.holds ?? 'auto'}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => setCatHolds(cat, e.target.value as 'movie' | 'series' | 'both' | 'auto')}
-                      className="shrink-0 rounded-md border border-gray-800 bg-gray-950 px-1.5 py-1 text-[11px] text-gray-300 outline-hidden focus:border-blue-500"
+                      className="shrink-0 rounded-md border border-gray-800 bg-gray-950 px-1.5 py-1 text-2xs text-gray-300 outline-hidden focus:border-focus"
                     >
                       <option value="auto">Auto</option>
                       <option value="movie">Movies</option>
@@ -151,7 +151,7 @@ const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
                       <option value="both">Both</option>
                     </select>
                   )}
-                  {cat.count !== undefined && <span className="shrink-0 text-[11px] text-gray-500">{cat.count}</span>}
+                  {cat.count !== undefined && <span className="shrink-0 text-2xs text-gray-500">{cat.count}</span>}
                   <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <button title="Move up" disabled={!isFilteringCats ? idx === 0 : true} onClick={() => moveCat(cat.id, -1)} className="rounded-sm p-1 text-gray-500 hover:bg-gray-700 hover:text-gray-200 disabled:opacity-20">
                       <ArrowUp size={12} />
@@ -177,7 +177,7 @@ const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
                       onChange={(e) => setCatNameDraft(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && saveCatEdit(cat)}
                       placeholder={isVirtual(cat.id) ? 'Category name' : 'Display name (blank = original)'}
-                      className="flex-1 rounded-lg border border-gray-800 bg-gray-950 px-2 py-1 text-xs text-white outline-hidden focus:border-blue-500"
+                      className="flex-1 rounded-lg border border-gray-800 bg-gray-950 px-2 py-1 text-xs text-white outline-hidden focus:border-focus"
                     />
                     <button onClick={() => saveCatEdit(cat)} className="rounded-lg bg-blue-600 px-2 py-1 text-xs font-bold text-white hover:bg-blue-500">Save</button>
                     {(isVirtual(cat.id) || cat.hidden || cat.display_name) && (

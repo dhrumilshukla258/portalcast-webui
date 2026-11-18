@@ -44,7 +44,7 @@ const ActiveSessionsPanel: React.FC<{ activeDevices: Device[] }> = ({ activeDevi
               </div>
               <div className="text-left flex-1 min-w-0">
                 <div className="font-bold text-white text-sm truncate">{device.name}</div>
-                <div className="text-[11px] text-gray-500 mt-0.5 flex items-center justify-between">
+                <div className="text-2xs text-gray-500 mt-0.5 flex items-center justify-between">
                   <span className="capitalize">{device.type}</span>
                   <span className="font-mono text-gray-600 truncate ml-2">{device.ip || 'Unknown IP'}</span>
                 </div>
