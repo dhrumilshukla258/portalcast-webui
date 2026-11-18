@@ -96,19 +96,23 @@ const PeopleView: React.FC<PeopleViewProps> = ({ sectionChips }) => {
 
   return (
     <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 overflow-y-auto px-3 pb-10 sm:px-6 tv-page">
-      <div className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-page px-3 pb-2 pt-2 sm:-mx-6 sm:px-6">
+      <div data-ui="page-bar" className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-page px-3 pb-2 pt-2 sm:-mx-6 sm:px-6">
         {sectionChips?.(null)}
-        <div className="mt-2 flex items-baseline gap-3 sm:mt-0">
-          <h2 className="text-xl font-bold text-fg sm:text-2xl">Cast</h2>
-          {!hits && total > 0 && <span className="text-sm text-fg-muted">{total.toLocaleString()}</span>}
+        {/* data-ui page-*: a theme can set the title and search side by side (Minimal). */}
+        <div data-ui="page-head">
+          <div className="mt-2 flex items-baseline gap-3 sm:mt-0">
+            <h2 data-ui="page-title" className="text-xl font-bold text-fg sm:text-2xl">Cast</h2>
+            {!hits && total > 0 && <span className="text-sm text-fg-muted">{total.toLocaleString()}</span>}
+          </div>
+          <div data-ui="page-search" className="mt-2">
+            <SearchField
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onClear={() => setQuery('')}
+              placeholder="Search cast"
+            />
+          </div>
         </div>
-        <SearchField
-          className="mt-2"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onClear={() => setQuery('')}
-          placeholder="Search actors, directors…"
-        />
         {!hits && (
           <div className="hide-scrollbar mt-2 flex gap-2 overflow-x-auto" data-focus-group="people-roles">
             {roles.map((r) => (

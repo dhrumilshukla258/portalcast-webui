@@ -329,7 +329,8 @@ html[data-theme='minimal'] *::after {
 /* Pills, avatars and dots stay true circles, not flattened capsules. */
 html[data-theme='minimal'] .rounded-full,
 html[data-theme='minimal'] [class*=':rounded-full'],
-html[data-theme='minimal'] .ui-chip {
+html[data-theme='minimal'] .ui-chip,
+html[data-theme='minimal'] .ui-field-input {
   corner-shape: round;
 }
 
@@ -440,4 +441,34 @@ html[data-theme='minimal'] [data-ui='person-photo'] {
 }
 html[data-theme='minimal'] [data-ui='person-photo'] > img {
   transform: none;
+}
+
+/* A page's own head (data-ui page-*, Cast): a large title, the search small on its right, room
+   around them and no rule under the bar. A phone keeps the search under the title. */
+html[data-theme='minimal'] [data-ui='page-bar'] {
+  border-bottom-color: transparent;
+  padding-top: 1rem;
+  padding-bottom: 0.75rem;
+}
+html[data-theme='minimal'] [data-ui='page-title'] {
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+html[data-theme='minimal'] [data-ui='page-search'] .ui-field-input {
+  padding-block: 0.5rem;
+  border-color: transparent;
+  background-color: rgb(255 255 255 / 0.08);
+  font-size: var(--text-sm);
+}
+@media (min-width: 640px) {
+  html[data-theme='minimal'] [data-ui='page-head'] {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  html[data-theme='minimal'] [data-ui='page-search'] {
+    width: 18rem;
+    margin: 0 0 0 auto;
+  }
 }
