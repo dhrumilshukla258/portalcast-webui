@@ -102,7 +102,7 @@ export const TVControls = React.memo(() => {
 
   return (
     <div className="pointer-events-auto absolute bottom-1 left-1 right-1 p-1 text-fg md:bottom-4 md:left-4 md:right-4 md:p-2.5">
-      <div className="rounded-lg border border-gray-700/80 bg-gray-800 bg-opacity-60 p-1 shadow-2xl md:p-2.5">
+      <div className="ui-player-panel rounded-lg p-1 shadow-2xl md:p-2.5">
         <div className="mb-0.5 flex items-center justify-between md:mb-2">
           <div className="flex min-w-0 items-center">
             {channelImgSrc && (
@@ -125,7 +125,7 @@ export const TVControls = React.memo(() => {
         </div>
 
         <div className="ml-8 md:ml-16">
-          <div className="flex items-center justify-between rounded-xs bg-red-700 bg-opacity-80 p-0.5 px-1.5 md:p-1.5 md:px-3">
+          <div className="ui-player-now flex items-center justify-between rounded-xs p-0.5 px-1.5 md:p-1.5 md:px-3">
             <span className="truncate text-3xs font-semibold md:text-base">
               {currentProgName}
             </span>
@@ -144,9 +144,9 @@ export const TVControls = React.memo(() => {
           </div>
         </div>
 
-        <div className="mt-0.5 h-0.5 w-full rounded-full bg-gray-600 md:mt-2 md:h-1.5">
+        <div className="ui-player-track mt-0.5 h-0.5 w-full rounded-full md:mt-2 md:h-1.5">
           <div
-            className="h-0.5 rounded-full bg-green-500 md:h-1.5"
+            className="ui-player-progress h-0.5 rounded-full md:h-1.5"
             style={{ width: `${programProgress}%` }}
           />
         </div>

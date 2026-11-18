@@ -18,6 +18,18 @@
     --ui-chip-hover-bg: var(--ui-chip-bg);
     --ui-chip-on-bg: var(--color-accent);
     --ui-chip-on-fg: var(--color-on-accent);
+    /* The player (TVControls, TopBar): live info panel, its Now row and progress, the buttons
+       over the picture. */
+    --ui-player-panel-bg: var(--color-gray-800);
+    --ui-player-panel-border: rgb(55 65 81 / 0.8);
+    --ui-player-panel-blur: none;
+    --ui-player-now-bg: var(--color-red-700);
+    --ui-player-now-fg: var(--color-fg);
+    --ui-player-track: var(--color-gray-600);
+    --ui-player-progress: var(--color-green-500);
+    --ui-player-button-bg: rgb(17 24 39 / 0.7);
+    --ui-player-button-hover-bg: rgb(31 41 55 / 0.9);
+    --ui-player-button-border: rgb(55 65 81 / 0.5);
     /* Search fields (SearchField.tsx). */
     /* Pick chips (Chip variant="pick": several on at once). */
     --ui-pick-bg: transparent;
@@ -139,6 +151,31 @@
   .ui-chip[data-variant='toggle'] {
     border-color: var(--color-line-strong);
     background-color: transparent;
+  }
+  .ui-player-panel {
+    border: 1px solid var(--ui-player-panel-border);
+    background-color: var(--ui-player-panel-bg);
+    -webkit-backdrop-filter: var(--ui-player-panel-blur);
+    backdrop-filter: var(--ui-player-panel-blur);
+  }
+  .ui-player-now {
+    background-color: var(--ui-player-now-bg);
+    color: var(--ui-player-now-fg);
+  }
+  .ui-player-track {
+    background-color: var(--ui-player-track);
+  }
+  .ui-player-progress {
+    background-color: var(--ui-player-progress);
+  }
+  .ui-player-button {
+    border: 1px solid var(--ui-player-button-border);
+    background-color: var(--ui-player-button-bg);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .ui-player-button:hover {
+    background-color: var(--ui-player-button-hover-bg);
   }
   .ui-chip[data-variant='pick'] {
     gap: 0.375rem;

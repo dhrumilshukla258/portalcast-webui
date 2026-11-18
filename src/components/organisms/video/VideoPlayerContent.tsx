@@ -298,7 +298,7 @@ const VideoPlayerContent: React.FC = () => {
           >
             <TopBar onBack={onBack} />
             {videoStats && (
-              <div className="absolute right-4 top-16 rounded-md bg-black/60 px-3 py-1 text-xs font-semibold tracking-wide text-fg md:right-6 md:top-20 md:text-sm">
+              <div className="ui-player-badge absolute right-4 top-16 rounded-md bg-black/60 px-3 py-1 text-xs font-semibold tracking-wide text-fg md:right-6 md:top-20 md:text-sm">
                 {videoStats}
               </div>
             )}

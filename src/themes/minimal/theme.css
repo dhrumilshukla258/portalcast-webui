@@ -38,6 +38,17 @@
     --ui-pick-border: transparent;
     --ui-pick-on-bg: #f5f5f7;
     --ui-pick-on-fg: #000;
+    /* The player: glass over the picture, white progress, no red or green. */
+    --ui-player-panel-bg: rgb(22 22 24 / 0.62);
+    --ui-player-panel-border: rgb(255 255 255 / 0.08);
+    --ui-player-panel-blur: blur(30px) saturate(1.6);
+    --ui-player-now-bg: rgb(255 255 255 / 0.1);
+    --ui-player-now-fg: #f5f5f7;
+    --ui-player-track: rgb(255 255 255 / 0.2);
+    --ui-player-progress: #f5f5f7;
+    --ui-player-button-bg: rgb(30 30 32 / 0.55);
+    --ui-player-button-hover-bg: rgb(60 60 64 / 0.7);
+    --ui-player-button-border: transparent;
     --ui-field-bg: rgb(255 255 255 / 0.08);
     --ui-field-border: transparent;
     --ui-panel-radius: 0.875rem;
@@ -493,4 +504,40 @@ html[data-theme='minimal'] [data-ui='search-bar'] {
 html[data-theme='minimal'] [data-ui='recent-search'] {
   border-color: transparent;
   background-color: rgb(255 255 255 / 0.08);
+}
+
+/* The player, Apple TV style: a rounder glass panel, round icon buttons over the picture (their
+   words are their tooltips), a glass pill for the quality and glass menus. */
+html[data-theme='minimal'] .ui-player-panel {
+  border-radius: 1.25rem;
+}
+html[data-theme='minimal'] .ui-player-now {
+  border-radius: 0.5rem;
+}
+html[data-theme='minimal'] .ui-player-button {
+  width: 2.75rem;
+  height: 2.75rem;
+  justify-content: center;
+  padding: 0;
+  border-radius: 9999px;
+  corner-shape: round;
+}
+html[data-theme='minimal'] .ui-player-button > span {
+  display: none;
+}
+html[data-theme='minimal'] .ui-player-button > svg {
+  margin: 0;
+}
+html[data-theme='minimal'] .ui-player-badge {
+  border-radius: 9999px;
+  corner-shape: round;
+  background-color: var(--ui-player-button-bg);
+  -webkit-backdrop-filter: var(--ui-player-panel-blur);
+  backdrop-filter: var(--ui-player-panel-blur);
+}
+html[data-theme='minimal'] .more-options-menu {
+  border-color: rgb(255 255 255 / 0.1);
+  background-color: var(--ui-glass-bg);
+  -webkit-backdrop-filter: var(--ui-glass-blur);
+  backdrop-filter: var(--ui-glass-blur);
 }
