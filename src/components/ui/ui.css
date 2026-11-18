@@ -190,8 +190,20 @@
     opacity: 1;
     transform: translate(-50%, 0);
   }
+  /* The fill and blur are on a layer behind the content: a blur on the panel itself makes it
+     the box `fixed` is measured from, which shut the settings panel (fixed, full height) inside
+     the live panel. */
   .ui-player-panel {
+    position: relative;
+    isolation: isolate;
     border: 1px solid var(--ui-player-panel-border);
+  }
+  .ui-player-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
     background-color: var(--ui-player-panel-bg);
     -webkit-backdrop-filter: var(--ui-player-panel-blur);
     backdrop-filter: var(--ui-player-panel-blur);
