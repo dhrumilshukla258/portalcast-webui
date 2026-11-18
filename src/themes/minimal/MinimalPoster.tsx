@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import ActivityIndicator from '@/components/ui/ActivityIndicator';
 import { snappy } from './motion';
 
 interface MinimalPosterProps {
@@ -31,14 +32,16 @@ interface MinimalPosterProps {
  * with soft corners, the title and a detail line in small grey type under it. It rests at 96 %
  * and lifts to 100 % on hover (a spring, plus a shadow), so the hovered poster fills its slot
  * exactly and a row that scrolls sideways (and so clips) never cuts its corners. Pressed, it
- * gives a little.
+ * gives a little. Opening, it stays lifted, the art dims a little and Apple's activity
+ * indicator turns in the middle (after a moment, so a quick open shows nothing).
  */
 export default function MinimalPoster(p: MinimalPosterProps) {
   return (
     <div className={`group ${p.dim ? 'opacity-35' : ''}`}>
       <motion.div
         initial={false}
-        animate={{ scale: 0.96 }}
+        // Opening, it stays lifted (as on Apple TV) until the page comes up.
+        animate={{ scale: p.loading ? 1 : 0.96 }}
         whileHover={{ scale: 1 }}
         whileTap={{ scale: 0.93 }}
         transition={snappy}
@@ -65,8 +68,8 @@ export default function MinimalPoster(p: MinimalPosterProps) {
           </div>
         )}
         {p.loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-            <div className="h-7 w-7 animate-spin rounded-full border-2 border-white/25 border-t-white" />
+          <div className="ui-wait-in absolute inset-0 flex items-center justify-center bg-black/35">
+            <ActivityIndicator className="text-[1.75rem] text-white" />
           </div>
         )}
       </motion.div>

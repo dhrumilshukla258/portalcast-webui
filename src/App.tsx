@@ -293,8 +293,9 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     };
   }, [backTargets, goHome, isHome, isTizen]);
   const activeSection: HomeSection = typedHome ?? (overlayPage === 'people' ? 'people' : 'home');
+  const SectionRow = usePart('SectionRow', SectionChips);
   const sectionChips = (filterButton: React.ReactNode) => (
-    <SectionChips
+    <SectionRow
       active={activeSection}
       onSelect={openSection}
       trailing={filterButton}
@@ -373,8 +374,8 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   // More Like This on a detail page opens titles the way a person's page does.
   const openTitle = React.useMemo(
-    () => ({ open: (item: MediaItem) => void openPersonTitle(item), loadingItemId: discoverLoadingItemId }),
-    [openPersonTitle, discoverLoadingItemId]
+    () => ({ open: (item: MediaItem) => void openPersonTitle(item), openPage: openDiscoverItem, loadingItemId: discoverLoadingItemId }),
+    [openPersonTitle, openDiscoverItem, discoverLoadingItemId]
   );
 
   const searchPlayChannel = useCallback((channel: MediaItem) => {

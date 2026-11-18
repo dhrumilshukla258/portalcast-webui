@@ -1,6 +1,7 @@
 import React from 'react';
 import { Loader2, Star, Tv, Undo2 } from 'lucide-react';
 import MediaCard from '@/components/molecules/MediaCard';
+import Chip from '@/components/ui/Chip';
 import { getMyList } from '@/api/endpoints/discover';
 import { getWatchedTitles, getHiddenCards, setWatched, setNotInterested } from '@/api/endpoints/user';
 import { allChannels } from '@/utils/channelList';
@@ -88,16 +89,9 @@ const MyListView: React.FC<MyListViewProps> = ({ onClick, loadingItemId, active,
       </div>
       <div className="hide-scrollbar mb-4 flex gap-2 overflow-x-auto" data-focus-group="mylist-sections">
         {SECTIONS.map((s) => (
-          <button
-            key={s.id}
-            data-focusable="true"
-            onClick={() => setSection(s.id)}
-            className={`h-9 shrink-0 rounded-full px-4 text-sm font-bold transition-colors ${
-              section === s.id ? 'bg-white text-surface-2' : 'border border-white/20 text-fg-soft'
-            }`}
-          >
+          <Chip key={s.id} selected={section === s.id} onClick={() => setSection(s.id)}>
             {s.label}
-          </button>
+          </Chip>
         ))}
       </div>
       {failed ? (

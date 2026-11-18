@@ -44,6 +44,7 @@ export const MyListButton: React.FC<{ contentId: string }> = ({ contentId }) => 
       onClick={() => void toggle()}
       data-focusable="true"
       aria-pressed={inList}
+      data-ui="title-action"
       className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-white/5 py-3 font-bold text-fg-soft transition-colors hover:bg-white/10"
     >
       {inList ? <Check size={18} className="text-accent" /> : <Plus size={18} />}

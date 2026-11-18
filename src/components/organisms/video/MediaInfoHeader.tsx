@@ -2,6 +2,7 @@ import { getTitleDetails, type PersonCredit, type TitleDetails } from '@/api/end
 import { useOpenPerson } from '@/context/PersonPageContext';
 import React, { useMemo } from 'react';
 import { Play, Clock, Star, Calendar, Globe2, Film, Image as ImageIcon, Link2, Merge } from 'lucide-react';
+import { runtimeText } from '@/utils/episodeInfo';
 import { useAuth } from '@/context/AuthContext';
 import EditImagesDialog from '@/components/organisms/admin/EditImagesDialog';
 import { PortalFixMatch } from '@/components/organisms/admin/FixMatchDialog';
@@ -55,7 +56,10 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
 
   // Tagline, age rating, studios, logo, cast with photos (server /api/v2/discover/details).
   const [details, setDetails] = React.useState<TitleDetails | null>(null);
-  const detailsKey = item.catalogId || `${item.is_series ? 'series' : 'movie'}_${item.id}`;
+  // Its content id ("movie_29467"). A title opened from Search carries its bare id ("29467"),
+  // which the raw lookup below does not find: so the type is put in front of it too.
+  const ownId = String(item.catalogId || item.id || '');
+  const detailsKey = /^(movie|series)_/.test(ownId) ? ownId : `${item.is_series ? 'series' : 'movie'}_${ownId}`;
   React.useEffect(() => {
     let cancelled = false;
     setDetails(null);
@@ -99,6 +103,8 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
     });
   }, [details]);
   const ageRating = details?.ageRating || item.rating_mpaa;
+  // A movie's length: TMDB's (minutes), else the portal's own; a series' is per episode.
+  const runtime = item.is_series ? null : runtimeText(Number(details?.runtime) || Number(item.duration) || 0);
 
   const imageUrl = useMemo(() => {
     if (typeof item.screenshot_uri !== 'string' || !item.screenshot_uri) return null;
@@ -171,6 +177,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                 onClick={() => setShowTrailer((prev) => !prev)}
                 data-focusable="true"
                 data-default-focus={!onPlay ? 'true' : undefined}
+                data-ui="title-action"
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-white/5 py-3 font-bold text-fg-soft transition-colors hover:bg-white/10"
               >
                 <Film size={18} />
@@ -231,7 +238,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 border-y border-white/5 py-3 text-xs text-gray-300 sm:gap-4 sm:text-sm">
+          <div data-ui="title-meta" className="flex flex-wrap items-center gap-2.5 border-y border-white/5 py-3 text-xs text-gray-300 sm:gap-4 sm:text-sm">
             {rating && (() => {
               const chip = (
                 <>
@@ -242,11 +249,11 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
               );
               const cls = 'flex items-center gap-1 rounded-full bg-yellow-400/10 px-2.5 py-1 font-bold text-yellow-400';
               return ratingSource === 'IMDb' && imdbUrl ? (
-                <a href={imdbUrl} target="_blank" rel="noopener noreferrer" title="Open on IMDb" className={`${cls} hover:bg-yellow-400/20`}>
+                <a href={imdbUrl} target="_blank" rel="noopener noreferrer" title="Open on IMDb" data-ui="rating" className={`${cls} hover:bg-yellow-400/20`}>
                   {chip}
                 </a>
               ) : (
-                <div className={cls}>{chip}</div>
+                <div data-ui="rating" className={cls}>{chip}</div>
               );
             })()}
             {item.rt_rating && (
@@ -262,24 +269,24 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
             )}
             {item.year && (
               <div className="flex items-center gap-1 text-fg-muted">
-                <Calendar size={14} />
+                <Calendar size={14} data-ui="meta-icon" />
                 <span>{item.year}</span>
               </div>
             )}
             {item.country && (
               <div className="flex items-center gap-1 text-fg-muted">
-                <Globe2 size={14} />
+                <Globe2 size={14} data-ui="meta-icon" />
                 <span>{item.country}</span>
               </div>
             )}
-            {item.duration && (
+            {runtime && (
               <div className="flex items-center gap-1 text-fg-muted">
-                <Clock size={14} />
-                <span>{Math.floor(item.duration / 60) || item.duration} mins</span>
+                <Clock size={14} data-ui="meta-icon" />
+                <span>{runtime}</span>
               </div>
             )}
             {ageRating && (
-              <div className="rounded-full border border-gray-600 px-2 py-0.5 text-3xs font-black text-fg-muted">
+              <div data-ui="meta-badge" className="rounded-full border border-gray-600 px-2 py-0.5 text-3xs font-black text-fg-muted">
                 {ageRating}
               </div>
             )}
@@ -287,10 +294,11 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
           </div>
 
           {item.genres_str && (
-            <div className="flex flex-wrap gap-1.5">
+            <div data-ui="genres" className="flex flex-wrap gap-1.5">
               {String(item.genres_str).split(',').map((genre, i) => (
                 <span
                   key={i}
+                  data-ui="genre"
                   className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300"
                 >
                   {genre.trim()}

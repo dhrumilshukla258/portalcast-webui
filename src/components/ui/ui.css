@@ -11,6 +11,13 @@
     --ui-control-radius: 9999px;
     --ui-control-text: var(--text-sm);
     --ui-control-weight: 700;
+    /* Chips (Chip.tsx: filters and tabs inside a page): resting, hovered, picked. */
+    --ui-chip-bg: var(--color-panel);
+    --ui-chip-border: var(--color-line);
+    --ui-chip-fg: var(--color-fg-soft);
+    --ui-chip-hover-bg: var(--ui-chip-bg);
+    --ui-chip-on-bg: var(--color-accent);
+    --ui-chip-on-fg: var(--color-on-accent);
     --ui-panel-radius: 0.75rem;
     --ui-label-size: var(--text-sm);
     --ui-label-weight: 700;
@@ -99,10 +106,10 @@
     justify-content: center;
     height: var(--ui-control-h);
     padding-inline: var(--ui-control-px);
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--ui-chip-border);
     border-radius: var(--ui-control-radius);
-    background-color: var(--color-panel);
-    color: var(--color-fg-soft);
+    background-color: var(--ui-chip-bg);
+    color: var(--ui-chip-fg);
     font-size: var(--ui-control-text);
     font-weight: var(--ui-control-weight);
     white-space: nowrap;
@@ -112,12 +119,13 @@
     transition-timing-function: var(--ui-ease);
   }
   .ui-chip:hover {
+    background-color: var(--ui-chip-hover-bg);
     color: var(--color-fg);
   }
   .ui-chip[aria-pressed='true'] {
     border-color: transparent;
-    background-color: var(--color-accent);
-    color: var(--color-on-accent);
+    background-color: var(--ui-chip-on-bg);
+    color: var(--ui-chip-on-fg);
   }
   .ui-chip[data-variant='toggle'] {
     border-color: var(--color-line-strong);
@@ -260,7 +268,9 @@
 
 @layer components {
   @supports (color: color-mix(in lab, red, red)) {
-    .ui-chip,
+    .ui-chip:not([aria-pressed='true']):not(:hover) {
+      background-color: color-mix(in oklab, var(--ui-chip-bg) 85%, transparent);
+    }
     .ui-field-input {
       background-color: color-mix(in oklab, var(--color-panel) 85%, transparent);
     }
@@ -560,4 +570,37 @@
   .ui-toast .Toastify__progress-bar--info { background: var(--ui-toast-progress); }
   .ui-toast .Toastify__close-button { margin: 10px 5px 0 0; color: var(--color-fg-subtle); opacity: 0.8; }
   .ui-toast .Toastify__close-button:hover { color: var(--color-fg); opacity: 1; }
+}
+
+/* Activity indicator (ActivityIndicator.tsx): 1em square, spokes from the centre out. The
+   spoke's origin is the square's centre: 0.5em below its top, its height 0.28em (178.57 %). */
+@layer components {
+  .ui-activity {
+    position: relative;
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+  }
+  .ui-activity > span {
+    position: absolute;
+    top: 0;
+    left: 46%;
+    width: 8%;
+    height: 28%;
+    border-radius: 9999px;
+    background: currentColor;
+    transform-origin: 50% 178.57%;
+    animation: ui-activity-spoke 0.8s linear infinite;
+  }
+  /* A layer that appears only when a wait is real: a short pause, then a quick fade. */
+  .ui-wait-in {
+    animation: ui-wait-in 0.22s ease-out 0.15s both;
+  }
+}
+@keyframes ui-activity-spoke {
+  from { opacity: 1; }
+  to { opacity: 0.22; }
+}
+@keyframes ui-wait-in {
+  from { opacity: 0; }
 }

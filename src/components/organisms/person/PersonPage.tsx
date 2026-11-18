@@ -87,7 +87,8 @@ const PersonPage: React.FC<PersonPageProps> = ({ id, onClose, onOpenTitle, loadi
 
   return (
     <div
-      className="animate-fade-in fixed inset-0 z-90 overflow-y-auto bg-black/95 custom-scrollbar"
+      // Solid: the header behind it showed through around Back. text-left: #root centres text.
+      className="animate-fade-in fixed inset-0 z-90 overflow-y-auto bg-page text-left custom-scrollbar"
       role="dialog"
       aria-modal="true"
       aria-label={p?.name || 'Person'}
@@ -98,7 +99,7 @@ const PersonPage: React.FC<PersonPageProps> = ({ id, onClose, onOpenTitle, loadi
           type="button"
           onClick={onClose}
           data-focusable="true"
-          className="mb-6 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 hover:text-fg focus:bg-white/10 focus:text-fg focus:outline-hidden focus:ring-2 focus:ring-focus"
+          className="mb-6 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 hover:text-fg focus-visible:bg-white/10 focus-visible:text-fg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-focus"
         >
           <ArrowLeft size={16} /> Back
         </button>
@@ -112,7 +113,7 @@ const PersonPage: React.FC<PersonPageProps> = ({ id, onClose, onOpenTitle, loadi
 
         {p && data && (
           <div className="flex flex-col gap-8 md:flex-row">
-            <aside className="w-full shrink-0 md:w-72">
+            <aside className="w-full shrink-0 text-center md:w-72 md:text-left">
               {p.photo ? (
                 <img src={p.photo} alt={p.name} className="mx-auto aspect-2/3 w-48 rounded-2xl object-cover shadow-2xl md:w-full" />
               ) : (

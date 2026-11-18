@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowDownAZ,
   Bookmark,
+  Clapperboard,
+  Film,
   Captions,
   ChevronLeft,
   House,
@@ -15,6 +17,7 @@ import {
   Trash2,
   Trophy,
   Tv,
+  Users,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -22,16 +25,18 @@ import OpenSubtitlesModal from '@/components/molecules/OpenSubtitlesModal';
 import type { HeaderProps } from '@/components/organisms/layout/Header';
 import { themeLabel, useTheme } from '@/themes/theme';
 import ThemePicker from '@/themes/ThemePicker';
+import { setHeaderSlot } from '@/themes/headerSlot';
 import { smooth, snappy } from './motion';
 
-type Tab = 'home' | 'tv' | 'sports' | 'mylist' | 'search';
+type Tab = 'home' | 'movies' | 'shows' | 'cast' | 'tv' | 'sports' | 'mylist' | 'search';
 
 /**
  * Minimal theme's header: a translucent bar with the logo, the sections as text tabs centred
- * (the selected one on a pill that slides between them), and search, sort and profile on the
- * right. On a phone the sections are a tab bar along the bottom, as in iOS. Movies, Series and
- * Cast are not tabs here: Home's chips already switch them, on every screen size. Same props
- * and actions as the Classic Header.
+ * (the selected one on a pill that slides between them), and search, the page's Filters
+ * (headerSlot), sort and profile on the right. Movies, Shows and Cast are tabs (Home's chip row
+ * is gone in this theme, MinimalSectionRow). Below 880 px the sections are a tab bar along the
+ * bottom, as in iOS (Home, Movies, Shows, Live TV, My List; Cast and Sports are then in the
+ * profile menu, search in the top bar). Same props and actions as the Classic Header.
  */
 const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
   const { user, logout } = useAuth();
@@ -60,20 +65,29 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
     };
   }, [menuOpen]);
 
-  // Movies, Series and Cast are Home's chips (SectionChips), so Home stays lit for them.
   const onHome = p.isDiscoverActive || p.isPeopleActive || !!p.typedHome;
   const active: Tab = p.isSearchActive
     ? 'search'
-    : p.isMyListActive
+    : p.isPeopleActive
+      ? 'cast'
+      : p.isMyListActive
       ? 'mylist'
       : p.isSportsActive
         ? 'sports'
-        : !onHome && p.contentType === 'tv'
-          ? 'tv'
-          : 'home';
+        : p.typedHome === 'movie'
+          ? 'movies'
+          : p.typedHome === 'series'
+            ? 'shows'
+            : !onHome && p.contentType === 'tv'
+              ? 'tv'
+              : 'home';
+  const typed = p.onSelectTypedHome;
 
   const tabs: { id: Tab; label: string; icon: typeof House; onClick?: () => void }[] = [
     { id: 'home', label: 'Home', icon: House, onClick: p.onSelectDiscover },
+    { id: 'movies', label: 'Movies', icon: Film, onClick: typed && (() => typed('movie')) },
+    { id: 'shows', label: 'Shows', icon: Clapperboard, onClick: typed && (() => typed('series')) },
+    { id: 'cast', label: 'Cast', icon: Users, onClick: p.onSelectPeople },
     { id: 'tv', label: 'Live TV', icon: Tv, onClick: () => p.handleContentTypeChange('tv') },
     { id: 'sports', label: 'Sports', icon: Trophy, onClick: p.onSelectSports },
     { id: 'search', label: 'Search', icon: Search, onClick: p.onSelectSearch },
@@ -109,14 +123,14 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
           </div>
 
           {!p.streamUrl && (
-            <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-0.5 rounded-full bg-white/6 p-1 sm:flex">
+            <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-0.5 rounded-full bg-white/6 p-1 min-[880px]:flex">
               {shown
                 .filter((t) => t.id !== 'search')
                 .map((t) => (
                   <button
                     key={t.id}
                     onClick={t.onClick}
-                    className={`relative rounded-full px-4 py-1.5 text-base font-medium transition-colors [&.focused]:text-white ${
+                    className={`relative rounded-full px-2.5 py-1.5 text-sm font-medium whitespace-nowrap transition-colors xl:px-4 xl:text-base [&.focused]:text-white ${
                       active === t.id ? 'text-white' : 'text-white/55 hover:text-white'
                     }`}
                     data-focusable="true"
@@ -137,7 +151,7 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
               {p.onSelectSearch && (
                 <button
                   onClick={p.onSelectSearch}
-                  className={`${iconButton} hidden sm:flex ${active === 'search' ? 'bg-white/15 text-white' : ''}`}
+                  className={`${iconButton} ${active === 'search' ? 'bg-white/15 text-white' : ''}`}
                   data-focusable="true"
                   tabIndex={-1}
                   aria-label="Search"
@@ -145,6 +159,9 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
                   <Search className="h-[18px] w-[18px]" />
                 </button>
               )}
+              {/* The page's Filters (Home, Movies, Shows), shown here by MinimalSectionRow; just its
+                  icon (and count) until there is room for the word beside the seven tabs. */}
+              <span ref={setHeaderSlot} className="contents [&_button>span:not(.absolute)]:hidden lg:[&_button>span:not(.absolute)]:inline" />
               <button
                 onClick={p.cycleSort}
                 className={iconButton}
@@ -199,6 +216,16 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
               <p className="truncate text-sm text-white/50">{user.email}</p>
             </div>
             <div className="my-1 h-px bg-white/10" />
+            {p.onSelectPeople && (
+              <button onClick={menuAction(p.onSelectPeople)} className={`${menuItem} min-[880px]:hidden`} data-focusable="true" tabIndex={-1}>
+                <Users className="h-4 w-4 text-white/60" /> Cast
+              </button>
+            )}
+            {p.onSelectSports && (
+              <button onClick={menuAction(p.onSelectSports)} className={`${menuItem} min-[880px]:hidden`} data-focusable="true" tabIndex={-1}>
+                <Trophy className="h-4 w-4 text-white/60" /> Sports
+              </button>
+            )}
             {user.role === 'admin' && (
               <button onClick={menuAction(() => navigate('/admin'))} className={menuItem} data-focusable="true" tabIndex={-1}>
                 <Shield className="h-4 w-4 text-white/60" /> Admin Panel
@@ -226,8 +253,9 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
 
 
       {!p.streamUrl && (
-        <nav className="ui-glass fixed inset-x-0 bottom-0 z-50 flex pb-[env(safe-area-inset-bottom)] sm:hidden">
+        <nav className="ui-glass fixed inset-x-0 bottom-0 z-50 flex pb-[env(safe-area-inset-bottom)] min-[880px]:hidden">
           {shown
+            .filter((t) => t.id !== 'sports' && t.id !== 'search' && t.id !== 'cast')
             .map((t) => {
               const Icon = t.icon;
               const on = active === t.id;

@@ -4,6 +4,8 @@ import type { MediaItem } from '@/types';
 export interface TitleMenuExtra {
   /** Continue Watching cards: "Remove from Continue Watching". */
   onRemoveFromContinue?: () => void;
+  /** Continue Watching cards: "Details", the title's page. */
+  onDetails?: () => void;
 }
 
 /** Opens the title menu (hold / right-click / ⋯ on a card; App renders it). */

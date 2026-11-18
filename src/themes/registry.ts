@@ -6,6 +6,7 @@ import type { ContinueHeroProps } from '@/components/organisms/browse/ContinueHe
 import type { MediaCardProps } from '@/components/molecules/MediaCard';
 import type { ContinueCardProps } from '@/components/organisms/browse/continueCard';
 import type { SportsScheduleProps } from '@/components/organisms/sports/SportsView';
+import type { SectionRowProps } from '@/components/molecules/SectionChips';
 import { isTvApp } from '@/utils/helpers';
 import { useTheme, type ThemeId } from './theme';
 import MinimalHeader from './minimal/MinimalHeader';
@@ -13,6 +14,7 @@ import MinimalHero from './minimal/MinimalHero';
 import MinimalCard from './minimal/MinimalCard';
 import MinimalContinueCard from './minimal/MinimalContinueCard';
 import MinimalSportsSchedule from './minimal/MinimalSportsSchedule';
+import MinimalSectionRow from './minimal/MinimalSectionRow';
 
 export interface ThemeParts {
   Header?: React.FC<HeaderProps>;
@@ -20,13 +22,14 @@ export interface ThemeParts {
   Card?: React.FC<MediaCardProps>;
   ContinueCard?: React.FC<ContinueCardProps>;
   SportsSchedule?: React.FC<SportsScheduleProps>;
+  SectionRow?: React.FC<SectionRowProps>;
 }
 
 const TV = isTvApp();
 
 const PARTS: Record<ThemeId, ThemeParts> = {
   classic: {},
-  minimal: { Header: MinimalHeader, Hero: MinimalHero, Card: MinimalCard, ContinueCard: MinimalContinueCard, SportsSchedule: MinimalSportsSchedule },
+  minimal: { Header: MinimalHeader, Hero: MinimalHero, Card: MinimalCard, ContinueCard: MinimalContinueCard, SportsSchedule: MinimalSportsSchedule, SectionRow: MinimalSectionRow },
 };
 
 /** The current theme's own version of a part, or `classic` when it has none. */

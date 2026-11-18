@@ -520,7 +520,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           eliminates Chromium's nested-backdrop-filter compositing bug that
           caused the sticky-bar flicker — there's no backdrop-filter left
           here to nest. */}
-      <div className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-surface-2 px-3 py-2 sm:-mx-6 sm:px-6">
+      <div className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-surface-2 px-3 py-2 empty:hidden sm:-mx-6 sm:px-6">
         {sectionChips?.(filterButton)}
       </div>
 

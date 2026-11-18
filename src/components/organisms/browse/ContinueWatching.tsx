@@ -11,7 +11,8 @@ import { useLongPress } from '@/hooks/useLongPress';
 import { usePart } from '@/themes/registry';
 import Dialog from '@/components/ui/Dialog';
 import Button from '@/components/ui/Button';
-import { continueImageUrl, type ContinueCardProps } from './continueCard';
+import { Info, Loader2 } from 'lucide-react';
+import { continueImageUrl, useContinueDetails, type ContinueCardProps } from './continueCard';
 
 interface ContinueWatchingProps {
   onClick: (item: MediaItem) => void;
@@ -34,11 +35,11 @@ const imageUrlOf = continueImageUrl;
  * its bottom and "Episode · 23 min left" under it, the size of the other rows' posters. The
  * landscape art is the Home hero's (ContinueHero), above this row.
  */
-const ClassicContinueCard: React.FC<ContinueCardProps> = React.memo(({ item, onClick, onRemove, onRemoveNow }) => {
+const ClassicContinueCard: React.FC<ContinueCardProps> = React.memo(({ item, onClick, onRemove, onRemoveNow, onDetails, opening }) => {
   const anyItem = item as any;
-  // The title menu (hold / right-click), with Remove from Continue Watching.
+  // The title menu (hold / right-click), with Details and Remove from Continue Watching.
   const openMenu = useTitleMenu();
-  const hold = useLongPress(openMenu ? () => openMenu(item, { onRemoveFromContinue: onRemoveNow }) : undefined);
+  const hold = useLongPress(openMenu ? () => openMenu(item, { onRemoveFromContinue: onRemoveNow, onDetails: onDetails ?? undefined }) : undefined);
   const [failed, setFailed] = useState(false);
   const poster = imageUrlOf(item.screenshot_uri);
   const wide = imageUrlOf(anyItem.cw_backdrop);
@@ -83,6 +84,20 @@ const ClassicContinueCard: React.FC<ContinueCardProps> = React.memo(({ item, onC
         >
           ×
         </button>
+        {onDetails && (
+          <button
+            className="absolute left-1 top-1 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white transition-opacity duration-200 hover:bg-white/25 focus:opacity-100 sm:h-6 sm:w-6 sm:opacity-0 sm:group-hover:opacity-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDetails();
+            }}
+            title="Details"
+            aria-label="Details"
+            data-focusable="true"
+          >
+            {opening ? <Loader2 size={13} className="animate-spin" /> : <Info size={14} />}
+          </button>
+        )}
         <div className="absolute bottom-0 left-0 h-1 w-full bg-white/20">
           <div className="h-full bg-sky-400" style={{ width: `${pct}%` }} />
         </div>
@@ -94,9 +109,10 @@ const ClassicContinueCard: React.FC<ContinueCardProps> = React.memo(({ item, onC
 });
 
 /** The current theme's Continue Watching card (src/themes/registry.ts), else Classic's above. */
-const ContinueCard: React.FC<ContinueCardProps> = (props) => {
+const ContinueCard: React.FC<Omit<ContinueCardProps, 'onDetails' | 'opening'>> = (props) => {
   const Card = usePart('ContinueCard', ClassicContinueCard);
-  return <Card {...props} />;
+  const { openDetails, opening } = useContinueDetails(props.item);
+  return <Card {...props} onDetails={openDetails} opening={opening} />;
 };
 
 const ContinueWatching: React.FC<ContinueWatchingProps> = ({ onClick, progressRecords, onProgressChanged, skipFirst = false }) => {

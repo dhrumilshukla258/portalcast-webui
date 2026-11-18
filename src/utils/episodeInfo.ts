@@ -40,15 +40,33 @@ function afterNumber(name: string): string {
   return name.replace(SXXEYY, ' ').replace(LEADING_EPISODE, '').replace(LEADING_NUMBER, '').trim();
 }
 
-/** The episode's number: from its name, then episode_num, then its position (1-based). */
-export function episodeNumber(ep: MediaItem, fallbackIndex: number): number {
+/** The number an episode carries: from its name, then episode_num; null when it has none. */
+function ownNumber(ep: MediaItem): number | null {
   const name = rawName(ep);
   for (const re of [SXXEYY, LEADING_EPISODE, LEADING_NUMBER]) {
     const m = re.exec(name);
     if (m) return Number(m[1]);
   }
   const n = Number(ep.episode_num);
-  return n > 0 ? n : fallbackIndex + 1;
+  return n > 0 ? n : null;
+}
+
+/** The episode's number: from its name, then episode_num, then its position (1-based). */
+export function episodeNumber(ep: MediaItem, fallbackIndex: number): number {
+  return ownNumber(ep) ?? fallbackIndex + 1;
+}
+
+/**
+ * A whole season in episode order (1, 2, 3...), whichever way the provider listed it (most
+ * newest first, some oldest first). As listed when an episode has no number of its own.
+ */
+export function inEpisodeOrder<T extends MediaItem>(eps: T[]): T[] {
+  const nums = eps.map(ownNumber);
+  if (nums.some((n) => n === null)) return eps;
+  return eps
+    .map((ep, i) => ({ ep, n: nums[i] as number }))
+    .sort((a, b) => a.n - b.n)
+    .map((x) => x.ep);
 }
 
 /** "26 May 2026" when the name starts with an air date (after any episode prefix). */
@@ -69,7 +87,7 @@ export function episodeAirDate(ep: MediaItem, seriesTitle?: string): string | nu
 
 /**
  * The title without its number prefix and leading air date; "Episode N" when nothing
- * meaningful is left, including a name that is only the show's own name.
+ * meaningful is left, including a name that is only the show's own name or a season.
  */
 export function episodeTitle(ep: MediaItem, fallbackIndex: number, seriesTitle?: string): string {
   let rest = withoutShowName(afterNumber(rawName(ep)), seriesTitle);
@@ -77,12 +95,18 @@ export function episodeTitle(ep: MediaItem, fallbackIndex: number, seriesTitle?:
   rest = rest.replace(LEADING_EPISODE, '').replace(LEADING_NUMBER, '');
   const stripped = rest.replace(/\s+/g, ' ').trim().replace(/^[-–—:.|\s]+/, '');
   const isShowName = !!seriesTitle && stripped.toLowerCase() === seriesTitle.trim().toLowerCase();
-  return !stripped || isShowName ? `Episode ${episodeNumber(ep, fallbackIndex)}` : stripped;
+  // "Episode 15. Two and a Half Men: Season 12" leaves only the season: not a title either.
+  const isSeasonOnly = /^(?:season|s)\s*\d{1,3}$/i.test(stripped);
+  return !stripped || isShowName || isSeasonOnly ? `Episode ${episodeNumber(ep, fallbackIndex)}` : stripped;
 }
 
 /** "21m", "1h 5m" from minutes or seconds-ish values; null when unknown. */
 export function episodeRuntime(ep: MediaItem): string | null {
-  const raw = Number((ep as { time?: unknown }).time ?? 0) || Number(ep.duration ?? 0);
+  return runtimeText(Number((ep as { time?: unknown }).time ?? 0) || Number(ep.duration ?? 0));
+}
+
+/** "21m", "2h 5m" from minutes (or seconds, when implausibly long for minutes); null when unknown. */
+export function runtimeText(raw: number): string | null {
   if (!raw || raw <= 0) return null;
   const minutes = raw > 600 ? Math.round(raw / 60) : raw; // seconds when implausibly long for minutes
   const h = Math.floor(minutes / 60);

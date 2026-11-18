@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
-import { Play } from 'lucide-react';
+import { Info, Loader2, Play } from 'lucide-react';
 import type { MediaItem } from '@/types';
 import type { ProgressRecord } from '@/api/types/user';
 import { downsize } from '@/utils/imageSize';
@@ -19,7 +19,7 @@ export interface ContinueHeroProps {
 const ContinueHero: React.FC<ContinueHeroProps> = ({ progressRecords, onResume }) => {
   const hero = useContinueHero(progressRecords);
   if (!hero) return null;
-  const { item, details, title, art, onArtError, pct } = hero;
+  const { item, details, title, art, onArtError, pct, openDetails, detailsLoading } = hero;
   const anyItem = item as any;
   return (
     <div className="relative mb-6 overflow-hidden rounded-2xl border border-white/10 bg-black/40">
@@ -48,7 +48,7 @@ const ContinueHero: React.FC<ContinueHeroProps> = ({ progressRecords, onResume }
           </div>
           {anyItem.cw_detail && <span className="truncate text-sm text-gray-200">{anyItem.cw_detail}</span>}
         </div>
-        <div>
+        <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={() => onResume(item)}
@@ -58,6 +58,17 @@ const ContinueHero: React.FC<ContinueHeroProps> = ({ progressRecords, onResume }
             <Play size={18} className="fill-current" />
             Resume
           </button>
+          {openDetails && (
+            <button
+              type="button"
+              onClick={openDetails}
+              data-focusable="true"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3 font-bold text-white transition-transform hover:scale-[1.03] hover:bg-white/20 focus:outline-hidden focus:ring-2 focus:ring-sky-400 [&.focused]:ring-2 [&.focused]:ring-sky-400"
+            >
+              {detailsLoading ? <Loader2 size={18} className="animate-spin" /> : <Info size={18} />}
+              Details
+            </button>
+          )}
         </div>
       </div>
     </div>

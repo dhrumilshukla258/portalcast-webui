@@ -67,11 +67,11 @@ const EpisodeAccordionRow = forwardRef<HTMLButtonElement, EpisodeAccordionRowPro
         isResume ? 'border-accent/40 bg-accent/10' : 'border-transparent hover:bg-white/10'
       } focus:border-white/80 focus:bg-white/15 [&.focused]:border-white/80 [&.focused]:bg-white/15`}
     >
-      <span className="w-9 shrink-0 text-center text-lg font-bold text-fg-muted group-hover:text-fg group-[.focused]:text-fg">
+      <span data-ui="episode-number" className="w-9 shrink-0 text-center text-lg font-bold text-fg-muted group-hover:text-fg group-[.focused]:text-fg">
         {number}
       </span>
       {imageUrl && (
-        <span className="relative aspect-video w-36 shrink-0 overflow-hidden rounded-md bg-white/5 sm:w-40">
+        <span data-ui="episode-thumb" className="relative aspect-video w-36 shrink-0 overflow-hidden rounded-md bg-white/5 sm:w-40">
           <img src={imageUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
           <span className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60"><Play size={16} className="fill-white text-fg" /></span>
@@ -84,6 +84,10 @@ const EpisodeAccordionRow = forwardRef<HTMLButtonElement, EpisodeAccordionRowPro
         </span>
       )}
       <span className="min-w-0 flex-1">
+        {/* A theme that drops the number column shows it here instead (Minimal). */}
+        <span data-ui="episode-kicker" className="hidden text-xs font-semibold text-fg-subtle">
+          Episode {number}
+        </span>
         <span className="block truncate text-sm font-bold text-fg sm:text-base">{title}</span>
         {sub && <span className="mt-0.5 block truncate text-xs text-fg-muted">{sub}</span>}
         {overview && (

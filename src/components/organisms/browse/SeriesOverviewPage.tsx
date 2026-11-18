@@ -106,7 +106,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
         }
       >
         <h3 className="ui-label mb-3 flex items-center gap-2">
-          <Layers size={13} />
+          <Layers size={13} data-ui="section-icon" />
           Seasons
         </h3>
 
@@ -128,13 +128,15 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
                     key={`${season.id}-${index}`}
                     onClick={() => setSelectedSeasonId(season.id)}
                     data-focusable="true"
+                    data-ui="season-tab"
+                    data-active={isActive || undefined}
                     className={`flex items-center gap-2 rounded-xl border py-2 pl-2 pr-3.5 text-left transition-colors ${
                       isActive
                         ? 'border-accent/60 bg-accent/10'
                         : 'border-line bg-white/5 hover:border-focus/40 hover:bg-white/10'
                     }`}
                   >
-                    <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-black/30">
+                    <div data-ui="season-thumb" className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-black/30">
                       {season.screenshot_uri ? (
                         <img
                           src={

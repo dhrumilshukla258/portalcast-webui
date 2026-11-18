@@ -129,12 +129,12 @@ const PeopleView: React.FC<PeopleViewProps> = ({ sectionChips }) => {
       {first && !first.ready && <p className="py-16 text-center text-fg-muted">People are still being prepared on the server. Try again in a minute.</p>}
       {hits && hits.length === 0 && <p className="py-16 text-center text-fg-muted">No one by that name.</p>}
 
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+      <div data-ui="people-grid" className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
         {people.map((p) => (
           <PersonCard key={p.id} person={p} onOpen={() => openPerson?.(p.id)} />
         ))}
         {loading && people.length === 0 &&
-          Array.from({ length: 14 }).map((_, i) => <div key={i} className="aspect-2/3 animate-pulse rounded-md bg-white/5 sm:rounded-xl" />)}
+          Array.from({ length: 14 }).map((_, i) => <div key={i} data-ui="person-photo" className="aspect-2/3 animate-pulse rounded-md bg-white/5 sm:rounded-xl" />)}
       </div>
       <div ref={sentinel} className="h-8" />
       {loading && people.length > 0 && (
@@ -155,9 +155,10 @@ const PersonCard: React.FC<{ person: PersonHit; onOpen: () => void }> = React.me
       data-focusable="true"
       onClick={onOpen}
       title={`${person.name}: all titles`}
+      data-ui="person-card"
       className="group text-left focus:outline-hidden"
     >
-      <div className="relative aspect-2/3 w-full overflow-hidden rounded-md border border-line bg-panel-raised transition-all group-hover:border-accent/50 group-focus:ring-2 group-focus:ring-white group-[.focused]:ring-2 group-[.focused]:ring-white sm:rounded-xl">
+      <div data-ui="person-photo" className="relative aspect-2/3 w-full overflow-hidden rounded-md border border-line bg-panel-raised transition-all group-hover:border-accent/50 group-focus:ring-2 group-focus:ring-white group-[.focused]:ring-2 group-[.focused]:ring-white sm:rounded-xl">
         {src && !failed ? (
           <img src={src} alt={person.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={() => setFailed(true)} />
         ) : (

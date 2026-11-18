@@ -35,11 +35,15 @@ export function sectionOn(active: HomeSection, chip: Exclude<HomeSection, 'home'
  * the header (owner: two rows at the top, everywhere). A chip that is on ([sectionOn]) is
  * lightly filled, the look Home starts with (owner 2026-11-13: not white, not blue).
  */
-const SectionChips: React.FC<{
+/** Home's row under the header: Classic's chips, or a theme's own (registry SectionRow). */
+export interface SectionRowProps {
   active: HomeSection;
   onSelect: (s: HomeSection) => void;
+  /** The page's Filters button. */
   trailing?: React.ReactNode;
-}> = ({ active, onSelect, trailing }) => (
+}
+
+const SectionChips: React.FC<SectionRowProps> = ({ active, onSelect, trailing }) => (
   <div className={`flex items-center ${TV ? 'gap-3' : 'gap-2'}`} data-focus-group="section-chips" data-tv-group="chips">
     {CHIPS.map((c) => {
       const on = sectionOn(active, c.id);

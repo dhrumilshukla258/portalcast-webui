@@ -5,6 +5,7 @@ import { URL_PATHS } from '@/api/config';
 import { getTitleDetails, type TitleDetails } from '@/api/endpoints/discover';
 import { continueItemsOf } from '@/utils/continueItems';
 import { isContentId } from '@/utils/titleFormat';
+import { useContinueDetails } from './continueCard';
 
 const urlOf = (path: string | undefined): string | null => {
   if (!path) return null;
@@ -31,13 +32,17 @@ export function useContinueHero(progressRecords: ProgressRecord[]) {
     };
   }, [catalogId]);
   const [artFailed, setArtFailed] = React.useState(false);
+  const { openDetails, opening } = useContinueDetails(item);
   React.useEffect(() => setArtFailed(false), [anyItem?.cw_backdrop]);
   if (!item) return null;
+  const title = (anyItem.cw_show_title || item.title || item.name || '') as string;
 
   return {
     item,
     details,
-    title: (anyItem.cw_show_title || item.title || item.name || '') as string,
+    title,
+    openDetails,
+    detailsLoading: opening,
     art: artFailed ? null : urlOf(anyItem.cw_backdrop),
     onArtError: () => setArtFailed(true),
     detail: anyItem.cw_detail as string | undefined,

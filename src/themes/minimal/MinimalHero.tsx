@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Play } from 'lucide-react';
+import { Info, Play } from 'lucide-react';
+import ActivityIndicator from '@/components/ui/ActivityIndicator';
 import type { ContinueHeroProps } from '@/components/organisms/browse/ContinueHero';
 import { useContinueHero } from '@/components/organisms/browse/useContinueHero';
 import { downsize } from '@/utils/imageSize';
@@ -8,14 +9,16 @@ import { easeOut, smooth, snappy } from './motion';
 
 /**
  * Minimal theme's Home hero, Apple TV style: the backdrop large, fading into black at the
- * bottom, title (or logo art) bottom left, one white Resume button. The art fades in once
- * it has loaded; nothing moves after that.
+ * bottom, title (or logo art) bottom left, a white Resume button and a glass Details one (the
+ * title's page). The art fades in once it has loaded; nothing moves after that.
  */
+const heroButton =
+  'inline-flex w-fit items-center gap-2 rounded-xl px-7 py-3 text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white [&.focused]:outline-2 [&.focused]:outline-offset-4 [&.focused]:outline-white';
 const MinimalHero: React.FC<ContinueHeroProps> = ({ progressRecords, onResume }) => {
   const hero = useContinueHero(progressRecords);
   const [loadedArt, setLoadedArt] = useState<string | null>(null);
   if (!hero) return null;
-  const { item, details, title, art, onArtError, detail, pct } = hero;
+  const { item, details, title, art, onArtError, detail, pct, openDetails, detailsLoading } = hero;
   const src = art ? downsize(art, 'w1280') : null;
 
   return (
@@ -56,18 +59,34 @@ const MinimalHero: React.FC<ContinueHeroProps> = ({ progressRecords, onResume })
             </div>
             {detail && <span className="truncate text-sm text-white/70">{detail}</span>}
           </div>
-          <motion.button
-            type="button"
-            onClick={() => onResume(item)}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.96 }}
-            transition={snappy}
-            data-focusable="true"
-            className="mt-1 inline-flex w-fit items-center gap-2 rounded-xl bg-white px-7 py-3 text-base font-semibold text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white [&.focused]:outline-2 [&.focused]:outline-offset-4 [&.focused]:outline-white"
-          >
-            <Play size={18} className="fill-current" />
-            Resume
-          </motion.button>
+          <div className="mt-1 flex items-center gap-3">
+            <motion.button
+              type="button"
+              onClick={() => onResume(item)}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.96 }}
+              transition={snappy}
+              data-focusable="true"
+              className={`${heroButton} bg-white text-black`}
+            >
+              <Play size={18} className="fill-current" />
+              Resume
+            </motion.button>
+            {openDetails && (
+              <motion.button
+                type="button"
+                onClick={openDetails}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
+                transition={snappy}
+                data-focusable="true"
+                className={`${heroButton} bg-white/15 text-white backdrop-blur-md hover:bg-white/25`}
+              >
+                {detailsLoading ? <ActivityIndicator className="text-lg" /> : <Info size={18} />}
+                Details
+              </motion.button>
+            )}
+          </div>
         </motion.div>
       </div>
     </section>

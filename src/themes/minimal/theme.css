@@ -27,6 +27,13 @@
     /* UI pieces (src/components/ui/ui.css). */
     --ui-control-h: 2.375rem;
     --ui-control-weight: 600;
+    /* Chips as Apple TV's tabs: words, the picked one on a soft pill (as the header's). */
+    --ui-chip-bg: transparent;
+    --ui-chip-border: transparent;
+    --ui-chip-fg: var(--color-fg-muted);
+    --ui-chip-hover-bg: rgb(255 255 255 / 0.08);
+    --ui-chip-on-bg: rgb(255 255 255 / 0.15);
+    --ui-chip-on-fg: #f5f5f7;
     --ui-panel-radius: 0.875rem;
     --ui-label-size: var(--text-xl);
     --ui-label-weight: 600;
@@ -270,6 +277,11 @@ html[data-theme='minimal'] {
 @media (min-width: 640px) {
   html[data-theme='minimal'] {
     --chrome-top: 4rem;
+  }
+}
+/* The tab bar along the bottom shows below 880 px (MinimalHeader: seven sections need the room). */
+@media (min-width: 880px) {
+  html[data-theme='minimal'] {
     --chrome-bottom: 0px;
   }
 }
@@ -316,7 +328,8 @@ html[data-theme='minimal'] *::after {
 
 /* Pills, avatars and dots stay true circles, not flattened capsules. */
 html[data-theme='minimal'] .rounded-full,
-html[data-theme='minimal'] [class*=':rounded-full'] {
+html[data-theme='minimal'] [class*=':rounded-full'],
+html[data-theme='minimal'] .ui-chip {
   corner-shape: round;
 }
 
@@ -328,4 +341,101 @@ html[data-theme='minimal'] [class*=':rounded-full'] {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+/* Title pages, Apple TV style: plain text and glass over boxes and pills. The hooks are data-ui
+   marks in MediaInfoHeader, TitleExtras (My List), SeriesOverviewPage and EpisodeAccordionRow. */
+html[data-theme='minimal'] [data-ui='title-action'] {
+  border-color: transparent;
+  background: rgb(255 255 255 / 0.12);
+  color: #f5f5f7;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+html[data-theme='minimal'] [data-ui='title-action']:hover {
+  background: rgb(255 255 255 / 0.2);
+}
+html[data-theme='minimal'] [data-ui='title-meta'] {
+  border-color: transparent;
+  padding-block: 0;
+  gap: 0.25rem 0.875rem;
+  color: var(--color-fg-muted);
+}
+html[data-theme='minimal'] [data-ui='meta-icon'],
+html[data-theme='minimal'] [data-ui='section-icon'],
+html[data-theme='minimal'] [data-ui='season-thumb'],
+html[data-theme='minimal'] [data-ui='episode-number'] {
+  display: none;
+}
+html[data-theme='minimal'] [data-ui='rating'] {
+  padding: 0;
+  background: none;
+  color: var(--color-fg-soft);
+}
+html[data-theme='minimal'] [data-ui='rating'] svg {
+  color: #ffd60a;
+}
+/* The rating's source ("IMDb") in grey, after the number. */
+html[data-theme='minimal'] [data-ui='rating'] > span + span {
+  color: var(--color-fg-subtle);
+}
+html[data-theme='minimal'] [data-ui='meta-badge'] {
+  border-radius: 0.3rem;
+  border-color: rgb(255 255 255 / 0.35);
+  padding: 0 0.35rem;
+  font-weight: 600;
+}
+/* Genres as a line of text: "Animation · Family · Fantasy". */
+html[data-theme='minimal'] [data-ui='genres'] {
+  gap: 0.5rem;
+}
+html[data-theme='minimal'] [data-ui='genre'] {
+  padding: 0;
+  background: none;
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+html[data-theme='minimal'] [data-ui='genre']:not(:last-child)::after {
+  content: '·';
+  margin-left: 0.5rem;
+}
+/* Season tabs: words on a pill that marks the open one. */
+html[data-theme='minimal'] [data-ui='season-tab'] {
+  border-color: transparent;
+  border-radius: 9999px;
+  background: none;
+  padding: 0.375rem 0.875rem;
+}
+html[data-theme='minimal'] [data-ui='season-tab']:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+html[data-theme='minimal'] [data-ui='season-tab'][data-active] {
+  background: rgb(255 255 255 / 0.15);
+}
+html[data-theme='minimal'] [data-ui='season-tab']:not([data-active]) > span {
+  color: var(--color-fg-muted);
+}
+/* Episodes: "Episode 3" over the title instead of a number column, a larger still. */
+html[data-theme='minimal'] [data-ui='episode-kicker'] {
+  display: block;
+}
+html[data-theme='minimal'] [data-ui='episode-thumb'] {
+  width: 12rem;
+  border-radius: 0.75rem;
+}
+
+/* Cast (PeopleView): round faces, as many to a row as fit, names centred under them. */
+html[data-theme='minimal'] [data-ui='people-grid'] {
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  gap: 1.5rem 1rem;
+}
+html[data-theme='minimal'] [data-ui='person-card'] {
+  text-align: center;
+}
+html[data-theme='minimal'] [data-ui='person-photo'] {
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 9999px;
+  corner-shape: round;
 }

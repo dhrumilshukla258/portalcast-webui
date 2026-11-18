@@ -16,6 +16,8 @@ export const useOpenPerson = () => React.useContext(PersonPageContext);
  */
 export interface OpenTitle {
   open: (item: import('@/types').MediaItem) => void;
+  /** Opens that exact title's page, no version picker (Continue Watching: the version being watched). */
+  openPage: (item: import('@/types').MediaItem) => Promise<void>;
   /** The card whose open is in flight (its spinner). */
   loadingItemId: string | null;
 }

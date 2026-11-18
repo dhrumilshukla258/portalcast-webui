@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bookmark, BookmarkCheck, Check, EyeOff, Trash2, X } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Check, EyeOff, Info, Trash2, X } from 'lucide-react';
 import type { MediaItem } from '@/types';
 import type { TitleMenuExtra } from '@/context/TitleMenuContext';
 import { contentIdOf } from '@/utils/contentId';
@@ -83,6 +83,17 @@ const TitleMenu: React.FC<TitleMenuProps> = ({ item, extra, onClose, onChanged }
         <p className="px-4 py-6 text-sm text-fg-muted">Nothing to do for this one.</p>
       ) : (
         <div className="pb-1">
+          {extra?.onDetails && (
+            <Row
+              icon={<Info className="h-5 w-5" />}
+              label="Details"
+              note="Its page: episodes, cast, more like this"
+              onClick={() => {
+                onClose();
+                extra.onDetails!();
+              }}
+            />
+          )}
           {inList !== null && (
             <Row
               icon={inList ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
