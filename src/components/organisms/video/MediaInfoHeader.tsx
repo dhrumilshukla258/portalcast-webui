@@ -3,6 +3,7 @@ import { useOpenPerson } from '@/context/PersonPageContext';
 import React, { useMemo } from 'react';
 import { Play, Clock, Star, Calendar, Globe2, Film, Image as ImageIcon, Link2, Merge } from 'lucide-react';
 import { runtimeText } from '@/utils/episodeInfo';
+import { useParallax } from '@/hooks/useParallax';
 import { useAuth } from '@/context/AuthContext';
 import EditImagesDialog from '@/components/organisms/admin/EditImagesDialog';
 import { PortalFixMatch } from '@/components/organisms/admin/FixMatchDialog';
@@ -123,6 +124,9 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
     if (!path) return null;
     return path.startsWith('http') ? path : `${baseUrl}/api/images${path}`;
   }, [item.backdrop_hd_path, item.backdrop_path, baseUrl]);
+  // The backdrop drifts slower than the page as it scrolls (the theme's parallax; none in Classic).
+  const backdropRef = React.useRef<HTMLImageElement>(null);
+  useParallax(backdropRef, backdropUrl);
 
   return (
     // The title's page (owner 2026-10-29: its own page, like the Android TV app's): the
@@ -132,6 +136,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
       {backdropUrl && (
         <div className="absolute inset-x-0 top-0 z-0 h-[48vh] min-h-64 overflow-hidden sm:h-[66vh]">
           <img
+            ref={backdropRef}
             key={backdropUrl}
             src={backdropUrl}
             alt=""

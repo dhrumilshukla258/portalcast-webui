@@ -30,6 +30,8 @@
     --ui-player-button-bg: rgb(17 24 39 / 0.7);
     --ui-player-button-hover-bg: rgb(31 41 55 / 0.9);
     --ui-player-button-border: rgb(55 65 81 / 0.5);
+    /* A title page's backdrop moves at this share of the scroll (useParallax): 0 keeps it still. */
+    --ui-backdrop-parallax: 0;
     /* Tooltips: data-tip="..." on a button (the player's icons), .ui-tip-label for a label of
        its own (the movie player's). */
     --ui-tip-bg: rgb(0 0 0 / 0.8);

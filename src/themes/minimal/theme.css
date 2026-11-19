@@ -49,6 +49,7 @@
     --ui-player-button-bg: rgb(30 30 32 / 0.55);
     --ui-player-button-hover-bg: rgb(60 60 64 / 0.7);
     --ui-player-button-border: transparent;
+    --ui-backdrop-parallax: 0.35;
     --ui-tip-bg: rgb(30 30 32 / 0.8);
     --ui-tip-fg: #f5f5f7;
     --ui-tip-blur: blur(20px) saturate(1.6);
