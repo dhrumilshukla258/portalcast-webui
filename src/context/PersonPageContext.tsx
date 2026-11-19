@@ -18,6 +18,8 @@ export interface OpenTitle {
   open: (item: import('@/types').MediaItem) => void;
   /** Opens that exact title's page, no version picker (Continue Watching: the version being watched). */
   openPage: (item: import('@/types').MediaItem) => Promise<void>;
+  /** Plays another version of the movie playing (a Discover variant), from `at` seconds. */
+  playVersion: (version: import('@/types').MediaItem, at: number) => Promise<void>;
   /** The card whose open is in flight (its spinner). */
   loadingItemId: string | null;
 }

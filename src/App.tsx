@@ -375,8 +375,27 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   // More Like This on a detail page opens titles the way a person's page does.
   const openTitle = React.useMemo(
-    () => ({ open: (item: MediaItem) => void openPersonTitle(item), openPage: openDiscoverItem, loadingItemId: discoverLoadingItemId }),
-    [openPersonTitle, openDiscoverItem, discoverLoadingItemId]
+    () => ({
+      open: (item: MediaItem) => void openPersonTitle(item),
+      openPage: openDiscoverItem,
+      // The player's Settings → Version: the variant's own file, from the same place.
+      playVersion: (version: MediaItem, at: number) =>
+        startPlayback(
+          {
+            ...version,
+            id: String(version.id).replace(/^movie_/, ''),
+            catalogId: String(version.id),
+            category_id: version.category ?? '*',
+            title: currentItem?.title || version.title,
+            is_playable_movie: true,
+          } as MediaItem,
+          undefined,
+          undefined,
+          at
+        ),
+      loadingItemId: discoverLoadingItemId,
+    }),
+    [openPersonTitle, openDiscoverItem, startPlayback, currentItem, discoverLoadingItemId]
   );
 
   // A genre on a title's page: Movies (or Shows) filtered to it, the title's page closed.

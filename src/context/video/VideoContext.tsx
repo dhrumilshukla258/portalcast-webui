@@ -129,7 +129,7 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({
   const settingsOpenRef = useRef(false);
   settingsOpenRef.current = isSettingsMenuOpen;
   const [activeSettingsMenu, setActiveSettingsMenu] = useState<
-    'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast' | 'external'
+    'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast' | 'external' | 'version'
   >('main');
 
   // --- Live TV States ---

@@ -292,7 +292,8 @@ export function useAppNavigation(
   );
 
   const startPlayback = useCallback(
-    async (item: MediaItem, startTime?: number, endTime?: number) => {
+    // resumeAt: a movie starts there (another version of the one playing, from the same place).
+    async (item: MediaItem, startTime?: number, endTime?: number, resumeAt?: number) => {
       if (contentType === 'tv') {
         playChannel(item, startTime, endTime);
         return;
@@ -425,7 +426,7 @@ export function useAppNavigation(
             },
             { itemId: listItemId, itemType: 'movie' }
           );
-          openPlayer(finalMovieItem, raw, proxied, getResumeTime());
+          openPlayer(finalMovieItem, raw, proxied, resumeAt ?? getResumeTime());
         } catch (err) {
           console.error(err);
           toast.error('Could not fetch stream details.');

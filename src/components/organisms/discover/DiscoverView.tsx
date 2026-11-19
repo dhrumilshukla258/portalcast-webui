@@ -1,4 +1,5 @@
 import { useHiddenTitles } from '@/utils/hiddenTitles';
+import { X } from 'lucide-react';
 import { contentIdOf } from '@/utils/contentId';
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import MediaCard from '@/components/molecules/MediaCard';
@@ -488,16 +489,35 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     ...(onOpenCategories ? sourceTypes.map((t) => ({ label: `IPTV categories${typeName(t)}`, note: "The provider's own lists", onClick: () => onOpenCategories(t) })) : []),
   ];
 
+  // Filters, and while any is set, a Clear beside it (one press, every filter).
   const filterButton = (
-    <DiscoverFilters
-      variant="phone"
-      iconOnly
-      facets={facets}
-      activeFilters={activeFilters}
-      onFilterChange={handleFilterChange}
-      onGenresChange={handleGenresChange}
-      links={libraryLinks}
-    />
+    <div className="flex items-center gap-2">
+      {hasActiveFilter && (
+        <button
+          type="button"
+          data-focusable="true"
+          onClick={() => {
+            applyNextFilters({});
+            document.getElementById('app-content-scroll')?.scrollTo({ top: 0 });
+          }}
+          aria-label="Clear filters"
+          title="Clear filters"
+          className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 text-sm font-semibold text-fg-soft transition-colors hover:bg-white/20 hover:text-fg"
+        >
+          <X className="h-4 w-4" />
+          Clear
+        </button>
+      )}
+      <DiscoverFilters
+        variant="phone"
+        iconOnly
+        facets={facets}
+        activeFilters={activeFilters}
+        onFilterChange={handleFilterChange}
+        onGenresChange={handleGenresChange}
+        links={libraryLinks}
+      />
+    </div>
   );
 
   if (TV) {

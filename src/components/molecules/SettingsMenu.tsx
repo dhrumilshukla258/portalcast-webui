@@ -12,6 +12,9 @@ import { FaChromecast } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { absoluteStreamUrl, externalChoices, playlistFile, playlistName, type ExternalChoice } from '@/utils/externalPlayer';
 import { subtitleDownloads, subtitleFailureText } from '@/utils/subtitleDownload';
+import { getDiscoverVariants, type DiscoverVariant } from '@/api/endpoints/discover';
+import { useOpenTitle } from '@/context/PersonPageContext';
+import { isContentId } from '@/utils/titleFormat';
 
 /** Languages offered in the subtitle search (ISO 639-1). */
 const SUBTITLE_LANGUAGES: [string, string][] = [
@@ -47,6 +50,32 @@ export const SettingsMenu = React.memo(() => {
   } = useVideoContext();
 
   const title: string = String(item?.title || item?.name || channelInfo?.name || seriesItem?.name || 'PortalCast');
+
+  // Version: the movie's other versions (Discover variants), to switch to from the same place.
+  const openTitle = useOpenTitle();
+  const catalogId = item && !seriesItem && isContentId(String(item.catalogId ?? '')) ? String(item.catalogId) : null;
+  const [versions, setVersions] = React.useState<DiscoverVariant[]>([]);
+  React.useEffect(() => {
+    let cancelled = false;
+    setVersions([]);
+    if (!catalogId || !isSettingsMenuOpen) return;
+    getDiscoverVariants(catalogId)
+      .then((v) => {
+        if (!cancelled) setVersions(v);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [catalogId, isSettingsMenuOpen]);
+  const currentVersion = versions.find((v) => String(v.id) === catalogId);
+  const switchVersion = (v: DiscoverVariant) => {
+    if (String(v.id) === catalogId || !openTitle) return setIsSettingsMenuOpen(false);
+    const at = Number(playerRef.current?.currentTime) || 0;
+    setIsSettingsMenuOpen(false);
+    toast.info(`Switching to ${v.variantLabel || 'the other version'}…`, { autoClose: 2500 });
+    void openTitle.playVersion(v, at);
+  };
   const externalUrl = streamUrl ? absoluteStreamUrl(streamUrl) : null;
 
   /** "Open in…": pauses here, then hands the same stream link to the chosen player. */
@@ -165,7 +194,7 @@ export const SettingsMenu = React.memo(() => {
 
   // Helper function to handle menu changes smoothly
   const handleMenuChange = (
-    menuName: 'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast' | 'external'
+    menuName: 'main' | 'quality' | 'audio' | 'subtitles' | 'add-subtitle' | 'cast' | 'external' | 'version'
   ) => {
     setActiveSettingsMenu(menuName);
     setFocusedIndex(0);
@@ -175,7 +204,7 @@ export const SettingsMenu = React.memo(() => {
 
   const menuTitle = {
     main: 'Settings', quality: 'Quality', audio: 'Audio', subtitles: 'Subtitles',
-    'add-subtitle': 'Find subtitles', cast: 'Cast', external: 'Open in…',
+    'add-subtitle': 'Find subtitles', cast: 'Cast', external: 'Open in…', version: 'Version',
   }[activeSettingsMenu] ?? 'Settings';
 
   // The same full-height side panel as Filters and the TV app (pc-panel in index.css; owner
@@ -187,7 +216,20 @@ export const SettingsMenu = React.memo(() => {
       ref={settingsMenuRef}
       className="pc-panel fixed bottom-0 right-0 top-0 z-50 flex w-full flex-col px-4 pb-4 pt-6 text-base text-gray-100 sm:w-[420px]"
     >
-      <h2 className="truncate px-3 pb-3 text-xl font-semibold text-white">{menuTitle}</h2>
+      <div className="flex items-center gap-2 px-3 pb-3">
+        <span className="h-9 w-9 shrink-0" aria-hidden="true" />
+        <h2 className="min-w-0 flex-1 truncate text-center text-xl font-semibold text-white">{menuTitle}</h2>
+        <button
+          type="button"
+          data-focusable="true"
+          data-control="settings-close"
+          aria-label="Close"
+          onClick={() => setIsSettingsMenuOpen(false)}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
       <div className="mx-3 mb-2 h-px shrink-0 bg-white/[0.06]" />
       <div key={activeSettingsMenu} className="pc-swap-in custom-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
       {/* MAIN MENU */}
@@ -209,6 +251,21 @@ export const SettingsMenu = React.memo(() => {
               <ChevronRightIcon className="h-4 w-4" />
             </div>
           </button>
+
+          {versions.length > 1 && (
+            <button
+              data-focusable="true"
+              data-control="settings-item"
+              onClick={() => handleMenuChange('version')}
+              className="pc-row flex items-center justify-between text-left"
+            >
+              <span>Version</span>
+              <div className="pc-muted flex min-w-0 items-center">
+                <span className="mr-1 truncate text-xs">{currentVersion?.variantLabel || `${versions.length} versions`}</span>
+                <ChevronRightIcon className="h-4 w-4 shrink-0" />
+              </div>
+            </button>
+          )}
 
           {audioOptions.length > 0 && (
             <button
@@ -254,15 +311,34 @@ export const SettingsMenu = React.memo(() => {
             </button>
           )}
 
+        </div>
+      )}
+
+      {/* VERSION: the movie's other versions */}
+      {activeSettingsMenu === 'version' && (
+        <div className="flex flex-col space-y-1">
           <button
             data-focusable="true"
-            data-control="settings-close"
-            onClick={() => setIsSettingsMenuOpen(false)}
-            className="pc-row mt-3 flex items-center justify-between text-left"
+            data-control="settings-item"
+            onClick={() => handleMenuChange('main')}
+            className="pc-row mb-1 flex items-center"
           >
-            <span>Close Menu</span>
-            <X className="h-4 w-4" />
+            <ChevronLeftIcon className="mr-2 h-4 w-4" />
+            <span>Back</span>
           </button>
+          {versions.map((v) => (
+            <button
+              key={String(v.id)}
+              data-focusable="true"
+              data-control="settings-item"
+              onClick={() => switchVersion(v)}
+              className="pc-row flex items-center justify-between text-left"
+            >
+              <span className="truncate">{v.variantLabel || String(v.title || v.name || v.id)}</span>
+              {String(v.id) === catalogId && <CheckIcon className="h-4 w-4 shrink-0" />}
+            </button>
+          ))}
+          <p className="px-3 pt-1 text-2xs leading-snug text-gray-500">Plays from where you are now.</p>
         </div>
       )}
 
