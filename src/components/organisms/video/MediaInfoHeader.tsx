@@ -192,7 +192,8 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
               </button>
             )}
             <MyListButton contentId={detailsKey} />
-            <VersionsButton contentId={detailsKey} />
+            {/* A movie switches version in the player (Settings → Version); a show, here. */}
+            {!!item.is_series && <VersionsButton contentId={detailsKey} />}
           </div>
         </div>
 
