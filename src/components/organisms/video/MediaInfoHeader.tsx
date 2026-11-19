@@ -55,7 +55,10 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
 
   // Tagline, age rating, studios, logo, cast with photos (server /api/v2/discover/details).
   const [details, setDetails] = React.useState<TitleDetails | null>(null);
-  const detailsKey = item.catalogId || `${item.is_series ? 'series' : 'movie'}_${item.id}`;
+  // Its content id ("movie_29467"). A title opened from Search carries its bare id ("29467"),
+  // which the raw lookup below does not find: so the type is put in front of it too.
+  const ownId = String(item.catalogId || item.id || '');
+  const detailsKey = /^(movie|series)_/.test(ownId) ? ownId : `${item.is_series ? 'series' : 'movie'}_${ownId}`;
   React.useEffect(() => {
     let cancelled = false;
     setDetails(null);
