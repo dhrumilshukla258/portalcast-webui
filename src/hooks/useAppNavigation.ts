@@ -257,7 +257,7 @@ export function useAppNavigation(
 
       openPlayer(isEpisodeCWT ? 'series' : 'movie', resumeItem, freshCmd, freshCmd, savedResumeTime);
     },
-    [context, fetchData, focusedIndex, items, totalItemsCount, detailItem, showDiscover, variantPickerItem, variantPickerOptions, setHistory, isFromContinueWatching, openPlayer]
+    [contentType, context, fetchData, focusedIndex, items, totalItemsCount, detailItem, showDiscover, variantPickerItem, variantPickerOptions, setHistory, isFromContinueWatching, openPlayer]
   );
 
   // A live channel, from whichever tab it was picked (Live TV, Search, Sports, My List).
@@ -363,7 +363,7 @@ export function useAppNavigation(
       const isInsideMovieCategory =
         contentType === 'movie' && context.category !== null;
 
-      if (isInsideMovieCategory || item.is_playable_movie) {
+      if (isInsideMovieCategory || item.is_playable_movie || item.type === 'movie') {
         try {
           // item.cmd already present means this item was already resolved to
           // a specific playable file — e.g. Discover's openDiscoverItem
@@ -513,7 +513,8 @@ export function useAppNavigation(
       const isPlayable =
         item.is_episode ||
         isInsideMovieCategory ||
-        item.is_playable_movie;
+        item.is_playable_movie ||
+        item.type === 'movie';
       if (isPlayable) {
         // Episodes are selected from the expandable episode row inside the series page
         // (which already shows their details) — pressing Play there should go straight
