@@ -87,7 +87,7 @@ export default function Home() {
       <main className="grow flex items-center py-16 px-6 max-w-6xl mx-auto w-full">
         <div className="grid md:grid-cols-12 gap-12 items-center w-full">
           <div className="md:col-span-7 space-y-8 text-left">
-            <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-400">
+            <div data-ui="tint" className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-400">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Next-Gen IPTV Client</span>
             </div>
@@ -138,7 +138,7 @@ export default function Home() {
 
               <div className="grow flex items-center justify-center">
                 <div className="text-center space-y-3">
-                  <div className="w-16 h-16 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
+                  <div data-ui="tint" className="w-16 h-16 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
                     <Tv className="w-8 h-8" />
                   </div>
                   <div className="text-sm font-semibold tracking-wide text-gray-300">Smart TV Ready</div>
@@ -159,7 +159,7 @@ export default function Home() {
       <section className="bg-gray-950/40 border-t border-gray-900/80 py-16 px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
           <div className="bg-gray-900/40 border border-gray-850 rounded-2xl p-6 text-left space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+            <div data-ui="tint" className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
               <Sparkles className="w-6 h-6" />
             </div>
             <h3 className="font-bold text-lg">Cloud Synchronization</h3>
@@ -169,7 +169,7 @@ export default function Home() {
           </div>
 
           <div className="bg-gray-900/40 border border-gray-850 rounded-2xl p-6 text-left space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+            <div data-ui="tint" className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
               <Tv className="w-6 h-6" />
             </div>
             <h3 className="font-bold text-lg">QR Device Authorization</h3>
@@ -179,7 +179,7 @@ export default function Home() {
           </div>
 
           <div className="bg-gray-900/40 border border-gray-850 rounded-2xl p-6 text-left space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400">
+            <div data-ui="tint" className="w-12 h-12 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400">
               <Shield className="w-6 h-6" />
             </div>
             <h3 className="font-bold text-lg">Unified Media Center</h3>
@@ -202,7 +202,7 @@ export default function Home() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {PLATFORMS.map((p) => (
               <div key={p.title} className="bg-gray-900/40 border border-gray-850 rounded-2xl p-6 text-left flex flex-col gap-3">
-                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                <div data-ui="tint" className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
                   <p.icon className="w-6 h-6" />
                 </div>
                 <h3 className="font-bold text-lg">{p.title}</h3>

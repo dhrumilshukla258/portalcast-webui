@@ -42,6 +42,12 @@
   --color-surface-8: #121a2b;
   --color-surface-9: #1e293b;
   --color-on-accent: #082f49;
+  /* Shades older code names that Tailwind 4 does not have: without them those classes did
+     nothing and their borders fell back to the light default (white lines on dark cards). */
+  --color-gray-550: #5b6472;
+  --color-gray-750: #2b3544;
+  --color-gray-850: #18202f;
+  --color-slate-750: #29354a;
   /* Below text-xs (badges, timestamps, captions), so a theme scales them with the rest: never
      text-[10px]. No line height of their own, as before. */
   --text-3xs: 0.625rem;
@@ -62,7 +68,8 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+    /* A theme's own (Minimal: its hairline), else Tailwind 3's light grey as before. */
+    border-color: var(--ui-border-default, var(--color-gray-200, currentcolor));
   }
 }
 

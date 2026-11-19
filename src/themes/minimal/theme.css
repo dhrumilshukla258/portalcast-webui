@@ -55,6 +55,8 @@
     --ui-tip-blur: blur(20px) saturate(1.6);
     --ui-tip-radius: 0.5rem;
     --ui-field-bg: rgb(255 255 255 / 0.08);
+    /* A border with no colour of its own: the hairline, not a light grey. */
+    --ui-border-default: var(--color-line);
     --ui-field-border: transparent;
     --ui-panel-radius: 0.875rem;
     --ui-label-size: var(--text-xl);
@@ -172,8 +174,11 @@
     --color-gray-400: #a1a1a6;
     --color-gray-500: #86868b;
     --color-gray-600: #636366;
+    --color-gray-550: #6e6e73;
     --color-gray-700: #48484a;
+    --color-gray-750: #3a3a3c;
     --color-gray-800: #2c2c2e;
+    --color-gray-850: #242426;
     --color-gray-900: #1c1c1e;
     --color-gray-950: #0a0a0a;
     --color-slate-50: #f5f5f7;
@@ -184,6 +189,7 @@
     --color-slate-500: #86868b;
     --color-slate-600: #636366;
     --color-slate-700: #48484a;
+    --color-slate-750: #3a3a3c;
     --color-slate-800: #2c2c2e;
     --color-slate-900: #1c1c1e;
     --color-slate-950: #0a0a0a;
@@ -561,4 +567,20 @@ html[data-theme='minimal'] .ui-player-float {
 }
 html[data-theme='minimal'] .ui-player-float:not(.rounded-full) {
   border-radius: 1.5rem;
+}
+
+/* No borders that light up white on hover (Apple TV marks a hover with a fill): the classes that
+   light one with the focus or accent colour (white here) keep the hairline instead. Keyboard and
+   remote focus keep theirs (focus:, .focused). */
+html[data-theme='minimal'] :is([class*='hover:border-focus'], [class*='hover:border-accent'], [class*='hover:border-portalcast'], [class*='hover:border-white'], [class*='hover:border-indigo']):hover,
+html[data-theme='minimal'] .group:hover :is([class*='group-hover:border-accent'], [class*='group-hover:border-portalcast']) {
+  border-color: var(--color-line);
+}
+/* A field being typed in: the stronger hairline, not a white frame (the caret shows where). */
+html[data-theme='minimal'] :is([class*='focus:border-focus'], [class*='focus:border-indigo']):focus {
+  border-color: var(--color-line-strong);
+}
+/* The landing page's tinted icon boxes and pill: the tint without its outline. */
+html[data-theme='minimal'] [data-ui='tint'] {
+  border-color: transparent;
 }
