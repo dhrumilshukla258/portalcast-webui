@@ -12,6 +12,10 @@ import type { MediaItem, ContextType } from '@/types';
 import { initialContext } from './useMediaLibrary';
 import { resolveStreamUrl } from './resolveStreamUrl';
 import { useNavigationHistory } from './useNavigationHistory';
+import { warmVideoPlayer } from '@/utils/loadVideoPlayer';
+
+// Next/previous channel tunes this long after the last press (a held key skips the ones between).
+const CHANNEL_SETTLE_MS = 350;
 
 function getResumeTime(): number | undefined {
   return undefined;
@@ -77,6 +81,11 @@ export function useAppNavigation(
   }, [streamUrl]);
 
   const channelChangeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // A pending channel change is dropped when the player closes or something else starts.
+  useEffect(() => () => {
+    if (channelChangeTimer.current) clearTimeout(channelChangeTimer.current);
+    channelChangeTimer.current = null;
+  }, [streamUrl]);
 
   const {
     history,
@@ -131,6 +140,7 @@ export function useAppNavigation(
 
   const playContinueWatching = useCallback(
     async (item: MediaItem) => {
+      warmVideoPlayer();
       let savedResumeTime: number | undefined;
       try {
         const records = await getUserProgress();
@@ -295,6 +305,7 @@ export function useAppNavigation(
   // A title (episode or movie). Channels go through playChannel.
   const startPlayback = useCallback(
     async (item: MediaItem) => {
+      warmVideoPlayer();
       if (item.is_episode) {
         try {
           // Prefer the episode's own series/season ids over the ambient
@@ -612,8 +623,6 @@ export function useAppNavigation(
 
   const debounceChannelChange = useCallback(
     (direction: 'next' | 'prev') => {
-      if (channelChangeTimer.current) clearTimeout(channelChangeTimer.current);
-
       const activeChannel = previewChannel || currentItem;
       if (!activeChannel) return;
 
@@ -627,6 +636,8 @@ export function useAppNavigation(
 
       if (newIndex === currentIndex) return;
 
+      // Only a real move restarts the wait (at the end of the list the pending change stands).
+      if (channelChangeTimer.current) clearTimeout(channelChangeTimer.current);
       const nextChannel = items[newIndex];
       setPreviewChannel(nextChannel);
 
@@ -634,7 +645,7 @@ export function useAppNavigation(
         handleItemClick(nextChannel);
         setPreviewChannel(null);
         channelChangeTimer.current = null;
-      }, 2000);
+      }, CHANNEL_SETTLE_MS);
     },
     [currentItem, handleItemClick, items, previewChannel]
   );

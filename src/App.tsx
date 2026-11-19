@@ -23,7 +23,8 @@ const Admin = React.lazy(lazyImport(() => import('@/components/organisms/admin/A
 // Lazy — only needed once playback actually starts, and its tree pulls in
 // the HLS/vidstack player stack, which is one of the heaviest dependencies
 // in the app.
-const VideoPlayer = React.lazy(lazyImport(() => import('@/components/organisms/video/VideoPlayer')));
+import { loadVideoPlayer } from '@/utils/loadVideoPlayer';
+const VideoPlayer = React.lazy(lazyImport(loadVideoPlayer));
 import ConfirmationModal from '@/components/molecules/ConfirmationModal';
 import VariantPickerModal from '@/components/molecules/VariantPickerModal';
 import MainContentGrid from '@/components/organisms/browse/MainContentGrid';

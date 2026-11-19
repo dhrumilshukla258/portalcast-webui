@@ -120,6 +120,8 @@ export function useProgressTracking({
   }, [contentType, mediaId, itemId, episodes, item, seasonId, categoryId, seriesItem, episodeLookup, playerRef]);
 
   const handleTimeUpdate = useCallback(() => {
+    // Live TV has neither a saved position to restore nor an episode end to track.
+    if (contentType === 'tv') return;
     const player = playerRef.current;
     if (!player) return;
 
@@ -150,7 +152,7 @@ export function useProgressTracking({
       setShowNextEpisodeButton((prev) => (prev ? false : prev));
     }
 
-    if (dur > 0 && contentType !== 'tv' && time / dur >= 0.9 && mediaId) {
+    if (dur > 0 && time / dur >= 0.9 && mediaId) {
       completePlayback();
     }
   }, [contentType, mediaId, itemId, initialPlaybackState, completePlayback, playerRef]);
@@ -216,7 +218,7 @@ export function useProgressTracking({
     saveUserProgress(targetKeyId, player.currentTime, false, progressData).catch((err) => {
       console.error('Failed to save progress to DB:', err);
     });
-    if (mediaId) {
+    if (targetKeyId !== mediaId) {
       saveUserProgress(mediaId, player.currentTime, false, progressData).catch(() => {});
     }
   }, [
