@@ -45,6 +45,9 @@ export function useAppNavigation(
   const { user, updatePreferences } = useAuth();
 
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
+  // What is playing, which is not always the open library tab: Home, Continue Watching,
+  // Search, Sports, My List and casting can start a title or a channel from any tab.
+  const [playbackType, setPlaybackType] = useState<ContextType['contentType']>('movie');
   const [rawStreamUrl, setRawStreamUrl] = useState<string | null>(null);
   const [currentItem, setCurrentItem] = useState<MediaItem | null>(null);
   const [currentSeriesItem, setCurrentSeriesItem] = useState<MediaItem | null>(
@@ -114,7 +117,8 @@ export function useAppNavigation(
   });
 
   const openPlayer = useCallback(
-    (item: MediaItem, raw: string, proxied: string, resumeTime?: number) => {
+    (type: ContextType['contentType'], item: MediaItem, raw: string, proxied: string, resumeTime?: number) => {
+      setPlaybackType(type);
       setCurrentItem(item);
       setRawStreamUrl(raw);
       setStreamUrl(proxied);
@@ -217,7 +221,7 @@ export function useAppNavigation(
           .catch((e) => console.error('Failed to load episode list for Next/Prev Episode:', e));
       }
 
-      setCurrentItem({
+      const resumeItem = {
         ...item,
         title: item.title || item.name,
         name: item.name || item.title,
@@ -233,7 +237,7 @@ export function useAppNavigation(
         // (falls back to the CW item's own id), so autoplay/"next episode"
         // can't resolve an adjacent episode until the user manually picks one.
         _episodeCardId: (item as any)._episodeCardId || (item as any).cw_episode_card_id || item.id,
-      } as MediaItem);
+      } as MediaItem;
 
       const urlParams: Record<string, any> = { id: playbackId };
       if (item.series_number !== undefined) {
@@ -251,45 +255,46 @@ export function useAppNavigation(
       if (typeof freshCmd !== 'string')
         throw new Error('Fresh stream URL not found.');
 
-      setRawStreamUrl(freshCmd);
-      setStreamUrl(freshCmd);
-      setResumePlaybackState(
-        savedResumeTime ? { currentTime: savedResumeTime } : undefined
-      );
+      openPlayer(isEpisodeCWT ? 'series' : 'movie', resumeItem, freshCmd, freshCmd, savedResumeTime);
     },
-    [context, fetchData, focusedIndex, items, totalItemsCount, detailItem, showDiscover, variantPickerItem, variantPickerOptions, setHistory, isFromContinueWatching]
+    [context, fetchData, focusedIndex, items, totalItemsCount, detailItem, showDiscover, variantPickerItem, variantPickerOptions, setHistory, isFromContinueWatching, openPlayer]
   );
 
-  const startPlayback = useCallback(
-    async (item: MediaItem, startTime?: number, endTime?: number) => {
-      if (contentType === 'tv') {
-        if (!item.cmd) {
-          toast.error('Channel has no command to play.');
-          return;
-        }
-        const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
-        let channelUrl = item.cmd;
-        if (channelUrl.startsWith('/')) {
-          channelUrl = `${baseUrl}${channelUrl}`;
-        }
-        if (startTime && endTime) {
-          // item.cmd is already a full /live.m3u8?t=<token>&id=...&proxy=1
-          // URL from the backend (the token carries the real channel + our
-          // identity) — just append the catchup window, don't re-wrap it.
-          channelUrl = `${channelUrl}&start_time=${startTime}&end_time=${endTime}`;
-        }
-
-        updatePreferences({
-          lastSelectedCategory: {
-            ...(user?.preferences?.lastSelectedCategory || {}),
-            lastPlayedTvChannelId: item.id.toString(),
-          },
-        });
-        addToRecentChannels(item);
-        openPlayer(item, channelUrl, channelUrl);
-        return;
+  // A live channel, from whichever tab it was picked (Live TV, Search, Sports, My List).
+  const playChannel = useCallback(
+    (item: MediaItem, startTime?: number, endTime?: number) => {
+      if (!item.cmd) {
+        toast.error('Channel has no command to play.');
+        return false;
+      }
+      const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
+      let channelUrl = item.cmd;
+      if (channelUrl.startsWith('/')) {
+        channelUrl = `${baseUrl}${channelUrl}`;
+      }
+      if (startTime && endTime) {
+        // item.cmd is already a full /live.m3u8?t=<token>&id=...&proxy=1
+        // URL from the backend (the token carries the real channel + our
+        // identity) — just append the catchup window, don't re-wrap it.
+        channelUrl = `${channelUrl}&start_time=${startTime}&end_time=${endTime}`;
       }
 
+      updatePreferences({
+        lastSelectedCategory: {
+          ...(user?.preferences?.lastSelectedCategory || {}),
+          lastPlayedTvChannelId: item.id.toString(),
+        },
+      });
+      addToRecentChannels(item);
+      openPlayer('tv', item, channelUrl, channelUrl);
+      return true;
+    },
+    [addToRecentChannels, openPlayer, updatePreferences, user?.preferences?.lastSelectedCategory]
+  );
+
+  // A title (episode or movie). Channels go through playChannel.
+  const startPlayback = useCallback(
+    async (item: MediaItem) => {
       if (item.is_episode) {
         try {
           // Prefer the episode's own series/season ids over the ambient
@@ -347,7 +352,7 @@ export function useAppNavigation(
               .catch((e) => console.error('Failed to load episode list for Next/Prev Episode:', e));
           }
 
-          openPlayer(enrichedItem as any, raw, proxied, getResumeTime());
+          openPlayer('series', enrichedItem as any, raw, proxied, getResumeTime());
         } catch (err) {
           console.error(err);
           toast.error('Could not fetch stream URL.');
@@ -417,7 +422,7 @@ export function useAppNavigation(
             },
             { itemId: listItemId, itemType: 'movie' }
           );
-          openPlayer(finalMovieItem, raw, proxied, getResumeTime());
+          openPlayer('movie', finalMovieItem, raw, proxied, getResumeTime());
         } catch (err) {
           console.error(err);
           toast.error('Could not fetch stream details.');
@@ -428,20 +433,14 @@ export function useAppNavigation(
     [
       contentType,
       isPortal,
-      addToRecentChannels,
       openPlayer,
       context,
-      updatePreferences,
-      user?.preferences?.lastSelectedCategory,
       currentSeriesItem,
     ]
   );
 
   const handleItemClick = useCallback(
     async (item: MediaItem) => {
-      if (contentType === 'tv' && streamUrl && currentItem?.id === item.id)
-        return;
-
       if (channelChangeTimer.current) {
         clearTimeout(channelChangeTimer.current);
         channelChangeTimer.current = null;
@@ -457,6 +456,12 @@ export function useAppNavigation(
           console.error(err);
           toast.error('Link expired or server busy.');
         }
+        return;
+      }
+
+      // A channel in the Live TV list; the one already playing stays as it is.
+      if (contentType === 'tv' && !item.is_episode && !item.is_playable_movie && !item.is_series && !item.is_season && item.type !== 'movie') {
+        if (!(streamUrl && playbackType === 'tv' && currentItem?.id === item.id)) playChannel(item);
         return;
       }
 
@@ -508,8 +513,7 @@ export function useAppNavigation(
       const isPlayable =
         item.is_episode ||
         isInsideMovieCategory ||
-        item.is_playable_movie ||
-        contentType === 'tv';
+        item.is_playable_movie;
       if (isPlayable) {
         // Episodes are selected from the expandable episode row inside the series page
         // (which already shows their details) — pressing Play there should go straight
@@ -565,6 +569,8 @@ export function useAppNavigation(
       context,
       currentItem,
       currentSeriesItem,
+      playbackType,
+      playChannel,
       fetchData,
       playContinueWatching,
       pushFrame,
@@ -591,8 +597,11 @@ export function useAppNavigation(
       castRawStreamUrl?: string,
       castContentType?: 'movie' | 'series' | 'tv'
     ) => {
+      setPlaybackType(castContentType ?? (media.is_episode || media.type === 'series' ? 'series'
+        : media.is_playable_movie || media.type === 'movie' ? 'movie' : media.tv_genre_id != null ? 'tv' : 'movie'));
       setCurrentItem(media);
-      if (castRawStreamUrl) setRawStreamUrl(castRawStreamUrl);
+      // The cast's own link, never the one left from the last thing played here.
+      setRawStreamUrl(castRawStreamUrl ?? castStreamUrl ?? null);
       if (castContentType) {
         setContext((prev) => ({ ...prev, contentType: castContentType }));
       }
@@ -650,6 +659,7 @@ export function useAppNavigation(
     history,
     resetHistory,
     streamUrl,
+    playbackType,
     rawStreamUrl,
     currentItem,
     currentSeriesItem,
@@ -666,6 +676,7 @@ export function useAppNavigation(
     playCastedMedia,
     pushFrame,
     startPlayback,
+    playChannel,
     episodeSnapshot,
     backTargets,
   };

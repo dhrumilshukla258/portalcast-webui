@@ -4,13 +4,21 @@ import { BackArrowIcon, CopyLinkIcon, DownloadIcon } from '@/components/atoms/Ic
 
 interface TopBarProps {
   onBack: () => void;
+  /** The decoded video ("2160p · 24 fps · 3840×2160"), at the right end of the same row. */
+  stats?: string | null;
 }
 
-export const TopBar = React.memo<TopBarProps>(({ onBack }) => {
+export const TopBar = React.memo<TopBarProps>(({ onBack, stats }) => {
   const { handleCopyLink, handleDownload, copied, isTizen, contentType } =
     useVideoContext();
 
-  if (isTizen) return null;
+  const badge = stats && (
+    <div className="ml-auto rounded-md bg-black/60 px-3 py-1 text-xs font-semibold tracking-wide text-white md:text-sm">
+      {stats}
+    </div>
+  );
+  // TVs have no buttons up here, only the badge.
+  if (isTizen) return badge ? <div className="top-bar-container absolute left-0 right-0 top-0 flex p-2 md:p-4">{badge}</div> : null;
   return (
     <div className="top-bar-container pointer-events-auto absolute left-0 right-0 top-0 p-2 md:p-4">
       <div className="flex items-center space-x-2 md:space-x-4">
@@ -44,6 +52,7 @@ export const TopBar = React.memo<TopBarProps>(({ onBack }) => {
             <span className="hidden md:inline">Download</span>
           </button>
         )}
+        {badge}
       </div>
     </div>
   );

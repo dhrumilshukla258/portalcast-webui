@@ -295,12 +295,7 @@ const VideoPlayerContent: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
             onDoubleClick={(e) => e.stopPropagation()}
           >
-            <TopBar onBack={onBack} />
-            {videoStats && (
-              <div className="absolute right-4 top-16 rounded-md bg-black/60 px-3 py-1 text-xs font-semibold tracking-wide text-white md:right-6 md:top-20 md:text-sm">
-                {videoStats}
-              </div>
-            )}
+            <TopBar onBack={onBack} stats={videoStats} />
 
             {contentType === 'tv' ? (
               <TVControls />

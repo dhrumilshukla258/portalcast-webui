@@ -573,7 +573,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
   );
 
   const handleContentTypeChange = useCallback(
-    (type: 'movie' | 'series' | 'tv') => {
+    (type: 'movie' | 'series' | 'tv', rememberPreference = true) => {
       if (type === contentType) return;
       
       const key = `${providerKey}_${type}`;
@@ -589,7 +589,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
 
       if (type === 'tv') setChannelGroups([]);
       setContentType(type);
-      updatePreferences({ preferredContentType: type });
+      if (rememberPreference) updatePreferences({ preferredContentType: type });
       setContext(newContext);
       fetchData(newContext, type);
 
