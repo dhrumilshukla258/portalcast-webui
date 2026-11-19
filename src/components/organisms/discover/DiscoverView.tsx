@@ -6,7 +6,7 @@ import MediaCardRow from '@/components/organisms/browse/MediaCardRow';
 import RecommendedRow from '@/components/organisms/browse/RecommendedRow';
 import DiscoverFilters, { hasAnyActiveFilter, genreParams, type ActiveDiscoverFilters, type SingleFilterKey } from '@/components/organisms/discover/DiscoverFilters';
 import { getDiscoverBrowse, type HomeRow } from '@/api/endpoints/discover';
-import { setSharedDiscoverFilters, sharedDiscoverFiltersFor } from '@/utils/sharedDiscoverFilters';
+import { onSharedDiscoverFiltersPicked, setSharedDiscoverFilters, sharedDiscoverFiltersFor } from '@/utils/sharedDiscoverFilters';
 import { useDiscover } from '@/hooks/useDiscover';
 import { useAnswersUpdated } from '@/hooks/useAnswersUpdated';
 import type { MediaItem } from '@/types';
@@ -249,6 +249,16 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
       }
     },
     [runFilteredBrowse]
+  );
+
+  // Filters picked elsewhere (a genre on a title's page): this tab takes them, from the top.
+  useEffect(
+    () =>
+      onSharedDiscoverFiltersPicked(() => {
+        applyNextFilters(sharedDiscoverFiltersFor(fixedType));
+        document.getElementById('app-content-scroll')?.scrollTo({ top: 0 });
+      }),
+    [applyNextFilters, fixedType]
   );
 
   const handleFilterChange = useCallback(

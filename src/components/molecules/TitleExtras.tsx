@@ -1,7 +1,7 @@
 import React from 'react';
-import { Check, Plus } from 'lucide-react';
+import { Check, ChevronRight, Layers, Plus } from 'lucide-react';
 import MediaCard from '@/components/molecules/MediaCard';
-import { getMyListIds, getSimilar, setInMyList } from '@/api/endpoints/discover';
+import { getDiscoverVariants, getMyListIds, getSimilar, setInMyList, type DiscoverVariant } from '@/api/endpoints/discover';
 import { useOpenTitle } from '@/context/PersonPageContext';
 import { isContentId } from '@/utils/titleFormat';
 import type { MediaItem } from '@/types';
@@ -49,6 +49,45 @@ export const MyListButton: React.FC<{ contentId: string }> = ({ contentId }) => 
     >
       {inList ? <Check size={18} className="text-accent" /> : <Plus size={18} />}
       <span>{inList ? 'In My List' : 'Add to My List'}</span>
+    </button>
+  );
+};
+
+/**
+ * The version open ("Version: Hindi 1080p") under a title's buttons, when it has several: opens
+ * the same picker as the first time, so another one can be chosen (its page replaces this one;
+ * Back comes back). Nothing for a title with one version.
+ */
+export const VersionsButton: React.FC<{ contentId: string }> = ({ contentId }) => {
+  const openTitle = useOpenTitle();
+  const [versions, setVersions] = React.useState<DiscoverVariant[]>([]);
+  React.useEffect(() => {
+    let cancelled = false;
+    setVersions([]);
+    if (!isContentId(contentId)) return;
+    getDiscoverVariants(contentId)
+      .then((v) => {
+        if (!cancelled) setVersions(v);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [contentId]);
+  if (!openTitle || versions.length < 2) return null;
+  const current = versions.find((v) => String(v.id) === contentId);
+  return (
+    <button
+      type="button"
+      onClick={() => openTitle.open({ ...(current ?? versions[0]), id: contentId } as MediaItem)}
+      data-focusable="true"
+      data-ui="title-action"
+      title={`${versions.length} versions`}
+      className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-white/5 px-3 py-3 font-bold text-fg-soft transition-colors hover:bg-white/10"
+    >
+      <Layers size={18} className="shrink-0" />
+      <span className="truncate">{current?.variantLabel ? `Version: ${current.variantLabel}` : `${versions.length} versions`}</span>
+      <ChevronRight size={16} className="shrink-0 opacity-60" />
     </button>
   );
 };

@@ -42,7 +42,8 @@ import SectionChips, { type HomeSection } from '@/components/molecules/SectionCh
 import ContinueHero from '@/components/organisms/browse/ContinueHero';
 // Lazy — only mounted when the user opens the Discover tab, not on initial load.
 const DiscoverView = React.lazy(lazyImport(() => import('@/components/organisms/discover/DiscoverView')));
-import { OpenTitleContext, PersonPageContext } from '@/context/PersonPageContext';
+import { OpenGenreContext, OpenTitleContext, PersonPageContext } from '@/context/PersonPageContext';
+import { pickSharedDiscoverFilters } from '@/utils/sharedDiscoverFilters';
 import MyListView from '@/components/organisms/discover/MyListView';
 // Lazy — only mounted when a cast or crew member is opened.
 const PersonPage = React.lazy(lazyImport(() => import('@/components/organisms/person/PersonPage')));
@@ -378,6 +379,16 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     [openPersonTitle, openDiscoverItem, discoverLoadingItemId]
   );
 
+  // A genre on a title's page: Movies (or Shows) filtered to it, the title's page closed.
+  const openGenre = useCallback(
+    (genre: string, type: 'movie' | 'series') => {
+      pickSharedDiscoverFilters({ genre: [genre] });
+      setPersonId(null);
+      openSection(type);
+    },
+    [openSection]
+  );
+
   const searchPlayChannel = useCallback((channel: MediaItem) => {
     // Sports, Search and My List can tune a channel from any browsing tab.
     if (playChannel(channel)) handleContentTypeChangeRaw('tv', false);
@@ -524,6 +535,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     <PersonPageContext.Provider value={setPersonId}>
     <TitleMenuContext.Provider value={openTitleMenu}>
     <OpenTitleContext.Provider value={openTitle}>
+    <OpenGenreContext.Provider value={openGenre}>
       {streamUrl ? (
         <React.Suspense
           fallback={
@@ -802,6 +814,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
           onChanged={onTitlesChanged}
         />
       )}
+    </OpenGenreContext.Provider>
     </OpenTitleContext.Provider>
     </TitleMenuContext.Provider>
     </PersonPageContext.Provider>

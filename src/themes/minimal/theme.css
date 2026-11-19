@@ -419,6 +419,10 @@ html[data-theme='minimal'] [data-ui='genre'] {
   font-size: var(--text-sm);
   font-weight: 500;
 }
+html[data-theme='minimal'] button[data-ui='genre']:hover,
+html[data-theme='minimal'] button[data-ui='genre']:focus-visible {
+  color: var(--color-fg);
+}
 html[data-theme='minimal'] [data-ui='genre']:not(:last-child)::after {
   content: '·';
   margin-left: 0.5rem;

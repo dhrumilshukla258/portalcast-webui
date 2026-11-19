@@ -1,5 +1,5 @@
 import { getTitleDetails, type PersonCredit, type TitleDetails } from '@/api/endpoints/discover';
-import { useOpenPerson } from '@/context/PersonPageContext';
+import { useOpenGenre, useOpenPerson } from '@/context/PersonPageContext';
 import React, { useMemo } from 'react';
 import { Play, Clock, Star, Calendar, Globe2, Film, Image as ImageIcon, Link2, Merge } from 'lucide-react';
 import { runtimeText } from '@/utils/episodeInfo';
@@ -10,7 +10,7 @@ import { PortalFixMatch } from '@/components/organisms/admin/FixMatchDialog';
 import MergeTitleDialog from '@/components/organisms/admin/MergeTitleDialog';
 import type { MediaItem } from '@/types';
 import { URL_PATHS } from '@/api/config';
-import { MoreLikeThis, MyListButton } from '@/components/molecules/TitleExtras';
+import { MoreLikeThis, MyListButton, VersionsButton } from '@/components/molecules/TitleExtras';
 
 interface MediaInfoHeaderProps {
   item: MediaItem;
@@ -124,6 +124,8 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
     if (!path) return null;
     return path.startsWith('http') ? path : `${baseUrl}/api/images${path}`;
   }, [item.backdrop_hd_path, item.backdrop_path, baseUrl]);
+  // A genre opens Movies (or Shows) filtered to it.
+  const openGenre = useOpenGenre();
   // The backdrop drifts slower than the page as it scrolls (the theme's parallax; none in Classic).
   const backdropRef = React.useRef<HTMLImageElement>(null);
   useParallax(backdropRef, backdropUrl);
@@ -190,6 +192,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
               </button>
             )}
             <MyListButton contentId={detailsKey} />
+            <VersionsButton contentId={detailsKey} />
           </div>
         </div>
 
@@ -300,15 +303,25 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
 
           {item.genres_str && (
             <div data-ui="genres" className="flex flex-wrap gap-1.5">
-              {String(item.genres_str).split(',').map((genre, i) => (
-                <span
-                  key={i}
-                  data-ui="genre"
-                  className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300"
-                >
-                  {genre.trim()}
-                </span>
-              ))}
+              {String(item.genres_str).split(',').map((g) => g.trim()).filter(Boolean).map((genre) =>
+                openGenre ? (
+                  <button
+                    key={genre}
+                    type="button"
+                    data-ui="genre"
+                    data-focusable="true"
+                    onClick={() => openGenre(genre, item.is_series ? 'series' : 'movie')}
+                    title={`More ${genre}`}
+                    className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300 transition-colors hover:bg-white/15 hover:text-fg"
+                  >
+                    {genre}
+                  </button>
+                ) : (
+                  <span key={genre} data-ui="genre" className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">
+                    {genre}
+                  </span>
+                ),
+              )}
             </div>
           )}
 

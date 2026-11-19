@@ -25,6 +25,22 @@ export function setSharedDiscoverFilters(filters: ActiveDiscoverFilters): void {
   shared = { ...filters };
 }
 
+const listeners = new Set<() => void>();
+
+/** Sets the filters from outside the tabs (a genre on a title's page); a tab on screen takes them too. */
+export function pickSharedDiscoverFilters(filters: ActiveDiscoverFilters): void {
+  setSharedDiscoverFilters(filters);
+  listeners.forEach((l) => l());
+}
+
+/** Calls `fn` when the filters are picked from outside; returns the unsubscribe. */
+export function onSharedDiscoverFiltersPicked(fn: () => void): () => void {
+  listeners.add(fn);
+  return () => {
+    listeners.delete(fn);
+  };
+}
+
 /** The shared filters for a view showing [type] (undefined: both). */
 export function sharedDiscoverFiltersFor(type: 'movie' | 'series' | undefined): ActiveDiscoverFilters {
   const map = type === 'series' ? TO_SERIES : type === 'movie' ? TO_MOVIE : {};

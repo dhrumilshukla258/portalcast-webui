@@ -23,4 +23,8 @@ export interface OpenTitle {
 }
 export const OpenTitleContext = React.createContext<OpenTitle | null>(null);
 
+/** Opens Movies (or Shows) filtered to one genre: a genre on a title's page. Null: not clickable. */
+export const OpenGenreContext = React.createContext<((genre: string, type: 'movie' | 'series') => void) | null>(null);
+export const useOpenGenre = () => React.useContext(OpenGenreContext);
+
 export const useOpenTitle = () => React.useContext(OpenTitleContext);
