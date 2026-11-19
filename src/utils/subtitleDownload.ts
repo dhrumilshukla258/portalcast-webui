@@ -1,4 +1,5 @@
 import { getBaseUrl } from '@/api/config';
+import { authFetch } from '@/api/client';
 
 export interface OnlineSubtitleRef {
   fileId: number;
@@ -15,12 +16,11 @@ export function subtitleFailureText(result: OnlineSubtitleRef): string {
 
 /** The address of an online subtitle (the server's download, as WebVTT). */
 export function subtitleDownloadUrl(result: OnlineSubtitleRef): string {
-  const hostPart = getBaseUrl().replace('/api', '');
   // New servers read `id` (OpenSubtitles or SubDL); older ones only `fileId`.
   const id = result.downloadId || `os:${result.fileId}`;
   const query = new URLSearchParams({ id });
   if (result.fileId) query.set('fileId', String(result.fileId));
-  return `${hostPart}/api/v2/subtitles/download?${query.toString()}`;
+  return `${getBaseUrl()}/v2/subtitles/download?${query.toString()}`;
 }
 
 /**
@@ -30,7 +30,8 @@ export function subtitleDownloadUrl(result: OnlineSubtitleRef): string {
  */
 export async function subtitleDownloads(result: OnlineSubtitleRef): Promise<boolean> {
   try {
-    const res = await fetch(subtitleDownloadUrl(result), { credentials: 'include' });
+    // The search and download must use the same viewer's linked subtitle account.
+    const res = await authFetch(subtitleDownloadUrl(result));
     return res.ok;
   } catch {
     return false;
