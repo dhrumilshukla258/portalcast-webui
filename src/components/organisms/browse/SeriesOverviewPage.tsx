@@ -27,13 +27,28 @@ interface SeriesOverviewPageProps {
 // back-button position jump, no extra history entry to back out of.
 const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
   seriesItem,
-  seasons,
+  seasons: listed,
   loadingSeasons,
   progressRecords,
   onPlayEpisode,
   onContinueWatching,
 }) => {
   const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
+  // An episode without a still shows the show's own backdrop (else its poster), dimmed.
+  const episodeFallback = useMemo(() => {
+    const path = seriesItem.backdrop_path || seriesItem.screenshot_uri;
+    if (!path) return null;
+    return String(path).startsWith('http') ? String(path) : `${baseUrl}/api/images${path}`;
+  }, [seriesItem.backdrop_path, seriesItem.screenshot_uri, baseUrl]);
+  // Season 1 first (providers list the newest first), Specials (season 0) last.
+  const seasons = useMemo(
+    () =>
+      listed
+        .map((season, index) => ({ season, n: seasonNumberOf(season, index) }))
+        .sort((a, b) => Number(a.n === 0) - Number(b.n === 0) || a.n - b.n)
+        .map((k) => k.season),
+    [listed]
+  );
   const {
     selectedSeasonId,
     setSelectedSeasonId,
@@ -190,6 +205,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
                       isResume={isResume}
                       onPlay={onPlayEpisode}
                       isDefaultFocus={resumeEpisode ? isResume : index === 0}
+                      fallbackImage={episodeFallback}
                     />
                   );
                 })

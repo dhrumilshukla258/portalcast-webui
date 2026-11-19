@@ -18,6 +18,9 @@ interface EpisodeAccordionRowProps {
   onPlay: (item: MediaItem) => void;
   // Marks this row as the TV-remote landing target (the resume episode, else the first).
   isDefaultFocus?: boolean;
+  /** The show's own picture, for an episode without a still: dimmed, its number on it, so every
+   *  row has the same shape. */
+  fallbackImage?: string | null;
 }
 
 /**
@@ -35,6 +38,7 @@ const EpisodeAccordionRow = forwardRef<HTMLButtonElement, EpisodeAccordionRowPro
   isResume = false,
   onPlay,
   isDefaultFocus = false,
+  fallbackImage = null,
 }, ref) => {
   const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
   const number = episodeNumber(item, index);
@@ -52,7 +56,8 @@ const EpisodeAccordionRow = forwardRef<HTMLButtonElement, EpisodeAccordionRowPro
     episodeRuntime(item),
     isCompleted ? 'Watched' : null,
   ].filter(Boolean).join('  ·  ');
-  const compact = !imageUrl && !overview;
+  const still = imageUrl ?? fallbackImage;
+  const compact = !still && !overview;
 
   return (
     <button
@@ -70,9 +75,12 @@ const EpisodeAccordionRow = forwardRef<HTMLButtonElement, EpisodeAccordionRowPro
       <span data-ui="episode-number" className="w-9 shrink-0 text-center text-lg font-bold text-fg-muted group-hover:text-fg group-[.focused]:text-fg">
         {number}
       </span>
-      {imageUrl && (
+      {still && (
         <span data-ui="episode-thumb" className="relative aspect-video w-36 shrink-0 overflow-hidden rounded-md bg-white/5 sm:w-40">
-          <img src={imageUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          <img src={still} alt="" loading="lazy" decoding="async" className={`h-full w-full object-cover ${imageUrl ? '' : 'opacity-35'}`} />
+          {!imageUrl && (
+            <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-white/85 group-hover:opacity-0">{number}</span>
+          )}
           <span className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60"><Play size={16} className="fill-white text-fg" /></span>
           </span>
