@@ -1,8 +1,36 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Play, Shield, Tv, Sparkles, ChevronRight, Bug, Rocket } from 'lucide-react';
+import { Play, Shield, Tv, Sparkles, ChevronRight, Bug, Rocket, Smartphone, MonitorPlay, Tv2 } from 'lucide-react';
 import { isTvApp } from '@/utils/helpers';
+
+// Where PortalCast runs: the README's "Where it runs", kept in step with it.
+const PLATFORMS = [
+  {
+    icon: Smartphone,
+    title: 'Phones, tablets and computers',
+    text: "Open your server's address in the browser and add it to your home screen. Browsers from 2018 on: Chrome 68, Safari on iOS 12, Firefox 78, Edge 79.",
+    link: null,
+  },
+  {
+    icon: Tv,
+    title: 'LG TVs',
+    text: "webOS 5 and newer (2020 on). A small app that opens your server in TV mode, installed with LG's Developer Mode app.",
+    link: { label: 'Get the LG app', href: 'https://github.com/dhrumilshukla258/portalcast-webui/releases/latest' },
+  },
+  {
+    icon: MonitorPlay,
+    title: 'Samsung TVs',
+    text: "Open your server's address in the TV's browser, or install the Tizen app signed with your own Samsung certificate.",
+    link: { label: 'Setup steps', href: 'https://github.com/dhrumilshukla258/portalcast-webui/tree/main/platforms' },
+  },
+  {
+    icon: Tv2,
+    title: 'Android TV',
+    text: 'Its own app, made for the remote, with the same design.',
+    link: { label: 'Android TV app', href: 'https://github.com/dhrumilshukla258/portalcast-tv-android' },
+  },
+] as const;
 
 export default function Home() {
   const { isLoggedIn } = useAuth();
@@ -162,6 +190,40 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Where it runs (README, "Where it runs") */}
+      <section className="border-t border-gray-900/80 py-16 px-6">
+        <div className="max-w-6xl mx-auto space-y-8">
+          <div className="text-left space-y-2">
+            <h2 className="text-2xl font-bold tracking-tight">Watch anywhere</h2>
+            <p className="text-fg-muted text-sm leading-relaxed max-w-2xl">
+              One app on your phone, your computer and your TV, with your progress, favourites and lists on every one.
+            </p>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {PLATFORMS.map((p) => (
+              <div key={p.title} className="bg-gray-900/40 border border-gray-850 rounded-2xl p-6 text-left flex flex-col gap-3">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                  <p.icon className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-lg">{p.title}</h3>
+                <p className="text-fg-muted text-sm leading-relaxed flex-1">{p.text}</p>
+                {p.link && (
+                  <a
+                    href={p.link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-300 hover:text-indigo-200"
+                  >
+                    {p.link.label}
+                    <ChevronRight className="w-4 h-4" />
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Tracker: Known Bugs & Upcoming Features */}
       <section className="bg-gray-950/80 border-t border-gray-900 py-16 px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12">
@@ -192,11 +254,6 @@ export default function Home() {
             </div>
 
             <div className="space-y-4">
-              <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
-                <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
-                <h4 className="text-sm font-semibold text-fg-soft">Expanded TV Browser Support</h4>
-                <p className="text-xs text-fg-muted leading-relaxed">Optimizing responsive controls and layouts for generic internal web applications on smart televisions.</p>
-              </div>
 
               <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
                 <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
