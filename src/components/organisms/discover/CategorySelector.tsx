@@ -70,7 +70,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
             onClick={() => setShowAllOverlay(true)}
             data-focusable="true"
             title="Pin / Manage Categories"
-            className="rounded-full p-1.5 text-fg-muted transition-all hover:bg-white/10 hover:text-fg"
+            className="rounded-full p-1.5 text-fg-muted transition-all hover:bg-interaction hover:text-fg"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -130,7 +130,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
           onClick={() => setShowAllOverlay(true)}
           data-focusable="true"
           title="Add / Pin Categories"
-          className="h-12 w-12 shrink-0 flex items-center justify-center rounded-full border border-gray-800/80 bg-gray-900/30 text-fg-muted font-bold hover:border-gray-750 hover:text-fg-soft hover:bg-gray-800/40 focus:scale-105 focus:border-focus focus:text-fg transition-all cursor-pointer"
+          className="h-12 w-12 shrink-0 flex items-center justify-center rounded-full border border-divider/80 bg-panel/30 text-fg-muted font-bold hover:border-line hover:text-fg-soft hover:bg-panel-hover/40 focus:scale-105 focus:border-focus focus:text-fg transition-all cursor-pointer"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />

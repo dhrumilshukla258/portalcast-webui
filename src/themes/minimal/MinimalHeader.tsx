@@ -138,9 +138,10 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
                     }`}
                     data-focusable="true"
                     data-default-focus={active === t.id ? 'true' : undefined}
+                    aria-current={active === t.id ? 'page' : undefined}
                     tabIndex={-1}
                   >
-                    {active === t.id && (
+                    {active === t.id && theme !== 'console' && (
                       <motion.span layoutId="minimal-nav-pill" className="absolute inset-0 rounded-full bg-white/15" transition={snappy} />
                     )}
                     <span className="relative">{t.label}</span>
@@ -181,8 +182,8 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
               {user && (
                 <div className="relative ml-1" ref={menuRef}>
                   <motion.button
-                    whileHover={{ scale: 1.06 }}
-                    whileTap={{ scale: 0.92 }}
+                    whileHover={theme === 'console' ? undefined : { scale: 1.06 }}
+                    whileTap={theme === 'console' ? undefined : { scale: 0.92 }}
                     transition={snappy}
                     onClick={() => setMenuOpen((o) => !o)}
                     className="flex h-9 w-9 cursor-pointer select-none items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25 aria-expanded:bg-white/25 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-white [&.focused]:outline-2 [&.focused]:outline-white"
@@ -267,7 +268,7 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
               return (
                 <motion.button
                   key={t.id}
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={theme === 'console' ? undefined : { scale: 0.9 }}
                   transition={snappy}
                   onClick={t.onClick}
                   className={`flex flex-1 flex-col items-center gap-0.5 pt-2 pb-1.5 text-3xs font-medium transition-colors ${

@@ -10,7 +10,7 @@ const errorText = (err: unknown, fallback: string) =>
   (err as { response?: { data?: { error?: string } } })?.response?.data?.error || fallback;
 
 const btn =
-  'flex items-center justify-center gap-1.5 rounded-lg border border-gray-700 px-3 py-2 text-xs font-bold text-gray-200 hover:bg-gray-800 disabled:opacity-50';
+  'flex items-center justify-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-xs font-bold text-fg-soft hover:bg-panel-hover disabled:opacity-50';
 
 /**
  * "Merge with…" on a title's page (admins): two or three entries that are one film or show but
@@ -78,17 +78,17 @@ const MergeTitleDialog: React.FC<{ contentId: string; onClose: () => void; onCha
   return (
     <Dialog open onClose={onClose} labelledBy="merge-title-heading" className="max-h-[90vh] max-w-2xl p-5">
       <div className="mb-1 flex items-center justify-between">
-        <h2 id="merge-title-heading" className="text-lg font-black text-white">Merge with…</h2>
-        <button type="button" data-focusable="true" onClick={onClose} className="rounded p-1 text-gray-400 hover:bg-gray-800" aria-label="Close">
+        <h2 id="merge-title-heading" className="text-lg font-black text-fg">Merge with…</h2>
+        <button type="button" data-focusable="true" onClick={onClose} className="rounded p-1 text-fg-muted hover:bg-panel-hover" aria-label="Close">
           <X size={18} />
         </button>
       </div>
-      <p className="mb-4 text-xs text-gray-400">
+      <p className="mb-4 text-xs text-fg-muted">
         "{info.name}" and the title you pick are one {info.type === 'movie' ? 'film' : 'show'}: its copies become versions of that title. Undo it here any time.
       </p>
 
       {info.mergedInto && (
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-gray-800 p-3 text-sm text-gray-200">
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-line p-3 text-sm text-fg-soft">
           <span className="min-w-0">Merged into <b>{info.mergedInto.toName}</b></span>
           <button type="button" data-focusable="true" className={btn} disabled={busy}
             onClick={() => void run(async () => { await undoTitleMerge(info.mergedInto!.from); return 'Merge undone'; })}>
@@ -100,7 +100,7 @@ const MergeTitleDialog: React.FC<{ contentId: string; onClose: () => void; onCha
         <div className="mb-4 space-y-2">
           <p className="ui-label text-xs">Merged into this title</p>
           {info.mergedHere.map((m) => (
-            <div key={m.from} className="flex items-center justify-between gap-3 rounded-xl border border-gray-800 p-3 text-sm text-gray-200">
+            <div key={m.from} className="flex items-center justify-between gap-3 rounded-xl border border-line p-3 text-sm text-fg-soft">
               <span className="min-w-0 truncate">{m.fromName}</span>
               <button type="button" data-focusable="true" className={btn} disabled={busy}
                 onClick={() => void run(async () => { await undoTitleMerge(m.from); return `"${m.fromName}" is its own title again`; })}>
@@ -117,12 +117,12 @@ const MergeTitleDialog: React.FC<{ contentId: string; onClose: () => void; onCha
           data-focusable="true"
           onChange={(e) => setQ(e.target.value)}
           placeholder={`Find the other ${info.type === 'movie' ? 'film' : 'show'}`}
-          className="min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-2 text-sm text-gray-100 outline-none focus:border-focus"
+          className="min-w-0 flex-1 rounded-lg border border-line-strong bg-page/60 px-3 py-2 text-sm text-fg outline-none focus:border-focus"
         />
         <button type="submit" data-focusable="true" className={btn}><Search size={14} /> Search</button>
       </form>
-      {results === null && <p className="text-sm text-gray-500">Searching…</p>}
-      {results !== null && others.length === 0 && <p className="text-sm text-gray-500">Nothing found. Try fewer words.</p>}
+      {results === null && <p className="text-sm text-fg-subtle">Searching…</p>}
+      {results !== null && others.length === 0 && <p className="text-sm text-fg-subtle">Nothing found. Try fewer words.</p>}
       <div className="space-y-2">
         {others.map((r) => (
           <button
@@ -131,19 +131,19 @@ const MergeTitleDialog: React.FC<{ contentId: string; onClose: () => void; onCha
             data-focusable="true"
             disabled={busy}
             onClick={() => setPick(r)}
-            className={`flex w-full items-center gap-3 rounded-xl border p-2 text-left hover:bg-gray-800 ${pick?.id === r.id ? 'border-blue-500' : 'border-gray-800'}`}
+            className={`flex w-full items-center gap-3 rounded-xl border p-2 text-left hover:bg-panel-hover ${pick?.id === r.id ? 'border-accent' : 'border-line'}`}
           >
-            {r.poster ? <img src={r.poster} alt="" className="h-16 w-11 shrink-0 rounded object-cover" loading="lazy" /> : <div className="h-16 w-11 shrink-0 rounded bg-gray-800" />}
-            <div className="min-w-0 text-sm text-gray-100">
-              <div className="truncate font-semibold">{r.name} {r.year && <span className="font-normal text-gray-400">({r.year})</span>}</div>
-              {r.local && <div className="mt-0.5 flex items-center gap-1 text-2xs text-gray-400"><HardDrive size={11} /> My library</div>}
+            {r.poster ? <img src={r.poster} alt="" className="h-16 w-11 shrink-0 rounded object-cover" loading="lazy" /> : <div className="h-16 w-11 shrink-0 rounded bg-panel-raised" />}
+            <div className="min-w-0 text-sm text-fg">
+              <div className="truncate font-semibold">{r.name} {r.year && <span className="font-normal text-fg-muted">({r.year})</span>}</div>
+              {r.local && <div className="mt-0.5 flex items-center gap-1 text-2xs text-fg-muted"><HardDrive size={11} /> My library</div>}
             </div>
           </button>
         ))}
       </div>
 
       {pick && (
-        <div className="mt-4 rounded-xl border border-blue-900/60 bg-blue-950/30 p-3 text-sm text-gray-200">
+        <div className="mt-4 rounded-xl border border-accent/60 bg-accent/30 p-3 text-sm text-fg-soft">
           <p className="mb-3">Merge "{info.name}" into "{pick.name}"{pick.year ? ` (${pick.year})` : ''}? Its copies become versions of "{pick.name}".</p>
           <div className="flex gap-2">
             <Button variant="accent" disabled={busy}

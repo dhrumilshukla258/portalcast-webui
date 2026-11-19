@@ -119,7 +119,7 @@ const MyListView: React.FC<MyListViewProps> = ({ onClick, loadingItemId, active,
                 <button
                   data-focusable="true"
                   onClick={() => void undo(item)}
-                  className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-full border border-white/15 py-1.5 text-xs font-bold text-fg-soft hover:bg-white/10"
+                  className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-full border border-white/15 py-1.5 text-xs font-bold text-fg-soft hover:bg-interaction"
                 >
                   <Undo2 className="h-3.5 w-3.5" />
                   {section === 'watched' ? 'Not watched' : 'Show on Home again'}
@@ -146,7 +146,7 @@ const ChannelItem: React.FC<{ channel: MediaItem; onPlay: (c: MediaItem) => void
         </span>
         <span className="min-w-0 flex-1 truncate font-bold text-fg">{channel.name}</span>
       </button>
-      <button data-focusable="true" onClick={onUnstar} aria-label="Remove from favourites" title="Remove from favourites" className="flex h-9 w-9 items-center justify-center rounded-full text-amber-400 hover:bg-white/10">
+      <button data-focusable="true" onClick={onUnstar} aria-label="Remove from favourites" title="Remove from favourites" className="flex h-9 w-9 items-center justify-center rounded-full text-amber-400 hover:bg-interaction">
         <Star className="h-5 w-5 fill-current" />
       </button>
     </div>

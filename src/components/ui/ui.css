@@ -11,6 +11,15 @@
     --ui-control-radius: 9999px;
     --ui-control-text: var(--text-sm);
     --ui-control-weight: 700;
+    /* Labeled playback actions on title pages and Home. */
+    --ui-play-fill: var(--color-fg);
+    --ui-play-ink: var(--color-page);
+    --ui-play-radius: var(--radius-xl);
+    --ui-play-height: 3rem;
+    --ui-play-hover-scale: 1.03;
+    --ui-secondary-fill: transparent;
+    --ui-secondary-line: var(--color-line);
+    --ui-secondary-hover: var(--color-panel-hover);
     /* Chips (Chip.tsx: filters and tabs inside a page): resting, hovered, picked. */
     --ui-chip-bg: var(--color-panel);
     --ui-chip-border: var(--color-line);
@@ -273,14 +282,41 @@
     background-color: var(--color-fg);
     color: var(--color-page);
   }
+  .ui-button.ui-play-button {
+    min-height: var(--ui-play-height);
+    height: auto;
+    padding-inline: 1.5rem;
+    border-radius: var(--ui-play-radius);
+    background: var(--ui-play-fill);
+    color: var(--ui-play-ink);
+    font-size: var(--text-base);
+    transition-property: scale, box-shadow;
+  }
+  .ui-play-button:focus-visible { outline: 2px solid var(--ui-focus-ring); outline-offset: var(--ui-focus-offset); }
+  .ui-button.ui-play-button[data-icon-only] {
+    width: 2.75rem; height: 2.75rem; min-height: 0; padding: 0; border-radius: 50%;
+  }
+  @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+    .ui-play-button:hover:not(:disabled) { scale: var(--ui-play-hover-scale); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ui-play-button:active:not(:disabled) { scale: .96; }
+  }
   .ui-button[data-variant='secondary'] {
-    border-color: rgb(255 255 255 / 0.15);
+    background-color: var(--ui-secondary-fill);
+    border-color: var(--ui-secondary-line);
     color: var(--color-fg-soft);
   }
   .ui-button[data-variant='secondary']:hover:not(:disabled) {
-    border-color: rgb(255 255 255 / 0.3);
-    background-color: rgb(255 255 255 / 0.06);
+    border-color: var(--color-line-strong);
+    background-color: var(--ui-secondary-hover);
     color: var(--color-fg);
+  }
+  .ui-button[data-ui='title-action'] {
+    min-height: var(--ui-play-height);
+    border-radius: var(--ui-play-radius);
+    font-size: var(--text-base);
+    background-color: var(--color-panel);
   }
   .ui-button[data-variant='link'] {
     height: auto;
@@ -435,8 +471,8 @@
     outline: none;
     transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
   }
-  .pc-row:hover { background-color: rgba(255, 255, 255, 0.06); }
-  .pc-row[data-selected='true'] { background-color: rgba(255, 255, 255, 0.05); }
+  .pc-row:hover { background-color: var(--color-interaction); }
+  .pc-row[data-selected='true'] { background-color: var(--color-interaction); }
   .pc-muted { color: var(--color-fg-muted); }
   .pc-set { color: var(--color-accent); }
   /* Focused (the remote's .focused, a keyboard's :focus-visible): the text colour as the fill,
@@ -454,6 +490,46 @@
 @media (prefers-reduced-motion: reduce) {
   .pc-panel, .pc-shade, .pc-swap-in { animation: none; }
 }
+
+/* MinimalHeader layout, shared by Minimal and Console. The header stays above the tab's
+   scroll container; title layers and the player own their own chrome. On compact screens
+   the sections move to the bottom bar. Both spacers scroll with the content. */
+html:is([data-theme='minimal'], [data-theme='console']) {
+  --chrome-top: 3.5rem;
+  --chrome-bottom: calc(4rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 640px) {
+  html:is([data-theme='minimal'], [data-theme='console']) { --chrome-top: 4rem; }
+}
+@media (min-width: 880px) {
+  html:is([data-theme='minimal'], [data-theme='console']) { --chrome-bottom: 0px; }
+}
+html:is([data-theme='minimal'], [data-theme='console']) div:has(> header.ui-glass) {
+  padding-bottom: 0;
+  & > main { padding-top: var(--chrome-top); }
+}
+html:is([data-theme='minimal'], [data-theme='console']) :where(.app-bg main) :is(#app-content-scroll, .tv-page) {
+  margin-top: calc(-1 * var(--chrome-top));
+  height: calc(100% + var(--chrome-top));
+  &::before, &::after { content: ''; display: block; }
+  &::before { height: var(--chrome-top); }
+  &::after { height: var(--chrome-bottom); }
+  & > .sticky.top-0 { top: var(--chrome-top); }
+}
+
+/* A small target over the middle of the artwork leaves the rest of the edge poster clickable. */
+html:is([data-theme='minimal'], [data-theme='console']) .row-step {
+  inset-block: 1.5rem 0;
+  margin-block: auto;
+  margin-inline: .25rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  corner-shape: round;
+  background-image: none;
+  opacity: 1;
+}
+html:is([data-theme='minimal'], [data-theme='console']) .row-step > svg { width: 1.25rem; height: 1.25rem; }
 
 /* Glass: a few large surfaces only (bars, menus, side panels), never per card: each blurred
    element is its own pass over what is behind it, so a grid of them is what gets slow. */
@@ -709,6 +785,10 @@
 @keyframes ui-activity-spoke {
   from { opacity: 1; }
   to { opacity: 0.22; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-activity > span { animation: none; }
+  .ui-activity > span:nth-child(n+5) { opacity: .35; }
 }
 @keyframes ui-wait-in {
   from { opacity: 0; }

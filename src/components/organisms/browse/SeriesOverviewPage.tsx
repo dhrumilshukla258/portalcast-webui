@@ -148,7 +148,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
                     className={`flex items-center gap-2 rounded-xl border py-2 pl-2 pr-3.5 text-left transition-colors ${
                       isActive
                         ? 'border-accent/60 bg-accent/10'
-                        : 'border-line bg-white/5 hover:border-focus/40 hover:bg-white/10'
+                        : 'border-line bg-white/5 hover:border-focus/40 hover:bg-interaction'
                     }`}
                   >
                     <div data-ui="season-thumb" className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-black/30">
@@ -163,7 +163,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-blue-500/20 to-transparent">
+                        <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-accent/20 to-transparent">
                           <span className="select-none text-xs font-black text-white/50">
                             {number === 0 ? 'SP' : `S${number}`}
                           </span>
@@ -231,7 +231,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
         <button
           onClick={onContinueWatching}
           data-focusable="true"
-          className="flex w-full items-center gap-3 rounded-xl border border-line bg-white/5 p-3 text-left transition-colors hover:bg-white/10 sm:w-96"
+          className="flex w-full items-center gap-3 rounded-xl border border-line bg-white/5 p-3 text-left transition-colors hover:bg-interaction sm:w-96"
         >
           <div className="relative flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-black/30">
             {continueImageUrl ? (

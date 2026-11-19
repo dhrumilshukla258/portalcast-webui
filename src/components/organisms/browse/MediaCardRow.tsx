@@ -40,7 +40,7 @@ const ROW_WIDTHS = {
 const TV_WIDTHS = { normal: 'w-[130px]', large: 'w-[130px]' } as const;
 /** Row heading and strip in the TV apps: rowTitle 20 semibold, 12 to the cards, 16 between cards, 24 between rows. */
 const TV_ROW = 'mb-6';
-const TV_TITLE = 'mb-3 text-left text-[20px] font-semibold text-slate-100';
+const TV_TITLE = 'mb-3 text-left text-[20px] font-semibold text-fg';
 
 const MediaCardRow: React.FC<MediaCardRowProps> = ({
   title,
@@ -203,7 +203,7 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
         <button
           onClick={() => scrollBy(-1)}
           aria-label="Scroll left"
-          className="absolute bottom-0 left-0 top-6 z-10 hidden w-10 items-center justify-center bg-linear-to-r from-black/60 to-transparent text-white opacity-70 transition-opacity hover:opacity-100! sm:flex"
+          className="row-step step-control absolute bottom-0 left-0 top-6 z-10 hidden w-10 items-center justify-center bg-linear-to-r from-black/60 to-transparent text-white opacity-70 transition-opacity hover:opacity-100! sm:flex"
         >
           <ChevronLeft className="h-8 w-8" />
         </button>
@@ -238,7 +238,7 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
         ))}
         {loadingMore && (
           <div className={`flex shrink-0 items-center justify-center ${widths}`}>
-            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-blue-500" />
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-accent" />
           </div>
         )}
       </div>
@@ -247,7 +247,7 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
         <button
           onClick={() => scrollBy(1)}
           aria-label="Scroll right"
-          className="absolute bottom-0 right-0 top-6 z-10 hidden w-10 items-center justify-center bg-linear-to-l from-black/60 to-transparent text-white opacity-70 transition-opacity hover:opacity-100! sm:flex"
+          className="row-step step-control absolute bottom-0 right-0 top-6 z-10 hidden w-10 items-center justify-center bg-linear-to-l from-black/60 to-transparent text-white opacity-70 transition-opacity hover:opacity-100! sm:flex"
         >
           <ChevronRight className="h-8 w-8" />
         </button>

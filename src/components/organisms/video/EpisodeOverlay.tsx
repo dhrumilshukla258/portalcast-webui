@@ -100,13 +100,13 @@ const EpisodeOverlay = forwardRef<EpisodeOverlayRef, EpisodeOverlayProps>(
 
     return (
       <div
-        className="glass-panel absolute right-0 top-0 z-40 flex h-full w-full max-w-[420px] flex-col bg-gray-950/80 shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-xl border-l border-white/5 p-4 transition-all duration-300 sm:p-6"
+        className="glass-panel absolute right-0 top-0 z-40 flex h-full w-full max-w-[420px] flex-col bg-page/80 shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-xl border-l border-white/5 p-4 transition-all duration-300 sm:p-6"
         tabIndex={-1}
       >
         {showCloseButton && (
           <button
             onClick={onBack}
-            className="absolute right-6 top-4 z-50 rounded-full p-2 text-fg-muted outline-hidden transition-transform hover:scale-110 hover:text-fg focus:scale-110 focus:bg-white/10 focus:text-fg"
+            className="absolute right-6 top-4 z-50 rounded-full p-2 text-fg-muted outline-hidden transition-transform hover:scale-110 hover:text-fg focus:scale-110 focus:bg-interaction focus:text-fg"
             aria-label="Close"
             data-focusable="true"
           >
@@ -155,11 +155,11 @@ const EpisodeOverlay = forwardRef<EpisodeOverlayRef, EpisodeOverlayProps>(
                     ? 'ui-selected scale-[1.01]'
                     : isItemPlaying
                       ? 'bg-accent/10 text-accent border-accent/40'
-                      : 'bg-white/5 text-gray-300 border-white/5 hover:bg-white/10 hover:text-fg'
+                      : 'bg-white/5 text-fg-soft border-white/5 hover:bg-interaction hover:text-fg'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className={`text-sm font-bold truncate ${isItemFocused ? 'text-fg' : isItemPlaying ? 'text-accent' : 'text-gray-100'}`}>
+                  <span className={`text-sm font-bold truncate ${isItemFocused ? 'text-fg' : isItemPlaying ? 'text-accent' : 'text-fg'}`}>
                     {displayTitle}
                   </span>
                   {isItemPlaying && (

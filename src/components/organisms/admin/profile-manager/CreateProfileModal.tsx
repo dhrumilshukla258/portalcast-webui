@@ -40,16 +40,16 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
 }) => {
   return (
     <Dialog open onClose={onCancel} labelledBy="create-profile-title" className="max-w-md" dismissOnBackdrop={false}>
-      <h2 id="create-profile-title" className="mb-4 text-xl font-bold text-white">Create Profile</h2>
+      <h2 id="create-profile-title" className="mb-4 text-xl font-bold text-fg">Create Profile</h2>
       <div className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-400">
+          <label className="mb-1 block text-sm font-medium text-fg-muted">
             Name
           </label>
           <input
             type="text"
             data-focusable="true"
-            className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-white placeholder-gray-500 backdrop-blur-xs focus:border-focus focus:outline-hidden focus:ring-1 focus:ring-focus"
+            className="w-full rounded-lg border border-divider/50 bg-panel-raised/50 p-2 text-fg placeholder-fg-subtle backdrop-blur-xs focus:border-focus focus:outline-hidden focus:ring-1 focus:ring-focus"
             placeholder="e.g., Bedroom STB"
             value={newProfileName}
             onChange={(e) => setNewProfileName(e.target.value)}
@@ -57,12 +57,12 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-400">
+          <label className="mb-1 block text-sm font-medium text-fg-muted">
             Description
           </label>
           <textarea
             data-focusable="true"
-            className="w-full resize-none rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-white placeholder-gray-500 backdrop-blur-xs focus:border-focus focus:outline-hidden focus:ring-1 focus:ring-focus"
+            className="w-full resize-none rounded-lg border border-divider/50 bg-panel-raised/50 p-2 text-fg placeholder-fg-subtle backdrop-blur-xs focus:border-focus focus:outline-hidden focus:ring-1 focus:ring-focus"
             rows={3}
             value={newProfileDescription}
             onChange={(e) => setNewProfileDescription(e.target.value)}
@@ -70,7 +70,7 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-400">
+          <label className="mb-1 block text-sm font-medium text-fg-muted">
             Provider Type
           </label>
           <div className="flex gap-4">
@@ -82,9 +82,9 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
                 data-focusable="true"
                 checked={newProfileProviderType === 'stalker'}
                 onChange={() => setNewProfileProviderType('stalker')}
-                className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-focus"
+                className="h-4 w-4 border-line-strong bg-panel-hover text-accent focus:ring-focus"
               />
-              <span className="text-sm text-gray-300 transition-colors group-hover:text-white">
+              <span className="text-sm text-fg-soft transition-colors group-hover:text-fg">
                 Stalker
               </span>
             </label>
@@ -96,9 +96,9 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
                 data-focusable="true"
                 checked={newProfileProviderType === 'xtream'}
                 onChange={() => setNewProfileProviderType('xtream')}
-                className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-focus"
+                className="h-4 w-4 border-line-strong bg-panel-hover text-accent focus:ring-focus"
               />
-              <span className="text-sm text-gray-300 transition-colors group-hover:text-white">
+              <span className="text-sm text-fg-soft transition-colors group-hover:text-fg">
                 Xtream Codes
               </span>
             </label>
@@ -110,9 +110,9 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
                 data-focusable="true"
                 checked={newProfileProviderType === 'm3u'}
                 onChange={() => setNewProfileProviderType('m3u')}
-                className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-focus"
+                className="h-4 w-4 border-line-strong bg-panel-hover text-accent focus:ring-focus"
               />
-              <span className="text-sm text-gray-300 transition-colors group-hover:text-white">
+              <span className="text-sm text-fg-soft transition-colors group-hover:text-fg">
                 M3U playlist
               </span>
             </label>
@@ -120,59 +120,59 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
         </div>
 
         {newProfileProviderType === 'm3u' && (
-          <div className="space-y-3 rounded-xl border border-gray-700/50 bg-gray-800/30 p-4">
+          <div className="space-y-3 rounded-xl border border-divider/50 bg-panel-raised/30 p-4">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-400">
+              <label className="mb-1 block text-xs font-medium text-fg-muted">
                 Playlist link (M3U)
               </label>
               <input
                 type="url"
                 data-focusable="true"
-                className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-sm text-white focus:border-focus focus:outline-hidden"
+                className="w-full rounded-lg border border-divider/50 bg-panel-raised/50 p-2 text-sm text-fg focus:border-focus focus:outline-hidden"
                 placeholder="http://provider.example/get.php?username=…&type=m3u_plus"
                 value={newProfileM3uUrl}
                 onChange={(e) => setNewProfileM3uUrl(e.target.value)}
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-400">
+              <label className="mb-1 block text-xs font-medium text-fg-muted">
                 Guide link (XMLTV, optional)
               </label>
               <input
                 type="url"
                 data-focusable="true"
-                className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-sm text-white focus:border-focus focus:outline-hidden"
+                className="w-full rounded-lg border border-divider/50 bg-panel-raised/50 p-2 text-sm text-fg focus:border-focus focus:outline-hidden"
                 placeholder="Empty: the guide link inside the playlist"
                 value={newProfileXmltvUrl}
                 onChange={(e) => setNewProfileXmltvUrl(e.target.value)}
               />
             </div>
-            <p className="text-xs text-gray-500">Stored encrypted; the link usually holds your account. Refreshed daily.</p>
+            <p className="text-xs text-fg-subtle">Stored encrypted; the link usually holds your account. Refreshed daily.</p>
           </div>
         )}
 
         {newProfileProviderType === 'xtream' && (
-          <div className="space-y-3 rounded-xl border border-gray-700/50 bg-gray-800/30 p-4">
+          <div className="space-y-3 rounded-xl border border-divider/50 bg-panel-raised/30 p-4">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-400">
+              <label className="mb-1 block text-xs font-medium text-fg-muted">
                 Username
               </label>
               <input
                 type="text"
                 data-focusable="true"
-                className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-sm text-white focus:border-focus focus:outline-hidden"
+                className="w-full rounded-lg border border-divider/50 bg-panel-raised/50 p-2 text-sm text-fg focus:border-focus focus:outline-hidden"
                 value={newProfileUsername}
                 onChange={(e) => setNewProfileUsername(e.target.value)}
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-400">
+              <label className="mb-1 block text-xs font-medium text-fg-muted">
                 Password
               </label>
               <input
                 type="text"
                 data-focusable="true"
-                className="w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-sm text-white focus:border-focus focus:outline-hidden"
+                className="w-full rounded-lg border border-divider/50 bg-panel-raised/50 p-2 text-sm text-fg focus:border-focus focus:outline-hidden"
                 value={newProfilePassword}
                 onChange={(e) => setNewProfilePassword(e.target.value)}
               />
@@ -180,7 +180,7 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
           </div>
         )}
 
-        <div className="rounded-lg border border-blue-500/20 bg-blue-900/10 p-3 text-xs text-blue-300">
+        <div className="rounded-lg border border-accent/20 bg-accent/10 p-3 text-xs text-accent">
           This profile will inherit other settings from your current
           configuration.
         </div>

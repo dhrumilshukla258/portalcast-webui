@@ -1,7 +1,9 @@
 import { getTitleDetails, type PersonCredit, type TitleDetails } from '@/api/endpoints/discover';
 import { useOpenGenre, useOpenPerson } from '@/context/PersonPageContext';
 import React, { useMemo } from 'react';
-import { Play, Clock, Star, Calendar, Globe2, Film, Image as ImageIcon, Link2, Merge } from 'lucide-react';
+import { Clock, Star, Calendar, Globe2, Film, Image as ImageIcon, Link2, Merge } from 'lucide-react';
+import PlaybackButton from '@/components/ui/PlaybackButton';
+import TitleActionButton from '@/components/ui/TitleActionButton';
 import { runtimeText } from '@/utils/episodeInfo';
 import { useParallax } from '@/hooks/useParallax';
 import { useAuth } from '@/context/AuthContext';
@@ -169,27 +171,19 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
 
           <div className="mt-4 flex w-full flex-col gap-2">
             {onPlay && (
-              <button
-                onClick={onPlay}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 font-bold text-surface-3 shadow-lg shadow-black/30 transition-all duration-200 hover:bg-gray-200 active:scale-95 focus:outline-hidden focus:ring-2 focus:ring-accent [&.focused]:ring-2 [&.focused]:ring-accent"
-                data-focusable="true"
-                data-default-focus="true"
-              >
-                <Play size={18} className="fill-current" />
-                <span>{playLabel}</span>
-              </button>
+              <PlaybackButton onClick={onPlay} data-default-focus="true" className="w-full">
+                {playLabel}
+              </PlaybackButton>
             )}
             {trailerKey && (
-              <button
+              <TitleActionButton
                 onClick={() => setShowTrailer((prev) => !prev)}
-                data-focusable="true"
+                aria-expanded={showTrailer}
                 data-default-focus={!onPlay ? 'true' : undefined}
-                data-ui="title-action"
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-white/5 py-3 font-bold text-fg-soft transition-colors hover:bg-white/10"
               >
                 <Film size={18} />
                 <span>{showTrailer ? 'Hide Trailer' : 'Trailer'}</span>
-              </button>
+              </TitleActionButton>
             )}
             <MyListButton contentId={detailsKey} />
             {/* A movie switches version in the player (Settings → Version); a show, here. */}
@@ -213,7 +207,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                 <button
                   type="button"
                   onClick={() => setEditingImages(true)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-line px-2 py-1 text-xs font-semibold text-fg-muted hover:bg-white/10 hover:text-fg-soft"
+                  className="inline-flex items-center gap-1 rounded-lg border border-line px-2 py-1 text-xs font-semibold text-fg-muted hover:bg-interaction hover:text-fg-soft"
                   data-focusable="true"
                 >
                   <ImageIcon size={13} /> Edit images
@@ -223,7 +217,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                   <button
                     type="button"
                     onClick={() => setFixingMatch(true)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-line px-2 py-1 text-xs font-semibold text-fg-muted hover:bg-white/10 hover:text-fg-soft"
+                    className="inline-flex items-center gap-1 rounded-lg border border-line px-2 py-1 text-xs font-semibold text-fg-muted hover:bg-interaction hover:text-fg-soft"
                     data-focusable="true"
                   >
                     <Link2 size={13} /> Fix match
@@ -233,7 +227,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                 <button
                   type="button"
                   onClick={() => setMerging(true)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-line px-2 py-1 text-xs font-semibold text-fg-muted hover:bg-white/10 hover:text-fg-soft"
+                  className="inline-flex items-center gap-1 rounded-lg border border-line px-2 py-1 text-xs font-semibold text-fg-muted hover:bg-interaction hover:text-fg-soft"
                   data-focusable="true"
                 >
                   <Merge size={13} /> Merge with…
@@ -242,12 +236,12 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
             )}
             {item.director && (
               <p className="mt-1 text-sm text-fg-muted">
-                {creditLabel} <span className="font-semibold text-gray-300">{item.director}</span>
+                {creditLabel} <span className="font-semibold text-fg-soft">{item.director}</span>
               </p>
             )}
           </div>
 
-          <div data-ui="title-meta" className="flex flex-wrap items-center gap-2.5 border-y border-white/5 py-3 text-xs text-gray-300 sm:gap-4 sm:text-sm">
+          <div data-ui="title-meta" className="flex flex-wrap items-center gap-2.5 border-y border-white/5 py-3 text-xs text-fg-soft sm:gap-4 sm:text-sm">
             {rating && (() => {
               const chip = (
                 <>
@@ -295,7 +289,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
               </div>
             )}
             {ageRating && (
-              <div data-ui="meta-badge" className="rounded-full border border-gray-600 px-2 py-0.5 text-3xs font-black text-fg-muted">
+              <div data-ui="meta-badge" className="rounded-full border border-line-strong px-2 py-0.5 text-3xs font-black text-fg-muted">
                 {ageRating}
               </div>
             )}
@@ -313,12 +307,12 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                     data-focusable="true"
                     onClick={() => openGenre(genre, item.is_series ? 'series' : 'movie')}
                     title={`More ${genre}`}
-                    className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300 transition-colors hover:bg-white/15 hover:text-fg"
+                    className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-fg-soft transition-colors hover:bg-interaction hover:text-fg"
                   >
                     {genre}
                   </button>
                 ) : (
-                  <span key={genre} data-ui="genre" className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">
+                  <span key={genre} data-ui="genre" className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-fg-soft">
                     {genre}
                   </span>
                 ),
@@ -329,7 +323,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
           {item.description && (
             <div className="space-y-1">
               <h3 className="ui-label">Overview</h3>
-              <p className="text-sm font-medium leading-relaxed text-gray-300 md:text-base">
+              <p className="text-sm font-medium leading-relaxed text-fg-soft md:text-base">
                 {item.description}
               </p>
             </div>
@@ -340,7 +334,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
               {facts.length > 0 && <p>{facts.join('  \u00b7  ')}</p>}
               {writers && !item.is_series && (
                 <p>
-                  Written by <span className="font-semibold text-gray-300">{writers}</span>
+                  Written by <span className="font-semibold text-fg-soft">{writers}</span>
                 </p>
               )}
             </div>
@@ -372,7 +366,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                       onClick={() => openPerson(c.id!)}
                       title={`${c.name}: all titles`}
                       data-focusable="true"
-                      className="w-22 shrink-0 rounded-xl p-1 text-center transition-colors hover:bg-white/10 focus:bg-white/10 focus:outline-hidden focus:ring-2 focus:ring-focus"
+                      className="w-22 shrink-0 rounded-xl p-1 text-center transition-colors hover:bg-interaction focus:bg-interaction focus:outline-hidden focus:ring-2 focus:ring-focus"
                     >
                       {body}
                     </button>
@@ -395,7 +389,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                   .map((actor, i) => (
                     <span
                       key={i}
-                      className="rounded-full border border-line bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300"
+                      className="rounded-full border border-line bg-white/5 px-3 py-1 text-xs font-semibold text-fg-soft"
                     >
                       {actor}
                     </span>

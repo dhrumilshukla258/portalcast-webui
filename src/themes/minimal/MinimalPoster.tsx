@@ -4,6 +4,8 @@ import ActivityIndicator from '@/components/ui/ActivityIndicator';
 import { snappy } from './motion';
 
 interface MinimalPosterProps {
+  /** Console uses a plain frame: CSS marks the one hovered/focused card. */
+  staticFrame?: boolean;
   /** Tooltip, image alt and the text shown when there is no art. */
   title: string;
   /** The art (src, srcSet...) or null for none. */
@@ -36,26 +38,27 @@ interface MinimalPosterProps {
  * indicator turns in the middle (after a moment, so a quick open shows nothing).
  */
 export default function MinimalPoster(p: MinimalPosterProps) {
+  const Frame = p.staticFrame ? 'div' : motion.div;
+  const motionProps = p.staticFrame ? {} : {
+    initial: false as const, animate: { scale: p.loading ? 1 : 0.96 },
+    whileHover: { scale: 1 }, whileTap: { scale: 0.93 }, transition: snappy,
+  };
   return (
-    <div className={`group ${p.dim ? 'opacity-35' : ''}`}>
-      <motion.div
-        initial={false}
-        // Opening, it stays lifted (as on Apple TV) until the page comes up.
-        animate={{ scale: p.loading ? 1 : 0.96 }}
-        whileHover={{ scale: 1 }}
-        whileTap={{ scale: 0.93 }}
-        transition={snappy}
+    <div className={`group ${p.dim ? 'opacity-35' : ''}`} data-ui={p.staticFrame ? 'console-card' : undefined}>
+      <Frame
+        {...motionProps}
         onClick={() => {
           if (!p.loading) p.onActivate();
         }}
         {...(p.handlers as object)}
         title={p.title}
+        aria-busy={p.loading || undefined}
         data-focusable="true"
         tabIndex={-1}
         className="relative aspect-2/3 w-full cursor-pointer overflow-hidden rounded-xl bg-gray-900 shadow-black/70 transition-shadow duration-300 group-hover:shadow-2xl"
       >
         {p.image ? (
-          <img {...p.image} alt={p.title} loading="lazy" decoding="async" className="h-full w-full object-cover" onError={p.onImageError} />
+          <img {...p.image} draggable={p.staticFrame ? false : p.image.draggable} alt={p.title} loading="lazy" decoding="async" className="h-full w-full object-cover" onError={p.onImageError} />
         ) : (
           <div className="flex h-full w-full items-center justify-center p-3 text-center text-sm font-semibold text-white/40">{p.title}</div>
         )}
@@ -64,7 +67,7 @@ export default function MinimalPoster(p: MinimalPosterProps) {
         {p.action}
         {p.progress !== undefined && p.progress > 0 && (
           <div className="absolute inset-x-2 bottom-2 h-1 overflow-hidden rounded-full bg-white/25">
-            <div className="h-full rounded-full bg-white" style={{ width: `${Math.min(100, p.progress)}%` }} />
+            <div data-part="progress" className="h-full rounded-full bg-white" style={{ width: `${Math.min(100, p.progress)}%` }} />
           </div>
         )}
         {p.loading && (
@@ -72,7 +75,7 @@ export default function MinimalPoster(p: MinimalPosterProps) {
             <ActivityIndicator className="text-[1.75rem] text-white" />
           </div>
         )}
-      </motion.div>
+      </Frame>
 
       <div className={`mt-2 px-0.5 text-left ${p.captionHiddenOnPhone ? 'hidden sm:block' : ''}`}>
         <p className="truncate text-sm font-medium text-white/85">{p.caption}</p>
@@ -104,7 +107,7 @@ export function PosterAction({
         e.stopPropagation();
         onClick();
       }}
-      className={`absolute top-2 right-2 z-10 h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80 focus-visible:flex ${
+      className={`poster-corner-action absolute top-2 right-2 z-10 h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80 group-focus-within:flex ${
         onPhone ? 'flex sm:hidden sm:group-hover:flex' : 'hidden sm:group-hover:flex'
       }`}
     >

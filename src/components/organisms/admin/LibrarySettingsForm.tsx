@@ -59,11 +59,11 @@ const LibrarySettingsForm: React.FC<LibrarySettingsFormProps> = ({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-3xl border border-gray-800 bg-gray-900/30 p-6 backdrop-blur-md">
+      <section className="rounded-3xl border border-line bg-panel/30 p-6 backdrop-blur-md">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Layout className="text-blue-500" size={20} />
-            <h3 className="text-lg font-bold text-white">
+            <Layout className="text-accent" size={20} />
+            <h3 className="text-lg font-bold text-fg">
               Content Library
             </h3>
           </div>
@@ -71,7 +71,7 @@ const LibrarySettingsForm: React.FC<LibrarySettingsFormProps> = ({
             type="button"
             onClick={onReloadGroups}
             disabled={loadingGroups}
-            className="flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:underline disabled:opacity-50"
+            className="flex items-center gap-1.5 text-xs font-bold text-accent hover:underline disabled:opacity-50"
           >
             <RefreshCw
               size={14}
@@ -83,7 +83,7 @@ const LibrarySettingsForm: React.FC<LibrarySettingsFormProps> = ({
 
         <select
           multiple
-          className="scrollbar-hide h-56 w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 text-sm outline-hidden focus:border-focus"
+          className="scrollbar-hide h-56 w-full rounded-2xl border border-line bg-page p-4 text-sm outline-hidden focus:border-focus"
           value={config.groups}
           onChange={handleGroupsChange}
         >
@@ -91,13 +91,13 @@ const LibrarySettingsForm: React.FC<LibrarySettingsFormProps> = ({
             <option
               key={g.title}
               value={g.title}
-              className="mb-1 rounded-lg p-2 checked:bg-blue-600"
+              className="mb-1 rounded-lg p-2 checked:bg-action"
             >
               {g.title}
             </option>
           ))}
         </select>
-        <p className="ml-1 mt-2 text-3xs text-gray-500">
+        <p className="ml-1 mt-2 text-3xs text-fg-subtle">
           Hold Ctrl/Cmd to select multiple. {config.groups.length} selected.
         </p>
 
@@ -111,7 +111,7 @@ const LibrarySettingsForm: React.FC<LibrarySettingsFormProps> = ({
               className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-black uppercase transition-all active:scale-95 disabled:opacity-50 ${
                 btn.variant === 'success'
                   ? 'border border-green-900/50 bg-green-900/20 text-green-500 hover:bg-green-900/40'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  : 'bg-panel-raised text-fg-soft hover:bg-panel-hover'
               }`}
             >
               {btn.loading && <RefreshCw size={12} className="animate-spin" />}

@@ -20,6 +20,12 @@ export const THEMES = [
     description: 'Black and glass, Apple TV style.',
     swatch: { page: '#000000', panel: '#1c1c1e', fg: '#ffffff', accent: '#f5f5f7' },
   },
+  {
+    id: 'console',
+    label: 'Console',
+    description: 'Midnight blue with an ice-blue focus ring.',
+    swatch: { page: '#071121', panel: '#14243c', fg: '#f4f7ff', accent: '#90caff' },
+  },
 ] as const;
 export type ThemeId = (typeof THEMES)[number]['id'];
 

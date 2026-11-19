@@ -620,7 +620,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
         />
         </React.Suspense>
       ) : (
-        <div className="flex h-screen flex-col overflow-hidden app-bg font-sans text-gray-200">
+        <div className="flex h-screen flex-col overflow-hidden app-bg font-sans text-fg-soft">
           <div className="flex min-h-0 w-full flex-1 flex-col pb-16 sm:pb-0">
             <AppHeader
               currentTitle={currentTitle}
@@ -865,8 +865,8 @@ function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen app-bg flex justify-center items-center font-sans text-gray-200">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      <div className="min-h-screen app-bg flex justify-center items-center font-sans text-fg-soft">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
     );
   }
@@ -905,7 +905,7 @@ export default function App() {
           path="/admin"
           element={
             <ProtectedRoute adminOnly>
-              <div className="min-h-screen app-bg pt-6 font-sans text-gray-200 md:pt-10">
+              <div className="min-h-screen app-bg pt-6 font-sans text-fg-soft md:pt-10">
                 <React.Suspense
                   fallback={
                     <div className="flex h-screen w-full items-center justify-center">

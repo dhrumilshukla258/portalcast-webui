@@ -105,15 +105,15 @@ media-player button[data-focusable="true"].focused:not([data-control="settings-i
   box-shadow:
     0 0 0 2px var(--ui-focus-ring),
     0 0 14px var(--ui-focus-border) !important;
-  background-color: rgba(255, 255, 255, 0.15) !important;
-  transform: scale(1.15) !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background-color: var(--ui-player-button-hover-bg) !important;
+  transform: scale(var(--ui-focus-scale)) !important;
+  transition: transform var(--ui-focus-duration) var(--ui-ease), background-color var(--ui-duration) var(--ui-ease) !important;
   z-index: 10;
 }
 
 /* 3. Settings Dropdown Items: Left border accent & background highlight (no scaling) */
 media-player button[data-control="settings-item"].focused {
-  background-color: rgba(255, 255, 255, 0.15) !important;
+  background-color: var(--ui-player-button-hover-bg) !important;
   border-left: 3px solid var(--ui-focus-ring) !important;
   padding-left: 9px !important; /* Offset padding to prevent text from shifting */
   transition: background-color 0.2s ease, border-color 0.2s ease !important;

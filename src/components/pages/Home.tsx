@@ -51,9 +51,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen app-bg text-gray-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-fg">
+    <div className="min-h-screen app-bg text-fg flex flex-col justify-between selection:bg-action selection:text-on-action">
       {/* Top Navbar */}
-      <header className="px-6 py-5 border-b border-gray-800/40 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between">
+      <header className="px-6 py-5 border-b border-divider/40 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between">
         <div className="flex items-center">
           <img
             src="/portalcast-logo.svg"
@@ -67,7 +67,7 @@ export default function Home() {
           {isLoggedIn ? (
             <button
               onClick={() => navigate('/')}
-              className="px-5 py-2.5 rounded-xl ui-brand hover:brightness-110 font-medium text-sm transition-all duration-300 shadow-md shadow-indigo-600/10 hover:shadow-indigo-500/20 hover:scale-[1.02] flex items-center space-x-2"
+              className="px-5 py-2.5 rounded-xl ui-brand hover:brightness-110 font-medium text-sm transition-all duration-300 shadow-md shadow-accent/10 hover:shadow-accent/20 hover:scale-[1.02] flex items-center space-x-2"
             >
               <span>TV Portal</span>
               <ChevronRight className="w-4 h-4" />
@@ -75,7 +75,7 @@ export default function Home() {
           ) : (
             <button
               onClick={() => navigate('/login')}
-              className="px-5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700/80 text-fg-soft font-medium text-sm transition-all duration-300 border border-gray-700/50 hover:scale-[1.02]"
+              className="px-5 py-2.5 rounded-xl bg-panel-raised hover:bg-panel-hover/80 text-fg-soft font-medium text-sm transition-all duration-300 border border-divider/50 hover:scale-[1.02]"
             >
               Sign In
             </button>
@@ -87,7 +87,7 @@ export default function Home() {
       <main className="grow flex items-center py-16 px-6 max-w-6xl mx-auto w-full">
         <div className="grid md:grid-cols-12 gap-12 items-center w-full">
           <div className="md:col-span-7 space-y-8 text-left">
-            <div data-ui="tint" className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-400">
+            <div data-ui="tint" className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-xs font-semibold text-accent">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Next-Gen IPTV Client</span>
             </div>
@@ -106,7 +106,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <button
                 onClick={handleLaunch}
-                className="px-8 py-4 rounded-2xl ui-brand hover:brightness-110 font-semibold text-base transition-all duration-300 shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:scale-[1.03] flex items-center justify-center space-x-3 cursor-pointer"
+                className="px-8 py-4 rounded-2xl ui-brand hover:brightness-110 font-semibold text-base transition-all duration-300 shadow-xl shadow-accent/20 hover:shadow-accent/30 hover:scale-[1.03] flex items-center justify-center space-x-3 cursor-pointer"
               >
                 <Play className="w-5 h-5 fill-current" />
                 <span>{isLoggedIn ? 'Launch TV Portal' : 'Start Watching Now'}</span>
@@ -115,7 +115,7 @@ export default function Home() {
               {!isLoggedIn && (
                 <button
                   onClick={() => navigate('/verify')}
-                  className="px-8 py-4 rounded-2xl bg-gray-900/60 hover:bg-gray-800/80 text-fg-soft font-semibold text-base transition-all duration-300 border border-gray-850 hover:scale-[1.02] flex items-center justify-center space-x-2 cursor-pointer"
+                  className="px-8 py-4 rounded-2xl bg-panel/60 hover:bg-panel-hover/80 text-fg-soft font-semibold text-base transition-all duration-300 border border-line hover:scale-[1.02] flex items-center justify-center space-x-2 cursor-pointer"
                   title="For entering a pairing code shown on a TV — not for logging this device in via a code"
                 >
                   <span>Have a TV Pairing Code?</span>
@@ -126,27 +126,27 @@ export default function Home() {
 
           <div className="md:col-span-5 relative hidden md:block">
             <div className="absolute -inset-1 rounded-3xl ui-brand opacity-20 blur-2xl"></div>
-            <div className="relative border border-gray-800 bg-gray-900/60 backdrop-blur-md rounded-3xl p-6 shadow-2xl overflow-hidden aspect-4/3 flex flex-col justify-between">
-              <div className="flex items-center justify-between border-b border-gray-850 pb-4">
+            <div className="relative border border-line bg-panel/60 backdrop-blur-md rounded-3xl p-6 shadow-2xl overflow-hidden aspect-4/3 flex flex-col justify-between">
+              <div className="flex items-center justify-between border-b border-line pb-4">
                 <div className="flex space-x-2">
                   <div className="w-3.5 h-3.5 rounded-full bg-red-500/80"></div>
                   <div className="w-3.5 h-3.5 rounded-full bg-yellow-500/80"></div>
                   <div className="w-3.5 h-3.5 rounded-full bg-green-500/80"></div>
                 </div>
-                <div className="w-16 h-3 rounded-full bg-gray-800"></div>
+                <div className="w-16 h-3 rounded-full bg-panel-raised"></div>
               </div>
 
               <div className="grow flex items-center justify-center">
                 <div className="text-center space-y-3">
-                  <div data-ui="tint" className="w-16 h-16 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
+                  <div data-ui="tint" className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto text-accent">
                     <Tv className="w-8 h-8" />
                   </div>
-                  <div className="text-sm font-semibold tracking-wide text-gray-300">Smart TV Ready</div>
+                  <div className="text-sm font-semibold tracking-wide text-fg-soft">Smart TV Ready</div>
                   <div className="text-xs text-fg-subtle max-w-[200px]">Optimized keyboard and remote controller navigation.</div>
                 </div>
               </div>
 
-              <div className="border-t border-gray-850 pt-4 flex justify-between items-center text-xs text-fg-subtle">
+              <div className="border-t border-line pt-4 flex justify-between items-center text-xs text-fg-subtle">
                 <span>Cloud Sync Enabled</span>
                 <span>Active Profile</span>
               </div>
@@ -156,10 +156,10 @@ export default function Home() {
       </main>
 
       {/* Features List */}
-      <section className="bg-gray-950/40 border-t border-gray-900/80 py-16 px-6">
+      <section className="bg-page/40 border-t border-divider/80 py-16 px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
-          <div className="bg-gray-900/40 border border-gray-850 rounded-2xl p-6 text-left space-y-4">
-            <div data-ui="tint" className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+          <div className="bg-panel/40 border border-line rounded-2xl p-6 text-left space-y-4">
+            <div data-ui="tint" className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
               <Sparkles className="w-6 h-6" />
             </div>
             <h3 className="font-bold text-lg">Cloud Synchronization</h3>
@@ -168,7 +168,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="bg-gray-900/40 border border-gray-850 rounded-2xl p-6 text-left space-y-4">
+          <div className="bg-panel/40 border border-line rounded-2xl p-6 text-left space-y-4">
             <div data-ui="tint" className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
               <Tv className="w-6 h-6" />
             </div>
@@ -178,7 +178,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="bg-gray-900/40 border border-gray-850 rounded-2xl p-6 text-left space-y-4">
+          <div className="bg-panel/40 border border-line rounded-2xl p-6 text-left space-y-4">
             <div data-ui="tint" className="w-12 h-12 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400">
               <Shield className="w-6 h-6" />
             </div>
@@ -191,7 +191,7 @@ export default function Home() {
       </section>
 
       {/* Where it runs (README, "Where it runs") */}
-      <section className="border-t border-gray-900/80 py-16 px-6">
+      <section className="border-t border-divider/80 py-16 px-6">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="text-left space-y-2">
             <h2 className="text-2xl font-bold tracking-tight">Watch anywhere</h2>
@@ -201,8 +201,8 @@ export default function Home() {
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {PLATFORMS.map((p) => (
-              <div key={p.title} className="bg-gray-900/40 border border-gray-850 rounded-2xl p-6 text-left flex flex-col gap-3">
-                <div data-ui="tint" className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+              <div key={p.title} className="bg-panel/40 border border-line rounded-2xl p-6 text-left flex flex-col gap-3">
+                <div data-ui="tint" className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
                   <p.icon className="w-6 h-6" />
                 </div>
                 <h3 className="font-bold text-lg">{p.title}</h3>
@@ -212,7 +212,7 @@ export default function Home() {
                     href={p.link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-300 hover:text-indigo-200"
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-accent hover:text-accent"
                   >
                     {p.link.label}
                     <ChevronRight className="w-4 h-4" />
@@ -225,12 +225,12 @@ export default function Home() {
       </section>
 
       {/* Tracker: Known Bugs & Upcoming Features */}
-      <section className="bg-gray-950/80 border-t border-gray-900 py-16 px-6">
+      <section className="bg-page/80 border-t border-line py-16 px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12">
           
           {/* Known Bugs Column */}
           <div className="space-y-6 text-left">
-            <div className="flex items-center space-x-3 border-b border-gray-850 pb-3">
+            <div className="flex items-center space-x-3 border-b border-line pb-3">
               <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
                 <Bug className="w-5 h-5" />
               </div>
@@ -246,7 +246,7 @@ export default function Home() {
 
           {/* Upcoming Features Column */}
           <div className="space-y-6 text-left">
-            <div className="flex items-center space-x-3 border-b border-gray-850 pb-3">
+            <div className="flex items-center space-x-3 border-b border-line pb-3">
               <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <Rocket className="w-5 h-5" />
               </div>
@@ -255,20 +255,20 @@ export default function Home() {
 
             <div className="space-y-4">
 
-              <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
-                <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
+              <div className="relative pl-6 border-l-2 border-accent/30 space-y-1">
+                <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-accent"></div>
                 <h4 className="text-sm font-semibold text-fg-soft">User Feature Request Pipeline</h4>
                 <p className="text-xs text-fg-muted leading-relaxed">Direct community implementation board allowing viewers to submit and upvote client modifications.</p>
               </div>
 
-              <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
-                <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
+              <div className="relative pl-6 border-l-2 border-accent/30 space-y-1">
+                <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-accent"></div>
                 <h4 className="text-sm font-semibold text-fg-soft">Centralized Bug Report Collection</h4>
                 <p className="text-xs text-fg-muted leading-relaxed">Automated exception logging to capture interface issues and improve application stability.</p>
               </div>
 
-              <div className="relative pl-6 border-l-2 border-indigo-500/30 space-y-1">
-                <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-400"></div>
+              <div className="relative pl-6 border-l-2 border-accent/30 space-y-1">
+                <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-accent"></div>
                 <h4 className="text-sm font-semibold text-fg-soft">Push Notification Engine</h4>
                 <p className="text-xs text-fg-muted leading-relaxed">Real-time inside-app banners and notifications regarding admin approvals, maintenance logs, or fresh updates.</p>
               </div>
@@ -279,7 +279,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-6 border-t border-gray-900 text-center text-xs text-fg-subtle bg-gray-950">
+      <footer className="py-6 border-t border-line text-center text-xs text-fg-subtle bg-page">
         <p>&copy; {new Date().getFullYear()} Portalcast. All Rights Reserved.</p>
       </footer>
     </div>

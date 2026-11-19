@@ -49,7 +49,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
         title="Drag to resize categories panel"
         className="group hidden w-3 shrink-0 cursor-col-resize items-center justify-center bg-black/70 md:flex"
       >
-        <div className="h-16 w-1 rounded-full bg-gray-700/60 transition-colors group-hover:bg-focus" />
+        <div className="h-16 w-1 rounded-full bg-panel-hover/60 transition-colors group-hover:bg-focus" />
       </div>
     </>
   );

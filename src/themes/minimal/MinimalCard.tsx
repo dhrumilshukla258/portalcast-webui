@@ -22,7 +22,8 @@ const MinimalCard = ({
   highlightTerm,
   isLoading = false,
   posterOnlyOnPhone = false,
-}: MediaCardProps) => {
+  staticFrame = false,
+}: MediaCardProps & { staticFrame?: boolean }) => {
   const [imageError, setImageError] = useState(false);
   const openMenu = useTitleMenu();
   const hold = useLongPress(openMenu ? () => openMenu(item) : undefined);
@@ -38,6 +39,7 @@ const MinimalCard = ({
 
   return (
     <MinimalPoster
+      staticFrame={staticFrame}
       title={title}
       image={image}
       onImageError={() => setImageError(true)}
@@ -79,3 +81,4 @@ const MinimalCard = ({
 };
 
 export default MinimalCard;
+export const ConsoleCard = (props: MediaCardProps) => <MinimalCard {...props} staticFrame />;

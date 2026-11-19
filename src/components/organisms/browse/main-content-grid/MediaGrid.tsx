@@ -30,7 +30,7 @@ const MediaGrid: React.FC<MediaGridProps> = ({
   if (loading && items.length === 0) {
     return (
       <div className="flex w-full justify-center py-12">
-        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-t-2 border-blue-500"></div>
+        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-t-2 border-accent"></div>
       </div>
     );
   }

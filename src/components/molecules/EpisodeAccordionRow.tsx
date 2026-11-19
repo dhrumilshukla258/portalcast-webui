@@ -69,8 +69,8 @@ const EpisodeAccordionRow = forwardRef<HTMLButtonElement, EpisodeAccordionRowPro
       className={`group flex w-full items-center gap-3 rounded-xl border text-left transition-colors focus:outline-hidden ${
         compact ? 'px-3 py-2' : 'p-2.5'
       } ${
-        isResume ? 'border-accent/40 bg-accent/10' : 'border-transparent hover:bg-white/10'
-      } focus:border-white/80 focus:bg-white/15 [&.focused]:border-white/80 [&.focused]:bg-white/15`}
+        isResume ? 'border-accent/40 bg-accent/10' : 'border-transparent hover:bg-panel-hover'
+      } focus:border-focus focus:bg-panel-hover [&.focused]:border-focus [&.focused]:bg-panel-hover`}
     >
       <span data-ui="episode-number" className="w-9 shrink-0 text-center text-lg font-bold text-fg-muted group-hover:text-fg group-[.focused]:text-fg">
         {number}

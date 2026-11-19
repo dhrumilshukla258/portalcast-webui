@@ -119,7 +119,7 @@ const CategoryBrowseView: React.FC<CategoryBrowseViewProps> = ({ type, only, onO
   return (
     <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 overflow-y-auto px-3 pb-10 sm:px-6">
       <div className="sticky top-0 z-30 -mx-3 mb-3 flex items-center gap-2 border-b border-white/5 bg-page px-2 py-2 sm:-mx-6 sm:px-5">
-        <button data-focusable="true" onClick={back} aria-label="Back" className="flex h-10 w-10 items-center justify-center rounded-full text-fg hover:bg-white/10">
+        <button data-focusable="true" onClick={back} aria-label="Back" className="flex h-10 w-10 items-center justify-center rounded-full text-fg hover:bg-interaction">
           <ChevronLeft className="h-6 w-6" />
         </button>
         <h2 className="min-w-0 flex-1 truncate text-lg font-bold text-fg sm:text-xl">{group ? group.title : `IPTV categories · ${label}`}</h2>
@@ -136,7 +136,7 @@ const CategoryBrowseView: React.FC<CategoryBrowseViewProps> = ({ type, only, onO
                 key={g.id}
                 data-focusable="true"
                 onClick={() => choose(g)}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left hover:bg-white/5 focus:bg-white/10 focus:outline-hidden [&.focused]:bg-white/10"
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left hover:bg-interaction focus:bg-interaction focus:outline-hidden [&.focused]:bg-interaction"
               >
                 <span className="min-w-0 flex-1 truncate text-base font-semibold text-fg">{g.title}</span>
                 <ChevronRight className="h-5 w-5 shrink-0 text-fg-subtle" />

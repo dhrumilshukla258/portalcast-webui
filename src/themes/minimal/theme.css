@@ -21,9 +21,16 @@
     --color-fg-subtle: #86868b;
     --color-accent: #f5f5f7;
     --color-on-accent: #000;
+    --color-action: var(--color-accent);
+    --color-action-hover: var(--color-fg-soft);
+    --color-on-action: var(--color-on-accent);
+    --color-interaction: rgb(255 255 255 / .1);
+    --color-divider: #48484a;
     --color-focus: #fff;
     --color-live: #ff453a;
 
+    /* Scale the tint on translucent surfaces together; content and blur keep their own values. */
+    --ui-glass-opacity-scale: 0.88;
     /* UI pieces (src/components/ui/ui.css). */
     --ui-control-h: 2.375rem;
     --ui-control-weight: 600;
@@ -39,18 +46,18 @@
     --ui-pick-on-bg: #f5f5f7;
     --ui-pick-on-fg: #000;
     /* The player: glass over the picture, white progress, no red or green. */
-    --ui-player-panel-bg: rgb(22 22 24 / 0.62);
+    --ui-player-panel-bg: rgb(22 22 24 / calc(0.62 * var(--ui-glass-opacity-scale)));
     --ui-player-panel-border: rgb(255 255 255 / 0.08);
     --ui-player-panel-blur: blur(30px) saturate(1.6);
-    --ui-player-now-bg: rgb(255 255 255 / 0.1);
+    --ui-player-now-bg: rgb(255 255 255 / calc(0.1 * var(--ui-glass-opacity-scale)));
     --ui-player-now-fg: #f5f5f7;
     --ui-player-track: rgb(255 255 255 / 0.2);
     --ui-player-progress: #f5f5f7;
-    --ui-player-button-bg: rgb(30 30 32 / 0.55);
-    --ui-player-button-hover-bg: rgb(60 60 64 / 0.7);
+    --ui-player-button-bg: rgb(30 30 32 / calc(0.55 * var(--ui-glass-opacity-scale)));
+    --ui-player-button-hover-bg: rgb(60 60 64 / calc(0.7 * var(--ui-glass-opacity-scale)));
     --ui-player-button-border: transparent;
     --ui-backdrop-parallax: 0.35;
-    --ui-tip-bg: rgb(30 30 32 / 0.8);
+    --ui-tip-bg: rgb(30 30 32 / calc(0.8 * var(--ui-glass-opacity-scale)));
     --ui-tip-fg: #f5f5f7;
     --ui-tip-blur: blur(20px) saturate(1.6);
     --ui-tip-radius: 0.5rem;
@@ -94,7 +101,7 @@
     --ui-scrollbar-thumb-hover: rgba(255, 255, 255, 0.5);
     /* Glass: Apple's dark material, toned down (user: "too glassy"): a moderate blur (cost grows with the radius), a little extra
        saturation, so colour behind it glows through, plus a hairline edge. */
-    --ui-glass-bg: rgb(6 6 8 / 0.86);
+    --ui-glass-bg: rgb(6 6 8 / calc(0.86 * var(--ui-glass-opacity-scale)));
     --ui-glass-blur: blur(24px) saturate(1.4);
     --ui-glass-edge: inset 0 0 0 1px rgb(255 255 255 / 0.07);
     /* Accent: Apple's white button with black text, no gradient. */
@@ -104,7 +111,7 @@
     --ui-brand-fg: #000;
     --ui-brand-text: linear-gradient(to right, #fff, #fff);
     /* Dialogs: the same glass as the bars, springing in. */
-    --ui-dialog-scrim: rgba(0, 0, 0, 0.55);
+    --ui-dialog-scrim: rgb(0 0 0 / calc(0.55 * var(--ui-glass-opacity-scale)));
     --ui-dialog-bg: var(--ui-glass-bg);
     --ui-dialog-border: rgba(255, 255, 255, 0.08);
     --ui-dialog-blur: var(--ui-glass-blur);
@@ -125,11 +132,11 @@
     --ui-toast-progress-display: none;
     --ui-toast-motion: slide;
     /* Side panels: the same glass, a little more opaque for reading, over a dimmed page. */
-    --ui-sheet-bg: rgb(28 28 30 / 0.78);
+    --ui-sheet-bg: rgb(28 28 30 / calc(0.78 * var(--ui-glass-opacity-scale)));
     --ui-sheet-shadow: inset 1px 0 0 rgb(255 255 255 / 0.07), -24px 0 48px rgb(0 0 0 / 0.5);
     --ui-sheet-blur: var(--ui-glass-blur);
     --ui-sheet-duration: 350ms;
-    --ui-scrim: linear-gradient(to right, rgb(0 0 0 / 0.2) 0%, rgb(0 0 0 / 0.45) 55%, rgb(0 0 0 / 0.6) 100%);
+    --ui-scrim: linear-gradient(to right, rgb(0 0 0 / calc(0.2 * var(--ui-glass-opacity-scale))) 0%, rgb(0 0 0 / calc(0.45 * var(--ui-glass-opacity-scale))) 55%, rgb(0 0 0 / calc(0.6 * var(--ui-glass-opacity-scale))) 100%);
 
     /* Type: SF Pro (the system font on Apple devices; the platform's own sans elsewhere,
        since SF Pro may not be served as a web font), Apple's text sizes, lighter bold. */
@@ -293,56 +300,39 @@ html[data-theme='minimal'] h2 {
   letter-spacing: -0.015em;
 }
 
-/* Glass needs something behind it. The header floats over the page (MinimalHeader is
-   absolute). Every page starts below it (main's padding), so nothing can hide under it; the
-   known page scroll boxes (#app-content-scroll, .tv-page) then reach back up under the glass
-   and start their content one header lower with a spacer that scrolls away. The bars stuck
-   under the header are glass too. On a phone the same at the bottom, for the tab bar. */
-html[data-theme='minimal'] {
-  --chrome-top: 3.5rem;
-  --chrome-bottom: calc(4rem + env(safe-area-inset-bottom));
-}
-@media (min-width: 640px) {
-  html[data-theme='minimal'] {
-    --chrome-top: 4rem;
-  }
-}
-/* The tab bar along the bottom shows below 880 px (MinimalHeader: seven sections need the room). */
-@media (min-width: 880px) {
-  html[data-theme='minimal'] {
-    --chrome-bottom: 0px;
-  }
-}
-html[data-theme='minimal'] div:has(> header.ui-glass) > main {
-  padding-top: var(--chrome-top);
-}
-html[data-theme='minimal'] :is(#app-content-scroll, .tv-page) {
-  margin-top: calc(-1 * var(--chrome-top));
-  height: calc(100% + var(--chrome-top));
-}
-html[data-theme='minimal'] :is(#app-content-scroll, .tv-page)::before {
-  content: '';
-  display: block;
-  height: var(--chrome-top);
-}
-html[data-theme='minimal'] :is(#app-content-scroll, .tv-page)::after {
-  content: '';
-  display: block;
-  height: var(--chrome-bottom);
-}
-html[data-theme='minimal'] div:has(> header.ui-glass) {
-  padding-bottom: 0;
-}
 html[data-theme='minimal'] :is(#app-content-scroll, .tv-page) > .sticky.top-0 {
-  top: var(--chrome-top);
   background-color: var(--ui-glass-bg);
   -webkit-backdrop-filter: var(--ui-glass-blur);
   backdrop-filter: var(--ui-glass-blur);
 }
 
 html[data-theme='minimal'] .glass-panel {
-  background: rgba(28, 28, 30, 0.72);
+  background: rgb(28 28 30 / calc(0.72 * var(--ui-glass-opacity-scale)));
   border-right-color: rgba(255, 255, 255, 0.06);
+}
+
+/* One material over the live picture. Stacking a tint on each column hid the broadcast. */
+html[data-theme='minimal'] [data-ui='channel-picker'] {
+  background: var(--ui-player-panel-bg);
+  -webkit-backdrop-filter: var(--ui-player-panel-blur);
+  backdrop-filter: var(--ui-player-panel-blur);
+  border-color: var(--ui-player-panel-border);
+  box-shadow: var(--ui-glass-edge), 12px 0 32px rgb(0 0 0 / 0.22);
+}
+html[data-theme='minimal'] [data-ui='channel-picker'] > :is([data-part='categories'], [data-part='divider'], [data-part='channels']) {
+  background: transparent;
+  box-shadow: none;
+}
+html[data-theme='minimal'] [data-ui='channel-picker'] [data-part='mobile-heading'] {
+  background: var(--ui-glass-bg);
+}
+@media (prefers-reduced-transparency: reduce) {
+  html[data-theme='minimal'] [data-ui='channel-picker'],
+  html[data-theme='minimal'] [data-ui='channel-picker'] [data-part='mobile-heading'] {
+    background: var(--color-panel);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 /* Apple-style continuous corners, as in ViddyScribe's app-frontend. corner-shape is not
@@ -376,13 +366,19 @@ html[data-theme='minimal'] .ui-field-input {
    marks in MediaInfoHeader, TitleExtras (My List), SeriesOverviewPage and EpisodeAccordionRow. */
 html[data-theme='minimal'] [data-ui='title-action'] {
   border-color: transparent;
-  background: rgb(255 255 255 / 0.12);
+  background: rgb(255 255 255 / calc(0.12 * var(--ui-glass-opacity-scale)));
   color: #f5f5f7;
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
 }
 html[data-theme='minimal'] [data-ui='title-action']:hover {
-  background: rgb(255 255 255 / 0.2);
+  background: rgb(255 255 255 / calc(0.2 * var(--ui-glass-opacity-scale)));
+}
+html[data-theme='minimal'] .minimal-glass-action {
+  background: rgb(255 255 255 / calc(var(--action-alpha, 0.15) * var(--ui-glass-opacity-scale)));
+}
+html[data-theme='minimal'] .minimal-glass-action:hover {
+  background: rgb(255 255 255 / calc(var(--action-hover-alpha, 0.25) * var(--ui-glass-opacity-scale)));
 }
 html[data-theme='minimal'] [data-ui='title-meta'] {
   border-color: transparent;
@@ -523,6 +519,32 @@ html[data-theme='minimal'] [data-ui='recent-search'] {
 
 /* The player, Apple TV style: a rounder glass panel, round icon buttons over the picture (their
    words are their tooltips), a glass pill for the quality and glass menus. */
+/* Row and transport arrows share the header material, only sampling the backdrop on interaction. */
+html[data-theme='minimal'] .row-step {
+  background-color: var(--color-panel);
+  box-shadow: var(--ui-glass-edge);
+}
+html[data-theme='minimal'] .step-control {
+  transition-property: background-color, scale;
+  transition-duration: var(--ui-duration);
+}
+html[data-theme='minimal'] .step-control:is(:focus-visible, .focused, :active, :hover),
+html[data-theme='minimal'] .seek-readout {
+  background-color: var(--ui-glass-bg);
+  box-shadow: var(--ui-glass-edge);
+  -webkit-backdrop-filter: var(--ui-glass-blur);
+  backdrop-filter: var(--ui-glass-blur);
+}
+html[data-theme='minimal'] .step-control:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme='minimal'] .step-control:active { scale: .95; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  html[data-theme='minimal'] :is(.step-control,.seek-readout) { --ui-glass-bg: var(--color-panel); --ui-glass-blur: none; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-theme='minimal'] :is(.step-control,.seek-readout) { --ui-glass-bg: var(--color-panel); }
+}
 html[data-theme='minimal'] .ui-player-panel {
   border-radius: 1.25rem;
 }

@@ -410,7 +410,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
         </div>
       )}
       {!loadingFiltered && filteredItems.length === 0 && (
-        <p className="mt-10 text-center text-gray-400">No titles match these filters.</p>
+        <p className="mt-10 text-center text-fg-muted">No titles match these filters.</p>
       )}
       {/* Loading indicator only for a "load more" fetch (items already on
           screen) — the next page loads automatically on scroll (see the
@@ -418,7 +418,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           grid, no manual "Load More" click needed. */}
       {loadingFiltered && filteredItems.length > 0 && (
         <div className="flex w-full justify-center py-8">
-          <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-t-2 border-blue-500"></div>
+          <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-t-2 border-accent"></div>
         </div>
       )}
     </>
@@ -502,7 +502,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           }}
           aria-label="Clear filters"
           title="Clear filters"
-          className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 text-sm font-semibold text-fg-soft transition-colors hover:bg-white/20 hover:text-fg"
+          className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 text-sm font-semibold text-fg-soft transition-colors hover:bg-interaction hover:text-fg"
         >
           <X className="h-4 w-4" />
           Clear

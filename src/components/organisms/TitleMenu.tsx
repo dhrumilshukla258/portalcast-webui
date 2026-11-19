@@ -53,7 +53,7 @@ const TitleMenu: React.FC<TitleMenuProps> = ({ item, extra, onClose, onChanged }
       data-focusable="true"
       disabled={busy}
       onClick={onClick}
-      className="flex w-full items-center gap-4 rounded-xl px-4 py-3.5 text-left hover:bg-white/5 focus:bg-white/10 focus:outline-hidden disabled:opacity-50 [&.focused]:bg-white/10"
+      className="flex w-full items-center gap-4 rounded-xl px-4 py-3.5 text-left hover:bg-interaction focus:bg-interaction focus:outline-hidden disabled:opacity-50 [&.focused]:bg-interaction"
     >
       <span className="text-fg-soft">{icon}</span>
       <span className="min-w-0 flex-1">
@@ -73,7 +73,7 @@ const TitleMenu: React.FC<TitleMenuProps> = ({ item, extra, onClose, onChanged }
     >
       <div className="flex items-center gap-2 px-3 py-2">
         <h3 id="title-menu-title" className="min-w-0 flex-1 truncate text-base font-bold text-fg">{title}</h3>
-        <button onClick={onClose} aria-label="Close" className="flex h-9 w-9 items-center justify-center rounded-full text-gray-300 hover:bg-white/10">
+        <button onClick={onClose} aria-label="Close" className="flex h-9 w-9 items-center justify-center rounded-full text-fg-soft hover:bg-interaction">
           <X className="h-5 w-5" />
         </button>
       </div>

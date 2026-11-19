@@ -18,6 +18,7 @@ import EpisodeOverlay, {
 import '@/components/organisms/video/VideoPlayerContent.css';
 
 import { BufferingOverlay } from '@/components/molecules/BufferingOverlay';
+import ActivityIndicator from '@/components/ui/ActivityIndicator';
 import { SeekOverlay } from '@/components/molecules/SeekOverlay';
 import { TopBar } from '@/components/organisms/layout/TopBar';
 import { TVControls } from '@/components/organisms/video/TVControls';
@@ -371,15 +372,10 @@ const VideoPlayerContent: React.FC = () => {
             )}
 
           {isRecovering && (
-            <div className="absolute z-50 flex h-full w-full flex-col items-center justify-center bg-gray-950/90 text-fg backdrop-blur-md">
-              <div className="relative mb-8 h-20 w-20">
-                <div className="absolute inset-0 animate-ping rounded-full bg-accent/20"></div>
-                <div className="absolute inset-2 animate-pulse rounded-full bg-accent/30 blur-md"></div>
-                <div className="absolute inset-0 animate-spin rounded-full border-4 border-white/5 border-r-accent border-t-accent"></div>
-                <div className="absolute inset-0 m-auto h-2 w-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>
-              </div>
+            <div className="absolute z-50 flex h-full w-full flex-col items-center justify-center bg-page/90 text-fg backdrop-blur-md">
+              <ActivityIndicator className="mb-6 text-4xl text-accent" />
               <div className="flex flex-col items-center space-y-2 text-center">
-                <div className="ui-accent bg-clip-text text-2xl font-bold tracking-wider text-transparent">
+                <div className="text-2xl font-bold tracking-wider text-accent">
                   Connecting...
                 </div>
                 <div className="text-sm font-medium tracking-wide transition-colors duration-300">
@@ -399,11 +395,11 @@ const VideoPlayerContent: React.FC = () => {
 
           {streamError && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-black pointer-events-none">
-              <div className="ui-player-float w-[90%] max-w-md p-6 rounded-xl border border-zinc-800 bg-zinc-900/95 text-center shadow-2xl shadow-black/80 space-y-3">
+              <div className="ui-player-float w-[90%] max-w-md p-6 rounded-xl border border-line bg-panel/95 text-center shadow-2xl shadow-black/80 space-y-3">
                 <h3 className="text-lg font-bold text-red-500 tracking-wide">
                   Error 404: Signal Not Found
                 </h3>
-                <p className="text-sm text-zinc-300 font-medium leading-relaxed px-2">
+                <p className="text-sm text-fg-soft font-medium leading-relaxed px-2">
                   We are currently unable to fetch the broadcast from the provider. Please try again later
                 </p>
               </div>
@@ -424,7 +420,7 @@ const VideoPlayerContent: React.FC = () => {
           )}
 
           {showExitToast && (
-            <div className="ui-player-float pointer-events-none absolute bottom-20 left-1/2 z-100 -translate-x-1/2 rounded-full border border-gray-700 bg-black/90 px-6 py-3 text-fg shadow-xl backdrop-blur-md transition-all duration-300">
+            <div className="ui-player-float pointer-events-none absolute bottom-20 left-1/2 z-100 -translate-x-1/2 rounded-full border border-line-strong bg-black/90 px-6 py-3 text-fg shadow-xl backdrop-blur-md transition-all duration-300">
               <span className="text-sm font-medium tracking-wide">
                 Press BACK again to exit
               </span>
@@ -440,7 +436,7 @@ const VideoPlayerContent: React.FC = () => {
                   setShowNextEpisodeButton(false);
                   playNextEpisode?.();
                 }}
-                className="ui-player-float flex items-center gap-2 px-5 py-3 rounded-lg border border-line bg-black/80 text-fg font-semibold shadow-lg backdrop-blur-md hover:bg-white/20 transition-all duration-200 outline-hidden focus:ring-2 focus:ring-focus focus:[background:var(--ui-selected-bg)] focus:border-focus"
+                className="ui-player-float flex items-center gap-2 px-5 py-3 rounded-lg border border-line bg-black/80 text-fg font-semibold shadow-lg backdrop-blur-md hover:bg-interaction transition-all duration-200 outline-hidden focus:ring-2 focus:ring-focus focus:[background:var(--ui-selected-bg)] focus:border-focus"
               >
                 <span>Next Episode</span>
                 <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">

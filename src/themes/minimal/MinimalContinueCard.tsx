@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
-import { Info, Play, X } from 'lucide-react';
+import { Info, X } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import PlaybackButton from '@/components/ui/PlaybackButton';
 import { useTitleMenu } from '@/context/TitleMenuContext';
 import { useLongPress } from '@/hooks/useLongPress';
 import { downsize, AMBIENT_BACKDROP } from '@/utils/imageSize';
@@ -13,25 +15,7 @@ import MinimalPoster, { PosterAction } from './MinimalPoster';
  * first, as Classic's does), and on hover Resume and Details over the art (on a phone: tap
  * resumes, hold for Details).
  */
-function RoundButton({ label, onClick, className, children }: { label: string; onClick: () => void; className: string; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      data-focusable="true"
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-      className={`flex h-10 w-10 items-center justify-center rounded-full shadow-lg shadow-black/40 transition-[background-color,transform] duration-200 hover:scale-105 active:scale-95 ${className}`}
-    >
-      {children}
-    </button>
-  );
-}
-
-const MinimalContinueCard = ({ item, onClick, onRemove, onRemoveNow, onDetails, opening }: ContinueCardProps) => {
+const MinimalContinueCard = ({ item, onClick, onRemove, onRemoveNow, onDetails, opening, staticFrame = false }: ContinueCardProps & { staticFrame?: boolean }) => {
   const anyItem = item as any;
   const openMenu = useTitleMenu();
   const hold = useLongPress(openMenu ? () => openMenu(item, { onRemoveFromContinue: onRemoveNow, onDetails: onDetails ?? undefined }) : undefined);
@@ -43,6 +27,7 @@ const MinimalContinueCard = ({ item, onClick, onRemove, onRemoveNow, onDetails, 
 
   return (
     <MinimalPoster
+      staticFrame={staticFrame}
       title={title}
       image={src ? { src } : null}
       onImageError={() => setFailed(true)}
@@ -57,14 +42,13 @@ const MinimalContinueCard = ({ item, onClick, onRemove, onRemoveNow, onDetails, 
           </PosterAction>
           {/* Two ways in, on hover: Resume plays on, Details opens the title's page. */}
           {!opening && (
-            <div className="absolute inset-x-0 bottom-0 z-10 hidden items-end justify-center gap-2.5 bg-linear-to-t from-black/80 via-black/30 to-transparent px-2 pt-14 pb-5 group-focus-within:flex sm:group-hover:flex">
-              <RoundButton label="Resume" onClick={() => onClick(item)} className="bg-white text-black hover:bg-white/90">
-                <Play size={16} className="ml-0.5 fill-current" />
-              </RoundButton>
+            <div className="poster-action-strip absolute inset-x-0 bottom-0 z-10 hidden items-end justify-center gap-2.5 bg-linear-to-t from-black/80 via-black/30 to-transparent px-2 pt-14 pb-5 group-focus-within:flex sm:group-hover:flex">
+              <PlaybackButton iconOnly title="Resume" onClick={(e) => { e.stopPropagation(); onClick(item); }}>Resume</PlaybackButton>
               {onDetails && (
-                <RoundButton label="Details" onClick={onDetails} className="bg-white/20 text-white backdrop-blur-md hover:bg-white/30">
-                  <Info size={18} />
-                </RoundButton>
+                <Button aria-label="Details" title="Details" onClick={(e) => { e.stopPropagation(); onDetails(); }}
+                  className="minimal-glass-action h-11 w-11 rounded-full p-0 [--action-alpha:0.2] [--action-hover-alpha:0.3] text-fg backdrop-blur-md">
+                  <Info size={18} aria-hidden="true" />
+                </Button>
               )}
             </div>
           )}
@@ -77,3 +61,4 @@ const MinimalContinueCard = ({ item, onClick, onRemove, onRemoveNow, onDetails, 
 };
 
 export default MinimalContinueCard;
+export const ConsoleContinueCard = (props: ContinueCardProps) => <MinimalContinueCard {...props} staticFrame />;

@@ -33,7 +33,7 @@ const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1.5 text-fg-muted hover:bg-white/10 hover:text-fg"
+            className="rounded-full p-1.5 text-fg-muted hover:bg-interaction hover:text-fg"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

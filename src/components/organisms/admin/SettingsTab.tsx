@@ -6,9 +6,9 @@ import type { ServerSetting, SettingsResponse, BackgroundJob } from '@/api/types
 import { formatAgo } from '@/hooks/useStreamFailures';
 
 const SOURCE_STYLE: Record<ServerSetting['source'], string> = {
-  admin: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+  admin: 'bg-accent/15 text-accent border-accent/30',
   environment: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
-  default: 'bg-gray-700/40 text-gray-400 border-gray-600/40',
+  default: 'bg-panel-hover/40 text-fg-muted border-divider/40',
 };
 const SOURCE_LABEL: Record<ServerSetting['source'], string> = {
   admin: 'Saved here',
@@ -61,7 +61,7 @@ const SettingRow: React.FC<{ s: ServerSetting; onSaved: (r: SettingsResponse) =>
 
   const input = (() => {
     const base =
-      'w-full rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-2 text-sm text-gray-100 outline-none focus:border-focus disabled:opacity-50';
+      'w-full rounded-lg border border-line-strong bg-page/60 px-3 py-2 text-sm text-fg outline-none focus:border-focus disabled:opacity-50';
     if (s.type === 'boolean') {
       const on = Boolean(s.value);
       return (
@@ -69,12 +69,12 @@ const SettingRow: React.FC<{ s: ServerSetting; onSaved: (r: SettingsResponse) =>
           type="button"
           disabled={busy || lockedByEnv}
           onClick={() => void save(!on)}
-          className={`relative h-6 w-11 rounded-full transition-colors ${on ? 'bg-blue-600' : 'bg-gray-700'} disabled:opacity-50`}
+          className={`relative h-6 w-11 rounded-full transition-colors ${on ? 'bg-action' : 'bg-panel-hover'} disabled:opacity-50`}
           aria-pressed={on}
           aria-label={s.label}
           data-focusable="true"
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full transition-all ${on ? 'left-[22px] bg-on-action' : 'left-0.5 bg-fg'}`} />
         </button>
       );
     }
@@ -106,19 +106,19 @@ const SettingRow: React.FC<{ s: ServerSetting; onSaved: (r: SettingsResponse) =>
   })();
 
   return (
-    <div className="grid gap-2 border-t border-gray-800/70 py-4 first:border-t-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-6">
+    <div className="grid gap-2 border-t border-divider/70 py-4 first:border-t-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-6">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold text-gray-100">{s.label}</span>
+          <span className="text-sm font-semibold text-fg">{s.label}</span>
           <span className={`rounded-full border px-2 py-0.5 text-2xs font-semibold ${SOURCE_STYLE[s.source]}`}>
             {SOURCE_LABEL[s.source]}
           </span>
           {s.apply === 'restart' && (
-            <span className="rounded-full border border-gray-600/50 px-2 py-0.5 text-2xs text-gray-400">After restart</span>
+            <span className="rounded-full border border-divider/50 px-2 py-0.5 text-2xs text-fg-muted">After restart</span>
           )}
         </div>
-        {s.help && <p className="mt-1 text-xs leading-relaxed text-gray-500">{s.help}</p>}
-        {s.env && <p className="mt-1 font-mono text-2xs text-gray-600">{s.env}</p>}
+        {s.help && <p className="mt-1 text-xs leading-relaxed text-fg-subtle">{s.help}</p>}
+        {s.env && <p className="mt-1 font-mono text-2xs text-fg-subtle">{s.env}</p>}
         {lockedByEnv && (
           <p className="mt-1 flex items-center gap-1 text-xs text-amber-400/80">
             <Lock size={12} /> Set in the environment, which always wins for this setting.
@@ -132,7 +132,7 @@ const SettingRow: React.FC<{ s: ServerSetting; onSaved: (r: SettingsResponse) =>
             type="button"
             onClick={() => void save(draft)}
             disabled={!dirty || busy || lockedByEnv}
-            className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-800 disabled:text-gray-500"
+            className="flex items-center gap-1 rounded-lg bg-action px-3 py-2 text-xs font-bold text-on-action transition-colors hover:bg-action-hover disabled:cursor-not-allowed disabled:bg-panel-raised disabled:text-fg-subtle"
             data-focusable="true"
           >
             <Save size={14} /> Save
@@ -144,7 +144,7 @@ const SettingRow: React.FC<{ s: ServerSetting; onSaved: (r: SettingsResponse) =>
             onClick={() => void reset()}
             disabled={busy}
             title="Forget the saved value; the environment or default applies again"
-            className="flex items-center gap-1 rounded-lg border border-gray-700 px-3 py-2 text-xs font-bold text-gray-300 hover:bg-gray-800 disabled:opacity-50"
+            className="flex items-center gap-1 rounded-lg border border-line-strong px-3 py-2 text-xs font-bold text-fg-soft hover:bg-panel-hover disabled:opacity-50"
             data-focusable="true"
           >
             <RotateCcw size={14} /> Reset
@@ -170,19 +170,19 @@ const TestEmail: React.FC = () => {
     }
   };
   return (
-    <div className="flex flex-col gap-2 border-t border-gray-800/70 pt-4 sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-2 border-t border-divider/70 pt-4 sm:flex-row sm:items-center">
       <input
         type="email"
         value={to}
         onChange={(e) => setTo(e.target.value)}
         placeholder="Send a test to (empty: the admin email)"
-        className="w-full rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-2 text-sm text-gray-100 outline-none focus:border-focus sm:max-w-sm"
+        className="w-full rounded-lg border border-line-strong bg-page/60 px-3 py-2 text-sm text-fg outline-none focus:border-focus sm:max-w-sm"
       />
       <button
         type="button"
         onClick={() => void send()}
         disabled={busy}
-        className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-700 px-3 py-2 text-xs font-bold text-gray-200 hover:bg-gray-800 disabled:opacity-50"
+        className="flex items-center justify-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-xs font-bold text-fg-soft hover:bg-panel-hover disabled:opacity-50"
         data-focusable="true"
       >
         <Send size={14} /> Send test email
@@ -213,12 +213,12 @@ const TestJellyfin: React.FC = () => {
     }
   };
   return (
-    <div className="flex flex-col gap-2 border-t border-gray-800/70 pt-4 sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-2 border-t border-divider/70 pt-4 sm:flex-row sm:items-center">
       <button
         type="button"
         onClick={() => void run()}
         disabled={busy}
-        className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-700 px-3 py-2 text-xs font-bold text-gray-200 hover:bg-gray-800 disabled:opacity-50"
+        className="flex items-center justify-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-xs font-bold text-fg-soft hover:bg-panel-hover disabled:opacity-50"
         data-focusable="true"
       >
         {busy ? 'Testing…' : 'Test connection'}
@@ -245,22 +245,22 @@ const Jobs: React.FC = () => {
   if (jobs.length === 0) return null;
   return (
     <section className="rounded-xl bg-white/[0.03] px-5 py-4">
-      <h2 className="mb-1 text-base font-black text-white">Background jobs</h2>
-      <p className="mb-2 text-xs text-gray-500">
+      <h2 className="mb-1 text-base font-black text-fg">Background jobs</h2>
+      <p className="mb-2 text-xs text-fg-subtle">
         One at a time. Jobs marked "waits for playback" hold off while someone is watching, for up to 2 hours.
       </p>
       {jobs.map((j) => (
-        <div key={j.name} className="flex flex-col gap-2 border-t border-gray-800/70 py-3 first:border-t-0 sm:flex-row sm:items-center sm:justify-between">
+        <div key={j.name} className="flex flex-col gap-2 border-t border-divider/70 py-3 first:border-t-0 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-gray-100">{j.label}</div>
-            <div className="text-xs text-gray-500">
+            <div className="text-sm font-semibold text-fg">{j.label}</div>
+            <div className="text-xs text-fg-subtle">
               {j.schedule}
               {j.lastEnd ? ` · last run ${formatAgo(j.lastEnd)}` : ' · not run yet'}
             </div>
             {j.lastError ? (
               <div className="mt-1 text-xs text-red-400">{j.lastError}</div>
             ) : j.lastResult ? (
-              <div className="mt-1 text-xs text-gray-400">{j.lastResult}</div>
+              <div className="mt-1 text-xs text-fg-muted">{j.lastResult}</div>
             ) : null}
           </div>
           <button
@@ -275,7 +275,7 @@ const Jobs: React.FC = () => {
                 toast.error(errorText(err, 'Could not start the job'));
               }
             }}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-700 px-3 py-2 text-xs font-bold text-gray-200 hover:bg-gray-800 disabled:opacity-50"
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-xs font-bold text-fg-soft hover:bg-panel-hover disabled:opacity-50"
             data-focusable="true"
           >
             <Play size={14} /> {j.running ? 'Running…' : j.queued ? 'Waiting…' : 'Run now'}
@@ -319,14 +319,14 @@ const SettingsTab: React.FC = () => {
   return (
     <div className="space-y-6 pb-16">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="max-w-2xl text-sm text-gray-400">
+        <p className="max-w-2xl text-sm text-fg-muted">
           A value saved here wins over the environment variable, which wins over the default. Most changes apply
           immediately; secrets are stored encrypted and never shown in full.
         </p>
         <button
           type="button"
           onClick={() => void load()}
-          className="flex items-center gap-1.5 rounded-lg border border-gray-700 px-3 py-2 text-xs font-bold text-gray-300 hover:bg-gray-800"
+          className="flex items-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-xs font-bold text-fg-soft hover:bg-panel-hover"
           data-focusable="true"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
@@ -335,7 +335,7 @@ const SettingsTab: React.FC = () => {
 
       {groups.map(([group, items]) => (
         <section key={group} className="rounded-xl bg-white/[0.03] px-5 py-4">
-          <h2 className="mb-1 text-base font-black text-white">{group}</h2>
+          <h2 className="mb-1 text-base font-black text-fg">{group}</h2>
           {items.map((s) => (
             <SettingRow key={s.key} s={s} onSaved={setData} />
           ))}
@@ -348,15 +348,15 @@ const SettingsTab: React.FC = () => {
 
       {data && (
         <section className="rounded-xl bg-white/[0.03] px-5 py-4">
-          <h2 className="mb-1 text-base font-black text-white">Set by Docker or the environment</h2>
-          <p className="mb-2 text-xs text-gray-500">Read-only here: these are needed before the server can start.</p>
+          <h2 className="mb-1 text-base font-black text-fg">Set by Docker or the environment</h2>
+          <p className="mb-2 text-xs text-fg-subtle">Read-only here: these are needed before the server can start.</p>
           {data.fixed.map((f) => (
-            <div key={f.key} className="grid gap-1 border-t border-gray-800/70 py-3 first:border-t-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-6">
+            <div key={f.key} className="grid gap-1 border-t border-divider/70 py-3 first:border-t-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-6">
               <div>
-                <span className="text-sm font-semibold text-gray-100">{f.label}</span>
-                <p className="mt-1 text-xs text-gray-500">{f.help}</p>
+                <span className="text-sm font-semibold text-fg">{f.label}</span>
+                <p className="mt-1 text-xs text-fg-subtle">{f.help}</p>
               </div>
-              <div className="self-center font-mono text-sm text-gray-300">{f.value}</div>
+              <div className="self-center font-mono text-sm text-fg-soft">{f.value}</div>
             </div>
           ))}
         </section>

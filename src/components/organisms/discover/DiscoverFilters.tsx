@@ -319,13 +319,13 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
           data-focusable="true"
           onClick={dim ? back : close}
           aria-label={dim ? 'Back' : 'Close'}
-          className="flex h-10 w-10 items-center justify-center rounded-full text-fg hover:bg-white/10"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-fg hover:bg-interaction"
         >
           {dim ? <ChevronLeft className="h-6 w-6" /> : <X className="h-6 w-6" />}
         </button>
         <h2 className="flex-1 truncate text-xl font-semibold text-fg">{dim ? DIMENSION_LABELS[dim] : 'Filters'}</h2>
         {count > 0 && !dim && (
-          <button data-focusable="true" onClick={clearAll} className="rounded-full px-3 py-2 text-sm font-bold text-gray-300 hover:bg-white/10">
+          <button data-focusable="true" onClick={clearAll} className="rounded-full px-3 py-2 text-sm font-bold text-fg-soft hover:bg-interaction">
             Clear all
           </button>
         )}
@@ -408,7 +408,7 @@ const PhoneFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, o
           <SlidersHorizontal className="h-4 w-4" />
           <span className="hidden sm:inline">Filters</span>
           {count > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-3xs font-bold text-page">{count}</span>
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-action px-1 text-3xs font-bold text-on-action">{count}</span>
           )}
         </button>
       ) : (
@@ -477,7 +477,7 @@ const RowFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onF
             className={`flex h-9 max-w-56 items-center gap-1.5 rounded-full border px-4 text-sm font-bold transition-all focus:outline-hidden focus:ring-1 focus:ring-focus [&.focused]:ring-1 [&.focused]:ring-focus ${
               isSet(dim)
                 ? 'ui-accent border-transparent'
-                : 'border-line bg-panel/85 text-gray-300 hover:border-white/20 hover:text-fg'
+                : 'border-line bg-panel/85 text-fg-soft hover:border-white/20 hover:text-fg'
             }`}
           >
             <span className="truncate">{summaryFor(dim, activeFilters)}</span>
@@ -512,7 +512,7 @@ const RowFilters: React.FC<DiscoverFiltersProps> = ({ facets, activeFilters, onF
         <button
           data-focusable="true"
           onClick={clearAll}
-          className="flex h-9 items-center gap-1 rounded-full px-3 text-sm font-bold text-fg-muted transition-colors hover:bg-white/5 hover:text-fg focus:outline-hidden [&.focused]:text-fg"
+          className="flex h-9 items-center gap-1 rounded-full px-3 text-sm font-bold text-fg-muted transition-colors hover:bg-interaction hover:text-fg focus:outline-hidden [&.focused]:text-fg"
         >
           <X className="h-4 w-4" /> Clear
         </button>

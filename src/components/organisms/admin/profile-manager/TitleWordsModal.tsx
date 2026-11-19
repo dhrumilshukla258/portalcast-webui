@@ -31,10 +31,10 @@ const Chip: React.FC<{ label: string; off?: boolean; mine?: boolean; title?: str
     data-focusable="true"
     className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors ${
       off
-        ? 'border-gray-700 bg-gray-900/40 text-gray-500 line-through'
+        ? 'border-line-strong bg-panel/40 text-fg-subtle line-through'
         : mine
-          ? 'border-blue-500/40 bg-blue-500/15 text-blue-200 hover:bg-blue-500/25'
-          : 'border-gray-600/60 bg-gray-800/60 text-gray-200 hover:bg-gray-700/70'
+          ? 'border-accent/40 bg-accent/15 text-accent hover:bg-accent/25'
+          : 'border-divider/60 bg-panel-raised/60 text-fg-soft hover:bg-panel-hover/70'
     }`}
   >
     {label}
@@ -108,30 +108,30 @@ const TitleWordsModal: React.FC<{ profileId: number; profileName: string; onClos
 
   return (
     <Dialog open onClose={onClose} labelledBy="title-words-title" className="flex max-h-[90vh] max-w-3xl flex-col overflow-hidden p-0 text-left" dismissOnBackdrop={false}>
-      <div className="flex items-start justify-between gap-4 border-b border-gray-700/50 p-5">
+      <div className="flex items-start justify-between gap-4 border-b border-divider/50 p-5">
         <div className="min-w-0">
-          <h2 id="title-words-title" className="text-lg font-bold text-white">Title words</h2>
-          <p className="truncate text-sm text-gray-400">
+          <h2 id="title-words-title" className="text-lg font-bold text-fg">Title words</h2>
+          <p className="truncate text-sm text-fg-muted">
             {profileName} · {changes ? `${changes} change${changes === 1 ? '' : 's'} from the defaults` : 'the defaults'}
           </p>
         </div>
-        <button type="button" onClick={onClose} data-focusable="true" aria-label="Close" className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-800 hover:text-white">
+        <button type="button" onClick={onClose} data-focusable="true" aria-label="Close" className="rounded-lg p-1.5 text-fg-muted hover:bg-panel-hover hover:text-fg">
           <X className="h-5 w-5" />
         </button>
       </div>
 
       {!data ? (
-        <div className="p-8 text-center text-gray-400">Loading…</div>
+        <div className="p-8 text-center text-fg-muted">Loading…</div>
       ) : (
         <>
-          <div className="flex gap-1 border-b border-gray-700/50 px-5 pt-3">
+          <div className="flex gap-1 border-b border-divider/50 px-5 pt-3">
             {tabs.map((t) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => { setSection(t.id); setWord(''); setFilter(''); }}
                 data-focusable="true"
-                className={`rounded-t-lg px-3 py-2 text-sm font-semibold ${section === t.id ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+                className={`rounded-t-lg px-3 py-2 text-sm font-semibold ${section === t.id ? 'bg-panel-raised text-fg' : 'text-fg-muted hover:text-fg-soft'}`}
               >
                 {t.label}
               </button>
@@ -139,7 +139,7 @@ const TitleWordsModal: React.FC<{ profileId: number; profileName: string; onClos
           </div>
 
           <div className="flex-1 space-y-4 overflow-y-auto p-5">
-            <p className="text-sm text-gray-400">{tabs.find((t) => t.id === section)!.hint} Click a word to turn it off for this portal.</p>
+            <p className="text-sm text-fg-muted">{tabs.find((t) => t.id === section)!.hint} Click a word to turn it off for this portal.</p>
 
             <div className="flex flex-col gap-2 sm:flex-row">
               <input
@@ -148,7 +148,7 @@ const TitleWordsModal: React.FC<{ profileId: number; profileName: string; onClos
                 onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
                 placeholder={section === 'languages' ? 'Spelling, e.g. hin dub' : section === 'tags' ? 'Tag, e.g. HEVC' : 'Channel name, e.g. Geo Kahani'}
                 data-focusable="true"
-                className="min-w-0 flex-1 rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-sm text-white placeholder-gray-500 focus:border-focus focus:outline-hidden focus:ring-1 focus:ring-focus"
+                className="min-w-0 flex-1 rounded-lg border border-divider/50 bg-panel-raised/50 p-2 text-sm text-fg placeholder-fg-subtle focus:border-focus focus:outline-hidden focus:ring-1 focus:ring-focus"
               />
               {section === 'languages' && (
                 <>
@@ -158,14 +158,14 @@ const TitleWordsModal: React.FC<{ profileId: number; profileName: string; onClos
                     list="title-words-languages"
                     placeholder="Language"
                     data-focusable="true"
-                    className="rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-sm text-white placeholder-gray-500 focus:border-focus focus:outline-hidden focus:ring-1 focus:ring-focus sm:w-40"
+                    className="rounded-lg border border-divider/50 bg-panel-raised/50 p-2 text-sm text-fg placeholder-fg-subtle focus:border-focus focus:outline-hidden focus:ring-1 focus:ring-focus sm:w-40"
                   />
                   <datalist id="title-words-languages">
                     {data.defaults.languages.map((l) => <option key={l.language} value={l.language} />)}
                   </datalist>
                 </>
               )}
-              <button type="button" onClick={add} data-focusable="true" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-500 active:scale-95">
+              <button type="button" onClick={add} data-focusable="true" className="rounded-lg bg-action px-4 py-2 text-sm font-bold text-on-action hover:bg-action-hover active:scale-95">
                 Add
               </button>
             </div>
@@ -177,7 +177,7 @@ const TitleWordsModal: React.FC<{ profileId: number; profileName: string; onClos
                   const mine = edits.languages.add.filter((a) => a.language === lang);
                   return (
                     <div key={lang} className="flex flex-wrap items-center gap-1.5">
-                      <span className="w-24 shrink-0 text-xs font-semibold text-gray-300">{lang}</span>
+                      <span className="w-24 shrink-0 text-xs font-semibold text-fg-soft">{lang}</span>
                       {defaults.filter((s) => !mine.some((m) => m.spelling === s)).map((s) => (
                         <Chip key={s} label={s} off={edits.languages.remove.includes(s) || edits.languages.add.some((a) => a.spelling === s)}
                           title={edits.languages.add.some((a) => a.spelling === s) ? 'Given another language below' : undefined}
@@ -200,7 +200,7 @@ const TitleWordsModal: React.FC<{ profileId: number; profileName: string; onClos
                     onChange={(e) => setFilter(e.target.value)}
                     placeholder={`Search ${data.defaults.channels.length} channel names`}
                     data-focusable="true"
-                    className="w-full rounded-lg border border-gray-700/50 bg-gray-900/50 p-2 text-sm text-white placeholder-gray-500 focus:border-focus focus:outline-hidden"
+                    className="w-full rounded-lg border border-divider/50 bg-panel/50 p-2 text-sm text-fg placeholder-fg-subtle focus:border-focus focus:outline-hidden"
                   />
                 )}
                 <div className="flex flex-wrap gap-1.5">
@@ -215,7 +215,7 @@ const TitleWordsModal: React.FC<{ profileId: number; profileName: string; onClos
             )}
           </div>
 
-          <div className="flex flex-col-reverse gap-2 border-t border-gray-700/50 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col-reverse gap-2 border-t border-divider/50 p-4 sm:flex-row sm:items-center sm:justify-between">
             <Button variant="secondary" onClick={() => setEdits(EMPTY)} disabled={!changes}>
               <RotateCcw className="h-4 w-4" /> Reset to defaults
             </Button>

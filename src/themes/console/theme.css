@@ -1,0 +1,265 @@
+/* Console · white for the current choice, ice for focus, cobalt for reflected light. */
+@layer theme {
+  html[data-theme='console'] {
+    color-scheme: dark;
+    --color-page: #071121;
+    --color-panel: #101c30;
+    --color-panel-raised: #14243c;
+    --color-panel-hover: #203452;
+    --color-fg: #f4f7ff;
+    --color-fg-soft: #dce6f6;
+    --color-fg-muted: #afbed4;
+    --color-fg-subtle: #96a8c2;
+    --color-line: rgb(177 207 250 / .16);
+    --color-line-strong: rgb(192 219 255 / .45);
+    --color-accent: #90caff;
+    --color-focus: #b4ddff;
+    --color-on-accent: #08172b;
+    --color-action: var(--color-accent);
+    --color-action-hover: var(--color-focus);
+    --color-on-action: var(--color-on-accent);
+    --color-interaction: rgb(144 202 255 / .13);
+    --color-divider: #465d7a;
+    --console-wave: #397cff;
+    --console-track: #40516a;
+    --console-overlay: rgb(9 20 37 / .91);
+    --console-edge: linear-gradient(90deg, transparent, var(--console-wave) 34%, var(--color-focus) 55%, transparent);
+    --console-film-shade: linear-gradient(to top, var(--color-page), rgb(5 13 27 / .28) 58%, transparent),
+      linear-gradient(90deg, rgb(4 10 19 / .91), rgb(4 10 19 / .68) 30%, transparent 73%);
+    --console-film-fallback: radial-gradient(ellipse at 82% 12%, #24466e, var(--color-page) 77%);
+    --console-light-button: linear-gradient(165deg, #fff, #e1eafa);
+    --console-rail: #648fbc;
+    --console-rim: rgb(180 221 255 / .55);
+    --console-bloom: rgb(71 147 255 / .24);
+    --console-hover-light: inset 0 0 0 1px var(--console-rim), 0 3px 14px -4px var(--console-bloom);
+    --console-press-light: inset 0 0 0 1px var(--color-focus), inset 0 1px 5px rgb(8 25 52 / .24);
+    --console-settle: 160ms cubic-bezier(.2,.75,.25,1);
+    --console-poster-fade: 230ms cubic-bezier(.25,.46,.45,.94);
+    --console-press-scale: .97;
+    --console-pad: clamp(1rem, 3.8vw, 4.25rem);
+    --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --color-surface-0: #050c18;
+    --color-surface-1: var(--color-page);
+    --color-surface-2: var(--color-page);
+    --color-surface-3: #0b1729;
+    --color-surface-4: #0e1b2e;
+    --color-surface-5: var(--color-panel);
+    --color-surface-6: #13223a;
+    --color-surface-7: var(--color-panel-raised);
+    --color-surface-8: #192b45;
+    --color-surface-9: var(--color-panel-hover);
+    --color-portalcast-light: var(--color-accent);
+    --color-portalcast-dark: var(--console-wave);
+    --color-gray-950: var(--color-surface-0);
+    --color-gray-900: var(--color-panel);
+    --color-gray-850: var(--color-panel-raised);
+    --color-gray-800: var(--color-panel-hover);
+    --color-gray-400: var(--color-fg-muted);
+    --ui-chip-on-bg: var(--color-fg);
+    --ui-chip-on-fg: var(--color-page);
+    --ui-chip-border: transparent;
+    --ui-chip-hover-bg: var(--color-panel-hover);
+    --ui-accent-bg: var(--console-light-button);
+    --ui-accent-fg: var(--color-on-accent);
+    --ui-brand-bg: var(--console-light-button);
+    --ui-brand-fg: var(--color-on-accent);
+    --ui-brand-text: linear-gradient(95deg, var(--color-fg), var(--color-accent));
+    --ui-control-h: 2.75rem;
+    --ui-control-weight: 600;
+    --ui-play-height: var(--ui-control-h);
+    --ui-play-radius: var(--ui-control-radius);
+    --ui-play-fill: var(--console-light-button);
+    --ui-play-ink: var(--color-on-accent);
+    --ui-play-hover-scale: 1;
+    --ui-label-case: none;
+    --ui-label-tracking: -.015em;
+    --ui-label-weight: 550;
+    --ui-label-size: var(--text-lg);
+    --ui-label-color: var(--color-fg);
+    --ui-selected-bg: var(--color-panel-hover);
+    --ui-selected-fg: var(--color-fg);
+    --ui-selected-shadow: inset 3px 0 var(--color-accent);
+    --ui-focus-ring: var(--color-focus);
+    --ui-focus-scale: 1;
+    --ui-focus-border: var(--color-focus);
+    --ui-focus-glow: 0 0 0 2px var(--color-page), 0 3px 14px var(--console-bloom);
+    --ui-focus-offset: 2px;
+    --ui-focus-duration: .15s;
+    --ui-border-default: var(--color-line);
+    --ui-glass-bg: var(--console-overlay);
+    --ui-glass-blur: none;
+    --ui-sheet-bg: var(--console-overlay);
+    --ui-sheet-blur: none;
+    --ui-dialog-bg: var(--color-panel);
+    --ui-dialog-border: var(--color-line-strong);
+    --ui-dialog-blur: none;
+    --ui-toast-bg: var(--color-panel-raised);
+    --ui-toast-fg: var(--color-fg);
+    --ui-toast-border: var(--color-line);
+    --ui-toast-blur: none;
+    --ui-toast-motion: slide;
+    --ui-player-panel-bg: var(--console-overlay);
+    --ui-player-panel-border: var(--color-line);
+    --ui-player-panel-blur: none;
+    --ui-player-now-bg: var(--color-panel-hover);
+    --ui-player-track: var(--console-track);
+    --ui-player-progress: var(--color-accent);
+    --ui-player-button-bg: var(--console-overlay);
+    --ui-player-button-hover-bg: var(--color-panel-hover);
+    --ui-player-button-border: var(--color-line);
+    --ui-tip-bg: var(--color-panel-raised);
+    --ui-scrollbar-thumb: var(--console-track);
+    --ui-scrollbar-thumb-hover: var(--console-rail);
+  }
+}
+
+html[data-theme='console'], html[data-theme='console'] body { overflow-x: clip; }
+html[data-theme='console'] body, html[data-theme='console'] .app-bg { background: var(--color-page); }
+html[data-theme='console'] .app-bg::before { content: none; }
+html[data-theme='console'] header.ui-glass { background: var(--console-overlay); box-shadow: none; }
+html[data-theme='console'] header.ui-glass::before {
+  content: ''; position: absolute; inset: 0 5% auto; height: 1px; background: var(--console-edge); pointer-events: none;
+}
+html[data-theme='console'] header nav { background: transparent; }
+html[data-theme='console'] header.ui-glass button { min-height: 2.75rem; min-width: 2.75rem; }
+html[data-theme='console'] header nav button { min-height: 2.75rem; color: var(--color-fg-muted); font-weight: 500; }
+html[data-theme='console'] header nav button[aria-current='page'] { color: var(--color-on-accent); background: var(--console-light-button); }
+html[data-theme='console'] header nav button[aria-current='page']::after {
+  content: ''; position: absolute; inset: auto 21% -3px; height: 2px; background: var(--console-edge); border-radius: 100%;
+  box-shadow: 0 2px 8px var(--console-bloom); pointer-events: none;
+}
+html[data-theme='console'] nav.ui-glass { background: var(--color-panel); }
+html[data-theme='console'] nav.ui-glass button { min-height: 3.5rem; white-space: nowrap; color: var(--color-fg-muted); }
+html[data-theme='console'] nav.ui-glass button[aria-current='page'] {
+  color: var(--color-focus);
+  background: radial-gradient(ellipse at 50% 0, rgb(84 154 255 / .16), transparent 70%);
+}
+html[data-theme='console'] #app-content-scroll { padding-inline: var(--console-pad); }
+html[data-theme='console'] .content-transition, html[data-theme='console'] .row-content-fade-in { animation: none; }
+html[data-theme='console'] [data-tv-section] > h2 { font-weight: 550; letter-spacing: -.025em; color: var(--color-fg); }
+
+.console-hero {
+  position: relative; isolation: isolate; overflow: hidden; display: grid; align-items: end;
+  min-height: clamp(21rem, 39vw, 39rem); margin: 0 calc(-1 * var(--console-pad)) clamp(1.35rem, 2vw, 2.5rem);
+  padding: clamp(3rem, 5vw, 6rem) var(--console-pad); background: var(--console-film-fallback);
+}
+.console-art, .console-hero::before { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.console-art { z-index: -2; object-fit: cover; object-position: center 38%; }
+.console-hero::before { content: ''; z-index: -1; background: var(--console-film-shade); }
+.console-story { min-width: 0; max-width: 38rem; text-align: left; color: var(--color-fg); }
+.console-kicker { font-size: .875rem; font-weight: 500; color: var(--color-fg-soft); }
+.console-story h2 {
+  font-size: clamp(1.9rem, 4.4vw, 4.1rem); line-height: 1.06; letter-spacing: -.045em; font-weight: 550;
+  overflow-wrap: anywhere; margin-block: .4rem;
+}
+.console-story h2 img { width: auto; max-width: min(100%, 26rem); max-height: clamp(3.5rem, 7vw, 6rem); object-fit: contain; }
+.console-tagline { color: var(--color-fg-soft); line-height: 1.45; }
+.console-meta, .console-actions { display: flex; align-items: center; gap: .875rem; margin-top: 1rem; }
+.console-meta { color: var(--color-fg-soft); font-size: .875rem; font-variant-numeric: tabular-nums; }
+.console-meta progress {
+  appearance: none; border: 0; width: clamp(5.5rem, 16vw, 12rem); height: .25rem;
+  border-radius: 1rem; overflow: hidden; background: var(--console-track); color: var(--color-focus);
+}
+.console-meta progress::-webkit-progress-bar { background: var(--console-track); }
+.console-meta progress::-webkit-progress-value { background: var(--color-focus); }
+.console-meta progress::-moz-progress-bar { background: var(--color-focus); }
+.console-actions { flex-wrap: wrap; gap: .625rem; }
+.console-actions [data-variant='secondary'] {
+  padding-inline: 1.4rem; font-size: var(--text-base);
+  color: var(--color-fg); background: var(--console-overlay); border-color: var(--console-rail);
+}
+.console-actions button:disabled { opacity: .65; cursor: progress; }
+.console-horizon { position: absolute; inset: auto 0 0; width: 100%; height: clamp(1.4rem, 4.2vw, 4rem); pointer-events: none; }
+
+/* The light is inside the frame: even the first and last posters in a clipped row keep the rim.
+   Only its opacity changes on hover. The art, progress bar and nested actions stay legible. */
+[data-ui='console-card'] > [data-focusable] {
+  border-radius: .55rem; background: var(--color-panel); box-shadow: none;
+  user-select: none; transition: scale var(--console-settle);
+}
+[data-ui='console-card'] > [data-focusable]::before {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(ellipse 70% 15% at 50% 100%, rgb(85 161 255 / .35), transparent),
+              linear-gradient(155deg, rgb(210 234 255 / .13), transparent 24%);
+  box-shadow: inset 0 0 0 1.5px var(--color-accent);
+  opacity: 0; transition: opacity var(--console-poster-fade);
+}
+[data-ui='console-card'] > [data-focusable]::after {
+  content: ''; position: absolute; inset: 0; z-index: 12; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 1px var(--color-line);
+}
+[data-ui='console-card'] > [data-focusable]:is(:focus-visible,.focused)::after {
+  box-shadow: inset 0 0 0 2px var(--color-focus), inset 0 0 0 3px var(--color-on-accent), inset 0 0 14px var(--console-bloom);
+}
+[data-ui='console-card'] > [data-focusable]:is(:focus-visible,.focused,:active)::before { opacity: 1; }
+[data-ui='console-card'] > [data-focusable]:active:not([aria-busy='true']) {
+  scale: var(--console-press-scale);
+  transition-duration: 65ms;
+}
+[data-ui='console-card'] > [data-focusable]:active::after { box-shadow: var(--console-press-light); }
+/* The shared remote ring is outside the element. On posters the inset rim above replaces it. */
+html[data-theme='console'] [data-ui='console-card'] > [data-focusable].focused {
+  outline-offset: -2px; box-shadow: none !important;
+}
+[data-ui='console-card'] [data-part='progress'] { background: var(--color-focus); }
+[data-ui='console-card'] .poster-corner-action::before { content: ''; position: absolute; inset: -.5rem; border-radius: inherit; }
+[data-ui='console-card'] button:not(.poster-corner-action) { width: 2.75rem; height: 2.75rem; }
+[data-ui='console-card'] .minimal-glass-action { background: var(--console-overlay); backdrop-filter: none; }
+html[data-theme='console'] .ui-player-button { border-radius: 999px; backdrop-filter: none; }
+html[data-theme='console'] :is(.ui-player-badge,.ui-player-float,.more-options-menu) { background: var(--console-overlay); border-color: var(--color-line); }
+html[data-theme='console'] [data-ui='channel-picker'] { background: var(--ui-sheet-bg); backdrop-filter: none; }
+html[data-theme='console'] [data-ui='channel-picker'] > [data-part] { background: transparent; }
+html[data-theme='console'] .ui-player-panel { border-radius: 1rem; }
+html[data-theme='console'] .seek-readout {
+  background: var(--console-overlay); box-shadow: var(--console-hover-light); backdrop-filter: none;
+  font-variant-numeric: tabular-nums;
+}
+html[data-theme='console'] [data-ui='title-action'] { border-radius: 999px; }
+
+/* Use the same feedback on the surfaces people move between. No tracking, pulsing, or
+   always-on blur. A focused control has an outline even if the artwork behind it is bright. */
+html[data-theme='console'] .row-step { color: var(--color-fg); background-color: var(--console-overlay); box-shadow: inset 0 0 0 1px var(--color-line-strong); }
+html[data-theme='console'] :is(.ui-glass button, .ui-button, .ui-chip, .row-step,
+  [data-ui='console-card'] button, [data-ui='title-action'], .vod-controls-buttons-row button, .ui-player-button):not(:disabled) {
+  transition: scale var(--console-settle), background-color var(--console-settle), color var(--console-settle), box-shadow var(--console-settle);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:where(:not(:active,:focus-visible,.focused)) { box-shadow: var(--console-hover-light); }
+  }
+  &:is(:focus-visible, .focused) { outline: 2px solid var(--color-focus); outline-offset: 2px; box-shadow: var(--ui-focus-glow); }
+  &:active { scale: var(--console-press-scale); box-shadow: var(--console-press-light); transition-duration: 65ms; }
+}
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme='console'] header nav button:not([aria-current]):hover {
+    color: var(--color-fg); background-color: var(--color-panel-raised);
+  }
+  [data-ui='console-card']:hover > [data-focusable]::before { opacity: 1; }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  [data-ui='console-card'] > [data-focusable] > img { transition: transform 300ms cubic-bezier(.2,.65,.3,1); }
+  [data-ui='console-card']:hover > [data-focusable] > img { transform: scale(1.025); }
+}
+/* Fade the controls and their scrim as one surface. Hidden actions neither intercept
+   poster clicks nor take Tab focus. Touch retains the existing tap/hold controls. */
+@media (min-width: 640px) and (hover: hover) and (pointer: fine) {
+  html[data-theme='console'] [data-ui='console-card'] :is(.poster-action-strip, button.poster-corner-action) {
+    display: flex; visibility: hidden; pointer-events: none; opacity: 0;
+    transition: opacity var(--console-poster-fade), visibility var(--console-poster-fade),
+                scale var(--console-settle), box-shadow var(--console-settle);
+  }
+  html[data-theme='console'] [data-ui='console-card']:is(:hover,:focus-within) :is(.poster-action-strip, button.poster-corner-action) {
+    visibility: visible; pointer-events: auto; opacity: 1;
+  }
+}
+@media (max-width: 639px) {
+  .console-hero { min-height: 20rem; padding-bottom: 2.1rem; }
+  .console-art { object-position: 62% center; }
+  .console-actions button { padding-inline: 1.1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme='console'] { --console-press-scale: 1; --ui-focus-duration: 0s; --ui-title-open-ms: 0; --ui-title-close-ms: 0; }
+  html[data-theme='console'] *, html[data-theme='console'] *::before, html[data-theme='console'] *::after { scroll-behavior: auto; transition-duration: 0s !important; }
+  [data-ui='console-card'] button { scale: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  html[data-theme='console'] { --console-overlay: var(--color-panel); }
+}

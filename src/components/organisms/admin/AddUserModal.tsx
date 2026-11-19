@@ -33,50 +33,50 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
 }) => {
   return (
     <Dialog open onClose={onCancel} labelledBy="add-user-title" className="max-w-md space-y-6" dismissOnBackdrop={false}>
-      <h4 id="add-user-title" className="text-lg font-bold text-white text-left">Add Authorized User</h4>
+      <h4 id="add-user-title" className="text-lg font-bold text-fg text-left">Add Authorized User</h4>
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-1 text-left">
-          <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Email Address</label>
+          <label className="text-xs text-fg-subtle font-bold uppercase tracking-wider">Email Address</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="user@example.com"
-            className="w-full bg-gray-950 border border-gray-800 hover:border-gray-700 focus:border-focus rounded-xl px-4 py-3 text-sm text-white focus:outline-hidden focus:ring-1 focus:ring-focus"
+            className="w-full bg-page border border-line hover:border-line-strong focus:border-focus rounded-xl px-4 py-3 text-sm text-fg focus:outline-hidden focus:ring-1 focus:ring-focus"
             required
           />
         </div>
 
         <div className="space-y-1 text-left">
-          <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Full Name</label>
+          <label className="text-xs text-fg-subtle font-bold uppercase tracking-wider">Full Name</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="John Doe"
-            className="w-full bg-gray-950 border border-gray-800 hover:border-gray-700 focus:border-focus rounded-xl px-4 py-3 text-sm text-white focus:outline-hidden focus:ring-1 focus:ring-focus"
+            className="w-full bg-page border border-line hover:border-line-strong focus:border-focus rounded-xl px-4 py-3 text-sm text-fg focus:outline-hidden focus:ring-1 focus:ring-focus"
             required
           />
         </div>
 
         <div className="space-y-1 text-left">
-          <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Password (Optional)</label>
+          <label className="text-xs text-fg-subtle font-bold uppercase tracking-wider">Password (Optional)</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="At least 6 characters"
-            className="w-full bg-gray-950 border border-gray-800 hover:border-gray-700 focus:border-focus rounded-xl px-4 py-3 text-sm text-white focus:outline-hidden focus:ring-1 focus:ring-focus"
+            className="w-full bg-page border border-line hover:border-line-strong focus:border-focus rounded-xl px-4 py-3 text-sm text-fg focus:outline-hidden focus:ring-1 focus:ring-focus"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1 text-left">
-            <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Access Role</label>
+            <label className="text-xs text-fg-subtle font-bold uppercase tracking-wider">Access Role</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as 'admin' | 'user')}
-              className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-hidden focus:border-focus"
+              className="w-full bg-page border border-line rounded-xl px-3 py-3 text-sm text-fg focus:outline-hidden focus:border-focus"
             >
               <option value="user">User</option>
               <option value="admin">Admin</option>
@@ -84,11 +84,11 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
           </div>
 
           <div className="space-y-1 text-left">
-            <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Account State</label>
+            <label className="text-xs text-fg-subtle font-bold uppercase tracking-wider">Account State</label>
             <select
               value={isActive ? 'true' : 'false'}
               onChange={(e) => setIsActive(e.target.value === 'true')}
-              className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-hidden focus:border-focus"
+              className="w-full bg-page border border-line rounded-xl px-3 py-3 text-sm text-fg focus:outline-hidden focus:border-focus"
             >
               <option value="true">Active</option>
               <option value="false">Disabled</option>

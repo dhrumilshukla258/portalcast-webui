@@ -99,11 +99,11 @@ const ClassicContinueCard: React.FC<ContinueCardProps> = React.memo(({ item, onC
           </button>
         )}
         <div className="absolute bottom-0 left-0 h-1 w-full bg-white/20">
-          <div className="h-full bg-sky-400" style={{ width: `${pct}%` }} />
+          <div className="h-full bg-accent" style={{ width: `${pct}%` }} />
         </div>
       </div>
       <h3 className="mt-2 hidden truncate text-sm font-semibold text-white group-hover:text-portalcast-light sm:block md:text-base">{title}</h3>
-      {anyItem.cw_detail && <p className="mt-1 truncate text-xs text-gray-400 sm:mt-0 md:text-sm">{anyItem.cw_detail}</p>}
+      {anyItem.cw_detail && <p className="mt-1 truncate text-xs text-fg-muted sm:mt-0 md:text-sm">{anyItem.cw_detail}</p>}
     </div>
   );
 });

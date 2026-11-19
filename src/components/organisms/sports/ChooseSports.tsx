@@ -81,7 +81,7 @@ const ChooseSports: React.FC<{ onClose: (saved: boolean) => void }> = ({ onClose
   return createPortal(
     <div className="fixed inset-0 z-[100] flex flex-col bg-page" role="dialog" aria-modal="true" data-focus-group="choose-sports">
       <div className="ui-glass flex h-14 shrink-0 items-center gap-2 border-b border-line px-2 pt-[env(safe-area-inset-top)] sm:h-16 sm:px-6">
-        <button data-focusable="true" onClick={() => window.history.back()} aria-label="Close" className="flex h-10 w-10 items-center justify-center rounded-full text-fg hover:bg-white/10">
+        <button data-focusable="true" onClick={() => window.history.back()} aria-label="Close" className="flex h-10 w-10 items-center justify-center rounded-full text-fg hover:bg-interaction">
           <X className="h-6 w-6" />
         </button>
         <h2 className="flex-1 truncate text-lg font-bold text-fg sm:text-xl">Choose sports</h2>

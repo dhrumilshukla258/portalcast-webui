@@ -78,14 +78,14 @@ export default function Verify() {
   if (authLoading) {
     return (
       <div className="min-h-screen app-bg flex justify-center items-center font-sans text-fg-soft">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen app-bg flex flex-col justify-center items-center px-4 font-sans text-fg-soft">
-      <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center">
+      <div className="max-w-md w-full bg-panel border border-line rounded-3xl p-8 shadow-2xl flex flex-col items-center">
         
         {/* Logo */}
         <div className="flex items-center mb-8">
@@ -106,7 +106,7 @@ export default function Verify() {
             <div className="space-y-2">
               <h2 className="text-2xl font-bold text-fg">TV Authorized!</h2>
               <p className="text-fg-muted text-sm max-w-xs">
-                Your Smart TV is now logged in as <span className="text-indigo-400 font-semibold">{user?.name}</span>.
+                Your Smart TV is now logged in as <span className="text-accent font-semibold">{user?.name}</span>.
               </p>
             </div>
             <p className="text-xs text-fg-subtle">
@@ -114,7 +114,7 @@ export default function Verify() {
             </p>
             <button
               onClick={() => navigate('/', { replace: true })}
-              className="w-full mt-4 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-gray-300 font-bold transition-all duration-300 border border-slate-750"
+              className="w-full mt-4 py-3.5 rounded-xl bg-panel-raised hover:bg-panel-hover text-fg-soft font-bold transition-all duration-300 border border-line"
             >
               Go to Web Portal
             </button>
@@ -122,13 +122,13 @@ export default function Verify() {
         ) : (
           /* Entry Screen */
           <div className="w-full flex flex-col items-center">
-            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-6">
               <KeyRound className="w-8 h-8" />
             </div>
 
             <h2 className="text-xl font-bold text-center mb-2">Authorize Smart TV</h2>
             <p className="text-fg-muted text-sm text-center mb-6">
-              Logged in as <span className="text-indigo-400 font-semibold">{user?.email}</span>. Confirm the 6-character code on your TV screen to pair the device.
+              Logged in as <span className="text-accent font-semibold">{user?.email}</span>. Confirm the 6-character code on your TV screen to pair the device.
             </p>
 
             <form onSubmit={handleAuthorize} className="w-full space-y-5">
@@ -142,7 +142,7 @@ export default function Verify() {
                   onChange={(e) => setUserCode(e.target.value)}
                   placeholder="e.g. AB-CDE"
                   maxLength={10}
-                  className="w-full bg-slate-950 border border-slate-800 hover:border-indigo-500/30 focus:border-indigo-500 rounded-2xl py-4 text-center text-2xl font-mono font-extrabold tracking-widest text-indigo-400 focus:outline-hidden transition-all duration-300"
+                  className="w-full bg-page border border-line hover:border-accent/30 focus:border-focus rounded-2xl py-4 text-center text-2xl font-mono font-extrabold tracking-widest text-accent focus:outline-hidden transition-all duration-300"
                 />
               </div>
 
@@ -156,7 +156,7 @@ export default function Verify() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 rounded-2xl ui-brand hover:brightness-110 font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50"
+                className="w-full py-4 rounded-2xl ui-brand hover:brightness-110 font-semibold transition-all duration-300 shadow-xl shadow-accent/10 hover:shadow-accent/20 flex items-center justify-center space-x-2 disabled:opacity-50"
               >
                 {loading ? (
                   <>

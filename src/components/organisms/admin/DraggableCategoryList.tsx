@@ -210,10 +210,10 @@ export const DraggableCategoryList: React.FC<DraggableCategoryListProps> = ({
               } ${!isTouchDevice && isDragging ? 'touch-none' : !isTouchDevice ? 'touch-pan-y' : ''} ${
                 isActive
                   ? 'ui-selected'
-                  : 'text-gray-400 hover:bg-white/10 hover:text-gray-100'
-              } ${isDragging ? 'shadow-xl shadow-black/40 ring-1 ring-sky-400/50' : ''} ${
+                  : 'text-fg-muted hover:bg-interaction hover:text-fg'
+              } ${isDragging ? 'shadow-xl shadow-black/40 ring-1 ring-focus/50' : ''} ${
                 isDraggable && !isTouchDevice ? 'cursor-grab active:cursor-grabbing' : ''
-              } focus:bg-blue-600 focus:text-white [&.focused]:bg-blue-600 [&.focused]:text-white`}
+              } focus:bg-action focus:text-on-action [&.focused]:bg-action [&.focused]:text-on-action`}
             >
               <span className="flex-1 truncate">{cat.title}</span>
               {/* Touch only — desktop drags from anywhere on the row via
@@ -229,7 +229,7 @@ export const DraggableCategoryList: React.FC<DraggableCategoryListProps> = ({
                   onPointerUp={endDrag}
                   onPointerCancel={endDrag}
                   aria-label="Drag to reorder"
-                  className="touch-none flex h-full shrink-0 cursor-grab items-center px-2.5 text-gray-500 active:cursor-grabbing"
+                  className="touch-none flex h-full shrink-0 cursor-grab items-center px-2.5 text-fg-subtle active:cursor-grabbing"
                 >
                   <GripVertical className="h-4 w-4" />
                 </span>

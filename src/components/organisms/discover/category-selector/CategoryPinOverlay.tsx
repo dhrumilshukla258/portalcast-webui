@@ -40,7 +40,7 @@ const CategoryPinOverlay: React.FC<CategoryPinOverlayProps> = ({
       className="categories-modal-container flex max-h-[85vh] max-w-4xl flex-col space-y-4"
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-800/60 pb-3">
+      <div className="flex items-center justify-between border-b border-divider/60 pb-3">
         <div className="text-left">
           <h4 id="category-pin-title" className="text-lg font-black text-fg uppercase tracking-tight">Pin & Select Categories</h4>
           <p className="text-xs text-fg-subtle">
@@ -56,7 +56,7 @@ const CategoryPinOverlay: React.FC<CategoryPinOverlayProps> = ({
           <button
             onClick={onClose}
             data-focusable="true"
-            className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-755 text-fg-muted hover:text-fg-soft transition-colors cursor-pointer outline-hidden focus:bg-gray-700 [&.focused]:bg-gray-700"
+            className="p-1.5 rounded-lg bg-panel-raised hover:bg-panel-hover text-fg-muted hover:text-fg-soft transition-colors cursor-pointer outline-hidden focus:bg-panel-hover [&.focused]:bg-panel-hover"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -94,13 +94,13 @@ const CategoryPinOverlay: React.FC<CategoryPinOverlayProps> = ({
                   className={`flex items-center justify-between p-2 rounded-xl border transition-all ${
                     isActive
                       ? 'bg-accent/20 border-accent text-fg'
-                      : 'bg-gray-950/40 border-gray-800 text-fg-muted hover:text-fg-soft'
+                      : 'bg-page/40 border-line text-fg-muted hover:text-fg-soft'
                   }`}
                 >
                   <button
                     data-focusable="true"
                     onClick={() => handleSelect(cat.id, cat.title)}
-                    className={`grow text-left p-2.5 rounded-lg text-xs sm:text-sm font-bold truncate transition-all cursor-pointer outline-hidden focus:scale-[1.02] focus:bg-gray-800/40 [&.focused]:scale-[1.02] [&.focused]:bg-gray-800/40`}
+                    className={`grow text-left p-2.5 rounded-lg text-xs sm:text-sm font-bold truncate transition-all cursor-pointer outline-hidden focus:scale-[1.02] focus:bg-panel-hover/40 [&.focused]:scale-[1.02] [&.focused]:bg-panel-hover/40`}
                   >
                     <span className="truncate">{cat.title}</span>
                   </button>
@@ -113,7 +113,7 @@ const CategoryPinOverlay: React.FC<CategoryPinOverlayProps> = ({
                       className={`p-2 rounded-lg border transition-all shrink-0 ml-1 outline-hidden ${
                         isPinned
                           ? 'bg-accent/20 border-accent/50 text-accent hover:bg-accent/30'
-                          : 'bg-gray-900 border-gray-800 hover:border-gray-700 text-fg-subtle hover:text-gray-300'
+                          : 'bg-panel border-line hover:border-line-strong text-fg-subtle hover:text-fg-soft'
                       } focus:scale-110 focus:border-focus [&.focused]:scale-110 [&.focused]:border-focus`}
                     >
                       {/* Pin Icon */}

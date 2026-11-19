@@ -39,7 +39,7 @@ const TvChannelListCard: React.FC<TvChannelListCardProps> = React.memo(({ item, 
       className={`group my-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 sm:gap-3 sm:px-3 sm:py-2 ${
         isFocused
           ? 'ui-selected z-10 scale-[1.01] border'
-          : 'border border-transparent bg-transparent hover:scale-[1.01] hover:bg-white/10'
+          : 'border border-transparent bg-transparent hover:scale-[1.01] hover:bg-interaction'
       }`}
       onClick={() => onClick(item)}
       title={raw}

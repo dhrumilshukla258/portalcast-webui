@@ -18,7 +18,7 @@ const typeLabel: Record<StreamFailureItemType, string> = {
 const typeColor: Record<StreamFailureItemType, string> = {
   movie: 'bg-emerald-900/30 text-emerald-400',
   episode: 'bg-amber-900/30 text-amber-400',
-  live: 'bg-blue-900/30 text-blue-400',
+  live: 'bg-accent/30 text-accent',
 };
 
 function StateBadge({ row }: { row: StreamFailure }) {
@@ -31,7 +31,7 @@ function StateBadge({ row }: { row: StreamFailure }) {
   }
   if (row.dismissed) {
     return (
-      <span className="rounded-sm bg-gray-800 px-2 py-0.5 text-3xs font-black uppercase text-gray-500">
+      <span className="rounded-sm bg-panel-raised px-2 py-0.5 text-3xs font-black uppercase text-fg-subtle">
         Dismissed
       </span>
     );
@@ -51,7 +51,7 @@ function StateBadge({ row }: { row: StreamFailure }) {
 }
 
 const actionBtn =
-  'inline-flex items-center gap-1 rounded-lg border border-gray-800 bg-gray-950 px-2.5 py-1.5 text-xs font-bold text-gray-300 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex items-center gap-1 rounded-lg border border-line bg-page px-2.5 py-1.5 text-xs font-bold text-fg-soft transition-colors hover:bg-panel-hover disabled:cursor-not-allowed disabled:opacity-50';
 
 const BrokenStreams: React.FC = () => {
   const { status, setStatus, items, loading, busy, testResults, refresh, test, unhide, dismiss } =
@@ -62,15 +62,15 @@ const BrokenStreams: React.FC = () => {
       <div className="rounded-xl bg-white/[0.03] p-6">
         <div className="mb-2 flex flex-wrap items-center gap-3">
           <AlertTriangle className="text-yellow-500" size={20} />
-          <h3 className="text-lg font-bold text-white">Broken Streams</h3>
+          <h3 className="text-lg font-bold text-fg">Broken Streams</h3>
           <div className="ml-auto flex items-center gap-2">
-            <div className="flex gap-1 rounded-xl border border-gray-800 bg-gray-950 p-1">
+            <div className="flex gap-1 rounded-xl border border-line bg-page p-1">
               {FILTERS.map((f) => (
                 <button
                   key={f.id}
                   onClick={() => setStatus(f.id)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-bold uppercase transition-colors ${
-                    status === f.id ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800'
+                    status === f.id ? 'bg-action text-on-action' : 'text-fg-muted hover:bg-panel-hover'
                   }`}
                   data-focusable="true"
                 >
@@ -83,7 +83,7 @@ const BrokenStreams: React.FC = () => {
             </button>
           </div>
         </div>
-        <p className="mb-4 text-xs text-gray-500">
+        <p className="mb-4 text-xs text-fg-subtle">
           Titles the portal still lists but that failed to play. A movie that fails 3 separate playback attempts within
           24 hours is hidden automatically; episodes and live channels are only recorded. Test re-resolves the link on
           the server and fetches the first bytes.
@@ -91,17 +91,17 @@ const BrokenStreams: React.FC = () => {
 
         {loading && items.length === 0 ? (
           <div className="flex h-24 items-center justify-center">
-            <RefreshCw className="animate-spin text-blue-500" size={24} />
+            <RefreshCw className="animate-spin text-accent" size={24} />
           </div>
         ) : items.length === 0 ? (
-          <p className="text-sm italic text-gray-500">
+          <p className="text-sm italic text-fg-subtle">
             {status === 'hidden' ? 'Nothing has been auto-hidden.' : 'No broken streams recorded.'}
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-xs uppercase tracking-widest text-gray-500">
+                <tr className="border-b border-line text-xs uppercase tracking-widest text-fg-subtle">
                   <th className="pb-2 pr-4 font-black">Title</th>
                   <th className="pb-2 pr-4 font-black">Type</th>
                   <th className="pb-2 pr-4 font-black">Failures</th>
@@ -117,35 +117,35 @@ const BrokenStreams: React.FC = () => {
                   const result = testResults[row.id];
                   const rowBusy = busy[row.id];
                   return (
-                    <tr key={row.id} className="border-b border-gray-800/60 align-top">
+                    <tr key={row.id} className="border-b border-divider/60 align-top">
                       <td className="max-w-xs py-2 pr-4">
-                        <div className="truncate text-xs text-gray-200" title={row.title ?? row.itemId}>
-                          {row.title ?? <span className="italic text-gray-600">Unknown ({row.itemId})</span>}
+                        <div className="truncate text-xs text-fg-soft" title={row.title ?? row.itemId}>
+                          {row.title ?? <span className="italic text-fg-subtle">Unknown ({row.itemId})</span>}
                         </div>
-                        <div className="truncate text-2xs text-gray-500">{row.category ?? '—'}</div>
+                        <div className="truncate text-2xs text-fg-subtle">{row.category ?? '—'}</div>
                       </td>
                       <td className="py-2 pr-4">
                         <span className={`rounded-sm px-2 py-0.5 text-3xs font-black uppercase ${typeColor[row.itemType]}`}>
                           {typeLabel[row.itemType]}
                         </span>
                       </td>
-                      <td className="py-2 pr-4 font-mono text-xs text-gray-300">
+                      <td className="py-2 pr-4 font-mono text-xs text-fg-soft">
                         {row.failureCount}
                         {row.threshold && row.strikes != null && (
-                          <span className="block text-xs text-slate-400" title="Only &quot;file not found&quot; failures count toward auto-hide">
+                          <span className="block text-xs text-fg-muted" title="Only &quot;file not found&quot; failures count toward auto-hide">
                             {row.strikes}/{row.threshold} toward hide
                           </span>
                         )}
                       </td>
-                      <td className="max-w-[16rem] py-2 pr-4 text-xs text-gray-400">
+                      <td className="max-w-[16rem] py-2 pr-4 text-xs text-fg-muted">
                         <span className="font-mono text-red-400">{row.lastStatus ?? 'net'}</span>{' '}
                         <span className="break-words" title={row.lastError ?? undefined}>
                           {row.lastError ?? '—'}
                         </span>
                       </td>
-                      <td className="py-2 pr-4 font-mono text-xs text-gray-400">{row.upstreamHost ?? '—'}</td>
+                      <td className="py-2 pr-4 font-mono text-xs text-fg-muted">{row.upstreamHost ?? '—'}</td>
                       <td
-                        className="whitespace-nowrap py-2 pr-4 text-xs text-gray-400"
+                        className="whitespace-nowrap py-2 pr-4 text-xs text-fg-muted"
                         title={row.lastFailedAt ? new Date(row.lastFailedAt).toLocaleString() : undefined}
                       >
                         {formatAgo(row.lastFailedAt)}

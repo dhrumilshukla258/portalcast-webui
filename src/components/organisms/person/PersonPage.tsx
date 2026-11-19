@@ -99,7 +99,7 @@ const PersonPage: React.FC<PersonPageProps> = ({ id, onClose, onOpenTitle, loadi
           type="button"
           onClick={onClose}
           data-focusable="true"
-          className="mb-6 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 hover:text-fg focus-visible:bg-white/10 focus-visible:text-fg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-focus"
+          className="mb-6 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-fg-soft transition-colors hover:bg-interaction hover:text-fg focus-visible:bg-interaction focus-visible:text-fg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-focus"
         >
           <ArrowLeft size={16} /> Back
         </button>
@@ -132,7 +132,7 @@ const PersonPage: React.FC<PersonPageProps> = ({ id, onClose, onOpenTitle, loadi
               </div>
               {p.biography && (
                 <div className="mt-4">
-                  <p className={`whitespace-pre-line text-sm leading-relaxed text-gray-300 ${bioOpen ? '' : 'line-clamp-8'}`}>{p.biography}</p>
+                  <p className={`whitespace-pre-line text-sm leading-relaxed text-fg-soft ${bioOpen ? '' : 'line-clamp-8'}`}>{p.biography}</p>
                   {p.biography.length > 500 && (
                     <Button variant="link" onClick={() => setBioOpen((v) => !v)} className="mt-1 text-xs hover:underline">
                       {bioOpen ? 'Show less' : 'Read more'}

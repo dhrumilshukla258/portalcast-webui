@@ -35,7 +35,7 @@ export default function ThemePicker({
       open={open}
       onClose={onClose}
       labelledBy="theme-picker-title"
-      className="max-w-xl text-left"
+      className="max-w-2xl text-left"
       focusGroup="theme-picker"
     >
       <h2 id="theme-picker-title" className="text-fg text-xl font-semibold">
@@ -48,7 +48,7 @@ export default function ThemePicker({
       <div
         role="radiogroup"
         aria-labelledby="theme-picker-title"
-        className="mt-5 grid grid-cols-2 gap-3 sm:gap-4"
+        className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3"
       >
         {THEMES.map((t) => {
           const on = t.id === current;
@@ -61,10 +61,10 @@ export default function ThemePicker({
               aria-checked={on}
               data-focusable="true"
               onClick={() => choose(t.id)}
-              className={`focus-visible:ring-focus rounded-xl p-2 text-left transition-colors hover:bg-white/5 focus:outline-hidden focus-visible:ring-2 ${on ? 'bg-white/5' : ''}`}
+              className={`focus-visible:ring-focus grid min-w-0 grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-x-3 rounded-xl p-2 text-left transition-colors hover:bg-white/5 focus:outline-hidden focus-visible:ring-2 sm:block ${on ? 'bg-white/5' : ''}`}
             >
-              <ThemePreview swatch={t.swatch} selected={on} />
-              <span className="mt-3 flex items-center justify-between gap-2 px-1">
+              <span className="row-span-2"><ThemePreview swatch={t.swatch} selected={on} /></span>
+              <span className="flex items-center justify-between gap-2 px-1 sm:mt-3">
                 <span className="text-fg font-semibold">{t.label}</span>
                 {on && (
                   <span className="bg-fg text-page flex h-5 w-5 items-center justify-center rounded-full">

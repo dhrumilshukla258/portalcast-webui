@@ -7,9 +7,9 @@ import type { AdminTarget } from '@/components/organisms/admin/AdminOverview';
 const errorText = (err: unknown, fallback: string) =>
   (err as { response?: { data?: { error?: string } } })?.response?.data?.error || fallback;
 
-const field = 'w-full rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-2 text-sm text-gray-100 outline-none focus:border-focus';
-const btn = 'rounded-lg border border-gray-700 px-3 py-1.5 text-xs font-bold text-gray-200 hover:bg-gray-800 disabled:opacity-50';
-const primary = 'rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-50';
+const field = 'w-full rounded-lg border border-line-strong bg-page/60 px-3 py-2 text-sm text-fg outline-none focus:border-focus';
+const btn = 'rounded-lg border border-line-strong px-3 py-1.5 text-xs font-bold text-fg-soft hover:bg-panel-hover disabled:opacity-50';
+const primary = 'rounded-lg bg-action px-3 py-1.5 text-xs font-bold text-on-action hover:bg-action-hover disabled:opacity-50';
 
 interface StepProps {
   done: boolean;
@@ -20,15 +20,15 @@ interface StepProps {
 
 const Step: React.FC<StepProps> = ({ done, optional, title, children }) => (
   <li className="flex gap-3 border-t border-white/5 py-4 first:border-t-0">
-    <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${done ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-gray-400'}`}>
+    <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${done ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-fg-muted'}`}>
       {done ? <Check size={14} /> : '•'}
     </span>
     <div className="min-w-0 flex-1">
-      <p className="text-sm font-semibold text-white">
+      <p className="text-sm font-semibold text-fg">
         {title}
-        {optional && <span className="ml-2 text-xs font-normal text-gray-500">optional</span>}
+        {optional && <span className="ml-2 text-xs font-normal text-fg-subtle">optional</span>}
       </p>
-      <div className="mt-1 space-y-2 text-sm text-gray-400">{children}</div>
+      <div className="mt-1 space-y-2 text-sm text-fg-muted">{children}</div>
     </div>
   </li>
 );
@@ -59,7 +59,7 @@ const SetupGuide: React.FC<{ onOpen: (t: AdminTarget) => void }> = ({ onOpen }) 
 
   if (!open) {
     return (
-      <button type="button" className="text-xs font-semibold text-gray-500 hover:text-white" onClick={() => setOpen(true)}>
+      <button type="button" className="text-xs font-semibold text-fg-subtle hover:text-fg" onClick={() => setOpen(true)}>
         Setup guide{needed ? ` · ${needed} to do` : ''}
       </button>
     );
@@ -111,13 +111,13 @@ const SetupGuide: React.FC<{ onOpen: (t: AdminTarget) => void }> = ({ onOpen }) 
   );
 
   return (
-    <section className="rounded-2xl border border-blue-500/20 bg-blue-500/[0.04] px-5 py-4">
+    <section className="rounded-2xl border border-accent/20 bg-accent/[0.04] px-5 py-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-base font-black text-white">Set up your server</h2>
-          <p className="mt-1 text-sm text-gray-400">A few steps and everyone in the house can watch. Skip anything you don't need; it is all in Admin later.</p>
+          <h2 className="text-base font-black text-fg">Set up your server</h2>
+          <p className="mt-1 text-sm text-fg-muted">A few steps and everyone in the house can watch. Skip anything you don't need; it is all in Admin later.</p>
         </div>
-        <button type="button" onClick={() => void dismiss()} className="rounded p-1 text-gray-500 hover:bg-white/5 hover:text-white" aria-label="Hide the setup guide">
+        <button type="button" onClick={() => void dismiss()} className="rounded p-1 text-fg-subtle hover:bg-interaction hover:text-fg" aria-label="Hide the setup guide">
           <X size={16} />
         </button>
       </div>

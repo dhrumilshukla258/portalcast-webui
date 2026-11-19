@@ -94,22 +94,22 @@ const EditImagesDialog: React.FC<{ contentId: string; title: string; onClose: ()
 
   return (
     <Dialog open onClose={onClose} labelledBy="edit-images-title" className="flex max-h-[92vh] max-w-5xl flex-col overflow-hidden p-0">
-      <div className="flex items-center justify-between border-b border-gray-800 px-5 py-3">
-        <h2 id="edit-images-title" className="truncate text-lg font-black text-white">Edit images · {title}</h2>
-        <button type="button" onClick={onClose} className="rounded p-1 text-gray-400 hover:bg-gray-800" aria-label="Close">
+      <div className="flex items-center justify-between border-b border-line px-5 py-3">
+        <h2 id="edit-images-title" className="truncate text-lg font-black text-fg">Edit images · {title}</h2>
+        <button type="button" onClick={onClose} className="rounded p-1 text-fg-muted hover:bg-panel-hover" aria-label="Close">
           <X size={18} />
         </button>
       </div>
-      <div className="flex flex-wrap items-center gap-2 border-b border-gray-800 px-5 py-3">
+      <div className="flex flex-wrap items-center gap-2 border-b border-line px-5 py-3">
         {TABS.map((t) => (
           <button
             key={t.kind}
             type="button"
             onClick={() => setTab(t.kind)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-bold ${tab === t.kind ? 'bg-blue-600 text-white' : 'border border-gray-700 text-gray-300 hover:bg-gray-800'}`}
+            className={`rounded-lg px-3 py-1.5 text-sm font-bold ${tab === t.kind ? 'bg-action text-on-action' : 'border border-line-strong text-fg-soft hover:bg-panel-hover'}`}
           >
             {t.label}
-            {data?.custom[t.kind] && <span className="ml-1.5 text-3xs text-blue-200">custom</span>}
+            {data?.custom[t.kind] && <span className="ml-1.5 text-3xs text-accent">custom</span>}
           </button>
         ))}
         <div className="ml-auto flex gap-2">
@@ -124,11 +124,11 @@ const EditImagesDialog: React.FC<{ contentId: string; title: string; onClose: ()
               e.target.value = '';
             }}
           />
-          <button type="button" disabled={busy} onClick={() => fileRef.current?.click()} className="flex items-center gap-1.5 rounded-lg border border-gray-700 px-3 py-1.5 text-xs font-bold text-gray-200 hover:bg-gray-800 disabled:opacity-50">
+          <button type="button" disabled={busy} onClick={() => fileRef.current?.click()} className="flex items-center gap-1.5 rounded-lg border border-line-strong px-3 py-1.5 text-xs font-bold text-fg-soft hover:bg-panel-hover disabled:opacity-50">
             <Upload size={14} /> Upload
           </button>
           {data?.custom[tab] && (
-            <button type="button" disabled={busy} onClick={() => void reset()} className="flex items-center gap-1.5 rounded-lg border border-gray-700 px-3 py-1.5 text-xs font-bold text-gray-200 hover:bg-gray-800 disabled:opacity-50">
+            <button type="button" disabled={busy} onClick={() => void reset()} className="flex items-center gap-1.5 rounded-lg border border-line-strong px-3 py-1.5 text-xs font-bold text-fg-soft hover:bg-panel-hover disabled:opacity-50">
               <RotateCcw size={14} /> Automatic
             </button>
           )}
@@ -137,12 +137,12 @@ const EditImagesDialog: React.FC<{ contentId: string; title: string; onClose: ()
       <div className="overflow-y-auto p-5">
         {data?.current[tab] && (
           <div className="mb-4">
-            <div className="mb-1 text-xs font-semibold text-gray-500">Now</div>
+            <div className="mb-1 text-xs font-semibold text-fg-subtle">Now</div>
             <img src={data.current[tab]!} alt="" className={`${tab === 'poster' ? 'h-40' : 'h-24'} rounded-lg bg-black/40 object-contain`} />
           </div>
         )}
-        {!data && <p className="text-sm text-gray-500">Loading…</p>}
-        {data && choices.length === 0 && <p className="text-sm text-gray-500">TMDB has no alternatives for this title. Upload one instead.</p>}
+        {!data && <p className="text-sm text-fg-subtle">Loading…</p>}
+        {data && choices.length === 0 && <p className="text-sm text-fg-subtle">TMDB has no alternatives for this title. Upload one instead.</p>}
         <div className={`grid gap-3 ${tab === 'poster' ? 'grid-cols-3 sm:grid-cols-5 md:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3'}`}>
           {choices.map((c) => (
             <button
@@ -150,11 +150,11 @@ const EditImagesDialog: React.FC<{ contentId: string; title: string; onClose: ()
               type="button"
               disabled={busy}
               onClick={() => void choose(c)}
-              className={`group relative overflow-hidden rounded-lg border border-gray-800 bg-black/40 hover:border-focus disabled:opacity-50 ${active.aspect}`}
+              className={`group relative overflow-hidden rounded-lg border border-line bg-black/40 hover:border-focus disabled:opacity-50 ${active.aspect}`}
               title={`${c.width}×${c.height}${c.language ? ` · ${c.language}` : ''}`}
             >
               <img src={c.preview} alt="" loading="lazy" className={`h-full w-full ${tab === 'logo' ? 'object-contain p-2' : 'object-cover'}`} />
-              <span className="absolute bottom-1 right-1 hidden rounded bg-blue-600 p-0.5 text-white group-hover:block">
+              <span className="absolute bottom-1 right-1 hidden rounded bg-action p-0.5 text-on-action group-hover:block">
                 <Check size={12} />
               </span>
             </button>

@@ -176,7 +176,7 @@ const SportsView: React.FC<SportsViewProps> = ({ onPlayChannel, onFindChannel })
                   autoFocus={i === 0}
                   data-focusable="true"
                   onClick={() => { setPicking(null); onPlayChannel(c); }}
-                  className="flex w-full items-center gap-3 rounded-xl bg-white/5 px-4 py-3 text-left font-bold text-fg hover:bg-white/10"
+                  className="flex w-full items-center gap-3 rounded-xl bg-white/5 px-4 py-3 text-left font-bold text-fg hover:bg-interaction"
                 >
                   <Play className="h-4 w-4 fill-current" /> {c.name}
                 </button>

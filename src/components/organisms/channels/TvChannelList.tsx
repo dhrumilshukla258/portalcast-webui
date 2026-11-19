@@ -95,6 +95,7 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
 
     return (
       <div
+        data-ui={isOverlay ? 'channel-picker' : undefined}
         className={`glass-panel absolute left-0 top-0 z-40 flex h-full flex-row shadow-2xl transition-all duration-300 ${
           isOverlay
             ? 'w-full md:w-auto md:max-w-[480px] lg:max-w-[560px]'
@@ -106,7 +107,7 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
         {!isMobile && showCloseButton && (
           <button
             onClick={onBack}
-            className="absolute right-6 top-4 z-30 rounded-full p-2 text-fg-muted outline-hidden transition-transform hover:scale-110 hover:text-fg focus:scale-110 focus:bg-white/10 focus:text-fg"
+            className="absolute right-6 top-4 z-30 rounded-full p-2 text-fg-muted outline-hidden transition-transform hover:scale-110 hover:text-fg focus:scale-110 focus:bg-interaction focus:text-fg"
             aria-label="Close"
             data-focusable="true"
           >
@@ -129,9 +130,10 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
 
         {}
         <div
+          data-part="categories"
           ref={groupListRef}
           style={!isMobile ? { width: groupsWidth } : undefined}
-          className={`custom-scrollbar no-scrollbar-mobile z-20 flex h-full w-full shrink-0 flex-col overflow-y-auto border-r border-white/5 bg-gray-900/60 p-3 shadow-[4px_0_24px_rgba(0,0,0,0.2)] ${
+          className={`custom-scrollbar no-scrollbar-mobile z-20 flex h-full w-full shrink-0 flex-col overflow-y-auto border-r border-white/5 bg-panel/60 p-3 shadow-[4px_0_24px_rgba(0,0,0,0.2)] ${
             isMobile && showChannelsList
               ? 'hidden'
               : 'animate-in slide-in-from-left block duration-300'
@@ -172,7 +174,7 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
                   if (isMobile) setShowChannelsList(true);
                 }}
                 className={`flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2 text-left text-xs font-semibold transition-all duration-200 sm:text-sm ${
-                  showWhatsOn ? 'bg-white/15 text-fg shadow-inner' : 'text-fg-muted hover:bg-white/10 hover:text-fg'
+                  showWhatsOn ? 'bg-white/15 text-fg shadow-inner' : 'text-fg-muted hover:bg-interaction hover:text-fg'
                 }`}
               >
                 <CirclePlay className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
@@ -199,7 +201,7 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
                       ? 'ui-selected scale-[1.01]'
                       : isGroupSelected
                         ? 'bg-white/15 text-fg shadow-inner'
-                        : 'text-fg-muted hover:bg-white/10 hover:text-gray-100'
+                        : 'text-fg-muted hover:bg-interaction hover:text-fg'
                   }`}
                 >
                   <span className="flex min-w-0 items-center gap-2.5">
@@ -229,18 +231,20 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
         {/* Drag handle to resize the categories panel */}
         {!isMobile && (
           <div
+            data-part="divider"
             onMouseDown={onGroupsResizeStart}
             title="Drag to resize categories panel"
-            className="group z-20 hidden w-3 shrink-0 cursor-col-resize items-center justify-center bg-gray-900/40 md:flex"
+            className="group z-20 hidden w-3 shrink-0 cursor-col-resize items-center justify-center bg-panel/40 md:flex"
           >
-            <div className="h-16 w-1 rounded-full bg-gray-700/60 transition-colors group-hover:bg-focus" />
+            <div className="h-16 w-1 rounded-full bg-panel-hover/60 transition-colors group-hover:bg-focus" />
           </div>
         )}
 
         {}
         <div
+          data-part="channels"
           ref={channelListRef}
-          className={`custom-scrollbar no-scrollbar-mobile relative z-10 h-full flex-1 overflow-y-auto bg-gray-900/30 p-2 sm:p-3 ${
+          className={`custom-scrollbar no-scrollbar-mobile relative z-10 h-full flex-1 overflow-y-auto bg-panel/30 p-2 sm:p-3 ${
             isMobile
               ? showChannelsList
                 ? 'slide-enter-active block'
@@ -249,7 +253,7 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
           }`}
         >
           {isMobile && (
-            <div className="sticky top-0 z-20 mb-2 flex w-full items-center justify-between rounded-b-2xl border-b border-line bg-gray-900/90 p-3 shadow-md backdrop-blur-xl sm:p-4">
+            <div data-part="mobile-heading" className="sticky top-0 z-20 mb-2 flex w-full items-center justify-between rounded-b-2xl border-b border-line bg-panel/90 p-3 shadow-md backdrop-blur-xl sm:p-4">
               <button
                 onClick={() => setShowChannelsList(false)}
                 className="flex flex-1 items-center text-white/90 transition-colors hover:text-fg"

@@ -3,6 +3,7 @@
    flattening as Tailwind (postcss.config.mjs); a separate CSS file loses to its rules. */
 @import './components/ui/ui.css';
 @import './themes/minimal/theme.css';
+@import './themes/console/theme.css';
 
 /*
   Semantic colours (src/themes/README.md): what a colour is for, not what it is. New and
@@ -22,6 +23,12 @@
   --color-fg-muted: var(--color-gray-400);
   --color-fg-subtle: var(--color-gray-500);
   --color-accent: var(--color-sky-400);
+  /* Solid controls need a contrasting foreground; a link uses accent on the page. */
+  --color-action: var(--color-blue-600);
+  --color-action-hover: var(--color-blue-700);
+  --color-on-action: #fff;
+  --color-interaction: rgb(255 255 255 / .1);
+  --color-divider: var(--color-slate-600);
   --color-focus: var(--color-portalcast-light);
   --color-live: var(--color-red-600);
 }
@@ -74,7 +81,7 @@
 }
 
 body {
-  background-color: #020617;
+  background-color: var(--color-page);
 }
 
 .cursor-none {
@@ -86,10 +93,10 @@ body {
 }
 
 .glass-panel {
-  background: rgba(17, 24, 39, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--ui-sheet-bg);
+  backdrop-filter: var(--ui-sheet-blur);
+  -webkit-backdrop-filter: var(--ui-sheet-blur);
+  border-right: 1px solid var(--color-line);
 }
 
 /* .custom-scrollbar: src/components/ui/ui.css, with the other shared pieces. */

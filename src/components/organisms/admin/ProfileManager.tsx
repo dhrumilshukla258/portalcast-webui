@@ -13,25 +13,25 @@ const ProfileManager = () => {
 
   if (pm.loading) {
     return (
-      <div className="mx-auto my-5 max-w-6xl rounded-lg bg-gray-800 p-5 text-center text-white">
+      <div className="mx-auto my-5 max-w-6xl rounded-lg bg-panel-raised p-5 text-center text-fg">
         <div className="text-lg">Loading profiles...</div>
       </div>
     );
   }
 
   return (
-    <div className="font-sans text-white">
+    <div className="font-sans text-fg">
       <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h2 className="text-base font-semibold text-white">IPTV profiles</h2>
-          <p className="text-sm text-gray-400">
+          <h2 className="text-base font-semibold text-fg">IPTV profiles</h2>
+          <p className="text-sm text-fg-muted">
             Manage your different server configurations
           </p>
         </div>
         <button
           onClick={() => pm.setShowCreateModal(true)}
           data-focusable="true"
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:scale-105 hover:bg-blue-500 active:scale-95 sm:w-auto sm:py-2"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-action px-4 py-2.5 font-bold text-on-action shadow-lg shadow-accent/20 transition-all hover:scale-105 hover:bg-action-hover active:scale-95 sm:w-auto sm:py-2"
         >
           <span>+</span> New Profile
         </button>

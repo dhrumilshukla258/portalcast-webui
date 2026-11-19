@@ -127,7 +127,7 @@ export const SettingsMenu = React.memo(() => {
       episode: isEpisode && item?.episode_num != null ? String(item.episode_num) : '',
     }));
   }, [defaultTitle, isEpisode, item?.year, item?.series_number, item?.episode_num]);
-  const subField = 'w-full rounded-md border border-gray-700 bg-gray-950/70 px-2 py-1.5 text-sm text-gray-100 outline-none focus:border-focus';
+  const subField = 'w-full rounded-md border border-line-strong bg-page/70 px-2 py-1.5 text-sm text-fg outline-none focus:border-focus';
 
   const qualities = useVideoQualityOptions({ auto: true, sort: 'ascending' });
   const audioOptions = useAudioOptions();
@@ -214,7 +214,7 @@ export const SettingsMenu = React.memo(() => {
     <div className="pc-shade fixed inset-0 z-40" aria-hidden="true" />
     <div
       ref={settingsMenuRef}
-      className="pc-panel fixed bottom-0 right-0 top-0 z-50 flex w-full flex-col px-4 pb-4 pt-6 text-base text-gray-100 sm:w-[420px]"
+      className="pc-panel fixed bottom-0 right-0 top-0 z-50 flex w-full flex-col px-4 pb-4 pt-6 text-base text-fg sm:w-[420px]"
     >
       <div className="flex items-center gap-2 px-3 pb-3">
         <span className="h-9 w-9 shrink-0" aria-hidden="true" />
@@ -225,7 +225,7 @@ export const SettingsMenu = React.memo(() => {
           data-control="settings-close"
           aria-label="Close"
           onClick={() => setIsSettingsMenuOpen(false)}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-interaction"
         >
           <X className="h-4 w-4" />
         </button>
@@ -338,7 +338,7 @@ export const SettingsMenu = React.memo(() => {
               {String(v.id) === catalogId && <CheckIcon className="h-4 w-4 shrink-0" />}
             </button>
           ))}
-          <p className="px-3 pt-1 text-2xs leading-snug text-gray-500">Plays from where you are now.</p>
+          <p className="px-3 pt-1 text-2xs leading-snug text-fg-subtle">Plays from where you are now.</p>
         </div>
       )}
 
@@ -365,7 +365,7 @@ export const SettingsMenu = React.memo(() => {
               <span>{c.label}</span>
             </button>
           ))}
-          <p className="px-3 pt-1 text-2xs leading-snug text-gray-500">
+          <p className="px-3 pt-1 text-2xs leading-snug text-fg-subtle">
             The other player gets this stream only, never your provider's address. Progress there is not saved here.
           </p>
         </div>
@@ -472,7 +472,7 @@ export const SettingsMenu = React.memo(() => {
           ))}
 
           {/* Per-title subtitle timing (utils/subtitleDelay.ts), saved on this device */}
-          <div className="mt-1 border-t border-gray-700 px-3 pt-2 text-xs text-gray-300">
+          <div className="mt-1 border-t border-line-strong px-3 pt-2 text-xs text-fg-soft">
             Timing: {formatDelay(subtitleDelay)}
           </div>
           <div className="flex items-center gap-1 px-2 pb-1 pt-1">
@@ -676,7 +676,7 @@ export const SettingsMenu = React.memo(() => {
               </button>
             ))
           ) : (
-            <div className="px-3 py-2 text-center text-sm text-gray-400">
+            <div className="px-3 py-2 text-center text-sm text-fg-muted">
               No other local screen apps found
             </div>
           )}

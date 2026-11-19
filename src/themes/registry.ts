@@ -11,10 +11,11 @@ import { isTvApp } from '@/utils/helpers';
 import { useTheme, type ThemeId } from './theme';
 import MinimalHeader from './minimal/MinimalHeader';
 import MinimalHero from './minimal/MinimalHero';
-import MinimalCard from './minimal/MinimalCard';
-import MinimalContinueCard from './minimal/MinimalContinueCard';
+import MinimalCard, { ConsoleCard } from './minimal/MinimalCard';
+import MinimalContinueCard, { ConsoleContinueCard } from './minimal/MinimalContinueCard';
 import MinimalSportsSchedule from './minimal/MinimalSportsSchedule';
 import MinimalSectionRow from './minimal/MinimalSectionRow';
+import ConsoleHero from './console/ConsoleHero';
 
 export interface ThemeParts {
   Header?: React.FC<HeaderProps>;
@@ -30,6 +31,7 @@ const TV = isTvApp();
 const PARTS: Record<ThemeId, ThemeParts> = {
   classic: {},
   minimal: { Header: MinimalHeader, Hero: MinimalHero, Card: MinimalCard, ContinueCard: MinimalContinueCard, SportsSchedule: MinimalSportsSchedule, SectionRow: MinimalSectionRow },
+  console: { Header: MinimalHeader, Hero: ConsoleHero, Card: ConsoleCard, ContinueCard: ConsoleContinueCard, SportsSchedule: MinimalSportsSchedule, SectionRow: MinimalSectionRow },
 };
 
 /** The current theme's own version of a part, or `classic` when it has none. */

@@ -14,6 +14,10 @@ from this device's last choice before the first frame, so the intro (its own sma
 `html[data-theme]` block, since it plays before the app's CSS) and the page start in the theme.
 The browser's bar colour is the theme's `swatch.page`.
 
+**Console** (`src/themes/console/`) is the midnight-blue web theme. It shares Minimal's navigation
+and card actions; its posters use plain DOM frames rather than a motion component per card.
+The hero reuses the existing Continue Watching data and artwork. Its horizon is a static inline SVG.
+
 ## Semantic colours
 
 Use what a colour is for, not what it is. Classic's values point at the palette it always used
@@ -26,6 +30,8 @@ Use what a colour is for, not what it is. Classic's values point at the palette 
 | `line`, `line-strong` (`border-line`) | hairlines; outlines that must show |
 | `fg`, `fg-soft`, `fg-muted`, `fg-subtle` (`text-fg-muted`) | text, from most to least important |
 | `accent`, `on-accent` | links, selected chips, progress; text on them |
+| `action`, `action-hover`, `on-action` | solid action or selected-control fill and its contrasting label |
+| `interaction`, `divider` | a translucent hover/focus surface; a divider colour for adjustable opacity |
 | `focus` | focus rings and hover outlines (`ring-focus`, `border-focus/60`) |
 | `live` | the LIVE badge |
 
@@ -43,12 +49,13 @@ Text sizes come from the scale (`text-3xs` 10px, `text-2xs` 11px, `text-xs`... i
 2. A list entry gets `ui-row` (layout utilities stay); a group heading `ui-label`; a tag `ui-badge`.
 3. Raw palette classes become semantic ones: `text-white` -> `text-fg`, `text-gray-400` ->
    `text-fg-muted`, `bg-surface-5` -> `bg-panel`, `text-sky-400` -> `text-accent`...
-4. Check it in both themes.
+4. Check it in Classic, Minimal and Console.
 
-New code starts this way. What is left (raw palette classes, 2026-11-18): admin ~800, the
-sign-in and other pages ~140, player controls ~50, and Classic's own header and cards (only
-Classic draws them). Until moved, each theme's "palette fallback" block recolours them; move a
-screen when you are changing it anyway.
+For labeled playback actions use `PlaybackButton` (Home's Resume and the title's Play Movie);
+for adjacent actions use `TitleActionButton` (Trailer, My List and Versions). These compose
+`Button` and keep playback, list mutations and version selection in their callers.
+Keep media scrims, provider branding, status colours and categorical chart series distinct from
+the interactive accent. Native TV components and theme-specific artwork can have their own palette.
 
 ## Focus, selection, motion
 

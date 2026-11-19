@@ -138,7 +138,7 @@ export const TVControls = React.memo(() => {
             <span className="text-3xs text-fg-soft md:text-base">
               {nextProgName}
             </span>
-            <span className="text-[8px] text-gray-300 md:text-sm">
+            <span className="text-[8px] text-fg-soft md:text-sm">
               {nextProgTime}
             </span>
           </div>
@@ -289,13 +289,13 @@ export const TVControls = React.memo(() => {
                 <MoreVertical className="h-5 w-5" />
               </button>
               {isMoreMenuOpen && (
-                <div className="more-options-menu absolute bottom-[calc(100%+12px)] right-0 z-50 flex w-48 origin-bottom-right flex-col rounded-xl border border-gray-600/40 bg-gray-900/95 p-2 text-sm text-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl">
+                <div className="more-options-menu absolute bottom-[calc(100%+12px)] right-0 z-50 flex w-48 origin-bottom-right flex-col rounded-xl border border-divider/40 bg-panel/95 p-2 text-sm text-fg shadow-[0_-10px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl">
                   <button
                     onClick={() => {
                       setUseProxy(!useProxy);
                       setIsMoreMenuOpen(false);
                     }}
-                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-interaction"
                   >
                     {!useProxy ? <ShieldX className="h-4 w-4 text-fg-muted" /> : <ShieldCheck className="h-4 w-4 text-green-400" />}
                     <span>Proxy: {useProxy ? 'On' : 'Off'}</span>
@@ -305,7 +305,7 @@ export const TVControls = React.memo(() => {
                     onClick={() => {
                       onCycleFitMode();
                     }}
-                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-interaction"
                   >
                     {fitMode === 'contain' && <Shrink className="h-4 w-4 text-fg-muted" />}
                     {fitMode === 'cover' && <SquareDashedBottomCode className="h-4 w-4 text-fg-muted" />}
@@ -321,7 +321,7 @@ export const TVControls = React.memo(() => {
                         onActiveSettingsMenuChange('cast');
                         setIsMoreMenuOpen(false);
                       }}
-                      className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
+                      className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-interaction"
                     >
                       <FaChromecast className="h-4 w-4 text-fg-muted" />
                       <span>Cast</span>
@@ -334,7 +334,7 @@ export const TVControls = React.memo(() => {
                       onActiveSettingsMenuChange('main');
                       setIsMoreMenuOpen(false);
                     }}
-                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-interaction"
                   >
                     <SettingsIcon className="h-4 w-4 text-fg-muted" />
                     <span>Settings</span>

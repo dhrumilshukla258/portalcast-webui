@@ -84,7 +84,7 @@ const OpenSubtitlesModal: React.FC<OpenSubtitlesModalProps> = ({ isOpen, onClose
       <h3 id="opensubtitles-modal-title" className="mb-2 text-xl font-bold text-fg">
         Subtitle Accounts
       </h3>
-      <p className="mb-5 text-sm text-gray-300">
+      <p className="mb-5 text-sm text-fg-soft">
         Use your own accounts so subtitle downloads use your personal quota. Details are checked, then
         stored encrypted on your server.
       </p>
@@ -95,8 +95,8 @@ const OpenSubtitlesModal: React.FC<OpenSubtitlesModalProps> = ({ isOpen, onClose
         <>
           {/* OpenSubtitles */}
           <div className="mb-2 text-sm font-semibold text-fg">OpenSubtitles</div>
-          <div className="mb-3 rounded-lg border border-gray-700/50 bg-gray-800/40 p-3 text-sm">
-            <p className={status.linked ? 'font-semibold text-emerald-400' : 'text-gray-300'}>
+          <div className="mb-3 rounded-lg border border-divider/50 bg-panel-raised/40 p-3 text-sm">
+            <p className={status.linked ? 'font-semibold text-emerald-400' : 'text-fg-soft'}>
               {status.linked ? `Signed in as ${status.username}` : 'Not signed in'}
             </p>
             {osKeyLine && <p className="mt-1 text-xs text-fg-muted">{osKeyLine}</p>}
@@ -121,7 +121,7 @@ const OpenSubtitlesModal: React.FC<OpenSubtitlesModalProps> = ({ isOpen, onClose
 
           {/* SubDL */}
           <div className="mb-2 text-sm font-semibold text-fg">SubDL</div>
-          <div className="mb-3 rounded-lg border border-gray-700/50 bg-gray-800/40 p-3 text-sm text-gray-300">
+          <div className="mb-3 rounded-lg border border-divider/50 bg-panel-raised/40 p-3 text-sm text-fg-soft">
             {subdl?.hasOwnApiKey
               ? 'Using your own API key'
               : subdl?.serverHasApiKey

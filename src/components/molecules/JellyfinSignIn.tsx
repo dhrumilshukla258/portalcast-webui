@@ -46,7 +46,7 @@ const JellyfinSignIn: React.FC<{ onSignedIn: () => void }> = ({ onSignedIn }) =>
     }
   };
 
-  const field = 'w-full rounded-xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm text-white outline-none focus:border-indigo-500';
+  const field = 'w-full rounded-xl border border-line bg-page/80 px-4 py-3 text-sm text-white outline-none focus:border-focus';
   return (
     <div className="mt-4 w-full">
       {!open ? (
@@ -63,7 +63,7 @@ const JellyfinSignIn: React.FC<{ onSignedIn: () => void }> = ({ onSignedIn }) =>
           <input autoFocus value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Jellyfin username" autoComplete="username" className={field} />
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" autoComplete="current-password" className={field} />
           <div className="flex gap-2">
-            <button type="button" onClick={() => setOpen(false)} className="flex-1 rounded-xl border border-slate-700 py-2.5 text-sm text-gray-300 hover:bg-slate-800">
+            <button type="button" onClick={() => setOpen(false)} className="flex-1 rounded-xl border border-line-strong py-2.5 text-sm text-fg-soft hover:bg-panel-hover">
               Cancel
             </button>
             <button type="submit" disabled={busy || !username.trim()} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-purple-600 py-2.5 text-sm font-bold text-white hover:bg-purple-500 disabled:opacity-50">

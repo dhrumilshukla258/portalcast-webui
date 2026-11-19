@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Chip from '@/components/ui/Chip';
+import Button from '@/components/ui/Button';
 import SearchField from '@/components/ui/SearchField';
 import { getPeople, searchPeople, type PeopleRole, type PeoplePage, type PersonHit } from '@/api/endpoints/discover';
 import { useOpenPerson } from '@/context/PersonPageContext';
@@ -126,8 +127,8 @@ const PeopleView: React.FC<PeopleViewProps> = ({ sectionChips }) => {
 
       {error && people.length === 0 && (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <p className="text-gray-300">Couldn't load the cast.</p>
-          <button data-focusable="true" onClick={() => void load(role, 1)} className="rounded-full bg-white px-5 py-2 font-bold text-surface-3">Retry</button>
+          <p className="text-fg-soft">Couldn't load the cast.</p>
+          <Button variant="primary" onClick={() => void load(role, 1)}>Retry</Button>
         </div>
       )}
       {first && !first.ready && <p className="py-16 text-center text-fg-muted">People are still being prepared on the server. Try again in a minute.</p>}
@@ -171,7 +172,7 @@ const PersonCard: React.FC<{ person: PersonHit; onOpen: () => void }> = React.me
           </div>
         )}
       </div>
-      <div className="mt-1.5 truncate text-xs font-semibold text-gray-100 sm:text-sm">{person.name}</div>
+      <div className="mt-1.5 truncate text-xs font-semibold text-fg sm:text-sm">{person.name}</div>
       <div className="truncate text-2xs text-fg-subtle sm:text-xs">{person.knownFor}{person.titles > 0 ? ` · ${person.titles}` : ''}</div>
     </button>
   );

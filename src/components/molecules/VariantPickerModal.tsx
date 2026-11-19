@@ -43,7 +43,7 @@ const VariantPickerModal: React.FC<VariantPickerModalProps> = ({ isOpen, title, 
               ref={index === 0 ? firstButtonRef : undefined}
               onClick={() => onSelect(variant)}
               data-focusable="true"
-              className="group flex flex-col items-center gap-2 rounded-xl border border-line bg-white/5 p-2 text-center transition-all hover:border-focus/60 hover:bg-white/10 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-focus"
+              className="group flex flex-col items-center gap-2 rounded-xl border border-line bg-white/5 p-2 text-center transition-all hover:border-focus/60 hover:bg-interaction focus:outline-hidden focus-visible:ring-2 focus-visible:ring-focus"
             >
               <div className="flex aspect-2/3 w-full items-center justify-center overflow-hidden rounded-lg bg-black/30">
                 {imageUrl ? (

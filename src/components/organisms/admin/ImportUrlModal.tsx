@@ -21,15 +21,15 @@ const ImportUrlModal: React.FC<ImportUrlModalProps> = ({
   return (
     <Dialog open={isOpen} onClose={onClose} labelledBy="import-config-title" className="max-w-lg" dismissOnBackdrop={false}>
       <div className="mb-6 flex items-center justify-between">
-        <h2 id="import-config-title" className="text-xl font-black text-white">
+        <h2 id="import-config-title" className="text-xl font-black text-fg">
           Import Config Text
         </h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-white">
+        <button onClick={onClose} className="text-fg-subtle hover:text-fg">
           <X size={20} />
         </button>
       </div>
       <textarea
-        className="custom-scrollbar h-48 w-full rounded-xl border border-gray-800 bg-gray-950 p-4 font-mono text-xs text-gray-300 outline-hidden transition-all focus:border-focus focus:ring-1 focus:ring-focus"
+        className="custom-scrollbar h-48 w-full rounded-xl border border-line bg-page p-4 font-mono text-xs text-fg-soft outline-hidden transition-all focus:border-focus focus:ring-1 focus:ring-focus"
         placeholder="Paste content with http://..., mac-..., username=..., password=..."
         value={importText}
         onChange={(e) => onChangeText(e.target.value)}

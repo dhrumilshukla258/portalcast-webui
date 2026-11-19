@@ -81,7 +81,7 @@ const GROUPS: Group[] = [
 ];
 
 const methodColor: Record<Endpoint['method'], string> = {
-  GET: 'bg-blue-900/30 text-blue-400',
+  GET: 'bg-accent/30 text-accent',
   POST: 'bg-green-900/30 text-green-400',
   PUT: 'bg-yellow-900/30 text-yellow-400',
   DELETE: 'bg-red-900/30 text-red-400',
@@ -90,7 +90,7 @@ const methodColor: Record<Endpoint['method'], string> = {
 const ApiReference: React.FC = () => {
   return (
     <div className="space-y-6">
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-fg-subtle">
         Quick reference for the server's REST endpoints. All routes below (except Auth and stream URLs, which carry their own token)
         require a Bearer JWT — admin routes additionally require the admin role.
       </p>
@@ -99,12 +99,12 @@ const ApiReference: React.FC = () => {
           <h3 className="ui-label mb-3">{group.title}</h3>
           <div className="space-y-1.5">
             {group.endpoints.map((ep) => (
-              <div key={ep.method + ep.path} className="flex flex-wrap items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-gray-800/40">
+              <div key={ep.method + ep.path} className="flex flex-wrap items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-panel-hover/40">
                 <span className={`w-14 shrink-0 rounded-sm px-2 py-0.5 text-center text-3xs font-black ${methodColor[ep.method]}`}>
                   {ep.method}
                 </span>
-                <code className="shrink-0 font-mono text-xs text-gray-200">{ep.path}</code>
-                <span className="text-xs text-gray-500">{ep.purpose}</span>
+                <code className="shrink-0 font-mono text-xs text-fg-soft">{ep.path}</code>
+                <span className="text-xs text-fg-subtle">{ep.purpose}</span>
               </div>
             ))}
           </div>

@@ -45,7 +45,7 @@ const FirstStartSetup: React.FC<Props> = ({ minPasswordLength, onCreated }) => {
   };
 
   const input =
-    'w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-gray-100 outline-none focus:border-indigo-500';
+    'w-full rounded-xl border border-line-strong bg-page px-4 py-3 text-sm text-fg outline-none focus:border-focus';
 
   return (
     <form onSubmit={submit} className="flex w-full flex-col gap-3">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, ChevronRight, Layers, Plus } from 'lucide-react';
 import MediaCard from '@/components/molecules/MediaCard';
+import TitleActionButton from '@/components/ui/TitleActionButton';
 import { getDiscoverVariants, getMyListIds, getSimilar, setInMyList, type DiscoverVariant } from '@/api/endpoints/discover';
 import { useOpenTitle } from '@/context/PersonPageContext';
 import { isContentId } from '@/utils/titleFormat';
@@ -39,17 +40,13 @@ export const MyListButton: React.FC<{ contentId: string }> = ({ contentId }) => 
     }
   };
   return (
-    <button
-      type="button"
+    <TitleActionButton
       onClick={() => void toggle()}
-      data-focusable="true"
       aria-pressed={inList}
-      data-ui="title-action"
-      className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-white/5 py-3 font-bold text-fg-soft transition-colors hover:bg-white/10"
     >
       {inList ? <Check size={18} className="text-accent" /> : <Plus size={18} />}
       <span>{inList ? 'In My List' : 'Add to My List'}</span>
-    </button>
+    </TitleActionButton>
   );
 };
 
@@ -77,18 +74,14 @@ export const VersionsButton: React.FC<{ contentId: string }> = ({ contentId }) =
   if (!openTitle || versions.length < 2) return null;
   const current = versions.find((v) => String(v.id) === contentId);
   return (
-    <button
-      type="button"
+    <TitleActionButton
       onClick={() => openTitle.open({ ...(current ?? versions[0]), id: contentId } as MediaItem)}
-      data-focusable="true"
-      data-ui="title-action"
       title={`${versions.length} versions`}
-      className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-white/5 px-3 py-3 font-bold text-fg-soft transition-colors hover:bg-white/10"
     >
       <Layers size={18} className="shrink-0" />
       <span className="truncate">{current?.variantLabel ? `Version: ${current.variantLabel}` : `${versions.length} versions`}</span>
       <ChevronRight size={16} className="shrink-0 opacity-60" />
-    </button>
+    </TitleActionButton>
   );
 };
 

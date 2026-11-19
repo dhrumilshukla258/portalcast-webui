@@ -340,7 +340,7 @@ const PeopleResults: React.FC<{ people: PersonHit[]; grid: boolean; onOpen: (id:
           data-focusable="true"
           onClick={() => onOpen(p.id)}
           title={`${p.name}: all titles`}
-          className={`${grid ? '' : 'w-28 shrink-0'} rounded-xl p-2 text-center transition-colors hover:bg-white/10 focus:bg-white/10 focus:outline-hidden focus:ring-2 focus:ring-focus [&.focused]:ring-2 [&.focused]:ring-focus`}
+          className={`${grid ? '' : 'w-28 shrink-0'} rounded-xl p-2 text-center transition-colors hover:bg-interaction focus:bg-interaction focus:outline-hidden focus:ring-2 focus:ring-focus [&.focused]:ring-2 [&.focused]:ring-focus`}
         >
           {p.photo ? (
             <img src={p.photo} alt={p.name} loading="lazy" className="mx-auto h-20 w-20 rounded-full object-cover" />

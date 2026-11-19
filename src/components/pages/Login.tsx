@@ -231,7 +231,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen app-bg flex flex-col justify-center items-center px-4 font-sans text-fg-soft">
-      <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center">
+      <div className="max-w-md w-full bg-panel border border-line rounded-3xl p-8 shadow-2xl flex flex-col items-center">
 
         {/* Logo */}
         <div className="flex items-center mb-6">
@@ -257,13 +257,13 @@ export default function Login() {
             login bounce, since generating a second code there would only
             loop back to /verify instead of into the app (see isVerifyRedirect above) */}
         {(activeTab === 'web' || activeTab === 'tv') && !isVerifyRedirect && (
-          <div className="flex w-full bg-slate-950 p-1.5 rounded-2xl border border-slate-800/80 mb-6">
+          <div className="flex w-full bg-page p-1.5 rounded-2xl border border-divider/80 mb-6">
             <button
               onClick={() => setActiveTab('web')}
               className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 cursor-pointer ${
                 activeTab === 'web'
-                  ? 'ui-brand shadow-lg shadow-indigo-500/10'
-                  : 'text-fg-muted hover:text-gray-255'
+                  ? 'ui-brand shadow-lg shadow-accent/10'
+                  : 'text-fg-muted hover:text-fg-soft'
               }`}
             >
               Credentials
@@ -272,8 +272,8 @@ export default function Login() {
               onClick={() => setActiveTab('tv')}
               className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 cursor-pointer ${
                 activeTab === 'tv'
-                  ? 'ui-brand shadow-lg shadow-indigo-500/10'
-                  : 'text-fg-muted hover:text-gray-255'
+                  ? 'ui-brand shadow-lg shadow-accent/10'
+                  : 'text-fg-muted hover:text-fg-soft'
               }`}
             >
               Sign-in via QR
@@ -298,7 +298,7 @@ export default function Login() {
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Full Name</label>
                   <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-550" />
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle" />
                     <input
                       type="text"
                       value={nameInput}
@@ -307,7 +307,7 @@ export default function Login() {
                         clearMessages();
                       }}
                       placeholder="John Doe"
-                      className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
+                      className="w-full bg-page border border-line hover:border-line focus:border-focus rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
                       required
                     />
                   </div>
@@ -317,7 +317,7 @@ export default function Login() {
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-550" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle" />
                   <input
                     type="email"
                     value={emailInput}
@@ -326,7 +326,7 @@ export default function Login() {
                       clearMessages();
                     }}
                     placeholder="name@example.com"
-                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
+                    className="w-full bg-page border border-line hover:border-line focus:border-focus rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
                     required
                   />
                 </div>
@@ -335,7 +335,7 @@ export default function Login() {
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Password</label>
                 <div className="relative">
-                  <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-550" />
+                  <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle" />
                   <input
                     type="password"
                     value={passwordInput}
@@ -344,7 +344,7 @@ export default function Login() {
                       clearMessages();
                     }}
                     placeholder="••••••••"
-                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
+                    className="w-full bg-page border border-line hover:border-line focus:border-focus rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
                     required
                   />
                 </div>
@@ -370,7 +370,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={credsLoading}
-                className="w-full py-3.5 rounded-2xl ui-brand hover:brightness-110 font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
+                className="w-full py-3.5 rounded-2xl ui-brand hover:brightness-110 font-semibold transition-all duration-300 shadow-xl shadow-accent/10 hover:shadow-accent/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
               >
                 {credsLoading ? (
                   <>
@@ -389,7 +389,7 @@ export default function Login() {
               </span>
               <button
                 onClick={toggleMode}
-                className="text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline ml-1 bg-transparent border-none p-0 inline focus:outline-hidden"
+                className="text-accent hover:text-accent font-semibold cursor-pointer underline ml-1 bg-transparent border-none p-0 inline focus:outline-hidden"
               >
                 {isSignUp ? 'Log In' : 'Sign Up'}
               </button>
@@ -400,7 +400,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => { setActiveTab('forgot'); clearMessages(); }}
-                  className="text-xs text-fg-muted hover:text-indigo-400 transition-colors duration-250 cursor-pointer"
+                  className="text-xs text-fg-muted hover:text-accent transition-colors duration-250 cursor-pointer"
                 >
                   Forgot password?
                 </button>
@@ -410,14 +410,14 @@ export default function Login() {
             {!isSignUp && googleClientId && (
               <>
                 <div className="relative flex py-5 items-center w-full">
-                  <div className="grow border-t border-slate-800/80"></div>
+                  <div className="grow border-t border-divider/80"></div>
                   <span className="shrink mx-4 text-fg-subtle text-xs font-semibold uppercase tracking-wider">or sign in with</span>
-                  <div className="grow border-t border-slate-800/80"></div>
+                  <div className="grow border-t border-divider/80"></div>
                 </div>
 
                 {googleLoading ? (
                   <div className="flex flex-col items-center space-y-3 py-2 w-full">
-                     <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
+                     <Loader2 className="w-6 h-6 text-accent animate-spin" />
                      <span className="text-xs text-fg-subtle">Verifying credentials...</span>
                   </div>
                 ) : (
@@ -440,7 +440,7 @@ export default function Login() {
 
             {deviceStatus === 'loading' && (
               <div className="flex flex-col items-center py-10 space-y-4">
-                <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
+                <Loader2 className="w-10 h-10 text-accent animate-spin" />
                 <span className="text-sm text-fg-subtle">Generating authorization codes...</span>
               </div>
             )}
@@ -448,7 +448,7 @@ export default function Login() {
             {deviceStatus === 'pending' && deviceFlow && (
               <div className="flex flex-col items-center w-full space-y-6">
                 {/* QR Code Container */}
-                <div className="p-3 bg-slate-950 border border-slate-800 rounded-2xl shadow-inner">
+                <div className="p-3 bg-page border border-line rounded-2xl shadow-inner">
                   {qrCodeUrl && (
                     <img
                       src={qrCodeUrl}
@@ -459,15 +459,15 @@ export default function Login() {
                 </div>
 
                 {/* User Authorization Code */}
-                <div className="text-center w-full bg-slate-950 border border-slate-800/80 rounded-2xl py-4">
+                <div className="text-center w-full bg-page border border-divider/80 rounded-2xl py-4">
                   <div className="text-xs text-fg-subtle tracking-wider uppercase mb-1">Authorization Code</div>
-                  <div className="text-3xl font-mono font-extrabold tracking-widest text-indigo-400 select-all">
+                  <div className="text-3xl font-mono font-extrabold tracking-widest text-accent select-all">
                     {deviceFlow.userCode}
                   </div>
                 </div>
 
                 <div className="text-xs text-fg-subtle flex items-center space-x-1.5">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-500" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />
                   <span>Waiting for mobile authorization...</span>
                 </div>
               </div>
@@ -478,7 +478,7 @@ export default function Login() {
                 <p className="text-red-400 text-sm">The authorization code has expired.</p>
                 <button
                   onClick={startTVDeviceFlow}
-                  className="px-5 py-2.5 rounded-xl ui-brand hover:brightness-110 font-medium text-sm transition-all duration-300 flex items-center space-x-2 shadow-lg shadow-indigo-600/10"
+                  className="px-5 py-2.5 rounded-xl ui-brand hover:brightness-110 font-medium text-sm transition-all duration-300 flex items-center space-x-2 shadow-lg shadow-accent/10"
                 >
                   <RefreshCw className="w-4 h-4" />
                   <span>Generate New Code</span>
@@ -499,7 +499,7 @@ export default function Login() {
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-550" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle" />
                   <input
                     type="email"
                     value={emailInput}
@@ -508,7 +508,7 @@ export default function Login() {
                       clearMessages();
                     }}
                     placeholder="name@example.com"
-                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
+                    className="w-full bg-page border border-line hover:border-line focus:border-focus rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
                     required
                   />
                 </div>
@@ -530,7 +530,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={credsLoading}
-                className="w-full py-3.5 rounded-2xl ui-brand hover:brightness-110 font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer text-sm"
+                className="w-full py-3.5 rounded-2xl ui-brand hover:brightness-110 font-semibold transition-all duration-300 shadow-xl shadow-accent/10 hover:shadow-accent/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer text-sm"
               >
                 {credsLoading ? (
                   <>
@@ -546,7 +546,7 @@ export default function Login() {
             <div className="mt-6 text-center text-sm">
               <button
                 onClick={() => { setActiveTab('web'); clearMessages(); }}
-                className="text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline bg-transparent border-none p-0 inline focus:outline-hidden"
+                className="text-accent hover:text-accent font-semibold cursor-pointer underline bg-transparent border-none p-0 inline focus:outline-hidden"
               >
                 Back to Login
               </button>
@@ -565,7 +565,7 @@ export default function Login() {
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">New Password</label>
                 <div className="relative">
-                  <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-555" />
+                  <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle" />
                   <input
                     type="password"
                     value={passwordInput}
@@ -574,7 +574,7 @@ export default function Login() {
                       clearMessages();
                     }}
                     placeholder="••••••••"
-                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
+                    className="w-full bg-page border border-line hover:border-line focus:border-focus rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
                     required
                   />
                 </div>
@@ -594,7 +594,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={credsLoading}
-                className="w-full py-3.5 rounded-2xl ui-brand hover:brightness-110 font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer text-sm"
+                className="w-full py-3.5 rounded-2xl ui-brand hover:brightness-110 font-semibold transition-all duration-300 shadow-xl shadow-accent/10 hover:shadow-accent/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer text-sm"
               >
                 {credsLoading ? (
                   <>
