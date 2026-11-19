@@ -273,11 +273,16 @@ const VideoPlayerContent: React.FC = () => {
             ))}
           </MediaProvider>
 
-          {/* Transparent Gesture Overlay to intercept touches on Vidstack media provider */}
+          {/* Transparent Gesture Overlay to intercept touches on Vidstack media provider. A click
+              (a mouse, not a touch: touches have their own gestures) plays or pauses. */}
           <div
             className="absolute inset-0 z-10 touch-none"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
+            onClick={() => {
+              if (isTizen || Date.now() - lastTouchTime.current < 500) return;
+              remote.togglePaused();
+            }}
           />
 
           <Captions

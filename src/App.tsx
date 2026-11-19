@@ -398,6 +398,26 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     [openPersonTitle, openDiscoverItem, startPlayback, currentItem, discoverLoadingItemId]
   );
 
+  const openSearchPage = useCallback(() => {
+    resetHistory(true);
+    setDetailItem(null);
+    setCurrentSeriesItem(null);
+    setSearchLiveQuery(undefined);
+    setOverlayPage('search');
+    setShowDiscover(true);
+  }, [resetHistory, setDetailItem, setCurrentSeriesItem, setShowDiscover]);
+  // Cmd+K (Ctrl+K elsewhere) opens Search from anywhere but the player, as in most apps.
+  useEffect(() => {
+    if (isTizen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'k' || streamUrl) return;
+      e.preventDefault();
+      openSearchPage();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isTizen, streamUrl, openSearchPage]);
+
   // A genre on a title's page: Movies (or Shows) filtered to it, the title's page closed.
   const openGenre = useCallback(
     (genre: string, type: 'movie' | 'series') => {
@@ -622,14 +642,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                 setOverlayPage('mylist');
                 setShowDiscover(true);
               }}
-              onSelectSearch={() => {
-                resetHistory(true);
-                setDetailItem(null);
-                setCurrentSeriesItem(null);
-                setSearchLiveQuery(undefined);
-                setOverlayPage('search');
-                setShowDiscover(true);
-              }}
+              onSelectSearch={openSearchPage}
               isPeopleActive={isPeoplePage}
               onSelectPeople={() => openSection('people')}
               isSportsActive={isSportsPage}
