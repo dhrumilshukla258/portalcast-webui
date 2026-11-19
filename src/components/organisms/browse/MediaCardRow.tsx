@@ -201,7 +201,9 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
         // (invisible) vertical scroll range — wheel-down gets consumed
         // scrolling that sliver internally instead of bubbling to the page,
         // while wheel-up still bubbles fine since scrollTop's already 0.
-        className={TV ? 'hide-scrollbar flex gap-4 overflow-x-auto overflow-y-hidden' : 'hide-scrollbar row-content-fade-in flex gap-2 overflow-x-auto overflow-y-hidden scroll-smooth pb-1 sm:gap-4'}
+        // Clipping does cut the hovered card, though: -m-2 p-2 gives it 8px of room on every
+        // side (its 1.03 grows about 5px) without moving the row (pb-3 keeps the old pb-1).
+        className={TV ? 'hide-scrollbar flex gap-4 overflow-x-auto overflow-y-hidden' : 'hide-scrollbar row-content-fade-in -m-2 flex gap-2 overflow-x-auto overflow-y-hidden scroll-smooth p-2 pb-3 sm:gap-4'}
         data-tv-group="row"
       >
         {/* Percentage widths matching MainContentGrid/the filtered Discover
