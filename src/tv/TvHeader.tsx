@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Settings, Captions, Trash2, Shield, LogOut, X } from 'lucide-react';
+import { Settings, Captions, Trash2, Shield, LogOut, X, Palette } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { THEMES, themeLabel, useTheme } from '@/themes/theme';
+import { useChooseTheme } from '@/themes/accountTheme';
 import OpenSubtitlesModal from '@/components/molecules/OpenSubtitlesModal';
 import type { HeaderProps } from '@/components/organisms/layout/Header';
 
@@ -85,6 +87,10 @@ const TvHeader: React.FC<HeaderProps> = ({
 const TvSettingsPanel: React.FC<{ onClose: () => void; onSubtitles: () => void; onClearHistory: () => void }> = ({ onClose, onSubtitles, onClearHistory }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const chooseTheme = useChooseTheme();
+  // OK steps through the themes (Classic, Minimal, Console): shown at once, behind the panel.
+  const nextTheme = () => chooseTheme(THEMES[(THEMES.findIndex((t) => t.id === theme) + 1) % THEMES.length].id);
   React.useEffect(() => {
     // Back closes it (the remote's Back reaches the page only when nothing handles it first).
     const onKey = (e: KeyboardEvent) => {
@@ -106,6 +112,9 @@ const TvSettingsPanel: React.FC<{ onClose: () => void; onSubtitles: () => void; 
         {user && <p className="mb-4 truncate text-[15px] text-slate-400">{user.name || user.email}</p>}
         <button type="button" className={item} onClick={onSubtitles} data-focusable="true" data-default-focus="true" tabIndex={-1}>
           <Captions className="h-5 w-5 text-slate-400" /> Subtitle accounts
+        </button>
+        <button type="button" className={item} onClick={nextTheme} data-focusable="true" tabIndex={-1}>
+          <Palette className="h-5 w-5 text-slate-400" /> Theme <span className="ml-auto text-[15px] font-normal text-slate-400">{themeLabel(theme)}</span>
         </button>
         <button type="button" className={item} onClick={onClearHistory} data-focusable="true" tabIndex={-1}>
           <Trash2 className="h-5 w-5 text-slate-400" /> Clear watch history

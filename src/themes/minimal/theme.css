@@ -7,7 +7,9 @@
 */
 
 @layer theme {
-  html[data-theme='minimal'] {
+  /* data-tv-theme: the same colours on the TV apps (src/tv/tv.css has their focus). */
+  html[data-theme='minimal'],
+  html[data-tv-theme='minimal'] {
     /* 1. Semantic colours: black page, Apple's dark greys, white as the accent. */
     --color-page: #000;
     --color-panel: #1c1c1e;
@@ -28,6 +30,11 @@
     --color-divider: #48484a;
     --color-focus: #fff;
     --color-live: #ff453a;
+    --ui-channel-monogram: var(--color-gray-700);
+    --ui-channel-tile: linear-gradient(160deg, var(--color-panel-hover), var(--color-panel));
+    --ui-channel-hero: linear-gradient(160deg, var(--color-gray-750), var(--color-gray-950));
+    accent-color: var(--color-accent);
+    -webkit-tap-highlight-color: rgba(255, 255, 255, .15);
 
     /* Scale the tint on translucent surfaces together; content and blur keep their own values. */
     --ui-glass-opacity-scale: 0.88;
@@ -200,13 +207,13 @@
     --color-slate-800: #2c2c2e;
     --color-slate-900: #1c1c1e;
     --color-slate-950: #0a0a0a;
-    --color-portalcast-light: #0a84ff;
-    --color-portalcast-dark: #0071e3;
-    --color-blue-300: #70b7ff;
-    --color-blue-400: #409cff;
-    --color-blue-500: #0a84ff;
-    --color-blue-600: #0071e3;
-    --color-blue-700: #0060c0;
+    --color-portalcast-light: var(--color-focus);
+    --color-portalcast-dark: var(--color-gray-400);
+    --color-blue-300: var(--color-fg-soft);
+    --color-blue-400: var(--color-accent);
+    --color-blue-500: var(--color-gray-400);
+    --color-blue-600: var(--color-gray-600);
+    --color-blue-700: var(--color-gray-700);
     /* Navy tints (bg-blue-900/30...): neutral, no blue cast. */
     --color-blue-800: #2c2c2e;
     --color-blue-900: #1c1c1e;
@@ -217,10 +224,11 @@
     --color-indigo-800: #2c2c2e;
     --color-indigo-900: #1c1c1e;
     --color-indigo-950: #0a0a0a;
+    --color-indigo-100: var(--color-fg-soft);
     --color-indigo-300: #d2d2d7;
     --color-indigo-400: #a1a1a6;
     --color-indigo-500: #f5f5f7;
-    --color-indigo-600: #0071e3;
+    --color-indigo-600: var(--color-gray-600);
     /* The sign-in pages' purples (violet, purple, fuchsia): neutral greys. */
     --color-violet-100: #f5f5f7;
     --color-violet-200: #e8e8ed;
@@ -251,8 +259,8 @@
     --color-fuchsia-900: #1c1c1e;
     --color-sky-300: #f5f5f7;
     --color-sky-400: #f5f5f7;
-    --color-sky-500: #0a84ff;
-    --color-sky-600: #0071e3;
+    --color-sky-500: var(--color-gray-400);
+    --color-sky-600: var(--color-gray-600);
     --color-green-400: #30d158;
     --color-green-500: #30d158;
     --color-emerald-400: #30d158;
@@ -260,6 +268,17 @@
     --color-red-400: #ff6961;
     --color-red-500: #ff453a;
     --color-red-600: #ff453a;
+  }
+  /* On the TV apps (data-tv-theme; src/tv/tv.css has their focus): no blur, and side panels a
+     dark grey rather than the page's black. After the block above, so these win. */
+  html[data-tv-theme='minimal'] {
+    --ui-glass-blur: none;
+    --ui-player-panel-blur: none;
+    --ui-sheet-blur: none;
+    --ui-dialog-blur: none;
+    --ui-tip-blur: none;
+    --ui-toast-blur: none;
+    --color-surface-5: #1c1c1e;
   }
 }
 
@@ -286,13 +305,32 @@ html[data-theme='minimal'] body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-html[data-theme='minimal'] .app-bg {
+html[data-theme='minimal'] .app-bg,
+html[data-tv-theme='minimal'] .app-bg {
   background-color: #000;
   background-image: none;
 }
 
-html[data-theme='minimal'] .app-bg::before {
+html[data-theme='minimal'] .app-bg::before,
+html[data-tv-theme='minimal'] .app-bg::before {
   display: none;
+}
+
+html[data-theme='minimal'] img[src='/portalcast-logo.svg'],
+html[data-tv-theme='minimal'] img[src='/portalcast-logo.svg'] {
+  filter: brightness(0) invert(1);
+}
+
+@layer base {
+  html[data-theme='minimal'] :focus-visible,
+  html[data-tv-theme='minimal'] :focus-visible {
+    outline-color: var(--color-focus);
+  }
+  html[data-theme='minimal'] ::selection,
+  html[data-tv-theme='minimal'] ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
 }
 
 html[data-theme='minimal'] h1,

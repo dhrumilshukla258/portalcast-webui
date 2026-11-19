@@ -56,7 +56,7 @@ const TvButton: React.FC<{ onClick: () => void; primary?: boolean; defaultFocus?
     data-focusable="true"
     data-default-focus={defaultFocus ? 'true' : undefined}
     tabIndex={-1}
-    className={`flex h-11 shrink-0 items-center gap-2 rounded-[10px] px-5 text-[16px] font-semibold ${primary ? 'bg-sky-600 text-white' : 'bg-surface-9/90 text-slate-100'}`}
+    className={`tv-button flex h-11 shrink-0 items-center gap-2 rounded-[10px] px-5 text-[16px] font-semibold ${primary ? 'tv-primary bg-sky-600 text-white' : 'bg-surface-9/90 text-slate-100'}`}
   >
     {children}
   </button>
@@ -93,8 +93,8 @@ const Backdrop: React.FC<{ item: MediaItem }> = ({ item }) => {
   return (
     <div className="pointer-events-none absolute inset-0">
       <img src={downsize(art, 'w1280')} alt="" className="tv-fade-in h-full w-full object-cover" onError={() => setFailed(true)} />
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(5,8,15,0.96) 0%, rgba(5,8,15,0.82) 38%, rgba(5,8,15,0.35) 70%, rgba(5,8,15,0.2) 100%)' }} />
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, #05080F 0%, rgba(5,8,15,0) 50%)' }} />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(var(--tv-page-rgb),0.96) 0%, rgba(var(--tv-page-rgb),0.82) 38%, rgba(var(--tv-page-rgb),0.35) 70%, rgba(var(--tv-page-rgb),0.2) 100%)' }} />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, var(--color-page) 0%, var(--tv-shade-0) 50%)' }} />
     </div>
   );
 };
@@ -375,7 +375,7 @@ export const TvSeriesDetail: React.FC<{
                       data-focusable="true"
                       data-active={active ? 'true' : undefined}
                       tabIndex={-1}
-                      className={`h-11 shrink-0 rounded-[10px] px-5 text-[16px] font-semibold ${active ? 'bg-sky-600 text-white' : 'bg-surface-9/90 text-slate-200'}`}
+                      className={`tv-button h-11 shrink-0 rounded-[10px] px-5 text-[16px] font-semibold ${active ? 'tv-primary bg-sky-600 text-white' : 'bg-surface-9/90 text-slate-200'}`}
                     >
                       {seasonLabel(season, i)}
                     </button>

@@ -40,7 +40,7 @@ function Logo({ channel, className }: { channel: MediaItem; className: string })
   ) : (
     <span
       className={`flex shrink-0 items-center justify-center rounded-md font-bold text-white/90 ${className}`}
-      style={{ background: `hsl(${nameHue(name)} 35% 24%)` }}
+      style={{ background: `var(--ui-channel-monogram, hsl(${nameHue(name)} 35% 24%))` }}
     >
       {monogram(name)}
     </span>
@@ -59,7 +59,7 @@ function Tile({ card, at, onPlay }: { card: OnNow; at: number; onPlay: (c: Media
       title={`${card.programme.name} · ${name}`}
       // Rests at 96 % and fills its slot on hover, so the row (which clips) never cuts it.
       className="flex aspect-16/10 w-full scale-[0.96] flex-col justify-between overflow-hidden rounded-xl p-3 text-left transition-transform duration-300 hover:scale-100 focus-visible:scale-100"
-      style={{ background: `linear-gradient(160deg, hsl(${h} 40% 26%) 0%, hsl(${h} 30% 11%) 100%)` }}
+      style={{ background: `var(--ui-channel-tile, linear-gradient(160deg, hsl(${h} 40% 26%) 0%, hsl(${h} 30% 11%) 100%))` }}
     >
       <span className="flex min-w-0 items-center gap-2">
         <Logo channel={card.channel} className="h-6 w-9 text-3xs" />
@@ -99,7 +99,7 @@ export default function WhatsOn({ channels, groups, epgData, now, favorites = []
     <div className="px-1 pb-32 pt-1">
       <section
         className="mb-8 overflow-hidden rounded-2xl p-6 sm:p-10"
-        style={{ background: `radial-gradient(120% 140% at 90% 10%, hsl(${h} 45% 30%) 0%, transparent 60%), linear-gradient(180deg, hsl(${h} 25% 14%) 0%, hsl(${h} 20% 7%) 100%)` }}
+        style={{ background: `var(--ui-channel-hero, radial-gradient(120% 140% at 90% 10%, hsl(${h} 45% 30%) 0%, transparent 60%), linear-gradient(180deg, hsl(${h} 25% 14%) 0%, hsl(${h} 20% 7%) 100%))` }}
       >
         <div className="flex items-start justify-between gap-6">
           <div className="min-w-0 max-w-2xl text-left">

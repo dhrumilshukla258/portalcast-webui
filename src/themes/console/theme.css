@@ -1,6 +1,8 @@
 /* Console · white for the current choice, ice for focus, cobalt for reflected light. */
 @layer theme {
-  html[data-theme='console'] {
+  /* data-tv-theme: the same colours on the TV apps (src/tv/tv.css has their focus). */
+  html[data-theme='console'],
+  html[data-tv-theme='console'] {
     color-scheme: dark;
     --color-page: #071121;
     --color-panel: #101c30;
@@ -110,6 +112,26 @@
     --ui-tip-bg: var(--color-panel-raised);
     --ui-scrollbar-thumb: var(--console-track);
     --ui-scrollbar-thumb-hover: var(--console-rail);
+  }
+  /* On the TV apps (data-tv-theme; src/tv/tv.css has their focus): no blur, and the raw colours
+     their screens still use (the web Console has no palette fallback). After the block above, so these win. */
+  html[data-tv-theme='console'] {
+    --ui-glass-blur: none;
+    --ui-player-panel-blur: none;
+    --ui-sheet-blur: none;
+    --ui-dialog-blur: none;
+    --ui-tip-blur: none;
+    --ui-toast-blur: none;
+    --color-slate-100: #f4f7ff;
+    --color-slate-200: #dce6f6;
+    --color-slate-300: #afbed4;
+    --color-slate-400: #afbed4;
+    --color-slate-500: #96a8c2;
+    --color-sky-400: #90caff;
+    --color-sky-600: #397cff;
+    --color-surface-5: #101c30;
+    --color-surface-8: #14243c;
+    --color-surface-9: #203452;
   }
 }
 

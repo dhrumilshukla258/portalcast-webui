@@ -47,8 +47,8 @@ const TvHero: React.FC<{ item: MediaItem | null; children?: React.ReactNode }> =
         <div key={art} className="tv-fade-in absolute inset-y-0 right-0 w-[72%]">
           <img src={downsize(art, 'w1280')} alt="" className="h-full w-full object-cover" onError={() => setFailed(art)} />
           {/* Faded into the page: from the left (to 60 % of the picture) and from the bottom. */}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, #05080F 0%, rgba(5,8,15,0.75) 30%, rgba(5,8,15,0) 60%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, #05080F 0%, rgba(5,8,15,0) 45%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, var(--color-page) 0%, var(--tv-shade-75) 30%, var(--tv-shade-0) 60%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, var(--color-page) 0%, var(--tv-shade-0) 45%)' }} />
         </div>
       )}
       <div className="relative z-10 flex h-full flex-col px-12">

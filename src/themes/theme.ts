@@ -31,7 +31,9 @@ export type ThemeId = (typeof THEMES)[number]['id'];
 
 const KEY = 'theme';
 const listeners = new Set<() => void>();
-// The TV apps (Samsung, LG) are always Classic: their screens are drawn for it.
+// The TV apps (Samsung, LG) draw their own screens (src/tv) with Classic's layout. There a
+// theme gives only its colours and its focus (data-tv-theme, src/tv/tv.css): data-theme stays
+// classic, so the web's page-wide rules (glass, squircles, springs) never reach an old TV browser.
 const TV = isTvApp();
 
 export const isThemeId = (v: unknown): v is ThemeId => THEMES.some((t) => t.id === v);
@@ -46,18 +48,19 @@ function stored(): ThemeId {
 }
 
 function apply(id: ThemeId): void {
-  document.documentElement.setAttribute('data-theme', id);
+  document.documentElement.setAttribute('data-theme', TV ? 'classic' : id);
+  if (TV) document.documentElement.setAttribute('data-tv-theme', id);
   // The browser's own bar (phones, the installed app) in the page's colour.
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEMES.find((t) => t.id === id)!.swatch.page);
 }
 
 // This device's last choice draws the first frame (index.html sets it even before this
 // runs, for the intro); the account's (accountTheme.ts) follows.
-let current: ThemeId = TV ? 'classic' : stored();
+let current: ThemeId = stored();
 apply(current);
 
 export function setTheme(id: ThemeId): void {
-  if (TV || id === current) return;
+  if (id === current) return;
   current = id;
   apply(id);
   try {

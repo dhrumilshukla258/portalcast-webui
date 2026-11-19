@@ -10,9 +10,11 @@ import { isTvApp } from '@/utils/helpers';
 import { PasswordStrengthChecklist } from '@/components/molecules/PasswordStrengthChecklist';
 import { useLoginForm } from '@/hooks/useLoginForm';
 import { useTVDeviceFlow } from '@/hooks/useTVDeviceFlow';
+import { useTheme } from '@/themes/theme';
 
 export default function Login() {
   const { isLoggedIn, loginWithGoogle, loginWithCredentials } = useAuth();
+  const theme = useTheme();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/';
@@ -214,7 +216,7 @@ export default function Login() {
 
         if (googleBtnRef.current) {
           win.google.accounts.id.renderButton(googleBtnRef.current, {
-            theme: 'filled_blue',
+            theme: theme === 'minimal' ? 'filled_black' : 'filled_blue',
             size: 'large',
             text: 'signin_with',
             shape: 'rectangular',
@@ -227,7 +229,7 @@ export default function Login() {
     // Poll for the Google SDK script load
     const checkInterval = setInterval(initGoogle, 100);
     return () => clearInterval(checkInterval);
-  }, [activeTab, isLoggedIn, isSignUp, handleCredentialResponse, googleClientId]);
+  }, [activeTab, isLoggedIn, isSignUp, handleCredentialResponse, googleClientId, theme]);
 
   return (
     <div className="min-h-screen app-bg flex flex-col justify-center items-center px-4 font-sans text-fg-soft">
@@ -453,7 +455,7 @@ export default function Login() {
                     <img
                       src={qrCodeUrl}
                       alt="QR Code to scan"
-                      className="w-[180px] h-[180px] rounded-lg"
+                      className={`w-[180px] h-[180px] rounded-lg${theme === 'minimal' ? ' grayscale' : ''}`}
                     />
                   )}
                 </div>

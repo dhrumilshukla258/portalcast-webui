@@ -49,7 +49,7 @@ const TvChannelListCard: React.FC<TvChannelListCardProps> = React.memo(({ item, 
       <span className="w-8 shrink-0 text-left text-xs tabular-nums text-fg-subtle sm:w-10 sm:text-sm">{item.number || ''}</span>
       <div
         className={`flex h-8 w-11 shrink-0 items-center justify-center overflow-hidden rounded-md sm:h-10 sm:w-14 ${showLogo ? 'bg-white/5' : ''}`}
-        style={showLogo ? undefined : { background: `hsl(${nameHue(name)} 35% 24%)` }}
+        style={showLogo ? undefined : { background: `var(--ui-channel-monogram, hsl(${nameHue(name)} 35% 24%))` }}
       >
         {showLogo ? (
           <img
