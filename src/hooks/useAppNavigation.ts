@@ -141,16 +141,14 @@ export function useAppNavigation(
   const playContinueWatching = useCallback(
     async (item: MediaItem) => {
       warmVideoPlayer();
-      let savedResumeTime: number | undefined;
+      let savedResumeTime = item.resumeTime;
       try {
         const records = await getUserProgress();
-        const record = records.find(r => r.mediaId === item.id);
-        if (record && record.meta) {
-          const entry = record.meta;
-          if (entry.currentTime && entry.currentTime > 2)
-            savedResumeTime = entry.currentTime;
-          if (entry.playbackFileId)
-            (item as any).playbackFileId = entry.playbackFileId;
+        const record = records.find(r => String(r.mediaId) === String(item.id));
+        if (record) {
+          savedResumeTime = record.completed ? 0 : Number(record.progress) || Number(record.meta?.currentTime) || 0;
+          if (record.meta?.playbackFileId)
+            (item as any).playbackFileId = record.meta.playbackFileId;
         }
       } catch {
         /* ignore */

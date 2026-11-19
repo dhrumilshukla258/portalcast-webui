@@ -30,6 +30,9 @@ import { createKeptTracker, onlineSubtitleKey } from '@/utils/subtitleKept';
 import { useTVRemoteNavigation } from '@/components/organisms/video/hooks/useTVRemoteNavigation';
 import { useTouchGestures } from '@/components/organisms/video/hooks/useTouchGestures';
 
+import { getUserProgress } from '@/api/endpoints/user';
+import { playbackPositionStorage } from '@/utils/playbackPosition';
+
 const VideoPlayerContent: React.FC = () => {
   const {
     playerRef,
@@ -49,6 +52,7 @@ const VideoPlayerContent: React.FC = () => {
     rawStreamUrl,
     contentType,
     itemId,
+    mediaId,
     item,
     seriesItem,
     channels,
@@ -64,6 +68,7 @@ const VideoPlayerContent: React.FC = () => {
 
     onProviderChange,
     handleCanPlay,
+    initialPlaybackState,
     handleVolumeChange,
     handleTimeUpdate,
     handleError,
@@ -83,7 +88,20 @@ const VideoPlayerContent: React.FC = () => {
     recentChannels,
   } = useVideoContext();
 
+  const progressId = itemId || mediaId;
+  const initialTime = initialPlaybackState?.currentTime;
+  const storage = useMemo(() => {
+    if (contentType === 'tv') return null;
+    return playbackPositionStorage(initialTime, async () => {
+      if (!progressId) return 0;
+      const records = await getUserProgress();
+      const saved = records.find(record => String(record.mediaId) === String(progressId));
+      return saved && !saved.completed ? saved.progress : 0;
+    });
+  }, [contentType, progressId, initialTime]);
   const remote = useMediaRemote(playerRef);
+  const source = useProxy ? streamUrl || rawStreamUrl : rawStreamUrl || streamUrl;
+  const playerKey = JSON.stringify([reloadTrigger, useProxy, source, progressId]);
 
   // Identity of the playing title, as the server keys catalog items (movie stream id /
   // episode id); live is shown but never reported.
@@ -156,7 +174,7 @@ const VideoPlayerContent: React.FC = () => {
     if (!player) return;
 
     const handlePause = () => {
-      if (player.state?.waiting || player.waiting) {
+      if ((contentType === 'tv' || player.state.started) && (player.state?.waiting || player.waiting)) {
         setTimeout(() => {
           player.play().catch((err: any) => {
             console.error("[TV Recovery] Forced play failed:", err);
@@ -176,7 +194,7 @@ const VideoPlayerContent: React.FC = () => {
       const now = Date.now();
       if (now - lastStallNudge < 3000) return;
       lastStallNudge = now;
-      if (player.paused) {
+      if (player.paused && (contentType === 'tv' || player.state.started)) {
         player.play().catch(() => {});
       }
     };
@@ -188,20 +206,18 @@ const VideoPlayerContent: React.FC = () => {
       player.removeEventListener('pause', handlePause);
       player.removeEventListener('stalled', handleStalled);
     };
-  }, [reloadTrigger, useProxy, playerRef]);
+  }, [playerKey, contentType, playerRef]);
 
   const videoSrc = useMemo<PlayerSrc>(() => {
-    const activeUrl =
-      (useProxy ? streamUrl || rawStreamUrl : rawStreamUrl || streamUrl) || '';
-    if (!activeUrl) return '';
+    if (!source) return '';
     const isM3u8 =
       (rawStreamUrl && rawStreamUrl.toLowerCase().includes('m3u8')) ||
-      activeUrl.toLowerCase().includes('m3u8');
+      source.toLowerCase().includes('m3u8');
     return {
-      src: activeUrl,
+      src: source,
       type: isM3u8 ? 'application/x-mpegurl' : 'video/mp4',
     } as PlayerSrc;
-  }, [useProxy, streamUrl, rawStreamUrl]);
+  }, [source, rawStreamUrl]);
 
   return (
     <div
@@ -221,7 +237,7 @@ const VideoPlayerContent: React.FC = () => {
         className={`group relative h-full w-full overflow-hidden ${!cursorVisible && !controlsVisible ? 'cursor-none' : ''}`}
       >
         <MediaPlayer
-          key={`${reloadTrigger}-${useProxy ? 'proxied' : 'direct'}`}
+          key={playerKey}
           className="media-provider h-full w-full"
           title={
             item?.title || seriesItem?.title || channelInfo?.name || 'Video'
@@ -235,6 +251,7 @@ const VideoPlayerContent: React.FC = () => {
           }}
           playsInline
           autoplay
+          storage={storage}
           load="eager"
           ref={playerRef}
           onProviderChange={onProviderChange}

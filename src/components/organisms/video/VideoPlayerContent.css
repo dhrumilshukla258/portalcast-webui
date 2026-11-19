@@ -21,6 +21,11 @@ media-provider {
   object-fit: var(--video-fit-mode, contain) !important;
 }
 
+/* A paused provider can paint frame zero while the resume seek is pending. */
+.media-provider[data-stream-type='on-demand']:not([data-started]):not([data-autoplay-error]) video {
+  visibility: hidden;
+}
+
 .media-captions {
   /* This ensures the subtitles don't touch the absolute edges of the screen */
   padding: 0 5%;

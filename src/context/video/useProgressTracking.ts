@@ -2,7 +2,7 @@
 import { nextEpisodeWindowSeconds } from '@/utils/videoQuality';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { toast } from 'react-toastify';
-import { saveUserProgress, getUserProgress } from '@/api/endpoints/user';
+import { saveUserProgress } from '@/api/endpoints/user';
 import { useEpisodeLookup, resolveAdjacentEpisode } from '@/context/video/useEpisodeLookup';
 
 interface UseProgressTrackingArgs {
@@ -18,15 +18,10 @@ interface UseProgressTrackingArgs {
   episodes?: any[];
   onEpisodeSelect?: (item: any) => void;
   onLoadMoreEpisodes?: () => Promise<void>;
-  initialPlaybackState?: any;
   streamUrl?: string | null;
   resetRecoveryState: () => void;
 }
 
-// Owns everything keyed off hasRestoredProgress/hasCompletedPlayback — these
-// two refs are read/written across saveProgress, handleTimeUpdate,
-// completePlayback and the reset effect below, so they stay together with
-// the callbacks that touch them rather than being split further.
 export function useProgressTracking({
   playerRef,
   contentType,
@@ -40,28 +35,18 @@ export function useProgressTracking({
   episodes,
   onEpisodeSelect,
   onLoadMoreEpisodes,
-  initialPlaybackState,
   streamUrl,
   resetRecoveryState,
 }: UseProgressTrackingArgs) {
-  const hasRestoredProgress = useRef(false);
   const hasCompletedPlayback = useRef(false);
   const [showNextEpisodeButton, setShowNextEpisodeButton] = useState(false);
   const [pendingNextIndex, setPendingNextIndex] = useState<number | null>(null);
 
   const episodeLookup = useEpisodeLookup(episodes, item);
 
-  // Deliberately NOT keyed on reloadTrigger: useHlsRecovery bumps
-  // retryCount and reloadTrigger together in the same retry step, so
-  // refiring this on every reloadTrigger change would call
-  // resetRecoveryState() and zero retryCount right back out from under
-  // the retry it's counting — breaking the cap and backoff entirely.
-  // A manual remount that isn't a retry (e.g. handleProxyToggle) resets
-  // hasRestoredProgress itself before bumping reloadTrigger.
   useEffect(() => {
     resetRecoveryState();
     hasCompletedPlayback.current = false;
-    hasRestoredProgress.current = false;
   }, [streamUrl, rawStreamUrl, resetRecoveryState]);
 
   const completePlayback = useCallback(async () => {
@@ -128,23 +113,6 @@ export function useProgressTracking({
     const time = player.currentTime;
     const dur = player.duration;
 
-    if (!hasRestoredProgress.current && time >= 1) {
-      hasRestoredProgress.current = true;
-      let targetTime = initialPlaybackState?.currentTime || 0;
-      getUserProgress().then((records) => {
-        const record = records.find((r) => r.mediaId === (itemId || mediaId));
-        if (record && !record.completed && record.progress > targetTime) {
-          targetTime = record.progress;
-        }
-        if (targetTime > 2) {
-          player.currentTime = targetTime;
-        }
-      }).catch((err) => {
-        console.error('Failed to restore progress from API:', err);
-        if (targetTime > 2) player.currentTime = targetTime;
-      });
-    }
-
     // Last 5% of the episode, 30–90 s (was a flat 5 min: a quarter of a sitcom).
     if (dur > 0 && contentType === 'series' && (dur - time <= nextEpisodeWindowSeconds(dur))) {
       setShowNextEpisodeButton((prev) => (prev ? prev : true));
@@ -155,7 +123,7 @@ export function useProgressTracking({
     if (dur > 0 && time / dur >= 0.9 && mediaId) {
       completePlayback();
     }
-  }, [contentType, mediaId, itemId, initialPlaybackState, completePlayback, playerRef]);
+  }, [contentType, mediaId, completePlayback, playerRef]);
 
   const lastSavedRef = useRef<{ mediaId: string; time: number } | null>(null);
   const saveProgress = useCallback(() => {
@@ -328,6 +296,5 @@ export function useProgressTracking({
     handleEnded,
     playNextEpisode,
     playPrevEpisode,
-    hasRestoredProgress,
   };
 }

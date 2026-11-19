@@ -34,6 +34,7 @@ export interface MediaItem {
   series_id?: string;
   season_id?: string;
   is_continue_watching?: boolean;
+  resumeTime?: number;
   stream_icon?: string;
   num?: string | number;
   stream_id?: string | number;
