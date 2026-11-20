@@ -58,12 +58,16 @@ export function useVideoQuality(containerRef: RefObject<HTMLElement | null>, id:
       rvfcHandle = video.requestVideoFrameCallback!(onFrame);
     };
 
+    // A seek (Resume jumps to the saved spot) moves mediaTime without frames: count from after it.
+    const restart = () => { first = null; };
+
     const attach = () => {
       const v = containerRef.current?.querySelector('video') as VideoWithRvfc | null;
       if (!v || v === video) return;
       video = v;
       v.addEventListener('loadedmetadata', update);
       v.addEventListener('resize', update);
+      v.addEventListener('seeking', restart);
       if (v.requestVideoFrameCallback) rvfcHandle = v.requestVideoFrameCallback(onFrame);
       update();
     };
@@ -76,6 +80,7 @@ export function useVideoQuality(containerRef: RefObject<HTMLElement | null>, id:
       if (video) {
         video.removeEventListener('loadedmetadata', update);
         video.removeEventListener('resize', update);
+        video.removeEventListener('seeking', restart);
         if (rvfcHandle && video.cancelVideoFrameCallback) video.cancelVideoFrameCallback(rvfcHandle);
       }
     };
