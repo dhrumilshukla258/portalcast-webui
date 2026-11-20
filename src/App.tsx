@@ -23,7 +23,8 @@ const Admin = React.lazy(lazyImport(() => import('@/components/organisms/admin/A
 // Lazy — only needed once playback actually starts, and its tree pulls in
 // the HLS/vidstack player stack, which is one of the heaviest dependencies
 // in the app.
-const VideoPlayer = React.lazy(lazyImport(() => import('@/components/organisms/video/VideoPlayer')));
+import { loadVideoPlayer } from '@/utils/loadVideoPlayer';
+const VideoPlayer = React.lazy(lazyImport(loadVideoPlayer));
 import ConfirmationModal from '@/components/molecules/ConfirmationModal';
 import VariantPickerModal from '@/components/molecules/VariantPickerModal';
 import MainContentGrid from '@/components/organisms/browse/MainContentGrid';
@@ -135,6 +136,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     history,
     resetHistory,
     streamUrl,
+    playbackType,
     rawStreamUrl,
     currentItem,
     currentSeriesItem,
@@ -149,6 +151,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     playCastedMedia,
     pushFrame,
     startPlayback,
+    playChannel,
     focusedIndex,
     setFocusedIndex,
     episodeSnapshot,
@@ -372,7 +375,11 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     [openPersonTitle, discoverLoadingItemId]
   );
 
-  const searchPlayChannel = useCallback((channel: MediaItem) => { startPlayback(channel); }, [startPlayback]);
+  const searchPlayChannel = useCallback((channel: MediaItem) => {
+    // Sports, Search and My List can tune a channel from any browsing tab. The TV library loads
+    // behind the player (next/previous channel need it) without saving Live TV as the preferred tab.
+    if (playChannel(channel)) handleContentTypeChangeRaw('tv', false);
+  }, [playChannel, handleContentTypeChangeRaw]);
   const setRecentSearches = useCallback(
     (list: string[]) => updatePreferences({ recentSearches: list }),
     [updatePreferences]
@@ -523,6 +530,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
           }
         >
         <VideoPlayer
+          key={playbackType}
           streamUrl={streamUrl}
           rawStreamUrl={rawStreamUrl}
           onBack={closePlayer}
@@ -530,17 +538,17 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
           seasonId={context.seasonId}
           categoryId={context.category}
           context={context}
-          contentType={contentType}
+          contentType={playbackType}
           mediaId={
-            context.movieId ??
-            (contentType === 'movie' && currentItem ? currentItem.id : null)
+            playbackType === 'movie' ? currentItem?.id ?? null
+              : playbackType === 'series' ? currentSeriesItem?.id ?? context.movieId : null
           }
           item={currentItem}
-          seriesItem={currentSeriesItem}
-          channels={contentType === 'tv' ? items : undefined}
-          episodes={episodeSnapshot}
-          channelInfo={contentType === 'tv' ? currentItem : null}
-          previewChannelInfo={contentType === 'tv' ? previewChannel : null}
+          seriesItem={playbackType === 'series' ? currentSeriesItem : null}
+          channels={playbackType === 'tv' ? items : undefined}
+          episodes={playbackType === 'series' ? episodeSnapshot : undefined}
+          channelInfo={playbackType === 'tv' ? currentItem : null}
+          previewChannelInfo={playbackType === 'tv' ? previewChannel : null}
           onNextChannel={handleNextChannel}
           onPrevChannel={handlePrevChannel}
           onChannelSelect={handleItemClick}

@@ -38,7 +38,7 @@ const EMPTY_ROW: DiscoverRowState = { items: [], page: 1, hasMore: false, loadin
 // more interdependent state to it risks the kind of effect-ordering bugs documented inline
 // there (see restoredForRef comment).
 export function useDiscover() {
-  const { user } = useAuth();
+  const userId = useAuth().user?.id;
 
   const [facets, setFacets] = useState<DiscoverFacets | null>(null);
   const [loadingFacets, setLoadingFacets] = useState(false);
@@ -79,11 +79,11 @@ export function useDiscover() {
   }, []);
 
   const fetchRecommendations = useCallback(async (type?: 'movie' | 'series') => {
-    if (!user) return;
+    if (userId == null) return;
     setLoadingRecommendations(true);
     const snapKey = `home:${type ?? 'all'}`;
     // Cold start: the last Home seen, at once, while the fresh one loads.
-    const snap = readSnapshot<{ rows: HomeRow[]; genreOrder: string[] }>(user.id, snapKey);
+    const snap = readSnapshot<{ rows: HomeRow[]; genreOrder: string[] }>(userId, snapKey);
     if (snap?.rows?.length) {
       setHomeRows((cur) => (cur.length ? cur : snap.rows));
       setGenreOrder((cur) => (cur.length ? cur : snap.genreOrder ?? []));
@@ -93,7 +93,7 @@ export function useDiscover() {
         const home = await getHome(type);
         setHomeRows(home.rows);
         setGenreOrder(home.genreOrder);
-        saveSnapshot(user.id, snapKey, home);
+        saveSnapshot(userId, snapKey, home);
         setRecommendations([]);
         setRecommendationsBasedOn(null);
         return;
@@ -109,7 +109,7 @@ export function useDiscover() {
     } finally {
       setLoadingRecommendations(false);
     }
-  }, [user]);
+  }, [userId]);
 
   const fetchWhatsNew = useCallback(async (type?: 'movie' | 'series') => {
     setLoadingWhatsNew(true);

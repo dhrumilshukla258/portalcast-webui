@@ -36,6 +36,7 @@ export interface MediaItem {
   // A season's number (series pages): the provider's, or the server's when it merged parts.
   season_number?: string | number;
   is_continue_watching?: boolean;
+  resumeTime?: number;
   stream_icon?: string;
   num?: string | number;
   stream_id?: string | number;

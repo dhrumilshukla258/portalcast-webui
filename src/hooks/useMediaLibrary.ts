@@ -573,7 +573,7 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
   );
 
   const handleContentTypeChange = useCallback(
-    (type: 'movie' | 'series' | 'tv') => {
+    (type: 'movie' | 'series' | 'tv', rememberPreference = true) => {
       if (type === contentType) return;
       
       const key = `${providerKey}_${type}`;
@@ -589,18 +589,12 @@ export function useMediaLibrary(isDetailOpen: boolean = false) {
 
       if (type === 'tv') setChannelGroups([]);
       setContentType(type);
-      updatePreferences({ preferredContentType: type });
+      if (rememberPreference) updatePreferences({ preferredContentType: type });
       setContext(newContext);
       fetchData(newContext, type);
-
-      if (type !== 'tv') {
-        fetchVodCategories(type);
-      }
-
-      // Live TV opens on its channel list (the TV apps used to start the last channel at once).
-      if (type === 'tv') loadEpgData();
+      // The contentType/providerKey effect (2. above) loads the categories or the guide, once.
     },
-    [contentType, fetchData, loadEpgData, fetchVodCategories, user, updatePreferences, providerKey]
+    [contentType, fetchData, user, updatePreferences, providerKey]
   );
 
   const cycleSort = useCallback(() => {

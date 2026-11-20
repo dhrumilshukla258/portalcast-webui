@@ -96,6 +96,7 @@ export function continueItemsOf(progressRecords: ProgressRecord[]): MediaItem[] 
         is_episode: isSeries ? 1 : 0,
         is_playable_movie: !isSeries,
         is_continue_watching: true,
+        resumeTime: Number(record.progress) || Number(entry.currentTime) || 0,
         cmd: entry.cmd,
         series_number: entry.series_number,
         progressPercent: entry.progressPercent,
