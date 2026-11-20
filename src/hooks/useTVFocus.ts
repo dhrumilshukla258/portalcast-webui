@@ -457,8 +457,6 @@ export function useTVFocus({
                 setIsSearchTyping(true);
               }
               el.focus();
-            } else if (el.getAttribute('data-control') === 'sort') {
-              cycleSort();
             } else {
               el.click();
             }

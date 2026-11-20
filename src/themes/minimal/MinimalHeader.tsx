@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
-  ArrowDownAZ,
   Bookmark,
   Clapperboard,
   Film,
@@ -12,8 +11,6 @@ import {
   Palette,
   Search,
   Shield,
-  SortAsc,
-  SortDesc,
   Trash2,
   Trophy,
   Tv,
@@ -33,7 +30,7 @@ type Tab = 'home' | 'movies' | 'shows' | 'cast' | 'tv' | 'sports' | 'mylist' | '
 /**
  * Minimal theme's header: a translucent bar with the logo, the sections as text tabs centred
  * (the selected one on a pill that slides between them), and search, the page's Filters
- * (headerSlot), sort and profile on the right. Movies, Shows and Cast are tabs (Home's chip row
+ * (headerSlot), theme and profile on the right. Movies, Shows and Cast are tabs (Home's chip row
  * is gone in this theme, MinimalSectionRow). Below 880 px the sections are a tab bar along the
  * bottom, as in iOS (Home, Movies, Shows, Live TV, My List; Cast and Sports are then in the
  * profile menu, search in the top bar). Same props and actions as the Classic Header.
@@ -82,9 +79,6 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
               ? 'tv'
               : 'home';
   const typed = p.onSelectTypedHome;
-  // Sort orders the provider's own lists (IPTV categories, My library, Live TV's channels).
-  // Home, Movies, Shows, Cast, Search, My List and Sports keep their own order: not shown there.
-  const sortable = !onHome && !p.isSearchActive && !p.isMyListActive && !p.isSportsActive;
 
   const tabs: { id: Tab; label: string; icon: typeof House; onClick?: () => void }[] = [
     { id: 'home', label: 'Home', icon: House, onClick: p.onSelectDiscover },
@@ -98,7 +92,6 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
   ];
   const shown = tabs.filter((t) => t.onClick);
 
-  const SortIcon = p.sort === 'oldest' ? SortAsc : p.sort === 'alphabetic' ? ArrowDownAZ : SortDesc;
   const iconButton =
     'flex h-9 w-9 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-white [&.focused]:bg-white/15 [&.focused]:text-white';
   const menuItem =
@@ -166,18 +159,17 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
               {/* The page's Filters (Home, Movies, Shows), shown here by MinimalSectionRow: just its
                   icon (and the count when some are set), like the other buttons here. */}
               <span ref={setHeaderSlot} className="contents [&_button]:border-transparent [&_button>span:not(.absolute)]:hidden" />
-              {sortable && (
-                <button
-                  onClick={p.cycleSort}
-                  className={iconButton}
-                  data-focusable="true"
-                  data-control="sort"
-                  tabIndex={-1}
-                  title={`Sort: ${p.sort === 'alphabetic' ? 'A-Z' : p.sort === 'oldest' ? 'Oldest' : 'Latest'}`}
-                >
-                  <SortIcon className="h-[18px] w-[18px]" strokeWidth={1.75} />
-                </button>
-              )}
+              <button
+                onClick={() => setShowThemes(true)}
+                className={iconButton}
+                data-focusable="true"
+                data-control="theme"
+                tabIndex={-1}
+                title={`Theme: ${themeLabel(theme)}`}
+                aria-label="Theme"
+              >
+                <Palette className="h-[18px] w-[18px]" strokeWidth={1.75} />
+              </button>
 
               {user && (
                 <div className="relative ml-1" ref={menuRef}>
@@ -245,9 +237,6 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
             </button>
             <button onClick={menuAction(p.handleClearWatched)} className={menuItem} data-focusable="true" tabIndex={-1}>
               <Trash2 className="h-4 w-4 text-white/60" /> Clear History
-            </button>
-            <button onClick={menuAction(() => setShowThemes(true))} className={menuItem} data-focusable="true" tabIndex={-1}>
-              <Palette className="h-4 w-4 text-white/60" /> Theme: {themeLabel(theme)}
             </button>
             <div className="my-1 h-px bg-white/10" />
             <button onClick={menuAction(logout)} className={`${menuItem} text-red-400`} data-focusable="true" tabIndex={-1}>

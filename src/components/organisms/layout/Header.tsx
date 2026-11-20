@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowDownAZ, SortDesc, SortAsc, LogOut, Shield, Trash2, Captions, Tv, Search, Bookmark, Trophy, Palette } from 'lucide-react';
+import { LogOut, Shield, Trash2, Captions, Tv, Search, Bookmark, Trophy, Palette } from 'lucide-react';
 import { themeLabel, useTheme } from '@/themes/theme';
 import ThemePicker from '@/themes/ThemePicker';
 import { useAuth } from '@/context/AuthContext';
@@ -28,8 +28,6 @@ export interface HeaderProps {
   /** Movies / Series showing Home's layout for that type (their per-category browse counts as the same tab). */
   typedHome?: 'movie' | 'series';
   onSelectTypedHome?: (type: 'movie' | 'series') => void;
-  sort: string | null | undefined;
-  cycleSort: () => void;
   handleClearWatched: () => void;
   streamUrl: string | null;
   historyLength: number;
@@ -55,8 +53,6 @@ export const Header: React.FC<HeaderProps> = React.memo(
     onSelectPeople,
     typedHome,
     onSelectTypedHome,
-    sort,
-    cycleSort,
     handleClearWatched,
     streamUrl,
     historyLength,
@@ -86,7 +82,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
 
     return (
       <header className="sticky top-0 z-50 border-b border-white/10 bg-surface-2 px-3 py-2 sm:px-6 sm:py-3 animate-in fade-in duration-300">
-  {/* One row on a phone too: logo left, sort and profile right (the tabs are the bottom bar). */}
+  {/* One row on a phone too: logo left, theme and profile right (the tabs are the bottom bar). */}
   <div className="flex w-full flex-row items-center justify-between gap-2 sm:gap-3">
     
     {/* Left Block: Navigation Back, Logo, Title */}
@@ -290,17 +286,16 @@ export const Header: React.FC<HeaderProps> = React.memo(
         {/* Action Controls Container */}
         <div className="flex items-center justify-end gap-1.5 sm:w-auto sm:gap-2">
           
-          {/* Sort Button */}
+          {/* Theme: opens the picker (Classic, Minimal, Console) */}
           <button
-            onClick={cycleSort}
+            onClick={() => setShowThemes(true)}
             className="flex shrink-0 items-center justify-center rounded-full border border-white/10 bg-surface-5/85 p-2.5 text-gray-300 shadow-xs transition-all duration-300 hover:bg-white/10 hover:text-white focus:outline-hidden focus:ring-1 focus:ring-portalcast-light active:scale-95"
             data-focusable="true"
-            data-control="sort"
-            title={`Sort: ${sort === 'alphabetic' ? 'A-Z' : sort === 'oldest' ? 'Oldest' : 'Latest'}`}
+            data-control="theme"
+            title={`Theme: ${themeLabel(theme)}`}
+            aria-label="Theme"
           >
-            {(!sort || sort === 'latest') && <SortDesc className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={1.5} />}
-            {sort === 'oldest' && <SortAsc className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={1.5} />}
-            {sort === 'alphabetic' && <ArrowDownAZ className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={1.5} />}
+            <Palette className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={1.5} />
           </button>
 
           {/* User Profile Dropdown */}
@@ -364,15 +359,6 @@ export const Header: React.FC<HeaderProps> = React.memo(
                     >
                       <Trash2 className="h-4 w-4 text-gray-400" />
                       <span>Clear History</span>
-                    </button>
-                    <button
-                      onClick={() => { setDropdownOpen(false); setShowThemes(true); }}
-                      className="flex w-full items-center space-x-2 rounded-xl px-3 py-2.5 text-left text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white transition-colors duration-250 cursor-pointer"
-                      data-focusable="true"
-                      tabIndex={-1}
-                    >
-                      <Palette className="h-4 w-4 text-gray-400" />
-                      <span>Theme: {themeLabel(theme)}</span>
                     </button>
                     <button
                       onClick={() => { setDropdownOpen(false); logout(); }}

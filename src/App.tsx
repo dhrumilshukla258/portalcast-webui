@@ -656,8 +656,6 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                 setShowDiscover(true);
               }}
               onSelectDiscover={goHome}
-              sort={context.sort}
-              cycleSort={cycleSort}
               showAdmin={false}
               setShowAdmin={onShowAdmin}
               handleClearWatched={onClearWatched}
