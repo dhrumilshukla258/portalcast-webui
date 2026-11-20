@@ -10,6 +10,8 @@ import type { ProgressRecord } from '@/api/types/user';
 // A season up to this long loads whole when picked, so it reads 1, 2, 3 (providers list newest
 // first, some oldest first); a longer one (a daily show) pages newest first, as listed.
 const WHOLE_SEASON = 150;
+// How many of its further pages load at once.
+const PAGE_BATCH = 2;
 
 /** The season's episode count from a page answer; the server sends it as a string ("22"). */
 const totalOf = (res: { total_items?: unknown }): number | null => {
@@ -50,7 +52,7 @@ export function useSeasonEpisodes(seriesItem: MediaItem, seasons: MediaItem[], p
 
   const category = seriesItem.category_id ? String(seriesItem.category_id) : '*';
 
-  // A season up to WHOLE_SEASON episodes loads whole (its pages at once) and is put in episode
+  // A season up to WHOLE_SEASON episodes loads whole (PAGE_BATCH pages at a time) and is put in episode
   // order; a longer one shows its first page and loads more on demand (loadMore).
   useEffect(() => {
     if (!selectedSeasonId) return;
@@ -66,16 +68,27 @@ export function useSeasonEpisodes(seriesItem: MediaItem, seasons: MediaItem[], p
         const total = totalOf(res);
         let pages = 1;
         if (total !== null && pageData.length > 0 && pageData.length < total && total <= WHOLE_SEASON) {
-          pages = Math.ceil(total / pageData.length);
-          const rest = await Promise.all(
-            Array.from({ length: pages - 1 }, (_, i) =>
-              getSeries({ movieId: seriesItem.id, seasonId: selectedSeasonId, page: i + 2, pageAtaTime: 1, category }).then(
-                (r) => r.data || [],
-                () => [],
+          const wanted = Math.ceil(total / pageData.length);
+          // PAGE_BATCH pages at a time: each page can reach the IPTV provider, which is never sent
+          // a burst. A page that fails or comes back empty stops it, so the pages loaded stay
+          // contiguous and loadMore carries on from the right one.
+          fetchPages: for (let next = 2; next <= wanted; next += PAGE_BATCH) {
+            if (cancelled) return;
+            const batch = Array.from({ length: Math.min(PAGE_BATCH, wanted - next + 1) }, (_, i) => next + i);
+            const got = await Promise.all(
+              batch.map((page) =>
+                getSeries({ movieId: seriesItem.id, seasonId: selectedSeasonId, page, pageAtaTime: 1, category }).then(
+                  (r) => r.data || [],
+                  () => [] as MediaItem[],
+                ),
               ),
-            ),
-          );
-          pageData = pageData.concat(...rest);
+            );
+            for (const data of got) {
+              if (data.length === 0) break fetchPages;
+              pageData = pageData.concat(data);
+              pages += 1;
+            }
+          }
         }
         if (cancelled) return;
         const whole = total !== null && pageData.length >= total;
