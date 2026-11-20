@@ -15,7 +15,9 @@ import { useNavigationHistory } from './useNavigationHistory';
 import { warmVideoPlayer } from '@/utils/loadVideoPlayer';
 
 // Next/previous channel tunes this long after the last press (a held key skips the ones between).
-const CHANNEL_SETTLE_MS = 350;
+// Each channel that settles opens a stream on the provider, so flipping at a normal pace must not
+// open every channel on the way. The Android TV app waits as long.
+const CHANNEL_SETTLE_MS = 800;
 
 function getResumeTime(): number | undefined {
   return undefined;
