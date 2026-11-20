@@ -3,8 +3,21 @@ import { useAnswersUpdated } from '@/hooks/useAnswersUpdated';
 import { getSeries } from '@/api/endpoints/series';
 import { findResumeEpisode } from '@/utils/resumeEpisode';
 import { seasonMatches } from '@/utils/seasonIds';
+import { inEpisodeOrder } from '@/utils/episodeInfo';
 import type { MediaItem } from '@/types';
 import type { ProgressRecord } from '@/api/types/user';
+
+// A season up to this long loads whole when picked, so it reads 1, 2, 3 (providers list newest
+// first, some oldest first); a longer one (a daily show) pages newest first, as listed.
+const WHOLE_SEASON = 150;
+// How many of its further pages load at once.
+const PAGE_BATCH = 2;
+
+/** The season's episode count from a page answer; the server sends it as a string ("22"). */
+const totalOf = (res: { total_items?: unknown }): number | null => {
+  const n = Number(res.total_items);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
 
 /**
  * A series page's seasons and episodes (the web page and the TV apps' page share it): the season
@@ -39,8 +52,8 @@ export function useSeasonEpisodes(seriesItem: MediaItem, seasons: MediaItem[], p
 
   const category = seriesItem.category_id ? String(seriesItem.category_id) : '*';
 
-  // Just the first page when a season is picked, so the opening episodes show at once; more
-  // pages load on demand (loadMore).
+  // A season up to WHOLE_SEASON episodes loads whole (PAGE_BATCH pages at a time) and is put in episode
+  // order; a longer one shows its first page and loads more on demand (loadMore).
   useEffect(() => {
     if (!selectedSeasonId) return;
     let cancelled = false;
@@ -50,15 +63,41 @@ export function useSeasonEpisodes(seriesItem: MediaItem, seasons: MediaItem[], p
     if (!refreshing) setLoadingEpisodes(true);
     setEpisodePage(1);
     getSeries({ movieId: seriesItem.id, seasonId: selectedSeasonId, page: 1, pageAtaTime: 1, category })
-      .then((res) => {
+      .then(async (res) => {
+        let pageData = res.data || [];
+        const total = totalOf(res);
+        let pages = 1;
+        if (total !== null && pageData.length > 0 && pageData.length < total && total <= WHOLE_SEASON) {
+          const wanted = Math.ceil(total / pageData.length);
+          // PAGE_BATCH pages at a time: each page can reach the IPTV provider, which is never sent
+          // a burst. A page that fails or comes back empty stops it, so the pages loaded stay
+          // contiguous and loadMore carries on from the right one.
+          fetchPages: for (let next = 2; next <= wanted; next += PAGE_BATCH) {
+            if (cancelled) return;
+            const batch = Array.from({ length: Math.min(PAGE_BATCH, wanted - next + 1) }, (_, i) => next + i);
+            const got = await Promise.all(
+              batch.map((page) =>
+                getSeries({ movieId: seriesItem.id, seasonId: selectedSeasonId, page, pageAtaTime: 1, category }).then(
+                  (r) => r.data || [],
+                  () => [] as MediaItem[],
+                ),
+              ),
+            );
+            for (const data of got) {
+              if (data.length === 0) break fetchPages;
+              pageData = pageData.concat(data);
+              pages += 1;
+            }
+          }
+        }
         if (cancelled) return;
-        const pageData = res.data || [];
+        const whole = total !== null && pageData.length >= total;
         // Fetched here, not through the app's navigation, so context.seasonId is never set:
         // startPlayback reads the season from the episode itself.
-        const withSeason = pageData.map((ep) => ({ ...ep, season_id: selectedSeasonId }));
+        const withSeason = (whole ? inEpisodeOrder(pageData) : pageData).map((ep) => ({ ...ep, season_id: selectedSeasonId }));
         setEpisodes(withSeason);
-        const total = res.total_items;
-        setHasMoreEpisodes(pageData.length > 0 && (typeof total !== 'number' || withSeason.length < total));
+        setEpisodePage(pages);
+        setHasMoreEpisodes(pageData.length > 0 && !whole);
       })
       .catch(() => {
         if (!cancelled) {
@@ -89,9 +128,9 @@ export function useSeasonEpisodes(seriesItem: MediaItem, seasons: MediaItem[], p
       const withSeason = pageData.map((ep) => ({ ...ep, season_id: selectedSeasonId }));
       setEpisodes((prev) => [...prev, ...withSeason]);
       setEpisodePage(nextPage);
-      const total = res.total_items;
+      const total = totalOf(res);
       const newTotalLoaded = episodes.length + withSeason.length;
-      setHasMoreEpisodes(pageData.length > 0 && (typeof total !== 'number' || newTotalLoaded < total));
+      setHasMoreEpisodes(pageData.length > 0 && (total === null || newTotalLoaded < total));
     } catch {
       setHasMoreEpisodes(false);
     } finally {
