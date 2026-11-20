@@ -27,13 +27,28 @@ interface SeriesOverviewPageProps {
 // back-button position jump, no extra history entry to back out of.
 const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
   seriesItem,
-  seasons,
+  seasons: listed,
   loadingSeasons,
   progressRecords,
   onPlayEpisode,
   onContinueWatching,
 }) => {
   const baseUrl = URL_PATHS.HOST === '/' ? '' : URL_PATHS.HOST;
+  // An episode without a still shows the show's own backdrop (else its poster), dimmed.
+  const episodeFallback = useMemo(() => {
+    const path = seriesItem.backdrop_path || seriesItem.screenshot_uri;
+    if (!path) return null;
+    return String(path).startsWith('http') ? String(path) : `${baseUrl}/api/images${path}`;
+  }, [seriesItem.backdrop_path, seriesItem.screenshot_uri, baseUrl]);
+  // Season 1 first (providers list the newest first), Specials (season 0) last.
+  const seasons = useMemo(
+    () =>
+      listed
+        .map((season, index) => ({ season, n: seasonNumberOf(season, index) }))
+        .sort((a, b) => Number(a.n === 0) - Number(b.n === 0) || a.n - b.n)
+        .map((k) => k.season),
+    [listed]
+  );
   const {
     selectedSeasonId,
     setSelectedSeasonId,
@@ -100,22 +115,22 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
         creditLabel="Created by"
         trailerKey={seriesItem.trailer_key}
         metaExtra={
-          <span className="text-gray-400">
+          <span className="text-fg-muted">
             {seasons.length || 0} season{seasons.length === 1 ? '' : 's'}
           </span>
         }
       >
-        <h3 className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-wider text-gray-500">
-          <Layers size={13} />
+        <h3 className="ui-label mb-3 flex items-center gap-2">
+          <Layers size={13} data-ui="section-icon" />
           Seasons
         </h3>
 
         {seasons.length === 0 && loadingSeasons ? (
           <div className="flex w-full justify-center py-6">
-            <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-t-2 border-blue-500" />
+            <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-t-2 border-accent" />
           </div>
         ) : seasons.length === 0 ? (
-          <p className="py-2 text-sm text-gray-500">No seasons found.</p>
+          <p className="py-2 text-sm text-fg-subtle">No seasons found.</p>
         ) : (
           <>
             {/* Season tabs — picking one loads its episodes below, inline. */}
@@ -128,13 +143,15 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
                     key={`${season.id}-${index}`}
                     onClick={() => setSelectedSeasonId(season.id)}
                     data-focusable="true"
+                    data-ui="season-tab"
+                    data-active={isActive || undefined}
                     className={`flex items-center gap-2 rounded-xl border py-2 pl-2 pr-3.5 text-left transition-colors ${
                       isActive
-                        ? 'border-blue-500/60 bg-blue-500/10'
-                        : 'border-white/10 bg-white/5 hover:border-blue-500/40 hover:bg-white/10'
+                        ? 'border-accent/60 bg-accent/10'
+                        : 'border-line bg-white/5 hover:border-focus/40 hover:bg-white/10'
                     }`}
                   >
-                    <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-black/30">
+                    <div data-ui="season-thumb" className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-black/30">
                       {season.screenshot_uri ? (
                         <img
                           src={
@@ -153,7 +170,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
                         </div>
                       )}
                     </div>
-                    <span className={`truncate text-sm font-bold ${isActive ? 'text-white' : 'text-gray-200'}`}>
+                    <span className={`truncate text-sm font-bold ${isActive ? 'text-fg' : 'text-fg-soft'}`}>
                       {seasonLabel(number)}
                     </span>
                   </button>
@@ -171,7 +188,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
               }`}
             >
               {episodes.length === 0 && !loadingEpisodes ? (
-                <p className="py-4 text-center text-sm text-gray-500">No episodes found for this season.</p>
+                <p className="py-4 text-center text-sm text-fg-subtle">No episodes found for this season.</p>
               ) : (
                 episodes.map((ep, index) => {
                   const record = progressByMediaId.get(String(ep.id));
@@ -188,19 +205,20 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
                       isResume={isResume}
                       onPlay={onPlayEpisode}
                       isDefaultFocus={resumeEpisode ? isResume : index === 0}
+                      fallbackImage={episodeFallback}
                     />
                   );
                 })
               )}
               {episodes.length === 0 && loadingEpisodes && (
                 <div className="flex w-full justify-center py-8">
-                  <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-t-2 border-blue-500" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-t-2 border-accent" />
                 </div>
               )}
               {hasMoreEpisodes && !loadingEpisodes && (
                 <div ref={loadMoreSentinelRef} className="flex w-full justify-center py-4">
                   {loadingMoreEpisodes && (
-                    <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-t-2 border-blue-500" />
+                    <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-t-2 border-accent" />
                   )}
                 </div>
               )}
@@ -213,7 +231,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
         <button
           onClick={onContinueWatching}
           data-focusable="true"
-          className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 text-left transition-colors hover:bg-white/10 sm:w-96"
+          className="flex w-full items-center gap-3 rounded-xl border border-line bg-white/5 p-3 text-left transition-colors hover:bg-white/10 sm:w-96"
         >
           <div className="relative flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-black/30">
             {continueImageUrl ? (
@@ -223,12 +241,12 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="truncate text-sm font-bold text-white">
+            <h4 className="truncate text-sm font-bold text-fg">
               {continueEntry.meta?.episodeTitle || continueEntry.meta?.name || 'Continue'}
             </h4>
             <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/10">
               <div
-                className="h-full rounded-full bg-blue-500"
+                className="ui-accent h-full rounded-full"
                 style={{ width: `${continueEntry.meta?.progressPercent || 0}%` }}
               />
             </div>

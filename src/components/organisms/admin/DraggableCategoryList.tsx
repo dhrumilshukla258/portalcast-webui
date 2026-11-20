@@ -209,7 +209,7 @@ export const DraggableCategoryList: React.FC<DraggableCategoryListProps> = ({
                 isTouchDevice ? 'pl-3 pr-1' : 'px-3'
               } ${!isTouchDevice && isDragging ? 'touch-none' : !isTouchDevice ? 'touch-pan-y' : ''} ${
                 isActive
-                  ? 'bg-linear-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-blue-900/30'
+                  ? 'ui-selected'
                   : 'text-gray-400 hover:bg-white/10 hover:text-gray-100'
               } ${isDragging ? 'shadow-xl shadow-black/40 ring-1 ring-sky-400/50' : ''} ${
                 isDraggable && !isTouchDevice ? 'cursor-grab active:cursor-grabbing' : ''

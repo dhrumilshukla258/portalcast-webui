@@ -1,6 +1,7 @@
 import React from 'react';
 import { Loader2, Star, Tv, Undo2 } from 'lucide-react';
 import MediaCard from '@/components/molecules/MediaCard';
+import Chip from '@/components/ui/Chip';
 import { getMyList } from '@/api/endpoints/discover';
 import { getWatchedTitles, getHiddenCards, setWatched, setNotInterested } from '@/api/endpoints/user';
 import { allChannels } from '@/utils/channelList';
@@ -83,30 +84,23 @@ const MyListView: React.FC<MyListViewProps> = ({ onClick, loadingItemId, active,
   return (
     <div className="custom-scrollbar h-full min-h-0 flex-1 overflow-y-auto px-3 pb-10 pt-3 sm:px-6 sm:pt-5 tv-page">
       <div className="mb-3 flex items-baseline gap-3">
-        <h2 className="text-xl font-bold text-white sm:text-2xl">My List</h2>
-        {!!count && <span className="text-sm text-gray-400">{count}</span>}
+        <h2 className="text-xl font-bold text-fg sm:text-2xl">My List</h2>
+        {!!count && <span className="text-sm text-fg-muted">{count}</span>}
       </div>
       <div className="hide-scrollbar mb-4 flex gap-2 overflow-x-auto" data-focus-group="mylist-sections">
         {SECTIONS.map((s) => (
-          <button
-            key={s.id}
-            data-focusable="true"
-            onClick={() => setSection(s.id)}
-            className={`h-9 shrink-0 rounded-full px-4 text-sm font-bold transition-colors ${
-              section === s.id ? 'bg-white text-[#05080F]' : 'border border-white/20 text-gray-200'
-            }`}
-          >
+          <Chip key={s.id} selected={section === s.id} onClick={() => setSection(s.id)}>
             {s.label}
-          </button>
+          </Chip>
         ))}
       </div>
       {failed ? (
-        <p className="text-gray-400">This isn't available on this server yet.</p>
+        <p className="text-fg-muted">This isn't available on this server yet.</p>
       ) : section === 'channels' ? (
         favChannels === null ? (
           <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-white/60" /></div>
         ) : favChannels.length === 0 ? (
-          <p className="text-gray-400">{empty.channels}</p>
+          <p className="text-fg-muted">{empty.channels}</p>
         ) : (
           <div className="space-y-2">
             {favChannels.map((c) => <ChannelItem key={String(c.id)} channel={c} onPlay={onPlayChannel} onUnstar={() => toggleFavorite(c)} />)}
@@ -115,7 +109,7 @@ const MyListView: React.FC<MyListViewProps> = ({ onClick, loadingItemId, active,
       ) : items === null ? (
         <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-white/60" /></div>
       ) : items.length === 0 ? (
-        <p className="text-gray-400">{empty[section]}</p>
+        <p className="text-fg-muted">{empty[section]}</p>
       ) : (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 md:gap-6 lg:grid-cols-6 xl:grid-cols-7">
           {items.map((item) => (
@@ -125,7 +119,7 @@ const MyListView: React.FC<MyListViewProps> = ({ onClick, loadingItemId, active,
                 <button
                   data-focusable="true"
                   onClick={() => void undo(item)}
-                  className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-full border border-white/15 py-1.5 text-xs font-bold text-gray-200 hover:bg-white/10"
+                  className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-full border border-white/15 py-1.5 text-xs font-bold text-fg-soft hover:bg-white/10"
                 >
                   <Undo2 className="h-3.5 w-3.5" />
                   {section === 'watched' ? 'Not watched' : 'Show on Home again'}
@@ -148,9 +142,9 @@ const ChannelItem: React.FC<{ channel: MediaItem; onPlay: (c: MediaItem) => void
     <div className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2">
       <button data-focusable="true" onClick={() => onPlay(channel)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
         <span className="flex h-10 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-black/40">
-          {src && !failed ? <img src={src} alt="" loading="lazy" className="max-h-full max-w-full object-contain" onError={() => setFailed(true)} /> : <Tv className="h-5 w-5 text-gray-500" />}
+          {src && !failed ? <img src={src} alt="" loading="lazy" className="max-h-full max-w-full object-contain" onError={() => setFailed(true)} /> : <Tv className="h-5 w-5 text-fg-subtle" />}
         </span>
-        <span className="min-w-0 flex-1 truncate font-bold text-white">{channel.name}</span>
+        <span className="min-w-0 flex-1 truncate font-bold text-fg">{channel.name}</span>
       </button>
       <button data-focusable="true" onClick={onUnstar} aria-label="Remove from favourites" title="Remove from favourites" className="flex h-9 w-9 items-center justify-center rounded-full text-amber-400 hover:bg-white/10">
         <Star className="h-5 w-5 fill-current" />

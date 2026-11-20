@@ -1,5 +1,6 @@
 import React from 'react';
 import { isTvApp } from '@/utils/helpers';
+import Chip from '@/components/ui/Chip';
 
 const TV = isTvApp();
 
@@ -34,27 +35,29 @@ export function sectionOn(active: HomeSection, chip: Exclude<HomeSection, 'home'
  * the header (owner: two rows at the top, everywhere). A chip that is on ([sectionOn]) is
  * lightly filled, the look Home starts with (owner 2026-11-13: not white, not blue).
  */
-const SectionChips: React.FC<{
+/** Home's row under the header: Classic's chips, or a theme's own (registry SectionRow). */
+export interface SectionRowProps {
   active: HomeSection;
   onSelect: (s: HomeSection) => void;
+  /** The page's Filters button. */
   trailing?: React.ReactNode;
-}> = ({ active, onSelect, trailing }) => (
+}
+
+const SectionChips: React.FC<SectionRowProps> = ({ active, onSelect, trailing }) => (
   <div className={`flex items-center ${TV ? 'gap-3' : 'gap-2'}`} data-focus-group="section-chips" data-tv-group="chips">
     {CHIPS.map((c) => {
       const on = sectionOn(active, c.id);
       return (
-        <button
+        <Chip
           key={c.id}
-          data-focusable="true"
+          variant="toggle"
+          selected={on}
           data-active={active === c.id ? 'true' : undefined}
-          aria-pressed={on}
           onClick={() => onSelect(nextSection(active, c.id))}
-          className={`${TV ? 'h-[38px] px-5 text-[15px]' : 'h-9 px-4 text-sm'} shrink-0 rounded-full border font-bold transition-colors ${
-            on ? 'border-white/40 bg-white/15 text-white' : 'border-white/25 text-gray-200'
-          }`}
+          className={TV ? 'h-[38px] px-5 text-[15px]' : ''}
         >
           {c.label}
-        </button>
+        </Chip>
       );
     })}
     {trailing && <div className="ml-auto">{trailing}</div>}

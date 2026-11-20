@@ -45,6 +45,23 @@ export function sportsDays(games: SportsGame[], sport: string | null): SportsDay
   }));
 }
 
+/** Live fixtures can cross local midnight. Show each game in exactly one section. */
+export function splitLiveSchedule(days: SportsDay[], hasChannel: (game: SportsGame) => boolean) {
+  const live: SportsGame[] = [];
+  const unmatched: SportsGame[] = [];
+  const schedule: SportsDay[] = [];
+  for (const day of days) {
+    const games: SportsGame[] = [];
+    for (const game of day.games) {
+      if (!game.live) games.push(game);
+      else if (hasChannel(game)) live.push(game);
+      else unmatched.push(game);
+    }
+    if (games.length) schedule.push({ ...day, games });
+  }
+  return { live: live.concat(unmatched), schedule };
+}
+
 /** "15:00" in the viewer's clock, or "Time TBC". */
 export const timeLabel = (game: SportsGame): string =>
   game.start === null ? 'Time TBC' : new Date(game.start).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });

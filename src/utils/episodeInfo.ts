@@ -102,7 +102,11 @@ export function episodeTitle(ep: MediaItem, fallbackIndex: number, seriesTitle?:
 
 /** "21m", "1h 5m" from minutes or seconds-ish values; null when unknown. */
 export function episodeRuntime(ep: MediaItem): string | null {
-  const raw = Number((ep as { time?: unknown }).time ?? 0) || Number(ep.duration ?? 0);
+  return runtimeText(Number((ep as { time?: unknown }).time ?? 0) || Number(ep.duration ?? 0));
+}
+
+/** "21m", "2h 5m" from minutes (or seconds, when implausibly long for minutes); null when unknown. */
+export function runtimeText(raw: number): string | null {
   if (!raw || raw <= 0) return null;
   const minutes = raw > 600 ? Math.round(raw / 60) : raw; // seconds when implausibly long for minutes
   const h = Math.floor(minutes / 60);

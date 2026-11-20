@@ -99,8 +99,9 @@ export function useTVFocus({
   // stuck on whatever tile was clicked — reads as a bug on desktop/web even
   // though it's correct behavior for an actual remote. Track which input
   // last drove things and only apply the visual ring for keyboard/remote,
-  // never for pointer.
-  const lastInputWasPointer = useRef(false);
+  // never for pointer. Before any input: pointer on the web (no ring on the page's default
+  // item, e.g. Home, until a key is pressed), keyboard on the TV apps (the remote is all).
+  const lastInputWasPointer = useRef(!isTizen);
 
   useEffect(() => {
     const onPointerDown = () => {

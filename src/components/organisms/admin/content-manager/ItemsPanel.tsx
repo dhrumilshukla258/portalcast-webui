@@ -60,7 +60,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({
             value={itemSearch}
             onChange={(e) => setItemSearch(e.target.value)}
             placeholder="Search items..."
-            className="w-48 rounded-lg border border-gray-800 bg-gray-950 py-1.5 pl-8 pr-2 text-xs text-white outline-hidden focus:border-blue-500"
+            className="w-48 rounded-lg border border-gray-800 bg-gray-950 py-1.5 pl-8 pr-2 text-xs text-white outline-hidden focus:border-focus"
           />
         </div>
       </div>
@@ -88,9 +88,9 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({
                   <div className={`h-2 w-2 shrink-0 rounded-full ${item.hidden ? 'bg-red-500' : 'bg-green-500'}`} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm text-gray-200">{displayName}</div>
-                    {showOriginal && <div className="truncate text-[11px] text-gray-500">{item.name}</div>}
+                    {showOriginal && <div className="truncate text-2xs text-gray-500">{item.name}</div>}
                     {showMoved && (
-                      <div className="truncate text-[11px] text-gray-500">
+                      <div className="truncate text-2xs text-gray-500">
                         → {targetCat?.display_name || targetCat?.title || item.target_category_id}
                       </div>
                     )}
@@ -118,13 +118,13 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({
                       onChange={(e) => setItemNameDraft(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && saveItemEdit(item)}
                       placeholder="Display name (blank = original)"
-                      className="min-w-[160px] flex-1 rounded-lg border border-gray-800 bg-gray-950 px-2 py-1 text-xs text-white outline-hidden focus:border-blue-500"
+                      className="min-w-[160px] flex-1 rounded-lg border border-gray-800 bg-gray-950 px-2 py-1 text-xs text-white outline-hidden focus:border-focus"
                     />
                     {(type === 'movie' || type === 'series') && (
                       <select
                         value={itemCatDraft}
                         onChange={(e) => setItemCatDraft(e.target.value)}
-                        className="rounded-lg border border-gray-800 bg-gray-950 px-2 py-1 text-xs text-white outline-hidden focus:border-blue-500"
+                        className="rounded-lg border border-gray-800 bg-gray-950 px-2 py-1 text-xs text-white outline-hidden focus:border-focus"
                       >
                         <option value="">— Keep in current category —</option>
                         {categories.map((c) => (

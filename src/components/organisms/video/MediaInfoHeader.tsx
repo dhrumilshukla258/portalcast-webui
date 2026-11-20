@@ -1,14 +1,16 @@
 import { getTitleDetails, type PersonCredit, type TitleDetails } from '@/api/endpoints/discover';
-import { useOpenPerson } from '@/context/PersonPageContext';
+import { useOpenGenre, useOpenPerson } from '@/context/PersonPageContext';
 import React, { useMemo } from 'react';
 import { Play, Clock, Star, Calendar, Globe2, Film, Image as ImageIcon, Link2, Merge } from 'lucide-react';
+import { runtimeText } from '@/utils/episodeInfo';
+import { useParallax } from '@/hooks/useParallax';
 import { useAuth } from '@/context/AuthContext';
 import EditImagesDialog from '@/components/organisms/admin/EditImagesDialog';
 import { PortalFixMatch } from '@/components/organisms/admin/FixMatchDialog';
 import MergeTitleDialog from '@/components/organisms/admin/MergeTitleDialog';
 import type { MediaItem } from '@/types';
 import { URL_PATHS } from '@/api/config';
-import { MoreLikeThis, MyListButton } from '@/components/molecules/TitleExtras';
+import { MoreLikeThis, MyListButton, VersionsButton } from '@/components/molecules/TitleExtras';
 
 interface MediaInfoHeaderProps {
   item: MediaItem;
@@ -102,6 +104,8 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
     });
   }, [details]);
   const ageRating = details?.ageRating || item.rating_mpaa;
+  // A movie's length: TMDB's (minutes), else the portal's own; a series' is per episode.
+  const runtime = item.is_series ? null : runtimeText(Number(details?.runtime) || Number(item.duration) || 0);
 
   const imageUrl = useMemo(() => {
     if (typeof item.screenshot_uri !== 'string' || !item.screenshot_uri) return null;
@@ -120,6 +124,11 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
     if (!path) return null;
     return path.startsWith('http') ? path : `${baseUrl}/api/images${path}`;
   }, [item.backdrop_hd_path, item.backdrop_path, baseUrl]);
+  // A genre opens Movies (or Shows) filtered to it.
+  const openGenre = useOpenGenre();
+  // The backdrop drifts slower than the page as it scrolls (the theme's parallax; none in Classic).
+  const backdropRef = React.useRef<HTMLImageElement>(null);
+  useParallax(backdropRef, backdropUrl);
 
   return (
     // The title's page (owner 2026-10-29: its own page, like the Android TV app's): the
@@ -129,6 +138,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
       {backdropUrl && (
         <div className="absolute inset-x-0 top-0 z-0 h-[48vh] min-h-64 overflow-hidden sm:h-[66vh]">
           <img
+            ref={backdropRef}
             key={backdropUrl}
             src={backdropUrl}
             alt=""
@@ -138,14 +148,14 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
             style={{ opacity: 0 }}
             className="h-full w-full object-cover transition-opacity duration-500"
           />
-          <div className="absolute inset-0 bg-linear-to-t from-[#05080F] via-[#05080F]/60 to-[#05080F]/10" />
-          <div className="absolute inset-0 hidden bg-linear-to-r from-[#05080F]/80 via-[#05080F]/20 to-transparent md:block" />
+          <div className="absolute inset-0 bg-linear-to-t from-page via-page/60 to-page/10" />
+          <div className="absolute inset-0 hidden bg-linear-to-r from-page/80 via-page/20 to-transparent md:block" />
         </div>
       )}
       <div className={`relative z-1 mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-8 md:flex-row md:gap-8 ${backdropUrl ? 'pt-[26vh] sm:pt-[38vh]' : 'pt-20'}`}>
         {/* Poster Column */}
         <div className="flex w-full shrink-0 flex-col items-center justify-start md:w-48 lg:w-56">
-          <div className="relative aspect-2/3 w-44 overflow-hidden rounded-2xl border border-white/10 bg-black/30 shadow-2xl md:w-full">
+          <div className="relative aspect-2/3 w-44 overflow-hidden rounded-2xl border border-line bg-black/30 shadow-2xl md:w-full">
             {imageUrl ? (
               <img src={imageUrl} alt={displayTitle} className="h-full w-full object-cover" />
             ) : (
@@ -161,7 +171,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
             {onPlay && (
               <button
                 onClick={onPlay}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 font-bold text-[#0A0F1C] shadow-lg shadow-black/30 transition-all duration-200 hover:bg-gray-200 active:scale-95 focus:outline-hidden focus:ring-2 focus:ring-sky-400 [&.focused]:ring-2 [&.focused]:ring-sky-400"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 font-bold text-surface-3 shadow-lg shadow-black/30 transition-all duration-200 hover:bg-gray-200 active:scale-95 focus:outline-hidden focus:ring-2 focus:ring-accent [&.focused]:ring-2 [&.focused]:ring-accent"
                 data-focusable="true"
                 data-default-focus="true"
               >
@@ -174,13 +184,16 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                 onClick={() => setShowTrailer((prev) => !prev)}
                 data-focusable="true"
                 data-default-focus={!onPlay ? 'true' : undefined}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 font-bold text-gray-200 transition-colors hover:bg-white/10"
+                data-ui="title-action"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-white/5 py-3 font-bold text-fg-soft transition-colors hover:bg-white/10"
               >
                 <Film size={18} />
                 <span>{showTrailer ? 'Hide Trailer' : 'Trailer'}</span>
               </button>
             )}
             <MyListButton contentId={detailsKey} />
+            {/* A movie switches version in the player (Settings → Version); a show, here. */}
+            {!!item.is_series && <VersionsButton contentId={detailsKey} />}
           </div>
         </div>
 
@@ -190,17 +203,17 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
             {logo ? (
               <img src={logo} alt={displayTitle} className="max-h-20 max-w-[min(100%,420px)] object-contain object-left md:max-h-28" />
             ) : (
-              <h1 className="text-2xl font-black leading-none tracking-tight text-white md:text-4xl">
+              <h1 className="text-2xl font-black leading-none tracking-tight text-fg md:text-4xl">
                 {displayTitle}
               </h1>
             )}
-            {tagline && <p className="mt-2 text-sm italic text-gray-400 md:text-base">{tagline}</p>}
+            {tagline && <p className="mt-2 text-sm italic text-fg-muted md:text-base">{tagline}</p>}
             {isAdmin && /^(movie|series)_/.test(detailsKey) && (
               <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => setEditingImages(true)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs font-semibold text-gray-400 hover:bg-white/10 hover:text-gray-200"
+                  className="inline-flex items-center gap-1 rounded-lg border border-line px-2 py-1 text-xs font-semibold text-fg-muted hover:bg-white/10 hover:text-fg-soft"
                   data-focusable="true"
                 >
                   <ImageIcon size={13} /> Edit images
@@ -210,7 +223,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                   <button
                     type="button"
                     onClick={() => setFixingMatch(true)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs font-semibold text-gray-400 hover:bg-white/10 hover:text-gray-200"
+                    className="inline-flex items-center gap-1 rounded-lg border border-line px-2 py-1 text-xs font-semibold text-fg-muted hover:bg-white/10 hover:text-fg-soft"
                     data-focusable="true"
                   >
                     <Link2 size={13} /> Fix match
@@ -220,7 +233,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                 <button
                   type="button"
                   onClick={() => setMerging(true)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs font-semibold text-gray-400 hover:bg-white/10 hover:text-gray-200"
+                  className="inline-flex items-center gap-1 rounded-lg border border-line px-2 py-1 text-xs font-semibold text-fg-muted hover:bg-white/10 hover:text-fg-soft"
                   data-focusable="true"
                 >
                   <Merge size={13} /> Merge with…
@@ -228,13 +241,13 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
               </div>
             )}
             {item.director && (
-              <p className="mt-1 text-sm text-gray-400">
+              <p className="mt-1 text-sm text-fg-muted">
                 {creditLabel} <span className="font-semibold text-gray-300">{item.director}</span>
               </p>
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 border-y border-white/5 py-3 text-xs text-gray-300 sm:gap-4 sm:text-sm">
+          <div data-ui="title-meta" className="flex flex-wrap items-center gap-2.5 border-y border-white/5 py-3 text-xs text-gray-300 sm:gap-4 sm:text-sm">
             {rating && (() => {
               const chip = (
                 <>
@@ -245,11 +258,11 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
               );
               const cls = 'flex items-center gap-1 rounded-full bg-yellow-400/10 px-2.5 py-1 font-bold text-yellow-400';
               return ratingSource === 'IMDb' && imdbUrl ? (
-                <a href={imdbUrl} target="_blank" rel="noopener noreferrer" title="Open on IMDb" className={`${cls} hover:bg-yellow-400/20`}>
+                <a href={imdbUrl} target="_blank" rel="noopener noreferrer" title="Open on IMDb" data-ui="rating" className={`${cls} hover:bg-yellow-400/20`}>
                   {chip}
                 </a>
               ) : (
-                <div className={cls}>{chip}</div>
+                <div data-ui="rating" className={cls}>{chip}</div>
               );
             })()}
             {item.rt_rating && (
@@ -264,25 +277,25 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
               </div>
             )}
             {item.year && (
-              <div className="flex items-center gap-1 text-gray-400">
-                <Calendar size={14} />
+              <div className="flex items-center gap-1 text-fg-muted">
+                <Calendar size={14} data-ui="meta-icon" />
                 <span>{item.year}</span>
               </div>
             )}
             {item.country && (
-              <div className="flex items-center gap-1 text-gray-400">
-                <Globe2 size={14} />
+              <div className="flex items-center gap-1 text-fg-muted">
+                <Globe2 size={14} data-ui="meta-icon" />
                 <span>{item.country}</span>
               </div>
             )}
-            {item.duration && (
-              <div className="flex items-center gap-1 text-gray-400">
-                <Clock size={14} />
-                <span>{Math.floor(item.duration / 60) || item.duration} mins</span>
+            {runtime && (
+              <div className="flex items-center gap-1 text-fg-muted">
+                <Clock size={14} data-ui="meta-icon" />
+                <span>{runtime}</span>
               </div>
             )}
             {ageRating && (
-              <div className="rounded-full border border-gray-600 px-2 py-0.5 text-[10px] font-black text-gray-400">
+              <div data-ui="meta-badge" className="rounded-full border border-gray-600 px-2 py-0.5 text-3xs font-black text-fg-muted">
                 {ageRating}
               </div>
             )}
@@ -290,23 +303,32 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
           </div>
 
           {item.genres_str && (
-            <div className="flex flex-wrap gap-1.5">
-              {String(item.genres_str).split(',').map((genre, i) => (
-                <span
-                  key={i}
-                  className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300"
-                >
-                  {genre.trim()}
-                </span>
-              ))}
+            <div data-ui="genres" className="flex flex-wrap gap-1.5">
+              {String(item.genres_str).split(',').map((g) => g.trim()).filter(Boolean).map((genre) =>
+                openGenre ? (
+                  <button
+                    key={genre}
+                    type="button"
+                    data-ui="genre"
+                    data-focusable="true"
+                    onClick={() => openGenre(genre, item.is_series ? 'series' : 'movie')}
+                    title={`More ${genre}`}
+                    className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300 transition-colors hover:bg-white/15 hover:text-fg"
+                  >
+                    {genre}
+                  </button>
+                ) : (
+                  <span key={genre} data-ui="genre" className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">
+                    {genre}
+                  </span>
+                ),
+              )}
             </div>
           )}
 
           {item.description && (
             <div className="space-y-1">
-              <h3 className="text-xs font-black uppercase tracking-wider text-gray-500">
-                Overview
-              </h3>
+              <h3 className="ui-label">Overview</h3>
               <p className="text-sm font-medium leading-relaxed text-gray-300 md:text-base">
                 {item.description}
               </p>
@@ -314,7 +336,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
           )}
 
           {(facts.length > 0 || writers) && (
-            <div className="space-y-1 text-sm text-gray-400">
+            <div className="space-y-1 text-sm text-fg-muted">
               {facts.length > 0 && <p>{facts.join('  \u00b7  ')}</p>}
               {writers && !item.is_series && (
                 <p>
@@ -326,7 +348,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
 
           {people.length > 0 ? (
             <div className="space-y-2">
-              <h3 className="text-xs font-black uppercase tracking-wider text-gray-500">Cast &amp; crew</h3>
+              <h3 className="ui-label">Cast &amp; crew</h3>
               <div className="flex gap-2 overflow-x-auto px-1 pb-2 pt-1 custom-scrollbar">
                 {people.map(({ person: c, line }, i) => {
                   const body = (
@@ -334,12 +356,12 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                       {c.photo ? (
                         <img src={c.photo} alt={c.name} loading="lazy" className="mx-auto h-16 w-16 rounded-full object-cover" />
                       ) : (
-                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-gray-400">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-fg-muted">
                           {c.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}
                         </div>
                       )}
-                      <div className="mt-1 truncate text-xs font-semibold text-gray-200">{c.name}</div>
-                      {line && <div className="truncate text-[11px] text-gray-500">{line}</div>}
+                      <div className="mt-1 truncate text-xs font-semibold text-fg-soft">{c.name}</div>
+                      {line && <div className="truncate text-2xs text-fg-subtle">{line}</div>}
                     </>
                   );
                   // Each person opens their page with every title of theirs (servers from 2026-10-21 send ids).
@@ -350,7 +372,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                       onClick={() => openPerson(c.id!)}
                       title={`${c.name}: all titles`}
                       data-focusable="true"
-                      className="w-22 shrink-0 rounded-xl p-1 text-center transition-colors hover:bg-white/10 focus:bg-white/10 focus:outline-hidden focus:ring-2 focus:ring-portalcast-light"
+                      className="w-22 shrink-0 rounded-xl p-1 text-center transition-colors hover:bg-white/10 focus:bg-white/10 focus:outline-hidden focus:ring-2 focus:ring-focus"
                     >
                       {body}
                     </button>
@@ -364,9 +386,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
             </div>
           ) : item.actors && (
             <div className="space-y-2">
-              <h3 className="text-xs font-black uppercase tracking-wider text-gray-500">
-                Cast
-              </h3>
+              <h3 className="ui-label">Cast</h3>
               <div className="flex flex-wrap gap-2">
                 {item.actors
                   .split(',')
@@ -375,7 +395,7 @@ export const MediaInfoHeader: React.FC<MediaInfoHeaderProps> = ({
                   .map((actor, i) => (
                     <span
                       key={i}
-                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300"
+                      className="rounded-full border border-line bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300"
                     >
                       {actor}
                     </span>

@@ -77,14 +77,14 @@ export default function Verify() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen app-bg flex justify-center items-center font-sans text-gray-200">
+      <div className="min-h-screen app-bg flex justify-center items-center font-sans text-fg-soft">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen app-bg flex flex-col justify-center items-center px-4 font-sans text-gray-200">
+    <div className="min-h-screen app-bg flex flex-col justify-center items-center px-4 font-sans text-fg-soft">
       <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center">
         
         {/* Logo */}
@@ -104,12 +104,12 @@ export default function Verify() {
               <CheckCircle2 className="w-12 h-12" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-white">TV Authorized!</h2>
-              <p className="text-gray-400 text-sm max-w-xs">
+              <h2 className="text-2xl font-bold text-fg">TV Authorized!</h2>
+              <p className="text-fg-muted text-sm max-w-xs">
                 Your Smart TV is now logged in as <span className="text-indigo-400 font-semibold">{user?.name}</span>.
               </p>
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-fg-subtle">
               You can close this tab now. The TV screen will update automatically.
             </p>
             <button
@@ -127,13 +127,13 @@ export default function Verify() {
             </div>
 
             <h2 className="text-xl font-bold text-center mb-2">Authorize Smart TV</h2>
-            <p className="text-gray-400 text-sm text-center mb-6">
+            <p className="text-fg-muted text-sm text-center mb-6">
               Logged in as <span className="text-indigo-400 font-semibold">{user?.email}</span>. Confirm the 6-character code on your TV screen to pair the device.
             </p>
 
             <form onSubmit={handleAuthorize} className="w-full space-y-5">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-400 tracking-wide uppercase">
+                <label className="text-xs font-semibold text-fg-muted tracking-wide uppercase">
                   TV Authorization Code
                 </label>
                 <input
@@ -156,7 +156,7 @@ export default function Verify() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 rounded-2xl bg-linear-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50"
+                className="w-full py-4 rounded-2xl ui-brand hover:brightness-110 font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50"
               >
                 {loading ? (
                   <>

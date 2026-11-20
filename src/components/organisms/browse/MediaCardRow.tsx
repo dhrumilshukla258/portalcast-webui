@@ -26,6 +26,9 @@ interface MediaCardRowProps {
   size?: 'normal' | 'large';
   // A card other than MediaCard (Continue Watching's poster with progress); same row, widths, paging.
   renderItem?: (item: MediaItem, index: number) => React.ReactNode;
+  // The title leads somewhere (a genre row: show only that genre): drawn as a button with a
+  // chevron, on phones and computers.
+  onTitleClick?: () => void;
 }
 
 /** Card widths per breakpoint: as many columns as the grids (MainContentGrid) for 'normal'. */
@@ -50,7 +53,23 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
   onLoadMore,
   size = 'normal',
   renderItem,
+  onTitleClick,
 }) => {
+  const heading =
+    onTitleClick && !TV ? (
+      <button
+        type="button"
+        onClick={onTitleClick}
+        data-focusable="true"
+        title={`Show only ${title}`}
+        className="group/title inline-flex items-center gap-1 text-left transition-opacity hover:opacity-80 focus:outline-hidden focus-visible:underline"
+      >
+        {title}
+        <ChevronRight className="h-5 w-5 opacity-50 transition-transform group-hover/title:translate-x-0.5 sm:h-6 sm:w-6" strokeWidth={2.5} />
+      </button>
+    ) : (
+      title
+    );
   const widths = (TV ? TV_WIDTHS : ROW_WIDTHS)[size];
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -160,7 +179,7 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
     return (
       <div className={TV ? TV_ROW : 'content-transition group/row relative mb-6 px-2 sm:mb-8 sm:px-0'} data-tv-section="">
         <h2 className={TV ? TV_TITLE : 'mb-2 text-left text-lg font-bold text-white sm:mb-4 sm:text-2xl'}>
-          {title}
+          {heading}
         </h2>
         <div className={TV ? 'flex gap-4 overflow-hidden' : 'flex gap-2 overflow-hidden sm:gap-4'}>
           {Array.from({ length: 6 }).map((_, i) => (
@@ -177,7 +196,7 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
   return (
     <div className={TV ? `relative ${TV_ROW}` : 'content-transition group/row relative mb-6 px-2 sm:mb-8 sm:px-0'} data-tv-section="">
       <h2 className={TV ? TV_TITLE : 'mb-2 text-left text-lg font-bold text-white sm:mb-4 sm:text-2xl'}>
-        {title}
+        {heading}
       </h2>
 
       {canScrollLeft && !TV && (

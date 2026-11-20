@@ -96,11 +96,11 @@ const ApiReference: React.FC = () => {
       </p>
       {GROUPS.map((group) => (
         <div key={group.title} className="rounded-xl bg-white/[0.03] p-5">
-          <h3 className="mb-3 text-sm font-black uppercase tracking-widest text-gray-400">{group.title}</h3>
+          <h3 className="ui-label mb-3">{group.title}</h3>
           <div className="space-y-1.5">
             {group.endpoints.map((ep) => (
               <div key={ep.method + ep.path} className="flex flex-wrap items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-gray-800/40">
-                <span className={`w-14 shrink-0 rounded-sm px-2 py-0.5 text-center text-[10px] font-black ${methodColor[ep.method]}`}>
+                <span className={`w-14 shrink-0 rounded-sm px-2 py-0.5 text-center text-3xs font-black ${methodColor[ep.method]}`}>
                   {ep.method}
                 </span>
                 <code className="shrink-0 font-mono text-xs text-gray-200">{ep.path}</code>

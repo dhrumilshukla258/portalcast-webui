@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Search as SearchIcon, X } from 'lucide-react';
+import Chip from '@/components/ui/Chip';
+import SearchField from '@/components/ui/SearchField';
 import { getPeople, searchPeople, type PeopleRole, type PeoplePage, type PersonHit } from '@/api/endpoints/discover';
 import { useOpenPerson } from '@/context/PersonPageContext';
 
@@ -95,40 +96,29 @@ const PeopleView: React.FC<PeopleViewProps> = ({ sectionChips }) => {
 
   return (
     <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 overflow-y-auto px-3 pb-10 sm:px-6 tv-page">
-      <div className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-[#05080F] px-3 pb-2 pt-2 sm:-mx-6 sm:px-6">
+      <div data-ui="page-bar" className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-page px-3 pb-2 pt-2 sm:-mx-6 sm:px-6">
         {sectionChips?.(null)}
-        <div className="mt-2 flex items-baseline gap-3 sm:mt-0">
-          <h2 className="text-xl font-bold text-white sm:text-2xl">Cast</h2>
-          {!hits && total > 0 && <span className="text-sm text-gray-400">{total.toLocaleString()}</span>}
+        {/* data-ui page-*: a theme can set the title and search side by side (Minimal). */}
+        <div data-ui="page-head">
+          <div className="mt-2 flex items-baseline gap-3 sm:mt-0">
+            <h2 data-ui="page-title" className="text-xl font-bold text-fg sm:text-2xl">Cast</h2>
+            {!hits && total > 0 && <span className="text-sm text-fg-muted">{total.toLocaleString()}</span>}
+          </div>
+          <div data-ui="page-search" className="mt-2">
+            <SearchField
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onClear={() => setQuery('')}
+              placeholder="Search cast"
+            />
+          </div>
         </div>
-        <label className="mt-2 flex h-10 items-center gap-2 rounded-full border border-white/10 bg-[#0b1120] px-4">
-          <SearchIcon className="h-4 w-4 shrink-0 text-gray-500" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search actors, directors…"
-            className="min-w-0 flex-1 bg-transparent text-sm text-white outline-hidden placeholder:text-gray-500"
-            data-focusable="true"
-          />
-          {query && (
-            <button onClick={() => setQuery('')} aria-label="Clear" className="text-gray-400 hover:text-white">
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </label>
         {!hits && (
           <div className="hide-scrollbar mt-2 flex gap-2 overflow-x-auto" data-focus-group="people-roles">
             {roles.map((r) => (
-              <button
-                key={r.id}
-                data-focusable="true"
-                onClick={() => setRole(r.id)}
-                className={`h-9 shrink-0 rounded-full px-4 text-sm font-bold transition-colors ${
-                  role === r.id ? 'bg-sky-400 text-[#082F49]' : 'border border-white/10 bg-[#0b1120] text-gray-300 hover:text-white'
-                }`}
-              >
+              <Chip key={r.id} selected={role === r.id} onClick={() => setRole(r.id)}>
                 {r.label}
-              </button>
+              </Chip>
             ))}
           </div>
         )}
@@ -137,22 +127,22 @@ const PeopleView: React.FC<PeopleViewProps> = ({ sectionChips }) => {
       {error && people.length === 0 && (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <p className="text-gray-300">Couldn't load the cast.</p>
-          <button data-focusable="true" onClick={() => void load(role, 1)} className="rounded-full bg-white px-5 py-2 font-bold text-[#0A0F1C]">Retry</button>
+          <button data-focusable="true" onClick={() => void load(role, 1)} className="rounded-full bg-white px-5 py-2 font-bold text-surface-3">Retry</button>
         </div>
       )}
-      {first && !first.ready && <p className="py-16 text-center text-gray-400">People are still being prepared on the server. Try again in a minute.</p>}
-      {hits && hits.length === 0 && <p className="py-16 text-center text-gray-400">No one by that name.</p>}
+      {first && !first.ready && <p className="py-16 text-center text-fg-muted">People are still being prepared on the server. Try again in a minute.</p>}
+      {hits && hits.length === 0 && <p className="py-16 text-center text-fg-muted">No one by that name.</p>}
 
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+      <div data-ui="people-grid" className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
         {people.map((p) => (
           <PersonCard key={p.id} person={p} onOpen={() => openPerson?.(p.id)} />
         ))}
         {loading && people.length === 0 &&
-          Array.from({ length: 14 }).map((_, i) => <div key={i} className="aspect-2/3 animate-pulse rounded-md bg-white/5 sm:rounded-xl" />)}
+          Array.from({ length: 14 }).map((_, i) => <div key={i} data-ui="person-photo" className="aspect-2/3 animate-pulse rounded-md bg-white/5 sm:rounded-xl" />)}
       </div>
       <div ref={sentinel} className="h-8" />
       {loading && people.length > 0 && (
-        <div className="flex justify-center py-6"><div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-sky-400" /></div>
+        <div className="flex justify-center py-6"><div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-accent" /></div>
       )}
     </div>
   );
@@ -169,9 +159,10 @@ const PersonCard: React.FC<{ person: PersonHit; onOpen: () => void }> = React.me
       data-focusable="true"
       onClick={onOpen}
       title={`${person.name}: all titles`}
+      data-ui="person-card"
       className="group text-left focus:outline-hidden"
     >
-      <div className="relative aspect-2/3 w-full overflow-hidden rounded-md border border-white/10 bg-[#121A2B] transition-all group-hover:border-sky-400/50 group-focus:ring-2 group-focus:ring-white group-[.focused]:ring-2 group-[.focused]:ring-white sm:rounded-xl">
+      <div data-ui="person-photo" className="relative aspect-2/3 w-full overflow-hidden rounded-md border border-line bg-panel-raised transition-all group-hover:border-accent/50 group-focus:ring-2 group-focus:ring-white group-[.focused]:ring-2 group-[.focused]:ring-white sm:rounded-xl">
         {src && !failed ? (
           <img src={src} alt={person.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={() => setFailed(true)} />
         ) : (
@@ -181,7 +172,7 @@ const PersonCard: React.FC<{ person: PersonHit; onOpen: () => void }> = React.me
         )}
       </div>
       <div className="mt-1.5 truncate text-xs font-semibold text-gray-100 sm:text-sm">{person.name}</div>
-      <div className="truncate text-[11px] text-gray-500 sm:text-xs">{person.knownFor}{person.titles > 0 ? ` · ${person.titles}` : ''}</div>
+      <div className="truncate text-2xs text-fg-subtle sm:text-xs">{person.knownFor}{person.titles > 0 ? ` · ${person.titles}` : ''}</div>
     </button>
   );
 });

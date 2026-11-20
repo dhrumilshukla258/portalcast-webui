@@ -9,10 +9,11 @@ import { cardPoster } from '@/utils/imageSize';
 import { ratingLabel } from '@/utils/titleFormat';
 import { isTvApp } from '@/utils/helpers';
 import { useTvFocusedItem } from '@/tv/TvHeroContext';
+import { usePart } from '@/themes/registry';
 
 const TV = isTvApp();
 
-interface MediaCardProps {
+export interface MediaCardProps {
   item: MediaItem;
   onClick: (item: MediaItem) => void;
   progressPercent?: number;
@@ -38,7 +39,7 @@ function splitOnMatch(text: string, term: string): [string, string, string] | nu
   return [text.slice(0, index), text.slice(index, index + term.length), text.slice(index + term.length)];
 }
 
-const MediaCard: React.FC<MediaCardProps> = React.memo(({
+const ClassicMediaCard: React.FC<MediaCardProps> = React.memo(({
   item,
   onClick,
   progressPercent,
@@ -90,7 +91,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
     return (
       <div className={iptvOffline && String(item.is_local) !== '1' && item.category_id !== 'local' ? 'opacity-35' : ''}>
         <div
-          className="tv-card relative aspect-2/3 w-full overflow-hidden rounded-lg bg-[#121A2B]"
+          className="tv-card relative aspect-2/3 w-full overflow-hidden rounded-lg bg-surface-8"
           onClick={() => { if (!isLoading) onClick(item); }}
           onFocus={reportFocus ? () => reportFocus(item) : undefined}
           {...hold}
@@ -110,7 +111,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
             </div>
           )}
           {String(item.is_local) === '1' ? (
-            <span className="absolute right-1.5 top-1.5 rounded-md bg-sky-500/90 px-1.5 py-0.5 text-[11px] font-bold text-white">
+            <span className="absolute right-1.5 top-1.5 rounded-md bg-sky-500/90 px-1.5 py-0.5 text-2xs font-bold text-white">
               {item.quality?.includes('4K') ? 'Local · 4K' : 'Local'}
             </span>
           ) : rating && !isCompleted ? (
@@ -186,7 +187,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
         )}
         {String(item.is_local) === '1' ? (
           <span
-            className="absolute right-2 top-2 z-10 rounded-md bg-sky-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white shadow"
+            className="absolute right-2 top-2 z-10 rounded-md bg-sky-500/90 px-1.5 py-0.5 text-3xs font-bold text-white shadow"
             title="On your NAS: plays without the IPTV portal"
           >
             {item.quality?.includes('4K') ? 'Local · 4K' : 'Local'}
@@ -194,7 +195,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
         ) : rating && !isCompleted ? (
           // The title's one rating (design-system.md, Cards): "★ 8.4", top right.
           <span
-            className="absolute right-2 top-2 z-10 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur-sm"
+            className="absolute right-2 top-2 z-10 rounded-full bg-black/60 px-2 py-0.5 text-2xs font-semibold text-white backdrop-blur-sm"
             title={item.rating_source ? `${item.rating_source} rating` : 'Rating'}
           >
             <span className="text-amber-400">★</span> {rating}
@@ -229,6 +230,12 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
       </div>
     </div>
   );
+});
+
+// The current theme's card (src/themes/registry.ts); Classic's, which also draws the TV apps' poster.
+const MediaCard: React.FC<MediaCardProps> = React.memo((props) => {
+  const Card = usePart('Card', ClassicMediaCard);
+  return <Card {...props} />;
 });
 
 export default MediaCard;

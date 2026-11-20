@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Search as SearchIcon, X, Tv } from 'lucide-react';
+import { X, Tv } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import Chip from '@/components/ui/Chip';
+import SearchField from '@/components/ui/SearchField';
 import type { MediaItem } from '@/types';
 import { getMedia } from '@/api/endpoints/movies';
 import { getSeries } from '@/api/endpoints/series';
@@ -205,16 +208,16 @@ const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearche
       <PeopleResults people={people.people} grid={filter === 'people'} onOpen={pickPerson} />
       {filter === 'all' && featured && (
         <section>
-          <h2 className="mb-3 text-lg font-bold text-white">Movies &amp; series with {featured.name}</h2>
+          <h2 className="mb-3 text-lg font-bold text-fg">Movies &amp; series with {featured.name}</h2>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 md:gap-6 lg:grid-cols-6 xl:grid-cols-7">
             {featured.credits.slice(0, ALL_TAB_TITLES).map((item) => (
               <MediaCard key={item.id} item={item} onClick={pickFeaturedTitle} categoryLabel={item.year} />
             ))}
           </div>
           {featured.total > ALL_TAB_TITLES && (
-            <button data-focusable="true" onClick={() => pickPerson(featured.id)} className="mt-3 text-sm font-bold text-sky-400 hover:text-sky-300">
+            <Button variant="link" className="mt-3" onClick={() => pickPerson(featured.id)}>
               All {featured.total} titles →
-            </button>
+            </Button>
           )}
         </section>
       )}
@@ -223,42 +226,24 @@ const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearche
 
   return (
     <div id="app-content-scroll" className="custom-scrollbar h-full min-h-0 flex-1 overflow-y-auto px-3 pt-3 sm:px-6 sm:pt-5 tv-page">
-      <div className="sticky top-0 z-30 mb-4 rounded-2xl bg-black/80 px-2 py-2">
-        <form
-          onSubmit={(e) => { e.preventDefault(); remember(query); run(query); }}
-          className="relative"
-        >
-          <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-          <input
+      <div data-ui="search-bar" className="sticky top-0 z-30 mb-4 rounded-2xl bg-page/80 px-2 py-2">
+        <form onSubmit={(e) => { e.preventDefault(); remember(query); run(query); }}>
+          <SearchField
             ref={inputRef}
-            type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onClear={() => { setQuery(''); inputRef.current?.focus(); }}
             readOnly={!typing}
             onClick={() => { if (isTizen) setTyping(true); }}
             onBlur={() => { if (isTizen) setTyping(false); }}
             placeholder="Search movies, series, actors and channels"
-            data-focusable="true"
-            className="w-full rounded-full border border-white/10 bg-[#0b1120]/85 py-2.5 pl-10 pr-10 text-base text-gray-100 placeholder-gray-500 focus:outline-hidden focus:ring-1 focus:ring-portalcast-light"
           />
-          {query && (
-            <button type="button" aria-label="Clear" onClick={() => { setQuery(''); inputRef.current?.focus(); }} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:text-white">
-              <X className="h-4 w-4" />
-            </button>
-          )}
         </form>
         <div className="mt-2 flex flex-wrap items-center gap-2" data-focus-group="search-filters">
           {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              data-focusable="true"
-              onClick={() => setFilter(f.key)}
-              className={`h-9 rounded-full border px-4 text-sm font-bold transition-all focus:outline-hidden focus:ring-1 focus:ring-portalcast-light [&.focused]:ring-1 [&.focused]:ring-portalcast-light ${
-                filter === f.key ? 'border-transparent bg-linear-to-r from-sky-400 to-blue-500 text-white' : 'border-white/10 bg-[#0b1120]/85 text-gray-300 hover:text-white'
-              }`}
-            >
+            <Chip key={f.key} selected={filter === f.key} onClick={() => setFilter(f.key)}>
               {f.label}
-            </button>
+            </Chip>
           ))}
           {loading && <div className="ml-2 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />}
         </div>
@@ -271,9 +256,9 @@ const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearche
           onRemove={(t) => onRecentSearchesChange(recentSearches.filter((s) => s !== t))}
         />
       ) : error ? (
-        <p className="py-10 text-center text-gray-400">Search failed. Check the connection and try again.</p>
+        <p className="py-10 text-center text-fg-muted">Search failed. Check the connection and try again.</p>
       ) : empty ? (
-        <p className="py-10 text-center text-gray-400">Nothing found for "{searched}".</p>
+        <p className="py-10 text-center text-fg-muted">Nothing found for "{searched}".</p>
       ) : (
         <div className="flex flex-col gap-8 pb-10">
           {peopleFirst && peopleBlock}
@@ -286,17 +271,17 @@ const SearchView: React.FC<SearchViewProps> = ({ recentSearches, onRecentSearche
           {!peopleFirst && peopleBlock}
           {(filter === 'all' || filter === 'live') && channels.length > 0 && (
             <section>
-              <h2 className="mb-3 text-lg font-bold text-white">Live TV · {channels.length}{channels.length >= MAX_CHANNELS ? '+' : ''}</h2>
+              <h2 className="mb-3 text-lg font-bold text-fg">Live TV · {channels.length}{channels.length >= MAX_CHANNELS ? '+' : ''}</h2>
               <div className="flex flex-col gap-2">
                 {(filter === 'all' ? channels.slice(0, ALL_TAB_CHANNELS) : channels).map((c) => <ChannelRow key={String(c.id)} channel={c} onPlay={play} />)}
               </div>
               {filter === 'all' && channels.length > ALL_TAB_CHANNELS && (
-                <button data-focusable="true" onClick={() => setFilter('live')} className="mt-3 text-sm font-bold text-sky-400 hover:text-sky-300">All channels →</button>
+                <Button variant="link" className="mt-3" onClick={() => setFilter('live')}>All channels →</Button>
               )}
             </section>
           )}
           {filter !== 'all' && ((filter === 'movies' && movies.groups.length === 0) || (filter === 'series' && series.groups.length === 0) || (filter === 'people' && people.people.length === 0) || (filter === 'live' && channels.length === 0)) && (
-            <p className="py-10 text-center text-gray-400">No {FILTERS.find((f) => f.key === filter)?.label.toLowerCase()} for "{searched}".</p>
+            <p className="py-10 text-center text-fg-muted">No {FILTERS.find((f) => f.key === filter)?.label.toLowerCase()} for "{searched}".</p>
           )}
         </div>
       )}
@@ -319,7 +304,7 @@ const TitleResults: React.FC<{
   );
   return (
     <section>
-      <h2 className="mb-3 text-lg font-bold text-white">
+      <h2 className="mb-3 text-lg font-bold text-fg">
         {title} · {section.groups.length}{section.rawLoaded < section.total ? '+' : ''}
       </h2>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 md:gap-6 lg:grid-cols-6 xl:grid-cols-7">
@@ -334,14 +319,9 @@ const TitleResults: React.FC<{
       </div>
       {hasMore && (
         <div className="mt-4 flex justify-center">
-          <button
-            data-focusable="true"
-            onClick={onMore}
-            disabled={section.loadingMore}
-            className="rounded-full border border-white/10 px-5 py-2 text-sm font-bold text-gray-200 hover:bg-white/10 disabled:opacity-50"
-          >
+          <Button onClick={onMore} disabled={section.loadingMore}>
             {section.loadingMore ? 'Loading…' : limit ? `All ${title.toLowerCase()} →` : 'Load more'}
-          </button>
+          </Button>
         </div>
       )}
     </section>
@@ -351,7 +331,7 @@ const TitleResults: React.FC<{
 /** People found by name: a row on All, a grid on the People tab. Each opens their page. */
 const PeopleResults: React.FC<{ people: PersonHit[]; grid: boolean; onOpen: (id: number) => void }> = ({ people, grid, onOpen }) => (
   <section>
-    <h2 className="mb-3 text-lg font-bold text-white">People · {people.length}</h2>
+    <h2 className="mb-3 text-lg font-bold text-fg">People · {people.length}</h2>
     <div className={grid ? 'grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8' : 'flex gap-2 overflow-x-auto px-1 pb-2 pt-1 custom-scrollbar'}>
       {people.map((p) => (
         <button
@@ -360,17 +340,17 @@ const PeopleResults: React.FC<{ people: PersonHit[]; grid: boolean; onOpen: (id:
           data-focusable="true"
           onClick={() => onOpen(p.id)}
           title={`${p.name}: all titles`}
-          className={`${grid ? '' : 'w-28 shrink-0'} rounded-xl p-2 text-center transition-colors hover:bg-white/10 focus:bg-white/10 focus:outline-hidden focus:ring-2 focus:ring-portalcast-light [&.focused]:ring-2 [&.focused]:ring-portalcast-light`}
+          className={`${grid ? '' : 'w-28 shrink-0'} rounded-xl p-2 text-center transition-colors hover:bg-white/10 focus:bg-white/10 focus:outline-hidden focus:ring-2 focus:ring-focus [&.focused]:ring-2 [&.focused]:ring-focus`}
         >
           {p.photo ? (
             <img src={p.photo} alt={p.name} loading="lazy" className="mx-auto h-20 w-20 rounded-full object-cover" />
           ) : (
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/10 text-lg font-bold text-gray-400">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/10 text-lg font-bold text-fg-muted">
               {p.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}
             </div>
           )}
-          <div className="mt-1.5 truncate text-sm font-semibold text-gray-100">{p.name}</div>
-          <div className="truncate text-[11px] text-gray-500">
+          <div className="mt-1.5 truncate text-sm font-semibold text-fg">{p.name}</div>
+          <div className="truncate text-xs text-fg-subtle">
             {p.knownFor}
             {p.titles > 0 ? ` · ${p.titles}` : ''}
           </div>
@@ -389,29 +369,29 @@ const ChannelRow: React.FC<{ channel: MediaItem; onPlay: (c: MediaItem) => void 
     <button
       data-focusable="true"
       onClick={() => onPlay(channel)}
-      className="flex w-full items-center gap-3 rounded-xl border border-transparent bg-white/5 px-3 py-2 text-left transition-colors hover:bg-white/10 focus:border-white/80 focus:outline-hidden [&.focused]:border-white/80"
+      className="ui-row flex w-full items-center gap-3 px-3 py-2 text-left"
     >
       <span className="flex h-10 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-black/40">
-        {src && !failed ? <img src={src} alt="" loading="lazy" className="max-h-full max-w-full object-contain" onError={() => setFailed(true)} /> : <Tv className="h-5 w-5 text-gray-500" />}
+        {src && !failed ? <img src={src} alt="" loading="lazy" className="max-h-full max-w-full object-contain" onError={() => setFailed(true)} /> : <Tv className="h-5 w-5 text-fg-subtle" />}
       </span>
-      {channel.number !== undefined && <span className="w-10 shrink-0 text-sm font-bold text-gray-400">{channel.number}</span>}
-      <span className="min-w-0 flex-1 truncate font-bold text-white">{channel.name}</span>
+      {channel.number !== undefined && <span className="w-10 shrink-0 text-sm font-bold text-fg-muted">{channel.number}</span>}
+      <span className="min-w-0 flex-1 truncate font-bold text-fg">{channel.name}</span>
     </button>
   );
 };
 
 const RecentSearches: React.FC<{ recent: string[]; onPick: (t: string) => void; onRemove: (t: string) => void }> = ({ recent, onPick, onRemove }) => {
   if (recent.length === 0) {
-    return <p className="py-10 text-center text-gray-500">Search all movies, series, actors and live channels.</p>;
+    return <p className="py-10 text-center text-fg-subtle">Search all movies, series, actors and live channels.</p>;
   }
   return (
     <section>
-      <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-gray-500">Recent searches</h2>
+      <h2 className="ui-label mb-3">Recent searches</h2>
       <div className="flex flex-wrap gap-2">
         {recent.map((t) => (
-          <span key={t} className="flex items-center rounded-full border border-white/10 bg-[#0b1120]/85">
-            <button data-focusable="true" onClick={() => onPick(t)} className="py-1.5 pl-4 pr-2 text-sm font-bold text-gray-200 hover:text-white">{t}</button>
-            <button data-focusable="true" aria-label={`Remove ${t}`} onClick={() => onRemove(t)} className="py-1.5 pl-1 pr-3 text-gray-500 hover:text-white">
+          <span key={t} data-ui="recent-search" className="flex items-center rounded-full border border-line bg-panel/85">
+            <button data-focusable="true" onClick={() => onPick(t)} className="py-1.5 pl-4 pr-2 text-sm font-bold text-fg-soft hover:text-fg">{t}</button>
+            <button data-focusable="true" aria-label={`Remove ${t}`} onClick={() => onRemove(t)} className="py-1.5 pl-1 pr-3 text-fg-subtle hover:text-fg">
               <X className="h-3.5 w-3.5" />
             </button>
           </span>

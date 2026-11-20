@@ -1,0 +1,586 @@
+/*
+  Minimal: an Apple TV-like look. Imported by src/index.css (see src/themes/README.md).
+  1. Tokens (@layer theme): semantic colours, UI piece tokens, type, motion.
+  2. Palette fallback (@layer theme): recolours screens not yet on semantic colours.
+  3. Page-wide rules (unlayered): background, corners, focus ring, Reduce Motion.
+  Whole components it replaces: src/themes/registry.ts.
+*/
+
+@layer theme {
+  html[data-theme='minimal'] {
+    /* 1. Semantic colours: black page, Apple's dark greys, white as the accent. */
+    --color-page: #000;
+    --color-panel: #1c1c1e;
+    --color-panel-raised: #1c1c1e;
+    --color-panel-hover: #2c2c2e;
+    --color-line: rgb(255 255 255 / 0.08);
+    --color-line-strong: rgb(255 255 255 / 0.18);
+    --color-fg: #fff;
+    --color-fg-soft: #e8e8ed;
+    --color-fg-muted: #a1a1a6;
+    --color-fg-subtle: #86868b;
+    --color-accent: #f5f5f7;
+    --color-on-accent: #000;
+    --color-focus: #fff;
+    --color-live: #ff453a;
+
+    /* UI pieces (src/components/ui/ui.css). */
+    --ui-control-h: 2.375rem;
+    --ui-control-weight: 600;
+    /* Chips as Apple TV's tabs: words, the picked one on a soft pill (as the header's). */
+    --ui-chip-bg: transparent;
+    --ui-chip-border: transparent;
+    --ui-chip-fg: var(--color-fg-muted);
+    --ui-chip-hover-bg: rgb(255 255 255 / 0.08);
+    --ui-chip-on-bg: rgb(255 255 255 / 0.15);
+    --ui-chip-on-fg: #f5f5f7;
+    --ui-pick-bg: rgb(255 255 255 / 0.08);
+    --ui-pick-border: transparent;
+    --ui-pick-on-bg: #f5f5f7;
+    --ui-pick-on-fg: #000;
+    /* The player: glass over the picture, white progress, no red or green. */
+    --ui-player-panel-bg: rgb(22 22 24 / 0.62);
+    --ui-player-panel-border: rgb(255 255 255 / 0.08);
+    --ui-player-panel-blur: blur(30px) saturate(1.6);
+    --ui-player-now-bg: rgb(255 255 255 / 0.1);
+    --ui-player-now-fg: #f5f5f7;
+    --ui-player-track: rgb(255 255 255 / 0.2);
+    --ui-player-progress: #f5f5f7;
+    --ui-player-button-bg: rgb(30 30 32 / 0.55);
+    --ui-player-button-hover-bg: rgb(60 60 64 / 0.7);
+    --ui-player-button-border: transparent;
+    --ui-backdrop-parallax: 0.35;
+    --ui-tip-bg: rgb(30 30 32 / 0.8);
+    --ui-tip-fg: #f5f5f7;
+    --ui-tip-blur: blur(20px) saturate(1.6);
+    --ui-tip-radius: 0.5rem;
+    --ui-field-bg: rgb(255 255 255 / 0.08);
+    /* A border with no colour of its own: the hairline, not a light grey. */
+    --ui-border-default: var(--color-line);
+    --ui-field-border: transparent;
+    --ui-panel-radius: 0.875rem;
+    --ui-label-size: var(--text-xl);
+    --ui-label-weight: 600;
+    --ui-label-case: none;
+    --ui-label-tracking: -0.01em;
+    --ui-label-color: var(--color-fg);
+    --ui-ease: cubic-bezier(0.32, 0.72, 0, 1);
+    --ui-duration: 250ms;
+    /* Title pages: Apple springs, as SwiftUI defines them (duration + bounce), drawn as
+       linear() curves: open 0.5 s with bounce 0.15 (settles in 700 ms, 0.6 % overshoot),
+       close 0.35 s with no bounce. The page is in within the first third; the size keeps
+       easing in, so the poster seems to grow into the page. */
+    --ui-title-open-ms: 700;
+    --ui-title-open-ease: linear(0, 0.026, 0.0905, 0.1773, 0.2746, 0.3741, 0.4702, 0.5594, 0.6397, 0.7102, 0.7708, 0.822, 0.8644, 0.899, 0.9268, 0.9486, 0.9656, 0.9784, 0.988, 0.9948, 0.9996, 1.0028, 1.0048, 1.0058, 1.0063, 1.0062, 1.0059, 1.0054, 1.0048, 1.0042, 1.0036, 1.003, 1.0025, 1.002, 1.0016, 1.0012, 1);
+    --ui-title-close-ms: 520;
+    --ui-title-close-ease: linear(0, 0.0283, 0.0959, 0.1833, 0.2779, 0.3719, 0.4607, 0.5417, 0.6138, 0.6769, 0.7313, 0.7777, 0.8169, 0.8498, 0.8773, 0.9, 0.9187, 0.9341, 0.9468, 0.957, 0.9654, 0.9722, 0.9777, 0.9821, 0.9857, 0.9886, 0.9909, 0.9927, 0.9942, 0.9954, 0.9963, 0.9971, 0.9977, 0.9982, 0.9985, 0.9988, 1);
+    --ui-title-fade: 0.45;
+    /* Focus and selection: a white ring and a soft shadow, a light grey fill for the picked
+       entry; no blue glow. */
+    --ui-focus-ring: rgba(255, 255, 255, 0.9);
+    --ui-focus-offset: 3px;
+    --ui-focus-border: transparent;
+    --ui-focus-glow: 0 18px 36px -10px rgba(0, 0, 0, 0.8);
+    --ui-focus-duration: 0.35s;
+    /* Posters already lift inside their slot (MinimalCard); growing past it gets clipped. */
+    --ui-focus-scale: 1;
+    --ui-selected-bg: rgb(255 255 255 / 0.16);
+    --ui-selected-fg: #fff;
+    --ui-selected-shadow: none;
+    /* Scrollbars: thin, and only while the pointer is over the row or page, as on macOS. */
+    --ui-scrollbar-size: 4px;
+    --ui-scrollbar-thumb: rgba(255, 255, 255, 0.3);
+    --ui-scrollbar-thumb-idle: transparent;
+    --ui-scrollbar-thumb-hover: rgba(255, 255, 255, 0.5);
+    /* Glass: Apple's dark material, toned down (user: "too glassy"): a moderate blur (cost grows with the radius), a little extra
+       saturation, so colour behind it glows through, plus a hairline edge. */
+    --ui-glass-bg: rgb(6 6 8 / 0.86);
+    --ui-glass-blur: blur(24px) saturate(1.4);
+    --ui-glass-edge: inset 0 0 0 1px rgb(255 255 255 / 0.07);
+    /* Accent: Apple's white button with black text, no gradient. */
+    --ui-accent-bg: #f5f5f7;
+    --ui-accent-fg: #000;
+    --ui-brand-bg: #f5f5f7;
+    --ui-brand-fg: #000;
+    --ui-brand-text: linear-gradient(to right, #fff, #fff);
+    /* Dialogs: the same glass as the bars, springing in. */
+    --ui-dialog-scrim: rgba(0, 0, 0, 0.55);
+    --ui-dialog-bg: var(--ui-glass-bg);
+    --ui-dialog-border: rgba(255, 255, 255, 0.08);
+    --ui-dialog-blur: var(--ui-glass-blur);
+    --ui-dialog-ms: 500ms;
+    --ui-dialog-ease: var(--ui-title-open-ease);
+    /* Notifications: the bars' glass, no coloured stripe or timer bar; colour only on the icon. */
+    --ui-toast-bg: var(--ui-glass-bg);
+    --ui-toast-fg: #f5f5f7;
+    --ui-toast-border: rgba(255, 255, 255, 0.08);
+    --ui-toast-stripe: 1px;
+    --ui-toast-stripe-color: rgba(255, 255, 255, 0.08);
+    --ui-toast-radius: 1.125rem;
+    --ui-toast-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.7);
+    --ui-toast-blur: var(--ui-glass-blur);
+    --ui-toast-success: #30d158;
+    --ui-toast-error: #ff453a;
+    --ui-toast-info: #f5f5f7;
+    --ui-toast-progress-display: none;
+    --ui-toast-motion: slide;
+    /* Side panels: the same glass, a little more opaque for reading, over a dimmed page. */
+    --ui-sheet-bg: rgb(28 28 30 / 0.78);
+    --ui-sheet-shadow: inset 1px 0 0 rgb(255 255 255 / 0.07), -24px 0 48px rgb(0 0 0 / 0.5);
+    --ui-sheet-blur: var(--ui-glass-blur);
+    --ui-sheet-duration: 350ms;
+    --ui-scrim: linear-gradient(to right, rgb(0 0 0 / 0.2) 0%, rgb(0 0 0 / 0.45) 55%, rgb(0 0 0 / 0.6) 100%);
+
+    /* Type: SF Pro (the system font on Apple devices; the platform's own sans elsewhere,
+       since SF Pro may not be served as a web font), Apple's text sizes, lighter bold. */
+    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Inter, system-ui, sans-serif;
+    --text-3xs: 0.6875rem;
+    --text-2xs: 0.75rem;
+    --text-xs: 0.8125rem;
+    --text-sm: 0.9375rem;
+    --text-base: 1.0625rem;
+    --text-lg: 1.1875rem;
+    --text-xl: 1.375rem;
+    --text-2xl: 1.625rem;
+    --text-3xl: 2rem;
+    --font-weight-black: 700;
+    --font-weight-extrabold: 700;
+    --tracking-wider: 0.01em;
+    --tracking-widest: 0.02em;
+
+    /* Motion: Apple's ease-out on every Tailwind transition. */
+    --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-in-out: cubic-bezier(0.32, 0.72, 0, 1);
+    --default-transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+    --default-transition-duration: 250ms;
+
+    /* 2. Palette fallback, for screens still on raw palette classes (bg-gray-800,
+       text-sky-400...): the same greys and accent. Shrinks as screens move to the
+       semantic colours; delete it when none are left. */
+    --color-surface-0: #000;
+    --color-surface-1: #000;
+    --color-surface-2: #000;
+    --color-surface-3: #000;
+    --color-surface-4: #000;
+    --color-surface-5: #000;
+    --color-surface-6: #1c1c1e;
+    --color-surface-7: #1c1c1e;
+    --color-surface-8: #1c1c1e;
+    --color-surface-9: #2c2c2e;
+    --color-gray-50: #f5f5f7;
+    --color-gray-100: #e8e8ed;
+    --color-gray-200: #d2d2d7;
+    --color-gray-300: #aeaeb2;
+    --color-gray-400: #a1a1a6;
+    --color-gray-500: #86868b;
+    --color-gray-600: #636366;
+    --color-gray-550: #6e6e73;
+    --color-gray-700: #48484a;
+    --color-gray-750: #3a3a3c;
+    --color-gray-800: #2c2c2e;
+    --color-gray-850: #242426;
+    --color-gray-900: #1c1c1e;
+    --color-gray-950: #0a0a0a;
+    --color-slate-50: #f5f5f7;
+    --color-slate-100: #e8e8ed;
+    --color-slate-200: #d2d2d7;
+    --color-slate-300: #aeaeb2;
+    --color-slate-400: #a1a1a6;
+    --color-slate-500: #86868b;
+    --color-slate-600: #636366;
+    --color-slate-700: #48484a;
+    --color-slate-750: #3a3a3c;
+    --color-slate-800: #2c2c2e;
+    --color-slate-900: #1c1c1e;
+    --color-slate-950: #0a0a0a;
+    --color-portalcast-light: #0a84ff;
+    --color-portalcast-dark: #0071e3;
+    --color-blue-300: #70b7ff;
+    --color-blue-400: #409cff;
+    --color-blue-500: #0a84ff;
+    --color-blue-600: #0071e3;
+    --color-blue-700: #0060c0;
+    /* Navy tints (bg-blue-900/30...): neutral, no blue cast. */
+    --color-blue-800: #2c2c2e;
+    --color-blue-900: #1c1c1e;
+    --color-blue-950: #0a0a0a;
+    --color-sky-800: #2c2c2e;
+    --color-sky-900: #1c1c1e;
+    --color-sky-950: #0a0a0a;
+    --color-indigo-800: #2c2c2e;
+    --color-indigo-900: #1c1c1e;
+    --color-indigo-950: #0a0a0a;
+    --color-indigo-300: #d2d2d7;
+    --color-indigo-400: #a1a1a6;
+    --color-indigo-500: #f5f5f7;
+    --color-indigo-600: #0071e3;
+    /* The sign-in pages' purples (violet, purple, fuchsia): neutral greys. */
+    --color-violet-100: #f5f5f7;
+    --color-violet-200: #e8e8ed;
+    --color-violet-300: #d2d2d7;
+    --color-violet-400: #aeaeb2;
+    --color-violet-500: #8e8e93;
+    --color-violet-600: #636366;
+    --color-violet-700: #48484a;
+    --color-violet-800: #2c2c2e;
+    --color-violet-900: #1c1c1e;
+    --color-purple-100: #f5f5f7;
+    --color-purple-200: #e8e8ed;
+    --color-purple-300: #d2d2d7;
+    --color-purple-400: #aeaeb2;
+    --color-purple-500: #8e8e93;
+    --color-purple-600: #636366;
+    --color-purple-700: #48484a;
+    --color-purple-800: #2c2c2e;
+    --color-purple-900: #1c1c1e;
+    --color-fuchsia-100: #f5f5f7;
+    --color-fuchsia-200: #e8e8ed;
+    --color-fuchsia-300: #d2d2d7;
+    --color-fuchsia-400: #aeaeb2;
+    --color-fuchsia-500: #8e8e93;
+    --color-fuchsia-600: #636366;
+    --color-fuchsia-700: #48484a;
+    --color-fuchsia-800: #2c2c2e;
+    --color-fuchsia-900: #1c1c1e;
+    --color-sky-300: #f5f5f7;
+    --color-sky-400: #f5f5f7;
+    --color-sky-500: #0a84ff;
+    --color-sky-600: #0071e3;
+    --color-green-400: #30d158;
+    --color-green-500: #30d158;
+    --color-emerald-400: #30d158;
+    --color-emerald-500: #30d158;
+    --color-red-400: #ff6961;
+    --color-red-500: #ff453a;
+    --color-red-600: #ff453a;
+  }
+}
+
+/* UI pieces where no token says it. */
+@layer components {
+  /* Group headings sit at the start, as on Apple TV, even where the page centres text. */
+  html[data-theme='minimal'] .ui-label {
+    text-align: start;
+  }
+  /* Side panel group headings: sentence case, as in Apple's settings sheets. */
+  html[data-theme='minimal'] .pc-section {
+    padding-top: 22px;
+    font-size: 15px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+}
+
+/* 3. Page-wide rules. */
+
+html[data-theme='minimal'] body {
+  background-color: #000;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html[data-theme='minimal'] .app-bg {
+  background-color: #000;
+  background-image: none;
+}
+
+html[data-theme='minimal'] .app-bg::before {
+  display: none;
+}
+
+html[data-theme='minimal'] h1,
+html[data-theme='minimal'] h2 {
+  letter-spacing: -0.015em;
+}
+
+/* Glass needs something behind it. The header floats over the page (MinimalHeader is
+   absolute). Every page starts below it (main's padding), so nothing can hide under it; the
+   known page scroll boxes (#app-content-scroll, .tv-page) then reach back up under the glass
+   and start their content one header lower with a spacer that scrolls away. The bars stuck
+   under the header are glass too. On a phone the same at the bottom, for the tab bar. */
+html[data-theme='minimal'] {
+  --chrome-top: 3.5rem;
+  --chrome-bottom: calc(4rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 640px) {
+  html[data-theme='minimal'] {
+    --chrome-top: 4rem;
+  }
+}
+/* The tab bar along the bottom shows below 880 px (MinimalHeader: seven sections need the room). */
+@media (min-width: 880px) {
+  html[data-theme='minimal'] {
+    --chrome-bottom: 0px;
+  }
+}
+html[data-theme='minimal'] div:has(> header.ui-glass) > main {
+  padding-top: var(--chrome-top);
+}
+html[data-theme='minimal'] :is(#app-content-scroll, .tv-page) {
+  margin-top: calc(-1 * var(--chrome-top));
+  height: calc(100% + var(--chrome-top));
+}
+html[data-theme='minimal'] :is(#app-content-scroll, .tv-page)::before {
+  content: '';
+  display: block;
+  height: var(--chrome-top);
+}
+html[data-theme='minimal'] :is(#app-content-scroll, .tv-page)::after {
+  content: '';
+  display: block;
+  height: var(--chrome-bottom);
+}
+html[data-theme='minimal'] div:has(> header.ui-glass) {
+  padding-bottom: 0;
+}
+html[data-theme='minimal'] :is(#app-content-scroll, .tv-page) > .sticky.top-0 {
+  top: var(--chrome-top);
+  background-color: var(--ui-glass-bg);
+  -webkit-backdrop-filter: var(--ui-glass-blur);
+  backdrop-filter: var(--ui-glass-blur);
+}
+
+html[data-theme='minimal'] .glass-panel {
+  background: rgba(28, 28, 30, 0.72);
+  border-right-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Apple-style continuous corners, as in ViddyScribe's app-frontend. corner-shape is not
+   inherited, so it goes on every element; elements with no radius are unaffected.
+   Chromium 139+ (Chrome, Brave, Edge); Safari and Firefox keep plain round corners. */
+html[data-theme='minimal'] *,
+html[data-theme='minimal'] *::before,
+html[data-theme='minimal'] *::after {
+  corner-shape: superellipse(2);
+}
+
+/* Pills, avatars and dots stay true circles, not flattened capsules. */
+html[data-theme='minimal'] .rounded-full,
+html[data-theme='minimal'] [class*=':rounded-full'],
+html[data-theme='minimal'] .ui-chip,
+html[data-theme='minimal'] .ui-field-input {
+  corner-shape: round;
+}
+
+/* Reduce Motion: things change in place instead of moving. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme='minimal'] *,
+  html[data-theme='minimal'] *::before,
+  html[data-theme='minimal'] *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Title pages, Apple TV style: plain text and glass over boxes and pills. The hooks are data-ui
+   marks in MediaInfoHeader, TitleExtras (My List), SeriesOverviewPage and EpisodeAccordionRow. */
+html[data-theme='minimal'] [data-ui='title-action'] {
+  border-color: transparent;
+  background: rgb(255 255 255 / 0.12);
+  color: #f5f5f7;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+html[data-theme='minimal'] [data-ui='title-action']:hover {
+  background: rgb(255 255 255 / 0.2);
+}
+html[data-theme='minimal'] [data-ui='title-meta'] {
+  border-color: transparent;
+  padding-block: 0;
+  gap: 0.25rem 0.875rem;
+  color: var(--color-fg-muted);
+}
+html[data-theme='minimal'] [data-ui='meta-icon'],
+html[data-theme='minimal'] [data-ui='section-icon'],
+html[data-theme='minimal'] [data-ui='season-thumb'],
+html[data-theme='minimal'] [data-ui='episode-number'] {
+  display: none;
+}
+html[data-theme='minimal'] [data-ui='rating'] {
+  padding: 0;
+  background: none;
+  color: var(--color-fg-soft);
+}
+html[data-theme='minimal'] [data-ui='rating'] svg {
+  color: #ffd60a;
+}
+/* The rating's source ("IMDb") in grey, after the number. */
+html[data-theme='minimal'] [data-ui='rating'] > span + span {
+  color: var(--color-fg-subtle);
+}
+html[data-theme='minimal'] [data-ui='meta-badge'] {
+  border-radius: 0.3rem;
+  border-color: rgb(255 255 255 / 0.35);
+  padding: 0 0.35rem;
+  font-weight: 600;
+}
+/* Genres as a line of text: "Animation · Family · Fantasy". */
+html[data-theme='minimal'] [data-ui='genres'] {
+  gap: 0.5rem;
+}
+html[data-theme='minimal'] [data-ui='genre'] {
+  padding: 0;
+  background: none;
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+html[data-theme='minimal'] button[data-ui='genre']:hover,
+html[data-theme='minimal'] button[data-ui='genre']:focus-visible {
+  color: var(--color-fg);
+}
+html[data-theme='minimal'] [data-ui='genre']:not(:last-child)::after {
+  content: '·';
+  margin-left: 0.5rem;
+}
+/* Season tabs: words on a pill that marks the open one. */
+html[data-theme='minimal'] [data-ui='season-tab'] {
+  border-color: transparent;
+  border-radius: 9999px;
+  background: none;
+  padding: 0.375rem 0.875rem;
+}
+html[data-theme='minimal'] [data-ui='season-tab']:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+html[data-theme='minimal'] [data-ui='season-tab'][data-active] {
+  background: rgb(255 255 255 / 0.15);
+}
+html[data-theme='minimal'] [data-ui='season-tab']:not([data-active]) > span {
+  color: var(--color-fg-muted);
+}
+/* Episodes: "Episode 3" over the title instead of a number column, a larger still. */
+html[data-theme='minimal'] [data-ui='episode-kicker'] {
+  display: block;
+}
+html[data-theme='minimal'] [data-ui='episode-thumb'] {
+  width: 12rem;
+  border-radius: 0.75rem;
+}
+
+/* Cast (PeopleView): as many people to a row as fit, each photo whole (2:3, rounded, uncropped;
+   a circle can only show a square from these tight headshots), names centred under them. */
+html[data-theme='minimal'] [data-ui='people-grid'] {
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  gap: 1.5rem 1rem;
+}
+html[data-theme='minimal'] [data-ui='person-card'] {
+  text-align: center;
+}
+html[data-theme='minimal'] [data-ui='person-photo'] {
+  border: 0;
+  border-radius: 0.875rem;
+}
+html[data-theme='minimal'] [data-ui='person-photo'] > img {
+  transform: none;
+}
+
+/* A page's own head (data-ui page-*, Cast): a large title, the search small on its right, room
+   around them and no rule under the bar. A phone keeps the search under the title. */
+html[data-theme='minimal'] [data-ui='page-bar'] {
+  border-bottom-color: transparent;
+  padding-top: 1rem;
+  padding-bottom: 0.75rem;
+}
+html[data-theme='minimal'] [data-ui='page-title'] {
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+html[data-theme='minimal'] [data-ui='page-search'] .ui-field-input {
+  padding-block: 0.5rem;
+  font-size: var(--text-sm);
+}
+@media (min-width: 640px) {
+  html[data-theme='minimal'] [data-ui='page-head'] {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  html[data-theme='minimal'] [data-ui='page-search'] {
+    width: 18rem;
+    margin: 0 0 0 auto;
+  }
+}
+
+/* Search (SearchView): the field and its filters on the page, not in a box; recent searches as
+   soft pills without outlines. */
+html[data-theme='minimal'] [data-ui='search-bar'] {
+  margin-inline: -0.75rem;
+  border-radius: 0;
+  padding: 0.75rem;
+}
+@media (min-width: 640px) {
+  html[data-theme='minimal'] [data-ui='search-bar'] {
+    margin-inline: -1.5rem;
+    padding-inline: 1.5rem;
+  }
+}
+html[data-theme='minimal'] [data-ui='recent-search'] {
+  border-color: transparent;
+  background-color: rgb(255 255 255 / 0.08);
+}
+
+/* The player, Apple TV style: a rounder glass panel, round icon buttons over the picture (their
+   words are their tooltips), a glass pill for the quality and glass menus. */
+html[data-theme='minimal'] .ui-player-panel {
+  border-radius: 1.25rem;
+}
+html[data-theme='minimal'] .ui-player-now {
+  border-radius: 0.5rem;
+}
+html[data-theme='minimal'] .ui-player-button {
+  width: 2.75rem;
+  height: 2.75rem;
+  justify-content: center;
+  padding: 0;
+  border-radius: 9999px;
+  corner-shape: round;
+}
+html[data-theme='minimal'] .ui-player-button > span {
+  display: none;
+}
+html[data-theme='minimal'] .ui-player-button > svg {
+  margin: 0;
+}
+html[data-theme='minimal'] .ui-player-badge {
+  border-radius: 9999px;
+  corner-shape: round;
+  background-color: var(--ui-player-button-bg);
+  -webkit-backdrop-filter: var(--ui-player-panel-blur);
+  backdrop-filter: var(--ui-player-panel-blur);
+}
+html[data-theme='minimal'] .more-options-menu {
+  border-color: rgb(255 255 255 / 0.1);
+  background-color: var(--ui-glass-bg);
+  -webkit-backdrop-filter: var(--ui-glass-blur);
+  backdrop-filter: var(--ui-glass-blur);
+}
+
+/* The player's floating boxes (the channel number while zapping, no signal, "Press BACK again",
+   Next Episode): the same glass as its panel. */
+html[data-theme='minimal'] .ui-player-float {
+  border-color: var(--ui-player-panel-border);
+  background-color: var(--ui-player-panel-bg);
+  -webkit-backdrop-filter: var(--ui-player-panel-blur);
+  backdrop-filter: var(--ui-player-panel-blur);
+}
+html[data-theme='minimal'] .ui-player-float:not(.rounded-full) {
+  border-radius: 1.5rem;
+}
+
+/* No borders that light up white on hover (Apple TV marks a hover with a fill): the classes that
+   light one with the focus or accent colour (white here) keep the hairline instead. Keyboard and
+   remote focus keep theirs (focus:, .focused). */
+html[data-theme='minimal'] :is([class*='hover:border-focus'], [class*='hover:border-accent'], [class*='hover:border-portalcast'], [class*='hover:border-white'], [class*='hover:border-indigo']):hover,
+html[data-theme='minimal'] .group:hover :is([class*='group-hover:border-accent'], [class*='group-hover:border-portalcast']) {
+  border-color: var(--color-line);
+}
+/* A field being typed in: the stronger hairline, not a white frame (the caret shows where). */
+html[data-theme='minimal'] :is([class*='focus:border-focus'], [class*='focus:border-indigo']):focus {
+  border-color: var(--color-line-strong);
+}
+/* The landing page's tinted icon boxes and pill: the tint without its outline. */
+html[data-theme='minimal'] [data-ui='tint'] {
+  border-color: transparent;
+}

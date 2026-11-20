@@ -1,4 +1,5 @@
 import { useHiddenTitles } from '@/utils/hiddenTitles';
+import { X } from 'lucide-react';
 import { contentIdOf } from '@/utils/contentId';
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import MediaCard from '@/components/molecules/MediaCard';
@@ -6,7 +7,7 @@ import MediaCardRow from '@/components/organisms/browse/MediaCardRow';
 import RecommendedRow from '@/components/organisms/browse/RecommendedRow';
 import DiscoverFilters, { hasAnyActiveFilter, genreParams, type ActiveDiscoverFilters, type SingleFilterKey } from '@/components/organisms/discover/DiscoverFilters';
 import { getDiscoverBrowse, type HomeRow } from '@/api/endpoints/discover';
-import { setSharedDiscoverFilters, sharedDiscoverFiltersFor } from '@/utils/sharedDiscoverFilters';
+import { onSharedDiscoverFiltersPicked, setSharedDiscoverFilters, sharedDiscoverFiltersFor } from '@/utils/sharedDiscoverFilters';
 import { useDiscover } from '@/hooks/useDiscover';
 import { useAnswersUpdated } from '@/hooks/useAnswersUpdated';
 import type { MediaItem } from '@/types';
@@ -251,6 +252,16 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     [runFilteredBrowse]
   );
 
+  // Filters picked elsewhere (a genre on a title's page): this tab takes them, from the top.
+  useEffect(
+    () =>
+      onSharedDiscoverFiltersPicked(() => {
+        applyNextFilters(sharedDiscoverFiltersFor(fixedType));
+        document.getElementById('app-content-scroll')?.scrollTo({ top: 0 });
+      }),
+    [applyNextFilters, fixedType]
+  );
+
   const handleFilterChange = useCallback(
     (key: SingleFilterKey, value: string | undefined) => {
       applyNextFilters({ ...activeFilters, [key]: value });
@@ -459,6 +470,11 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           hasMore={row.hasMore}
           loadingMore={row.loadingMore}
           onLoadMore={() => loadMoreGenreRow(genre, activeType)}
+          onTitleClick={() => {
+            // The row's title adds its genre to Filters; the results start at the top.
+            handleGenresChange([...new Set([...(activeFilters.genre ?? []), genre])]);
+            document.getElementById('app-content-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
         />
       ))}
     </>
@@ -473,16 +489,35 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
     ...(onOpenCategories ? sourceTypes.map((t) => ({ label: `IPTV categories${typeName(t)}`, note: "The provider's own lists", onClick: () => onOpenCategories(t) })) : []),
   ];
 
+  // Filters, and while any is set, a Clear beside it (one press, every filter).
   const filterButton = (
-    <DiscoverFilters
-      variant="phone"
-      iconOnly
-      facets={facets}
-      activeFilters={activeFilters}
-      onFilterChange={handleFilterChange}
-      onGenresChange={handleGenresChange}
-      links={libraryLinks}
-    />
+    <div className="flex items-center gap-2">
+      {hasActiveFilter && (
+        <button
+          type="button"
+          data-focusable="true"
+          onClick={() => {
+            applyNextFilters({});
+            document.getElementById('app-content-scroll')?.scrollTo({ top: 0 });
+          }}
+          aria-label="Clear filters"
+          title="Clear filters"
+          className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 text-sm font-semibold text-fg-soft transition-colors hover:bg-white/20 hover:text-fg"
+        >
+          <X className="h-4 w-4" />
+          Clear
+        </button>
+      )}
+      <DiscoverFilters
+        variant="phone"
+        iconOnly
+        facets={facets}
+        activeFilters={activeFilters}
+        onFilterChange={handleFilterChange}
+        onGenresChange={handleGenresChange}
+        links={libraryLinks}
+      />
+    </div>
   );
 
   if (TV) {
@@ -515,7 +550,7 @@ const DiscoverView: React.FC<DiscoverViewProps> = ({
           eliminates Chromium's nested-backdrop-filter compositing bug that
           caused the sticky-bar flicker — there's no backdrop-filter left
           here to nest. */}
-      <div className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-[#05080F] px-3 py-2 sm:-mx-6 sm:px-6">
+      <div className="sticky top-0 z-30 -mx-3 mb-4 border-b border-white/5 bg-surface-2 px-3 py-2 empty:hidden sm:-mx-6 sm:px-6">
         {sectionChips?.(filterButton)}
       </div>
 
