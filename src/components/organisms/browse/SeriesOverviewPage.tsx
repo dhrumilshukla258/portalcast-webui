@@ -6,6 +6,7 @@ import { URL_PATHS } from '@/api/config';
 import { MediaInfoHeader } from '@/components/organisms/video/MediaInfoHeader';
 import EpisodeAccordionRow from '@/components/molecules/EpisodeAccordionRow';
 import { useSeasonEpisodes } from '@/hooks/useSeasonEpisodes';
+import { seasonLabel, seasonNumberOf } from '@/utils/seasonNumber';
 
 interface SeriesOverviewPageProps {
   seriesItem: MediaItem;
@@ -16,17 +17,6 @@ interface SeriesOverviewPageProps {
   onPlayEpisode: (episode: MediaItem) => void;
   onContinueWatching?: () => void;
   onBack: () => void;
-}
-
-// Derives a clean "Season N" label from whatever number appears in the
-// season's own title/name, instead of trusting that field verbatim — some
-// providers return season entries whose title already has the series name
-// baked in (e.g. "Season 1. The Apartment Job - Hindi"), which read fine as
-// a one-off but look wrong repeated across every tab/chip.
-function seasonLabelFor(season: MediaItem, index: number): string {
-  const raw = season.title || season.name || '';
-  const num = season.number ?? raw.match(/^\D*(\d+)/)?.[1];
-  return `Season ${num || index + 1}`;
 }
 
 // Uses the same MediaInfoHeader as the movie detail page — everything
@@ -132,6 +122,7 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
             <div className="flex flex-wrap gap-2">
               {seasons.map((season, index) => {
                 const isActive = season.id === selectedSeasonId;
+                const number = seasonNumberOf(season, index);
                 return (
                   <button
                     key={`${season.id}-${index}`}
@@ -157,13 +148,13 @@ const SeriesOverviewPage: React.FC<SeriesOverviewPageProps> = ({
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-blue-500/20 to-transparent">
                           <span className="select-none text-xs font-black text-white/50">
-                            S{seasonLabelFor(season, index).replace('Season ', '')}
+                            {number === 0 ? 'SP' : `S${number}`}
                           </span>
                         </div>
                       )}
                     </div>
                     <span className={`truncate text-sm font-bold ${isActive ? 'text-white' : 'text-gray-200'}`}>
-                      {seasonLabelFor(season, index)}
+                      {seasonLabel(number)}
                     </span>
                   </button>
                 );
