@@ -31,7 +31,7 @@ const ChannelBadge: React.FC<ChannelBadgeProps> = ({ channel, logo, size = 18, c
           onError={() => setFailed(true)}
         />
       ) : (
-        <span className="whitespace-nowrap text-[10px] font-bold leading-4 text-white">{channel}</span>
+        <span className="whitespace-nowrap text-3xs font-bold leading-4 text-white">{channel}</span>
       )}
     </span>
   );

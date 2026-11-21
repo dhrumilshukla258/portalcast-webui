@@ -101,8 +101,8 @@ export const TVControls = React.memo(() => {
     : '...';
 
   return (
-    <div className="pointer-events-auto absolute bottom-1 left-1 right-1 p-1 text-white md:bottom-4 md:left-4 md:right-4 md:p-2.5">
-      <div className="rounded-lg border border-gray-700/80 bg-gray-800 bg-opacity-60 p-1 shadow-2xl md:p-2.5">
+    <div className="pointer-events-auto absolute bottom-1 left-1 right-1 p-1 text-fg md:bottom-4 md:left-4 md:right-4 md:p-2.5">
+      <div className="ui-player-panel rounded-lg p-1 shadow-2xl md:p-2.5">
         <div className="mb-0.5 flex items-center justify-between md:mb-2">
           <div className="flex min-w-0 items-center">
             {channelImgSrc && (
@@ -119,14 +119,14 @@ export const TVControls = React.memo(() => {
               {activeChannel?.name}
             </span>
           </div>
-          <div className="ml-1.5 shrink-0 text-xs text-gray-200 md:ml-4 md:text-lg">
+          <div className="ml-1.5 shrink-0 text-xs text-fg-soft md:ml-4 md:text-lg">
             {liveTime}
           </div>
         </div>
 
         <div className="ml-8 md:ml-16">
-          <div className="flex items-center justify-between rounded-xs bg-red-700 bg-opacity-80 p-0.5 px-1.5 md:p-1.5 md:px-3">
-            <span className="truncate text-[10px] font-semibold md:text-base">
+          <div className="ui-player-now flex items-center justify-between rounded-xs p-0.5 px-1.5 md:p-1.5 md:px-3">
+            <span className="truncate text-3xs font-semibold md:text-base">
               {currentProgName}
             </span>
             <span className="ml-1.5 shrink-0 text-[8px] md:text-sm">
@@ -135,30 +135,32 @@ export const TVControls = React.memo(() => {
           </div>
 
           <div className="flex items-center justify-between p-0.5 px-1.5 md:p-1.5 md:px-3">
-            <span className="text-[10px] text-gray-200 md:text-base">
+            <span className="text-3xs text-fg-soft md:text-base">
               {nextProgName}
             </span>
-            <span className="text-[8px] text-gray-300 md:text-sm">
+            <span className="text-[8px] text-fg-soft md:text-sm">
               {nextProgTime}
             </span>
           </div>
         </div>
 
-        <div className="mt-0.5 h-0.5 w-full rounded-full bg-gray-600 md:mt-2 md:h-1.5">
+        <div className="ui-player-track mt-0.5 h-0.5 w-full rounded-full md:mt-2 md:h-1.5">
           <div
-            className="h-0.5 rounded-full bg-green-500 md:h-1.5"
+            className="ui-player-progress h-0.5 rounded-full md:h-1.5"
             style={{ width: `${programProgress}%` }}
           />
         </div>
 
-        <div className="mt-0.5 flex items-center justify-between px-1 text-sm text-gray-200 md:mt-2">
+        <div className="mt-0.5 flex items-center justify-between px-1 text-sm text-fg-soft md:mt-2">
           <div className="flex items-center gap-1.5 md:gap-4">
             {/* Vidstack Remote actions mapped here */}
             <button
               data-focusable="true"
               data-control="play-pause"
+              data-tip={isPaused ? 'Play' : 'Pause'}
+              aria-label={isPaused ? 'Play' : 'Pause'}
               onClick={() => (isPaused ? remote.play() : remote.pause())}
-              className="text-white hover:text-blue-400"
+              className="text-fg hover:text-accent"
             >
               {isPlaying ? (
                 <PauseIcon className="h-4 w-4 md:h-6 md:w-6" />
@@ -169,7 +171,9 @@ export const TVControls = React.memo(() => {
             <button
               data-focusable="true"
               onClick={onToggleChannelList}
-              className="text-white hover:text-blue-400"
+              data-tip="Channels"
+              aria-label="Channels"
+              className="text-fg hover:text-accent"
             >
               <ListIcon className="h-4 w-4 md:h-6 md:w-6" />
             </button>
@@ -178,17 +182,19 @@ export const TVControls = React.memo(() => {
           <div className="flex items-center gap-1.5 md:gap-4">
             <button
               data-focusable="true"
-              className="hidden md:block text-white hover:text-blue-400"
+              className="hidden md:block text-fg hover:text-accent"
               onClick={() => setUseProxy(!useProxy)}
-              title="Proxy"
+              data-tip={useProxy ? 'Proxy on' : 'Proxy off'}
+              aria-label="Proxy"
             >
               {!useProxy ? <ShieldX /> : <ShieldCheck />}
             </button>
             <button
               data-focusable="true"
               onClick={onCycleFitMode}
-              className="hidden md:block text-white hover:text-blue-400"
-              title="Video Scale"
+              className="hidden md:block text-fg hover:text-accent"
+              data-tip={`Scale: ${fitMode === 'contain' ? 'fit' : fitMode === 'cover' ? 'fill' : 'stretch'}`}
+              aria-label="Video scale"
             >
               {fitMode === 'contain' && (
                 <Shrink className="h-5 w-5 md:h-6 md:w-6" />
@@ -214,7 +220,9 @@ export const TVControls = React.memo(() => {
                       onActiveSettingsMenuChange('cast');
                     }
                   }}
-                  className="hidden md:block mr-1 text-white hover:text-blue-400 md:mr-2"
+                  data-tip="Cast"
+                  aria-label="Cast"
+                  className="hidden md:block mr-1 text-fg hover:text-accent md:mr-2"
                 >
                   <FaChromecast className="h-4 w-4 md:h-6 md:w-6" />
                 </button>
@@ -224,7 +232,9 @@ export const TVControls = React.memo(() => {
                   <button
                     data-focusable="true"
                     onClick={() => onSetIsSettingsMenuOpen((v) => !v)}
-                    className="hidden md:block text-white hover:text-blue-400"
+                    data-tip="Settings"
+                    aria-label="Settings"
+                    className="hidden md:block text-fg hover:text-accent"
                   >
                     <SettingsIcon className="h-4 w-4 md:h-6 md:w-6" />
                   </button>
@@ -237,7 +247,9 @@ export const TVControls = React.memo(() => {
             <button
               data-focusable="true"
               onClick={() => onToggleFavorite(activeChannel)}
-              className="text-white hover:text-yellow-400"
+              data-tip={isFavorite ? 'Remove from favourites' : 'Add to favourites'}
+              aria-label={isFavorite ? 'Remove from favourites' : 'Add to favourites'}
+              className="text-fg hover:text-yellow-400"
             >
               {isFavorite ? (
                 <HeartSolidIcon className="h-4 w-4 text-yellow-400 md:h-6 md:w-6" />
@@ -254,7 +266,9 @@ export const TVControls = React.memo(() => {
                 <button
                   data-focusable="true"
                   onClick={() => remote.toggleFullscreen()}
-                  className="text-white hover:text-blue-400"
+                  data-tip={isFullscreen ? 'Exit full screen' : 'Full screen'}
+                  aria-label={isFullscreen ? 'Exit full screen' : 'Full screen'}
+                  className="text-fg hover:text-accent"
                 >
                   {isFullscreen ? (
                     <FullscreenExitIcon className="h-4 w-4 md:h-6 md:w-6" />
@@ -269,21 +283,21 @@ export const TVControls = React.memo(() => {
             <div className="relative flex items-center justify-center md:hidden">
               <button
                 onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-                className="text-white hover:text-blue-400 p-1.5 transition-colors"
+                className="text-fg hover:text-accent p-1.5 transition-colors"
                 title="More Options"
               >
                 <MoreVertical className="h-5 w-5" />
               </button>
               {isMoreMenuOpen && (
-                <div className="more-options-menu absolute bottom-[calc(100%+12px)] right-0 z-50 flex w-48 origin-bottom-right flex-col rounded-xl border border-gray-600/40 bg-gray-900/95 p-2 text-sm text-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl">
+                <div className="more-options-menu absolute bottom-[calc(100%+12px)] right-0 z-50 flex w-48 origin-bottom-right flex-col rounded-xl border border-divider/40 bg-panel/95 p-2 text-sm text-fg shadow-[0_-10px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl">
                   <button
                     onClick={() => {
                       setUseProxy(!useProxy);
                       setIsMoreMenuOpen(false);
                     }}
-                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-interaction"
                   >
-                    {!useProxy ? <ShieldX className="h-4 w-4 text-gray-400" /> : <ShieldCheck className="h-4 w-4 text-green-400" />}
+                    {!useProxy ? <ShieldX className="h-4 w-4 text-fg-muted" /> : <ShieldCheck className="h-4 w-4 text-green-400" />}
                     <span>Proxy: {useProxy ? 'On' : 'Off'}</span>
                   </button>
 
@@ -291,11 +305,11 @@ export const TVControls = React.memo(() => {
                     onClick={() => {
                       onCycleFitMode();
                     }}
-                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-interaction"
                   >
-                    {fitMode === 'contain' && <Shrink className="h-4 w-4 text-gray-400" />}
-                    {fitMode === 'cover' && <SquareDashedBottomCode className="h-4 w-4 text-gray-400" />}
-                    {fitMode === 'fill' && <Maximize2 className="h-4 w-4 text-gray-400" />}
+                    {fitMode === 'contain' && <Shrink className="h-4 w-4 text-fg-muted" />}
+                    {fitMode === 'cover' && <SquareDashedBottomCode className="h-4 w-4 text-fg-muted" />}
+                    {fitMode === 'fill' && <Maximize2 className="h-4 w-4 text-fg-muted" />}
                     <span className="capitalize">{fitMode}</span>
                   </button>
 
@@ -307,9 +321,9 @@ export const TVControls = React.memo(() => {
                         onActiveSettingsMenuChange('cast');
                         setIsMoreMenuOpen(false);
                       }}
-                      className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
+                      className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-interaction"
                     >
-                      <FaChromecast className="h-4 w-4 text-gray-400" />
+                      <FaChromecast className="h-4 w-4 text-fg-muted" />
                       <span>Cast</span>
                     </button>
                   )}
@@ -320,9 +334,9 @@ export const TVControls = React.memo(() => {
                       onActiveSettingsMenuChange('main');
                       setIsMoreMenuOpen(false);
                     }}
-                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-interaction"
                   >
-                    <SettingsIcon className="h-4 w-4 text-gray-400" />
+                    <SettingsIcon className="h-4 w-4 text-fg-muted" />
                     <span>Settings</span>
                   </button>
                 </div>

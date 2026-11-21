@@ -56,7 +56,7 @@ const TvButton: React.FC<{ onClick: () => void; primary?: boolean; defaultFocus?
     data-focusable="true"
     data-default-focus={defaultFocus ? 'true' : undefined}
     tabIndex={-1}
-    className={`flex h-11 shrink-0 items-center gap-2 rounded-[10px] px-5 text-[16px] font-semibold ${primary ? 'bg-sky-600 text-white' : 'bg-[#1E293B]/90 text-slate-100'}`}
+    className={`tv-button flex h-11 shrink-0 items-center gap-2 rounded-[10px] px-5 text-[16px] font-semibold ${primary ? 'tv-primary bg-sky-600 text-white' : 'bg-surface-9/90 text-slate-100'}`}
   >
     {children}
   </button>
@@ -93,8 +93,8 @@ const Backdrop: React.FC<{ item: MediaItem }> = ({ item }) => {
   return (
     <div className="pointer-events-none absolute inset-0">
       <img src={downsize(art, 'w1280')} alt="" className="tv-fade-in h-full w-full object-cover" onError={() => setFailed(true)} />
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(5,8,15,0.96) 0%, rgba(5,8,15,0.82) 38%, rgba(5,8,15,0.35) 70%, rgba(5,8,15,0.2) 100%)' }} />
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, #05080F 0%, rgba(5,8,15,0) 50%)' }} />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(var(--tv-page-rgb),0.96) 0%, rgba(var(--tv-page-rgb),0.82) 38%, rgba(var(--tv-page-rgb),0.35) 70%, rgba(var(--tv-page-rgb),0.2) 100%)' }} />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, var(--color-page) 0%, var(--tv-shade-0) 50%)' }} />
     </div>
   );
 };
@@ -181,7 +181,7 @@ const CastRow: React.FC<{ details: TitleDetails | null }> = ({ details }) => {
                 onClick={() => { if (person.id && openPerson) openPerson(person.id); }}
                 data-focusable="true"
                 tabIndex={-1}
-                className="tv-card mx-auto block h-[88px] w-[88px] overflow-hidden rounded-full bg-[#121A2B]"
+                className="tv-card mx-auto block h-[88px] w-[88px] overflow-hidden rounded-full bg-surface-8"
               >
                 {photo ? <img src={photo} alt="" loading="lazy" className="h-full w-full object-cover" /> : <span className="text-2xl font-bold text-white/40">{person.name.charAt(0)}</span>}
               </button>
@@ -241,7 +241,7 @@ const Trailer: React.FC<{ youtubeKey: string; onClose: () => void }> = ({ youtub
  * drawn on <body>, outside the app's layers, so nothing of the page under it scrolls with it.
  */
 const TitleLayer: React.FC<{ children: React.ReactNode }> = ({ children }) =>
-  createPortal(<div className="fixed inset-0 z-[85] overflow-hidden bg-[#05080F]" data-tv-layer="">{children}</div>, document.body);
+  createPortal(<div className="fixed inset-0 z-[85] overflow-hidden bg-surface-2" data-tv-layer="">{children}</div>, document.body);
 
 /** A movie: details and buttons, then its Cast and More Like This rows. */
 export const TvMovieDetail: React.FC<{ item: MediaItem; onPlay: (item: MediaItem) => void; progressRecords?: ProgressRecord[] }> = ({ item, onPlay, progressRecords = [] }) => {
@@ -296,7 +296,7 @@ const EpisodeRow: React.FC<{ ep: MediaItem; index: number; seriesTitle?: string;
       className="flex w-full items-center gap-4 rounded-[14px] px-3 py-3 text-left"
     >
       <span className="w-8 shrink-0 text-center text-[20px] font-semibold text-slate-300">{episodeNumber(ep, index)}</span>
-      <span className="relative aspect-video w-[150px] shrink-0 overflow-hidden rounded-md bg-[#121A2B]">
+      <span className="relative aspect-video w-[150px] shrink-0 overflow-hidden rounded-md bg-surface-8">
         {still && <img src={downsize(still, 'w300')} alt="" loading="lazy" className="h-full w-full object-cover" />}
         {progress !== undefined && progress > 0 && (
           <span className="absolute inset-x-0 bottom-0 h-[3px] bg-white/25"><span className="block h-full bg-sky-400" style={{ width: `${Math.min(100, progress)}%` }} /></span>
@@ -375,7 +375,7 @@ export const TvSeriesDetail: React.FC<{
                       data-focusable="true"
                       data-active={active ? 'true' : undefined}
                       tabIndex={-1}
-                      className={`h-11 shrink-0 rounded-[10px] px-5 text-[16px] font-semibold ${active ? 'bg-sky-600 text-white' : 'bg-[#1E293B]/90 text-slate-200'}`}
+                      className={`tv-button h-11 shrink-0 rounded-[10px] px-5 text-[16px] font-semibold ${active ? 'tv-primary bg-sky-600 text-white' : 'bg-surface-9/90 text-slate-200'}`}
                     >
                       {seasonLabel(season, i)}
                     </button>

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Settings, Captions, Trash2, Shield, LogOut, X } from 'lucide-react';
+import { Settings, Captions, Trash2, Shield, LogOut, X, Palette } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { THEMES, themeLabel, useTheme } from '@/themes/theme';
+import { useChooseTheme } from '@/themes/accountTheme';
 import OpenSubtitlesModal from '@/components/molecules/OpenSubtitlesModal';
 import type { HeaderProps } from '@/components/organisms/layout/Header';
 
@@ -40,7 +42,7 @@ const TvHeader: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="tv-header relative z-50 flex h-[72px] shrink-0 items-center gap-12 bg-[#05080F] px-12">
+    <header className="tv-header relative z-50 flex h-[72px] shrink-0 items-center gap-12 bg-surface-2 px-12">
       <img src="/portalcast-logo.svg" alt="PortalCast" className="h-[26px] w-auto select-none" draggable={false} />
       <nav className="flex items-center gap-8" data-tv-group="tabs">
         {tabs.filter((t) => t.onSelect).map((t) => (
@@ -85,6 +87,10 @@ const TvHeader: React.FC<HeaderProps> = ({
 const TvSettingsPanel: React.FC<{ onClose: () => void; onSubtitles: () => void; onClearHistory: () => void }> = ({ onClose, onSubtitles, onClearHistory }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const chooseTheme = useChooseTheme();
+  // OK steps through the themes (Classic, Minimal, Console): shown at once, behind the panel.
+  const nextTheme = () => chooseTheme(THEMES[(THEMES.findIndex((t) => t.id === theme) + 1) % THEMES.length].id);
   React.useEffect(() => {
     // Back closes it (the remote's Back reaches the page only when nothing handles it first).
     const onKey = (e: KeyboardEvent) => {
@@ -96,7 +102,7 @@ const TvSettingsPanel: React.FC<{ onClose: () => void; onSubtitles: () => void; 
   const item = 'flex w-full items-center gap-4 rounded-[10px] px-5 py-4 text-left text-[17px] font-semibold text-slate-100';
   return (
     <div className="fixed inset-0 z-[100] flex justify-end bg-black/60" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label="Settings" className="flex h-full w-[400px] flex-col gap-2 border-l border-white/10 bg-[#0B1120] p-8" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label="Settings" className="flex h-full w-[400px] flex-col gap-2 border-l border-white/10 bg-surface-5 p-8" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-[26px] font-bold text-white">Settings</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="tv-icon-button flex h-10 w-10 items-center justify-center rounded-full text-slate-300" data-focusable="true" tabIndex={-1}>
@@ -106,6 +112,9 @@ const TvSettingsPanel: React.FC<{ onClose: () => void; onSubtitles: () => void; 
         {user && <p className="mb-4 truncate text-[15px] text-slate-400">{user.name || user.email}</p>}
         <button type="button" className={item} onClick={onSubtitles} data-focusable="true" data-default-focus="true" tabIndex={-1}>
           <Captions className="h-5 w-5 text-slate-400" /> Subtitle accounts
+        </button>
+        <button type="button" className={item} onClick={nextTheme} data-focusable="true" tabIndex={-1}>
+          <Palette className="h-5 w-5 text-slate-400" /> Theme <span className="ml-auto text-[15px] font-normal text-slate-400">{themeLabel(theme)}</span>
         </button>
         <button type="button" className={item} onClick={onClearHistory} data-focusable="true" tabIndex={-1}>
           <Trash2 className="h-5 w-5 text-slate-400" /> Clear watch history

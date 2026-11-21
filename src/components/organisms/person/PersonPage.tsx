@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { getPerson, type CreditRole, type PersonPage as PersonPageData } from '@/api/endpoints/discover';
 import MediaCard from '@/components/molecules/MediaCard';
+import Button from '@/components/ui/Button';
 import type { MediaItem } from '@/types';
 
 interface PersonPageProps {
@@ -86,7 +87,8 @@ const PersonPage: React.FC<PersonPageProps> = ({ id, onClose, onOpenTitle, loadi
 
   return (
     <div
-      className="animate-fade-in fixed inset-0 z-90 overflow-y-auto bg-black/95 custom-scrollbar"
+      // Solid: the header behind it showed through around Back. text-left: #root centres text.
+      className="animate-fade-in fixed inset-0 z-90 overflow-y-auto bg-page text-left custom-scrollbar"
       role="dialog"
       aria-modal="true"
       aria-label={p?.name || 'Person'}
@@ -97,7 +99,7 @@ const PersonPage: React.FC<PersonPageProps> = ({ id, onClose, onOpenTitle, loadi
           type="button"
           onClick={onClose}
           data-focusable="true"
-          className="mb-6 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white focus:outline-hidden focus:ring-2 focus:ring-portalcast-light"
+          className="mb-6 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-fg-soft transition-colors hover:bg-interaction hover:text-fg focus-visible:bg-interaction focus-visible:text-fg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-focus"
         >
           <ArrowLeft size={16} /> Back
         </button>
@@ -107,20 +109,20 @@ const PersonPage: React.FC<PersonPageProps> = ({ id, onClose, onOpenTitle, loadi
             <Loader2 className="h-8 w-8 animate-spin text-white/60" />
           </div>
         )}
-        {error && <p className="py-24 text-center text-gray-400">{error}</p>}
+        {error && <p className="py-24 text-center text-fg-muted">{error}</p>}
 
         {p && data && (
           <div className="flex flex-col gap-8 md:flex-row">
-            <aside className="w-full shrink-0 md:w-72">
+            <aside className="w-full shrink-0 text-center md:w-72 md:text-left">
               {p.photo ? (
                 <img src={p.photo} alt={p.name} className="mx-auto aspect-2/3 w-48 rounded-2xl object-cover shadow-2xl md:w-full" />
               ) : (
-                <div className="mx-auto flex aspect-2/3 w-48 items-center justify-center rounded-2xl bg-white/10 text-5xl font-black text-gray-500 md:w-full">
+                <div className="mx-auto flex aspect-2/3 w-48 items-center justify-center rounded-2xl bg-white/10 text-5xl font-black text-fg-subtle md:w-full">
                   {p.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}
                 </div>
               )}
-              <h1 className="mt-5 text-2xl font-black leading-tight text-white md:text-3xl">{p.name}</h1>
-              <div className="mt-2 space-y-1 text-sm text-gray-400">
+              <h1 className="mt-5 text-2xl font-black leading-tight text-fg md:text-3xl">{p.name}</h1>
+              <div className="mt-2 space-y-1 text-sm text-fg-muted">
                 {facts.map((f) => (
                   <p key={f}>{f}</p>
                 ))}
@@ -130,16 +132,11 @@ const PersonPage: React.FC<PersonPageProps> = ({ id, onClose, onOpenTitle, loadi
               </div>
               {p.biography && (
                 <div className="mt-4">
-                  <p className={`whitespace-pre-line text-sm leading-relaxed text-gray-300 ${bioOpen ? '' : 'line-clamp-8'}`}>{p.biography}</p>
+                  <p className={`whitespace-pre-line text-sm leading-relaxed text-fg-soft ${bioOpen ? '' : 'line-clamp-8'}`}>{p.biography}</p>
                   {p.biography.length > 500 && (
-                    <button
-                      type="button"
-                      onClick={() => setBioOpen((v) => !v)}
-                      data-focusable="true"
-                      className="mt-1 rounded px-1 text-xs font-bold text-portalcast-light hover:underline focus:outline-hidden focus:ring-2 focus:ring-portalcast-light"
-                    >
+                    <Button variant="link" onClick={() => setBioOpen((v) => !v)} className="mt-1 text-xs hover:underline">
                       {bioOpen ? 'Show less' : 'Read more'}
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
@@ -147,7 +144,7 @@ const PersonPage: React.FC<PersonPageProps> = ({ id, onClose, onOpenTitle, loadi
 
             <section className="min-w-0 flex-1">
               {data.credits.length === 0 ? (
-                <p className="text-gray-400">Nothing of theirs in the catalog yet.</p>
+                <p className="text-fg-muted">Nothing of theirs in the catalog yet.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                   {data.credits.map((item) => {
@@ -155,7 +152,7 @@ const PersonPage: React.FC<PersonPageProps> = ({ id, onClose, onOpenTitle, loadi
                     return (
                       <div key={item.id} className="min-w-0">
                         <MediaCard item={item as MediaItem} onClick={onOpenTitle} isLoading={loadingItemId === item.id} />
-                        <p className="mt-1.5 truncate px-1 text-xs text-gray-400" title={role}>
+                        <p className="mt-1.5 truncate px-1 text-xs text-fg-muted" title={role}>
                           {[item.year, role].filter(Boolean).join(' · ')}
                         </p>
                       </div>

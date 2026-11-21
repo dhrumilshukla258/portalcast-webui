@@ -42,9 +42,9 @@ const AdminOverview: React.FC<{ onOpen: (t: AdminTarget) => void }> = ({ onOpen 
 
   if (!data) {
     return failed ? (
-      <p className="py-16 text-center text-sm text-gray-500">Could not reach the server.</p>
+      <p className="py-16 text-center text-sm text-fg-subtle">Could not reach the server.</p>
     ) : (
-      <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-gray-500" /></div>
+      <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-fg-subtle" /></div>
     );
   }
 
@@ -74,14 +74,14 @@ const AdminOverview: React.FC<{ onOpen: (t: AdminTarget) => void }> = ({ onOpen 
       <SetupGuide onOpen={onOpen} />
       {/* Health: one line */}
       <section className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-        <span className="flex items-center gap-2 font-semibold text-white">
+        <span className="flex items-center gap-2 font-semibold text-fg">
           <span className={`h-2.5 w-2.5 rounded-full ${allGood ? 'bg-emerald-400' : 'bg-amber-400'}`} />
           {allGood ? 'All good' : 'Something needs a look'}
         </span>
-        <span className="text-gray-400">IPTV {data.health.iptv === 'online' ? 'online' : 'offline'}</span>
-        <span className="text-gray-500">Up {uptime(data.health.uptimeSeconds)}</span>
+        <span className="text-fg-muted">IPTV {data.health.iptv === 'online' ? 'online' : 'offline'}</span>
+        <span className="text-fg-subtle">Up {uptime(data.health.uptimeSeconds)}</span>
         <span
-          className="text-gray-500"
+          className="text-fg-subtle"
           title={data.health.memory
             ? `JS heap ${data.health.memory.heapUsedMb} of ${data.health.memory.heapTotalMb} MB · buffers ${data.health.memory.buffersMb} MB`
               + (data.health.catalog ? ` (catalog ${data.health.catalog.sizeMb} MB)` : '')
@@ -90,13 +90,13 @@ const AdminOverview: React.FC<{ onOpen: (t: AdminTarget) => void }> = ({ onOpen 
         >
           {data.health.memoryMb} MB {data.health.memory ? 'in use' : 'memory'}
         </span>
-        {data.runningJobs.length > 0 && <span className="text-gray-500">Working on: {data.runningJobs.join(', ')}</span>}
+        {data.runningJobs.length > 0 && <span className="text-fg-subtle">Working on: {data.runningJobs.join(', ')}</span>}
       </section>
 
       {/* Needs you: only when there is something */}
       {needs.length > 0 && (
         <section>
-          <h2 className="mb-2 text-sm font-semibold text-gray-400">Needs you</h2>
+          <h2 className="mb-2 text-sm font-semibold text-fg-muted">Needs you</h2>
           <ul className="divide-y divide-white/5 overflow-hidden rounded-xl bg-white/[0.03]">
             {needs.map((x) => (
               <li key={x.text}>
@@ -104,11 +104,11 @@ const AdminOverview: React.FC<{ onOpen: (t: AdminTarget) => void }> = ({ onOpen 
                   type="button"
                   data-focusable="true"
                   onClick={() => onOpen(x.target)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-gray-200 transition-colors hover:bg-white/5 focus:bg-white/5 focus:outline-hidden"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-fg-soft transition-colors hover:bg-interaction focus:bg-interaction focus:outline-hidden"
                 >
                   <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${x.urgent ? 'bg-red-400' : 'bg-amber-400'}`} />
                   <span className="flex-1">{x.text}</span>
-                  <ChevronRight size={16} className="text-gray-600" />
+                  <ChevronRight size={16} className="text-fg-subtle" />
                 </button>
               </li>
             ))}
@@ -119,23 +119,23 @@ const AdminOverview: React.FC<{ onOpen: (t: AdminTarget) => void }> = ({ onOpen 
       {/* Watching now */}
       <section>
         <div className="mb-2 flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold text-gray-400">Watching now</h2>
-          <button type="button" data-focusable="true" onClick={() => onOpen({ section: 'iptv', page: 'activity' })} className="text-xs text-gray-500 hover:text-gray-300">
+          <h2 className="text-sm font-semibold text-fg-muted">Watching now</h2>
+          <button type="button" data-focusable="true" onClick={() => onOpen({ section: 'iptv', page: 'activity' })} className="text-xs text-fg-subtle hover:text-fg-soft">
             Activity →
           </button>
         </div>
         {data.watching.length === 0 ? (
-          <p className="text-sm text-gray-600">Nobody right now.</p>
+          <p className="text-sm text-fg-subtle">Nobody right now.</p>
         ) : (
           <ul className="divide-y divide-white/5">
             {data.watching.map((w, i) => (
               <li key={`${w.user}-${w.title}-${i}`} className="flex items-center gap-4 py-2.5 text-sm">
-                <span className="w-32 shrink-0 truncate font-medium text-gray-200">{w.user ?? 'Unknown'}</span>
-                <span className="min-w-0 flex-1 truncate text-gray-300" title={w.category ?? undefined}>
+                <span className="w-32 shrink-0 truncate font-medium text-fg-soft">{w.user ?? 'Unknown'}</span>
+                <span className="min-w-0 flex-1 truncate text-fg-soft" title={w.category ?? undefined}>
                   {w.title ?? 'Something'}
-                  {w.kind && <span className="ml-2 text-xs text-gray-600">{KIND_LABEL[w.kind] ?? w.kind}</span>}
+                  {w.kind && <span className="ml-2 text-xs text-fg-subtle">{KIND_LABEL[w.kind] ?? w.kind}</span>}
                 </span>
-                <span className="shrink-0 tabular-nums text-gray-500">{formatDuration(Date.now() - w.startedAt)}</span>
+                <span className="shrink-0 tabular-nums text-fg-subtle">{formatDuration(Date.now() - w.startedAt)}</span>
               </li>
             ))}
           </ul>
@@ -143,8 +143,8 @@ const AdminOverview: React.FC<{ onOpen: (t: AdminTarget) => void }> = ({ onOpen 
       </section>
 
       {/* Today: one quiet line */}
-      <section className="text-sm text-gray-500">
-        <span className="mr-3 font-semibold text-gray-400">Today</span>
+      <section className="text-sm text-fg-subtle">
+        <span className="mr-3 font-semibold text-fg-muted">Today</span>
         {today.join('  ·  ')}
       </section>
     </div>

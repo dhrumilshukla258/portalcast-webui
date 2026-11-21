@@ -1,0 +1,795 @@
+/*
+  Shared UI pieces (src/components/ui/*.tsx), drawn only from tokens: a theme restyles them
+  by setting tokens in its theme.css (@layer theme). Only when a token cannot say it does a
+  theme override a .ui-* rule (@layer components, under html[data-theme='<id>']).
+  The values here are Classic's. See src/themes/README.md.
+*/
+@layer theme {
+  :root {
+    --ui-control-h: 2.25rem;
+    --ui-control-px: 1rem;
+    --ui-control-radius: 9999px;
+    --ui-control-text: var(--text-sm);
+    --ui-control-weight: 700;
+    /* Labeled playback actions on title pages and Home. */
+    --ui-play-fill: var(--color-fg);
+    --ui-play-ink: var(--color-page);
+    --ui-play-radius: var(--radius-xl);
+    --ui-play-height: 3rem;
+    --ui-play-hover-scale: 1.03;
+    --ui-secondary-fill: transparent;
+    --ui-secondary-line: var(--color-line);
+    --ui-secondary-hover: var(--color-panel-hover);
+    /* Chips (Chip.tsx: filters and tabs inside a page): resting, hovered, picked. */
+    --ui-chip-bg: var(--color-panel);
+    --ui-chip-border: var(--color-line);
+    --ui-chip-fg: var(--color-fg-soft);
+    --ui-chip-hover-bg: var(--ui-chip-bg);
+    --ui-chip-on-bg: var(--color-accent);
+    --ui-chip-on-fg: var(--color-on-accent);
+    /* The player (TVControls, TopBar): live info panel, its Now row and progress, the buttons
+       over the picture. */
+    --ui-player-panel-bg: var(--color-gray-800);
+    --ui-player-panel-border: rgb(55 65 81 / 0.8);
+    --ui-player-panel-blur: none;
+    --ui-player-now-bg: var(--color-red-700);
+    --ui-player-now-fg: var(--color-fg);
+    --ui-player-track: var(--color-gray-600);
+    --ui-player-progress: var(--color-green-500);
+    --ui-player-button-bg: rgb(17 24 39 / 0.7);
+    --ui-player-button-hover-bg: rgb(31 41 55 / 0.9);
+    --ui-player-button-border: rgb(55 65 81 / 0.5);
+    /* A title page's backdrop moves at this share of the scroll (useParallax): 0 keeps it still. */
+    --ui-backdrop-parallax: 0;
+    /* Tooltips: data-tip="..." on a button (the player's icons), .ui-tip-label for a label of
+       its own (the movie player's). */
+    --ui-tip-bg: rgb(0 0 0 / 0.8);
+    --ui-tip-fg: #fff;
+    --ui-tip-blur: none;
+    --ui-tip-radius: 0.375rem;
+    /* Search fields (SearchField.tsx). */
+    /* Pick chips (Chip variant="pick": several on at once). */
+    --ui-pick-bg: transparent;
+    --ui-pick-border: rgb(255 255 255 / 0.15);
+    --ui-pick-fg: var(--color-fg-soft);
+    --ui-pick-on-bg: var(--color-accent);
+    --ui-pick-on-fg: var(--color-on-accent);
+    --ui-field-bg: var(--color-panel);
+    --ui-field-border: var(--color-line);
+    --ui-panel-radius: 0.75rem;
+    --ui-label-size: var(--text-sm);
+    --ui-label-weight: 700;
+    --ui-label-case: uppercase;
+    --ui-label-tracking: 0.05em;
+    --ui-label-color: var(--color-fg-subtle);
+    --ui-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --ui-duration: 150ms;
+    /* A title page growing out of its card and shrinking back (TitlePageLayer). Read by
+       script (Web Animations), so plain values: ms, an easing, and how much of the opening
+       the page takes to fade in (1: all of it). Classic: the Android TV app's Material motion. */
+    --ui-title-open-ms: 380;
+    --ui-title-open-ease: cubic-bezier(0.05, 0.7, 0.1, 1);
+    --ui-title-close-ms: 260;
+    --ui-title-close-ease: cubic-bezier(0.3, 0, 0.8, 0.15);
+    --ui-title-fade: 1;
+    /* Focus: the keyboard / remote ring (.focused, set by useTVFocus after arrow keys) and
+       the lift a focused tile gets. */
+    --ui-focus-ring: #3b82f6;
+    --ui-focus-offset: 2px;
+    --ui-focus-border: rgba(59, 130, 246, 0.8);
+    --ui-focus-glow: 0 10px 25px -5px rgba(59, 130, 246, 0.4), 0 8px 10px -6px rgba(59, 130, 246, 0.4);
+    --ui-focus-duration: 0.2s;
+    --ui-focus-scale: 1.03;
+    /* Selected: the picked entry of a list (.ui-selected: the channel on; a focused channel row). */
+    --ui-selected-bg: linear-gradient(90deg, var(--color-portalcast-light), var(--color-portalcast-dark));
+    --ui-selected-fg: #fff;
+    --ui-selected-shadow: 0 4px 12px rgba(0, 114, 255, 0.3);
+    /* Scrollbars (.custom-scrollbar). idle: the thumb when the pointer is elsewhere. */
+    --ui-scrollbar-size: 6px;
+    --ui-scrollbar-thumb: rgba(255, 255, 255, 0.2);
+    --ui-scrollbar-thumb-idle: var(--ui-scrollbar-thumb);
+    --ui-scrollbar-thumb-hover: rgba(255, 255, 255, 0.4);
+    /* Accent: the main action of a screen or dialog (Button variant="accent", .ui-accent). */
+    --ui-accent-bg: linear-gradient(to right, var(--color-sky-400), var(--color-blue-500));
+    --ui-accent-fg: #fff;
+    /* Brand: the sign-in and landing pages' own fill (.ui-brand; text: .ui-brand-text). */
+    --ui-brand-bg: linear-gradient(to right, var(--color-indigo-500), var(--color-violet-600));
+    --ui-brand-fg: #fff;
+    --ui-brand-text: linear-gradient(to right, var(--color-indigo-400), var(--color-violet-400), var(--color-fuchsia-400));
+    /* Dialogs (Dialog.tsx): the dimmed page, the panel, how it comes in. */
+    --ui-dialog-scrim: rgba(0, 0, 0, 0.75);
+    --ui-dialog-bg: rgba(16, 24, 40, 0.95);
+    --ui-dialog-border: rgba(255, 255, 255, 0.1);
+    --ui-dialog-blur: none;
+    --ui-dialog-ms: 200ms;
+    --ui-dialog-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    /* Notifications (Toaster.tsx): card, coloured left stripe per kind, progress bar, motion. */
+    --ui-toast-bg: #0b0f19;
+    --ui-toast-fg: var(--color-gray-300);
+    --ui-toast-border: var(--color-slate-800);
+    --ui-toast-radius: 1rem;
+    --ui-toast-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    --ui-toast-blur: blur(10px);
+    --ui-toast-stripe: 4px;
+    --ui-toast-success: var(--color-emerald-500);
+    --ui-toast-error: var(--color-red-500);
+    --ui-toast-info: #3b82f6;
+    --ui-toast-progress: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    --ui-toast-progress-display: block;
+    --ui-toast-motion: bounce;
+    /* Glass (.ui-glass): bars and menus over the content. Classic: no blur. */
+    --ui-glass-bg: rgb(11 17 32 / 0.95);
+    --ui-glass-blur: none;
+    --ui-glass-edge: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+    /* Side panels (Filters, the player's settings) and the scrim behind them. */
+    --ui-sheet-bg: linear-gradient(to bottom, #111a2d 0%, #0a1120 50%, #05080f 100%);
+    --ui-sheet-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.08), -24px 0 48px rgba(0, 0, 0, 0.45);
+    --ui-sheet-blur: none;
+    --ui-sheet-duration: 240ms;
+    --ui-scrim: linear-gradient(to right, rgba(5, 8, 15, 0) 0%, rgba(5, 8, 15, 0.35) 55%, rgba(5, 8, 15, 0.78) 100%);
+  }
+}
+
+/* Old TV browsers (Chrome 68) have no color-mix(): with a var() inside, the declaration then
+   computes to nothing rather than falling back, so the solid colour comes first and the
+   translucent one only where it is supported. */
+
+@layer components {
+  /* Chip: a filter or section switch. aria-pressed = on.
+     data-variant="toggle": Home's section chips, outlined, lightly filled when on. */
+  .ui-chip {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    height: var(--ui-control-h);
+    padding-inline: var(--ui-control-px);
+    border: 1px solid var(--ui-chip-border);
+    border-radius: var(--ui-control-radius);
+    background-color: var(--ui-chip-bg);
+    color: var(--ui-chip-fg);
+    font-size: var(--ui-control-text);
+    font-weight: var(--ui-control-weight);
+    white-space: nowrap;
+    cursor: pointer;
+    transition-property: color, background-color, border-color, box-shadow;
+    transition-duration: var(--ui-duration);
+    transition-timing-function: var(--ui-ease);
+  }
+  .ui-chip:hover {
+    background-color: var(--ui-chip-hover-bg);
+    color: var(--color-fg);
+  }
+  .ui-chip[aria-pressed='true'] {
+    border-color: transparent;
+    background-color: var(--ui-chip-on-bg);
+    color: var(--ui-chip-on-fg);
+  }
+  .ui-chip[data-variant='toggle'] {
+    border-color: var(--color-line-strong);
+    background-color: transparent;
+  }
+  [data-tip] {
+    position: relative;
+  }
+  [data-tip]::after,
+  .ui-tip-label {
+    border-radius: var(--ui-tip-radius);
+    background-color: var(--ui-tip-bg);
+    color: var(--ui-tip-fg);
+    -webkit-backdrop-filter: var(--ui-tip-blur);
+    backdrop-filter: var(--ui-tip-blur);
+  }
+  [data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 0.625rem);
+    left: 50%;
+    z-index: 60;
+    padding: 0.125rem 0.5rem;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, 0.25rem);
+    transition: opacity var(--ui-duration) var(--ui-ease), transform var(--ui-duration) var(--ui-ease);
+  }
+  [data-tip]:hover::after,
+  [data-tip]:focus-visible::after,
+  [data-tip].focused::after {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  /* The fill and blur are on a layer behind the content: a blur on the panel itself makes it
+     the box `fixed` is measured from, which shut the settings panel (fixed, full height) inside
+     the live panel. */
+  .ui-player-panel {
+    position: relative;
+    isolation: isolate;
+    border: 1px solid var(--ui-player-panel-border);
+  }
+  .ui-player-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background-color: var(--ui-player-panel-bg);
+    -webkit-backdrop-filter: var(--ui-player-panel-blur);
+    backdrop-filter: var(--ui-player-panel-blur);
+  }
+  .ui-player-now {
+    background-color: var(--ui-player-now-bg);
+    color: var(--ui-player-now-fg);
+  }
+  .ui-player-track {
+    background-color: var(--ui-player-track);
+  }
+  .ui-player-progress {
+    background-color: var(--ui-player-progress);
+  }
+  .ui-player-button {
+    border: 1px solid var(--ui-player-button-border);
+    background-color: var(--ui-player-button-bg);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .ui-player-button:hover {
+    background-color: var(--ui-player-button-hover-bg);
+  }
+  .ui-chip[data-variant='pick'] {
+    gap: 0.375rem;
+    border-color: var(--ui-pick-border);
+    background-color: var(--ui-pick-bg);
+    color: var(--ui-pick-fg);
+  }
+  .ui-chip[data-variant='pick'][aria-pressed='true'] {
+    border-color: transparent;
+    background-color: var(--ui-pick-on-bg);
+    color: var(--ui-pick-on-fg);
+  }
+  .ui-chip[data-variant='toggle'][aria-pressed='true'] {
+    border-color: rgb(255 255 255 / 0.4);
+    background-color: rgb(255 255 255 / 0.15);
+    color: var(--color-fg);
+  }
+
+  /* Button. data-variant: primary (solid), secondary (outlined), link (text only). */
+  .ui-button {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: var(--ui-control-h);
+    padding-inline: var(--ui-control-px);
+    border: 1px solid transparent;
+    border-radius: var(--ui-control-radius);
+    font-size: var(--ui-control-text);
+    font-weight: var(--ui-control-weight);
+    white-space: nowrap;
+    cursor: pointer;
+    transition-property: color, background-color, border-color, opacity;
+    transition-duration: var(--ui-duration);
+    transition-timing-function: var(--ui-ease);
+  }
+  .ui-button:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+  .ui-button[data-variant='primary'] {
+    background-color: var(--color-fg);
+    color: var(--color-page);
+  }
+  .ui-button.ui-play-button {
+    min-height: var(--ui-play-height);
+    height: auto;
+    padding-inline: 1.5rem;
+    border-radius: var(--ui-play-radius);
+    background: var(--ui-play-fill);
+    color: var(--ui-play-ink);
+    font-size: var(--text-base);
+    transition-property: scale, box-shadow;
+  }
+  .ui-play-button:focus-visible { outline: 2px solid var(--ui-focus-ring); outline-offset: var(--ui-focus-offset); }
+  .ui-button.ui-play-button[data-icon-only] {
+    width: 2.75rem; height: 2.75rem; min-height: 0; padding: 0; border-radius: 50%;
+  }
+  @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+    .ui-play-button:hover:not(:disabled) { scale: var(--ui-play-hover-scale); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ui-play-button:active:not(:disabled) { scale: .96; }
+  }
+  .ui-button[data-variant='secondary'] {
+    background-color: var(--ui-secondary-fill);
+    border-color: var(--ui-secondary-line);
+    color: var(--color-fg-soft);
+  }
+  .ui-button[data-variant='secondary']:hover:not(:disabled) {
+    border-color: var(--color-line-strong);
+    background-color: var(--ui-secondary-hover);
+    color: var(--color-fg);
+  }
+  .ui-button[data-ui='title-action'] {
+    min-height: var(--ui-play-height);
+    border-radius: var(--ui-play-radius);
+    font-size: var(--text-base);
+    background-color: var(--color-panel);
+  }
+  .ui-button[data-variant='link'] {
+    height: auto;
+    padding: 0;
+    color: var(--color-accent);
+  }
+  .ui-button[data-variant='link']:hover {
+    opacity: 0.8;
+  }
+
+  /* Search field: the input with its icon and clear button (SearchField.tsx). */
+  .ui-field {
+    position: relative;
+  }
+  .ui-field-input {
+    width: 100%;
+    padding: 0.625rem 2.5rem;
+    border: 1px solid var(--ui-field-border);
+    border-radius: var(--ui-control-radius);
+    background-color: var(--ui-field-bg);
+    color: var(--color-fg);
+    font-size: var(--text-base);
+    transition: box-shadow var(--ui-duration) var(--ui-ease);
+  }
+  .ui-field-input::placeholder {
+    color: var(--color-fg-subtle);
+  }
+  .ui-field-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px var(--color-focus);
+  }
+  .ui-field-icon {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    width: 1rem;
+    height: 1rem;
+    transform: translateY(-50%);
+    color: var(--color-fg-subtle);
+    pointer-events: none;
+  }
+  .ui-field-clear {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    padding: 0.25rem;
+    border-radius: 9999px;
+    transform: translateY(-50%);
+    color: var(--color-fg-muted);
+  }
+  .ui-field-clear:hover {
+    color: var(--color-fg);
+  }
+
+  /* Section label: the small heading over a group ("Recent searches"). */
+  .ui-label {
+    color: var(--ui-label-color);
+    font-size: var(--ui-label-size);
+    font-weight: var(--ui-label-weight);
+    letter-spacing: var(--ui-label-tracking);
+    text-transform: var(--ui-label-case);
+  }
+
+  /* Row: a raised list entry (a game, a channel). Layout stays at the call site. */
+  .ui-row {
+    border: 1px solid rgb(255 255 255 / 0.05);
+    border-radius: var(--ui-panel-radius);
+    background-color: var(--color-panel-raised);
+    transition: background-color var(--ui-duration) var(--ui-ease);
+  }
+  .ui-row:hover {
+    background-color: var(--color-panel-hover);
+  }
+  .ui-row:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-fg);
+  }
+
+  /* Badge: a small tag on a row or a poster. data-tone="live": red. */
+  .ui-badge {
+    display: inline-block;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    background-color: rgb(0 0 0 / 0.6);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+  .ui-badge[data-tone='live'] {
+    background-color: var(--color-live);
+  }
+}
+
+@layer components {
+  @supports (color: color-mix(in lab, red, red)) {
+    .ui-chip:not([aria-pressed='true']):not(:hover):not([data-variant]) {
+      background-color: color-mix(in oklab, var(--ui-chip-bg) 85%, transparent);
+    }
+    .ui-field-input {
+      background-color: color-mix(in oklab, var(--ui-field-bg) 85%, transparent);
+    }
+    .ui-row {
+      background-color: color-mix(in oklab, var(--color-panel-raised) 85%, transparent);
+    }
+  }
+}
+
+/* Side panels: Filters and the player's settings (owner 2026-11-04: they had a hard border and
+   simply appeared; the same as the TV app's SidePanel). Only transform and opacity animate, so
+   the compositor runs it, and nothing here is newer than Chrome 68 (LG webOS 5, Tizen 2019):
+   plain gradients, no flex gap, and :focus-visible in a rule of its own (an old browser drops a
+   whole rule whose selector it cannot read). Look: the --ui-sheet-* and --ui-scrim tokens. */
+@keyframes pc-panel-in {
+  from { opacity: 0; transform: translate3d(48px, 0, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pc-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@layer components {
+  /* What is behind darkens towards the panel, with no hard edge. */
+  .pc-shade {
+    background: var(--ui-scrim);
+    animation: pc-fade-in var(--ui-sheet-duration) var(--ui-ease) both;
+  }
+  .pc-panel {
+    background: var(--ui-sheet-bg);
+    box-shadow: var(--ui-sheet-shadow);
+    -webkit-backdrop-filter: var(--ui-sheet-blur);
+    backdrop-filter: var(--ui-sheet-blur);
+    animation: pc-panel-in var(--ui-sheet-duration) var(--ui-ease) both;
+  }
+  /* Moving between levels (Filters and a selector's values): the content fades in place. */
+  .pc-swap-in {
+    animation: pc-fade-in 140ms var(--ui-ease) both;
+  }
+  .pc-section {
+    display: block;
+    padding: 18px 12px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .pc-row {
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--color-fg);
+    outline: none;
+    transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
+  }
+  .pc-row:hover { background-color: var(--color-interaction); }
+  .pc-row[data-selected='true'] { background-color: var(--color-interaction); }
+  .pc-muted { color: var(--color-fg-muted); }
+  .pc-set { color: var(--color-accent); }
+  /* Focused (the remote's .focused, a keyboard's :focus-visible): the text colour as the fill,
+     the page colour as the text, like Home's chips and the Play button (owner 2026-11-05: the
+     accent fill washed out on a TV). */
+  .pc-row.focused { background-color: var(--color-fg); color: var(--color-page); transform: scale(1.02); }
+  .pc-row.focused .pc-muted, .pc-row.focused .pc-set { color: var(--color-page); opacity: 0.7; }
+  .pc-row:focus-visible { background-color: var(--color-fg); color: var(--color-page); transform: scale(1.02); }
+  .pc-row:focus-visible .pc-muted { color: var(--color-page); opacity: 0.7; }
+  .pc-row:focus-visible .pc-set { color: var(--color-page); opacity: 0.7; }
+}
+@media (min-width: 640px) {
+  .pc-panel { border-top-left-radius: 16px; border-bottom-left-radius: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-panel, .pc-shade, .pc-swap-in { animation: none; }
+}
+
+/* MinimalHeader layout, shared by Minimal and Console. The header stays above the tab's
+   scroll container; title layers and the player own their own chrome. On compact screens
+   the sections move to the bottom bar. Both spacers scroll with the content. */
+html:is([data-theme='minimal'], [data-theme='console']) {
+  --chrome-top: 3.5rem;
+  --chrome-bottom: calc(4rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 640px) {
+  html:is([data-theme='minimal'], [data-theme='console']) { --chrome-top: 4rem; }
+}
+@media (min-width: 880px) {
+  html:is([data-theme='minimal'], [data-theme='console']) { --chrome-bottom: 0px; }
+}
+html:is([data-theme='minimal'], [data-theme='console']) div:has(> header.ui-glass) {
+  padding-bottom: 0;
+  & > main { padding-top: var(--chrome-top); }
+}
+html:is([data-theme='minimal'], [data-theme='console']) :where(.app-bg main) :is(#app-content-scroll, .tv-page) {
+  margin-top: calc(-1 * var(--chrome-top));
+  height: calc(100% + var(--chrome-top));
+  &::before, &::after { content: ''; display: block; }
+  &::before { height: var(--chrome-top); }
+  &::after { height: var(--chrome-bottom); }
+  & > .sticky.top-0 { top: var(--chrome-top); }
+}
+
+/* A small target over the middle of the artwork leaves the rest of the edge poster clickable. */
+html:is([data-theme='minimal'], [data-theme='console']) .row-step {
+  inset-block: 1.5rem 0;
+  margin-block: auto;
+  margin-inline: .25rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  corner-shape: round;
+  background-image: none;
+  opacity: 1;
+}
+html:is([data-theme='minimal'], [data-theme='console']) .row-step > svg { width: 1.25rem; height: 1.25rem; }
+
+/* Glass: a few large surfaces only (bars, menus, side panels), never per card: each blurred
+   element is its own pass over what is behind it, so a grid of them is what gets slow. */
+@layer components {
+  .ui-glass {
+    background-color: var(--ui-glass-bg);
+    box-shadow: var(--ui-glass-edge);
+    -webkit-backdrop-filter: var(--ui-glass-blur);
+    backdrop-filter: var(--ui-glass-blur);
+  }
+}
+/* No blur available, or Reduce Transparency on: solid panels. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ui-glass,
+  .pc-panel {
+    background: var(--color-panel);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .ui-glass,
+  .pc-panel {
+    background: var(--color-panel);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Scrollbars on the page and on rows (.custom-scrollbar): the same thickness both ways (the
+   horizontal one used to get the browser's thick default). Firefox: the standard properties,
+   only there, since Chrome 121+ would let them override these. */
+.custom-scrollbar::-webkit-scrollbar {
+  width: var(--ui-scrollbar-size);
+  height: var(--ui-scrollbar-size);
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: var(--ui-scrollbar-thumb-idle);
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: var(--ui-scrollbar-thumb);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ui-scrollbar-thumb-hover);
+}
+@supports not selector(::-webkit-scrollbar) {
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ui-scrollbar-thumb) transparent;
+  }
+}
+
+/* Everything clickable shows the hand cursor. Tailwind 4 dropped it from buttons, so any button
+   without its own cursor-pointer showed the arrow. Base layer: a cursor-* utility still wins. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  a[href],
+  summary,
+  label[for],
+  select:not(:disabled),
+  [data-focusable='true']:not(input):not(textarea):not(select) {
+    cursor: pointer;
+  }
+}
+
+/* The app draws its own focus ring (.focused below, once arrow keys are used). Without this the
+   browser adds its default ring to what the app focuses for itself, e.g. Home on load. Base
+   layer: an element's own focus-visible utilities still win. */
+@layer base {
+  [data-focusable='true']:focus:not(.focused) {
+    outline: none;
+  }
+}
+
+/* Focus and selection. !important: they win over a tile's own border, shadow and transform. */
+.focused {
+  outline: 2px solid var(--ui-focus-ring) !important;
+  outline-offset: var(--ui-focus-offset);
+}
+/* A focused tile lifts; text inputs do not (scaling a box being typed into reads as a bug). */
+[data-focusable='true']:not([type='search']).focused {
+  z-index: 10;
+  transform: scale(var(--ui-focus-scale)) !important;
+  border-color: var(--ui-focus-border) !important;
+  box-shadow: var(--ui-focus-glow) !important;
+  transition: all var(--ui-focus-duration) var(--ui-ease);
+}
+.ui-selected,
+.channel-list [data-focusable='true'].focused {
+  border-color: transparent !important;
+  background: var(--ui-selected-bg) !important;
+  color: var(--ui-selected-fg) !important;
+  box-shadow: var(--ui-selected-shadow) !important;
+}
+.channel-list [data-focusable='true'].focused {
+  transform: scale(1.01) !important;
+}
+.channel-list [data-focusable='true'].focused h3,
+.channel-list [data-focusable='true'].focused span,
+.channel-list [data-focusable='true'].focused p,
+.ui-selected h3,
+.ui-selected span,
+.ui-selected p {
+  color: var(--ui-selected-fg) !important;
+}
+
+/* Accent and danger buttons, and accent fills that are not buttons (a picked pill). */
+@layer components {
+  .ui-button[data-variant='accent'],
+  .ui-accent {
+    background: var(--ui-accent-bg);
+    color: var(--ui-accent-fg);
+  }
+  .ui-brand {
+    background: var(--ui-brand-bg);
+    color: var(--ui-brand-fg);
+  }
+  .ui-brand-text {
+    background: var(--ui-brand-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .ui-button[data-variant='accent']:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+  .ui-button[data-variant='danger'] {
+    background-color: var(--color-red-600);
+    color: #fff;
+  }
+  .ui-button[data-variant='danger']:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+  .ui-button:focus-visible,
+  .ui-button.focused {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Dialog (Dialog.tsx): over everything, the page dimmed, the panel scaling in. */
+@keyframes ui-dialog-in {
+  from { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@layer components {
+  .ui-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: var(--ui-dialog-scrim);
+    animation: pc-fade-in var(--ui-dialog-ms) var(--ui-ease) both;
+  }
+  .ui-dialog {
+    width: 100%;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    padding: 1.5rem;
+    border: 1px solid var(--ui-dialog-border);
+    border-radius: 1rem;
+    background: var(--ui-dialog-bg);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    -webkit-backdrop-filter: var(--ui-dialog-blur);
+    backdrop-filter: var(--ui-dialog-blur);
+    animation: ui-dialog-in var(--ui-dialog-ms) var(--ui-dialog-ease) both;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-dialog-backdrop, .ui-dialog { animation: none; }
+}
+
+/* Notifications (Toaster.tsx, react-toastify underneath): the card from --ui-toast-* tokens.
+   The components layer outranks react-toastify's own stylesheet. */
+@layer components {
+  .ui-toaster {
+    --toastify-color-success: var(--ui-toast-success);
+    --toastify-color-error: var(--ui-toast-error);
+    --toastify-color-info: var(--ui-toast-info);
+    --toastify-toast-min-height: 60px;
+    --toastify-z-index: 9999;
+    --toastify-font-family: inherit;
+  }
+  .ui-toast {
+    --ui-toast-accent: var(--ui-toast-info);
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    min-height: 60px;
+    margin-bottom: 0.75rem;
+    padding: 0.25rem;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid var(--ui-toast-border);
+    border-left: var(--ui-toast-stripe) solid var(--ui-toast-stripe-color, var(--ui-toast-accent));
+    border-radius: var(--ui-toast-radius);
+    background: var(--ui-toast-bg);
+    color: var(--ui-toast-fg);
+    box-shadow: var(--ui-toast-shadow);
+    text-align: left;
+    -webkit-backdrop-filter: var(--ui-toast-blur);
+    backdrop-filter: var(--ui-toast-blur);
+  }
+  .ui-toast--success { --ui-toast-accent: var(--ui-toast-success); }
+  .ui-toast--error { --ui-toast-accent: var(--ui-toast-error); }
+  .ui-toast-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    padding: 0.75rem;
+    color: var(--ui-toast-fg);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  .ui-toast .Toastify__progress-bar--wrp,
+  .ui-toast .Toastify__progress-bar { display: var(--ui-toast-progress-display); }
+  .ui-toast .Toastify__progress-bar--info { background: var(--ui-toast-progress); }
+  .ui-toast .Toastify__close-button { margin: 10px 5px 0 0; color: var(--color-fg-subtle); opacity: 0.8; }
+  .ui-toast .Toastify__close-button:hover { color: var(--color-fg); opacity: 1; }
+}
+
+/* Activity indicator (ActivityIndicator.tsx): 1em square, spokes from the centre out. The
+   spoke's origin is the square's centre: 0.5em below its top, its height 0.28em (178.57 %). */
+@layer components {
+  .ui-activity {
+    position: relative;
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+  }
+  .ui-activity > span {
+    position: absolute;
+    top: 0;
+    left: 46%;
+    width: 8%;
+    height: 28%;
+    border-radius: 9999px;
+    background: currentColor;
+    transform-origin: 50% 178.57%;
+    animation: ui-activity-spoke 0.8s linear infinite;
+  }
+  /* A layer that appears only when a wait is real: a short pause, then a quick fade. */
+  .ui-wait-in {
+    animation: ui-wait-in 0.22s ease-out 0.15s both;
+  }
+}
+@keyframes ui-activity-spoke {
+  from { opacity: 1; }
+  to { opacity: 0.22; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-activity > span { animation: none; }
+  .ui-activity > span:nth-child(n+5) { opacity: .35; }
+}
+@keyframes ui-wait-in {
+  from { opacity: 0; }
+}

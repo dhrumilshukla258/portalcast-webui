@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from 'react';
+import Dialog from '@/components/ui/Dialog';
+import Button from '@/components/ui/Button';
 
 type ConfirmationModalProps = {
   isOpen: boolean;
@@ -53,18 +55,12 @@ const ConfirmationModal: React.FC<
   };
 
   return (
-    <div className="animate-fade-in fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-xs">
-      <div
-        className="animate-scale-in w-full max-w-md scale-100 rounded-2xl border border-gray-700/50 bg-gray-900/90 p-6 shadow-2xl backdrop-blur-md"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-        onKeyDown={handleKeyDown}
-      >
-        <h3 id="modal-title" className="mb-2 text-xl font-bold text-white">
+    <Dialog open={isOpen} onClose={onCancel} labelledBy="modal-title">
+      <div onKeyDown={handleKeyDown}>
+        <h3 id="modal-title" className="mb-2 text-xl font-bold text-fg">
           {title}
         </h3>
-        <p className="mb-6 text-gray-300">{message}</p>
+        <p className="mb-6 text-fg-soft">{message}</p>
 
         {showInput && (
           <input
@@ -74,33 +70,20 @@ const ConfirmationModal: React.FC<
             placeholder={inputPlaceholder}
             data-focusable="true"
             autoFocus
-            className="mb-6 w-full rounded-lg border border-gray-600/50 bg-gray-800/50 p-2 text-white placeholder-gray-500 backdrop-blur-xs focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+            className="ui-field-input mb-6 rounded-lg px-3 py-2"
           />
         )}
 
         <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            data-focusable="true"
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-400 transition-colors hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white focus:outline-hidden focus:ring-2 focus:ring-gray-500"
-          >
+          <Button variant="secondary" onClick={onCancel}>
             {cancelLabel}
-          </button>
-          <button
-            ref={confirmButtonRef}
-            onClick={onConfirm}
-            data-focusable="true"
-            className={`rounded-lg px-4 py-2 text-sm font-bold text-white shadow-lg transition-all focus:outline-hidden focus:ring-2 active:scale-95 ${
-              isDestructive
-                ? 'bg-red-600 shadow-red-900/20 hover:bg-red-500 focus:ring-red-500'
-                : 'bg-blue-600 shadow-blue-900/20 hover:bg-blue-500 focus:ring-blue-500'
-            }`}
-          >
+          </Button>
+          <Button ref={confirmButtonRef} variant={isDestructive ? 'danger' : 'accent'} onClick={onConfirm}>
             {confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Dialog>
   );
 };
 

@@ -1,4 +1,5 @@
 import type { MediaItem, ContextType } from '@/types';
+import Button from '@/components/ui/Button';
 
 interface GridFooterProps {
   items: MediaItem[];
@@ -22,10 +23,10 @@ const GridFooter: React.FC<GridFooterProps> = ({
   return (
     <>
       {!items?.length && !loading && !context.search && (
-        <p className="mt-10 text-center text-gray-400">No content found.</p>
+        <p className="mt-10 text-center text-fg-muted">No content found.</p>
       )}
       {!items?.length && !loading && context.search && (
-        <p className="mt-10 text-center text-gray-400">
+        <p className="mt-10 text-center text-fg-muted">
           No results found for "{context.search}".
         </p>
       )}
@@ -33,18 +34,14 @@ const GridFooter: React.FC<GridFooterProps> = ({
       {(totalItemsCount === 0 || items.length < totalItemsCount) && contentType !== 'tv' && (
         <div className="w-full py-8 flex flex-col items-center justify-center">
           {loading && items.length > 0 && (
-            <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-t-2 border-blue-500"></div>
+            <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-t-2 border-accent"></div>
           )}
           {!loading && paginationError && (
             <div className="text-center">
               <p className="text-red-500">{paginationError}</p>
-              <button
-                onClick={() => handlePageChange(1)}
-                className="mt-4 rounded-lg bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600"
-                data-focusable="true"
-              >
-                Retry
-              </button>
+               <Button variant="accent" className="mt-4" onClick={() => handlePageChange(1)}>
+                 Retry
+               </Button>
             </div>
           )}
         </div>

@@ -83,7 +83,7 @@ const TvLiveScreen: React.FC<Props> = ({ channels, groups, epg, favorites, recen
               data-focusable="true"
               data-active={active ? 'true' : undefined}
               tabIndex={-1}
-              className={`mb-1 block w-full truncate rounded-[10px] px-4 py-2.5 text-left text-[15px] font-semibold ${active ? 'bg-[#1E293B] text-white' : 'text-slate-400'}`}
+              className={`mb-1 block w-full truncate rounded-[10px] px-4 py-2.5 text-left text-[15px] font-semibold ${active ? 'bg-surface-9 text-white' : 'text-slate-400'}`}
             >
               {g.title}
             </button>

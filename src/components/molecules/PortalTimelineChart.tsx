@@ -4,8 +4,8 @@ import type { PortalMetrics } from '@/hooks/useAdminStats';
 // Status red/blue (references/palette.md status palette) — errors are a
 // status, not a categorical content-type identity, so these stay separate
 // from AdminStats' per-category hue slots.
-const ERROR_COLOR = '#d03b3b';
-const REQUEST_COLOR = '#3987e5';
+const ERROR_COLOR = 'var(--ui-toast-error)';
+const REQUEST_COLOR = 'var(--color-accent)';
 
 function formatBucketTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -64,7 +64,7 @@ export const PortalTimelineChart: React.FC<{ timeline: PortalMetrics['timeline']
   };
 
   if (timeline.length === 0) {
-    return <p className="text-sm italic text-gray-500">No request activity recorded yet.</p>;
+    return <p className="text-sm italic text-fg-subtle">No request activity recorded yet.</p>;
   }
 
   const hovered = hoverIndex !== null ? timeline[hoverIndex] : null;
@@ -74,7 +74,7 @@ export const PortalTimelineChart: React.FC<{ timeline: PortalMetrics['timeline']
 
   return (
     <div className="relative">
-      <div className="mb-2 flex items-center gap-4 text-xs text-gray-400">
+      <div className="mb-2 flex items-center gap-4 text-xs text-fg-muted">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: REQUEST_COLOR }} />
           Requests
@@ -99,10 +99,10 @@ export const PortalTimelineChart: React.FC<{ timeline: PortalMetrics['timeline']
               x2={width - padding.right}
               y1={yForValue(tick)}
               y2={yForValue(tick)}
-              stroke="#2c2c2a"
+              stroke="var(--color-line)"
               strokeWidth={1}
             />
-            <text x={padding.left - 8} y={yForValue(tick)} textAnchor="end" dominantBaseline="middle" className="fill-gray-500" fontSize={10}>
+            <text x={padding.left - 8} y={yForValue(tick)} textAnchor="end" dominantBaseline="middle" className="fill-fg-subtle" fontSize={10}>
               {tick}
             </text>
           </g>
@@ -115,7 +115,7 @@ export const PortalTimelineChart: React.FC<{ timeline: PortalMetrics['timeline']
             x={xForIndex(i)}
             y={height - 8}
             textAnchor={idx === 0 ? 'start' : idx === 2 ? 'end' : 'middle'}
-            className="fill-gray-500"
+            className="fill-fg-subtle"
             fontSize={10}
           >
             {formatBucketTime(timeline[i].bucket)}
@@ -130,8 +130,8 @@ export const PortalTimelineChart: React.FC<{ timeline: PortalMetrics['timeline']
         <path d={errorsPath} fill="none" stroke={ERROR_COLOR} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
 
         {/* End-dots with a surface ring */}
-        <circle cx={xForIndex(timeline.length - 1)} cy={yForValue(timeline[timeline.length - 1].count)} r={4} fill={REQUEST_COLOR} stroke="#1a1a19" strokeWidth={2} />
-        <circle cx={xForIndex(timeline.length - 1)} cy={yForValue(timeline[timeline.length - 1].errorCount)} r={4} fill={ERROR_COLOR} stroke="#1a1a19" strokeWidth={2} />
+        <circle cx={xForIndex(timeline.length - 1)} cy={yForValue(timeline[timeline.length - 1].count)} r={4} fill={REQUEST_COLOR} stroke="var(--color-panel)" strokeWidth={2} />
+        <circle cx={xForIndex(timeline.length - 1)} cy={yForValue(timeline[timeline.length - 1].errorCount)} r={4} fill={ERROR_COLOR} stroke="var(--color-panel)" strokeWidth={2} />
 
         {/* Hover crosshair */}
         {hoverIndex !== null && (
@@ -140,7 +140,7 @@ export const PortalTimelineChart: React.FC<{ timeline: PortalMetrics['timeline']
             x2={xForIndex(hoverIndex)}
             y1={padding.top}
             y2={height - padding.bottom}
-            stroke="#898781"
+            stroke="var(--color-fg-subtle)"
             strokeWidth={1}
             strokeDasharray="2,2"
           />
@@ -149,21 +149,21 @@ export const PortalTimelineChart: React.FC<{ timeline: PortalMetrics['timeline']
 
       {hovered && hoverIndex !== null && (
         <div
-          className="pointer-events-none absolute top-0 rounded-lg border border-gray-800 bg-gray-950 px-3 py-2 text-xs shadow-xl"
+          className="pointer-events-none absolute top-0 rounded-lg border border-line bg-page px-3 py-2 text-xs shadow-xl"
           style={{
             left: tooltipAlignRight ? undefined : `${(tooltipX / width) * 100}%`,
             right: tooltipAlignRight ? `${100 - (tooltipX / width) * 100}%` : undefined,
             transform: tooltipAlignRight ? 'translateX(8px)' : 'translateX(8px)',
           }}
         >
-          <div className="font-bold text-gray-200">{formatBucketTime(hovered.bucket)}</div>
+          <div className="font-bold text-fg-soft">{formatBucketTime(hovered.bucket)}</div>
           <div className="mt-1 flex items-center gap-1.5" style={{ color: REQUEST_COLOR }}>
             <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: REQUEST_COLOR }} />
-            <span className="text-gray-300">{hovered.count} requests</span>
+            <span className="text-fg-soft">{hovered.count} requests</span>
           </div>
           <div className="mt-0.5 flex items-center gap-1.5">
             <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: ERROR_COLOR }} />
-            <span className="text-gray-300">{hovered.errorCount} errors</span>
+            <span className="text-fg-soft">{hovered.errorCount} errors</span>
           </div>
         </div>
       )}

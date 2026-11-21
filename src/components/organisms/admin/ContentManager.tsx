@@ -14,7 +14,7 @@ const ContentManager: React.FC = () => {
             key={t}
             onClick={() => cm.setType(t)}
             className={`rounded-xl px-4 py-2 text-xs font-bold uppercase transition-all ${
-              cm.type === t ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+              cm.type === t ? 'bg-action text-on-action shadow-lg' : 'text-fg-muted hover:bg-panel-hover hover:text-fg-soft'
             }`}
             data-focusable="true"
           >
