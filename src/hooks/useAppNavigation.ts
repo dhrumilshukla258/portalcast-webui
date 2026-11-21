@@ -304,7 +304,8 @@ export function useAppNavigation(
 
   // A title (episode or movie). Channels go through playChannel.
   const startPlayback = useCallback(
-    async (item: MediaItem) => {
+    // resumeAt: a movie starts there (another version of the one playing, from the same place).
+    async (item: MediaItem, resumeAt?: number) => {
       warmVideoPlayer();
       if (item.is_episode) {
         try {
@@ -433,7 +434,7 @@ export function useAppNavigation(
             },
             { itemId: listItemId, itemType: 'movie' }
           );
-          openPlayer('movie', finalMovieItem, raw, proxied, getResumeTime());
+          openPlayer('movie', finalMovieItem, raw, proxied, resumeAt ?? getResumeTime());
         } catch (err) {
           console.error(err);
           toast.error('Could not fetch stream details.');

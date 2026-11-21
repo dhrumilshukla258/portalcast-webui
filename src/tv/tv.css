@@ -5,6 +5,14 @@
 html.tv,
 html.tv body {
   background: #05080f;
+  background: var(--color-page);
+}
+
+/* The hero and title page fade into the page without color-mix() on older TVs. */
+html.tv {
+  --tv-page-rgb: 5, 8, 15;
+  --tv-shade-75: rgba(var(--tv-page-rgb), 0.75);
+  --tv-shade-0: rgba(var(--tv-page-rgb), 0);
 }
 
 /* No hover effects: LG's pointer resting on something, or the remote's focus, must not start them. */
@@ -97,3 +105,72 @@ html.tv .tv-page > .sticky {
   padding-right: 48px !important;
 }
 
+/* ---- Themes on a TV (theme.ts sets data-tv-theme). Colours, blur-off and the raw colours the TV
+   screens still use come from the theme's token block (themes/<name>/theme.css, data-tv-theme);
+   this adds only what a remote needs. No blur, squircles or springs: TV browsers from 2020
+   (Chrome 68) lack them and newer TVs draw blur slowly over video. As above, focus changes only
+   transform, box-shadow and background, and !important is needed to beat the utilities (the
+   cascade-layers fallback gives them ID-level weight). Classic is left exactly as it was. */
+
+/* Minimal: Apple TV. Buttons rest on a soft platter and turn white with dark text when the
+   remote is on them; rows get a light platter; posters grow 8 % with a thin white edge. */
+html.tv[data-tv-theme='minimal'] {
+  --tv-page-rgb: 0, 0, 0;
+}
+html.tv[data-tv-theme='minimal'] [data-focusable='true']:not([type='search']).focused {
+  box-shadow: none !important;
+  background-color: rgba(255, 255, 255, 0.16) !important;
+}
+html.tv[data-tv-theme='minimal'] [data-focusable='true'].tv-card.focused {
+  transform: scale(1.08) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 16px 32px rgba(0, 0, 0, 0.7) !important;
+}
+html.tv[data-tv-theme='minimal'] .tv-primary {
+  background-color: rgba(255, 255, 255, 0.24) !important;
+  color: #fff !important;
+}
+html.tv[data-tv-theme='minimal'] [data-focusable='true'].tv-button.focused,
+html.tv[data-tv-theme='minimal'] [data-focusable='true'].tv-icon-button.focused {
+  background-color: #fff !important;
+  color: #000 !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6) !important;
+}
+html.tv[data-tv-theme='minimal'] [data-focusable='true'].tv-button.focused {
+  transform: scale(1.05) !important;
+}
+html.tv[data-tv-theme='minimal'] .tv-button.focused * {
+  color: inherit !important;
+}
+html.tv[data-tv-theme='minimal'] [data-focusable='true'].tv-tab.focused {
+  color: #000 !important;
+  background-color: transparent !important;
+}
+html.tv[data-tv-theme='minimal'] .tv-tab.focused::after {
+  background: #f5f5f7;
+}
+
+/* Console: PS5. An ice ring with a soft glow on what the remote is on; the current choice is a
+   light pill with dark text. */
+html.tv[data-tv-theme='console'] {
+  --tv-page-rgb: 7, 17, 33;
+}
+html.tv[data-tv-theme='console'] [data-focusable='true']:not([type='search']).focused {
+  box-shadow: 0 0 0 2px #b4ddff, 0 0 18px rgba(144, 202, 255, 0.35) !important;
+}
+html.tv[data-tv-theme='console'] .tv-primary {
+  background: #e9f0fc !important;
+  background: var(--console-light-button) !important;
+  color: #08172b !important;
+}
+html.tv[data-tv-theme='console'] [data-focusable='true'].tv-button.focused:not(.tv-primary) {
+  background-color: #203452 !important;
+}
+html.tv[data-tv-theme='console'] [data-focusable='true'].tv-tab.focused {
+  box-shadow: none !important;
+}
+html.tv[data-tv-theme='console'] .tv-tab.focused::after {
+  background: rgba(144, 202, 255, 0.16);
+}
+html.tv[data-tv-theme='console'] .tv-icon-button.focused {
+  background: rgba(144, 202, 255, 0.22) !important;
+}

@@ -63,8 +63,8 @@ const ConfigTab: React.FC = () => {
         </div>
 
         {/* Floating Action Bar */}
-        <div className="sticky bottom-6 z-20 flex flex-col items-center justify-between gap-4 rounded-2xl border border-blue-500/30 bg-gray-900/80 p-4 shadow-[0_0_50px_-12px_rgba(59,130,246,0.3)] backdrop-blur-xl sm:flex-row md:p-5">
-          <p className="hidden text-xs font-medium text-gray-400 sm:block sm:max-w-sm">
+        <div className="ui-glass sticky bottom-6 z-20 flex flex-col items-center justify-between gap-4 rounded-2xl border border-accent/30 p-4 sm:flex-row md:p-5">
+          <p className="hidden text-xs font-medium text-fg-muted sm:block sm:max-w-sm">
             Changes here apply immediately to the database but require a
             restart for active streams.
           </p>
@@ -72,7 +72,7 @@ const ConfigTab: React.FC = () => {
             <button
               type="button"
               onClick={handleClearCache}
-              className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/5 px-2 py-3 text-xs font-bold text-blue-400 transition-colors hover:bg-blue-500/10 sm:flex-none sm:border-transparent sm:bg-transparent sm:px-4 sm:py-2"
+              className="flex-1 rounded-xl border border-accent/20 bg-accent/5 px-2 py-3 text-xs font-bold text-accent transition-colors hover:bg-accent/10 sm:flex-none sm:border-transparent sm:bg-transparent sm:px-4 sm:py-2"
             >
               Clear Cache
             </button>
@@ -85,7 +85,7 @@ const ConfigTab: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="flex flex-2 justify-center rounded-xl bg-blue-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-blue-600/40 transition-all hover:-translate-y-0.5 hover:bg-blue-500 active:translate-y-0 sm:flex-none sm:px-8"
+              className="flex flex-2 justify-center rounded-xl bg-action px-6 py-3 text-sm font-black text-on-action shadow-lg shadow-accent/40 transition-all hover:-translate-y-0.5 hover:bg-action-hover active:translate-y-0 sm:flex-none sm:px-8"
             >
               Save Config
             </button>

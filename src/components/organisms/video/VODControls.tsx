@@ -36,6 +36,7 @@ import { formatTime } from '@/utils/helpers';
  * A small round icon button, named above it on hover or keyboard/remote focus: the TV app's
  * Netflix-style row (owner, 2026-10-24: "make the webui similar to TV android").
  */
+const transportButton = 'group/btn relative flex h-10 w-10 items-center justify-center rounded-full text-fg transition hover:bg-interaction focus-visible:bg-interaction focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus md:h-11 md:w-11';
 const IconButton: React.FC<{
   label: string;
   onClick?: () => void;
@@ -47,10 +48,10 @@ const IconButton: React.FC<{
     data-focusable="true"
     onClick={onClick}
     aria-label={label}
-    className={`group/btn relative flex h-10 w-10 items-center justify-center rounded-full text-white transition hover:bg-white/15 focus-visible:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 md:h-11 md:w-11 ${className}`}
+    className={`${transportButton} ${className}`}
   >
     {children}
-    <span className="pointer-events-none absolute bottom-full mb-2 whitespace-nowrap rounded-md bg-black/80 px-2 py-0.5 text-xs font-semibold opacity-0 transition-opacity group-hover/btn:opacity-100 group-focus-visible/btn:opacity-100 group-[.focused]/btn:opacity-100">
+    <span className="pointer-events-none absolute bottom-full mb-2 whitespace-nowrap rounded-md ui-tip-label px-2 py-0.5 text-xs font-semibold opacity-0 transition-opacity group-hover/btn:opacity-100 group-focus-visible/btn:opacity-100 group-[.focused]/btn:opacity-100">
       {label}
     </span>
   </button>
@@ -122,7 +123,7 @@ export const VODControls = React.memo(() => {
       style={{
         // Tall and soft: the picture shows through above the text.
         background:
-          'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0) 100%)',
+          'linear-gradient(to top, rgba(0,0,0,calc(0.92 * var(--ui-glass-opacity-scale, 1))) 0%, rgba(0,0,0,calc(0.55 * var(--ui-glass-opacity-scale, 1))) 45%, transparent 100%)',
       }}
     >
       <Controls.Group className="w-full">
@@ -130,38 +131,38 @@ export const VODControls = React.memo(() => {
           // text-left: the player's own styles centre text. The space below is the buttons' labels
           // (shown above a focused or hovered button), so they never cover the subtitle.
           <div className="mb-9 max-w-3xl text-left md:mb-10">
-            <h2 className="truncate text-lg font-semibold text-white md:text-3xl">{title}</h2>
-            {subtitle && <p className="truncate text-sm text-gray-300 md:text-base">{subtitle}</p>}
+            <h2 className="truncate text-lg font-semibold text-fg md:text-3xl">{title}</h2>
+            {subtitle && <p className="truncate text-sm text-fg-soft md:text-base">{subtitle}</p>}
           </div>
         )}
 
         {/* The buttons, above the bar (Netflix / the TV app). */}
-        <div className="vod-controls-buttons-row flex items-end justify-between text-white">
+        <div className="vod-controls-buttons-row flex items-end justify-between text-fg">
           <div className="flex items-end gap-1 md:gap-2">
             <PlayButton
               data-focusable="true"
               data-control="play-pause"
               aria-label={isPaused ? 'Play' : 'Pause'}
-              className="group/btn relative flex h-10 w-10 items-center justify-center rounded-full text-white transition hover:bg-white/15 focus-visible:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 md:h-11 md:w-11"
+              className={transportButton}
             >
               {isPaused ? <PlayIcon className={`${ICON} fill-current`} /> : <PauseIcon className={`${ICON} fill-current`} />}
-              <span className="pointer-events-none absolute bottom-full mb-2 whitespace-nowrap rounded-md bg-black/80 px-2 py-0.5 text-xs font-semibold opacity-0 transition-opacity group-hover/btn:opacity-100 group-focus-visible/btn:opacity-100">
+              <span className="pointer-events-none absolute bottom-full mb-2 whitespace-nowrap rounded-md ui-tip-label px-2 py-0.5 text-xs font-semibold opacity-0 transition-opacity group-hover/btn:opacity-100 group-focus-visible/btn:opacity-100">
                 {isPaused ? 'Play' : 'Pause'}
               </span>
             </PlayButton>
             {hasEpisodes && (
-              <IconButton label="Previous episode" onClick={playPrevEpisode}>
+              <IconButton label="Previous episode" className="step-control" onClick={playPrevEpisode}>
                 <SkipBack className={ICON} />
               </IconButton>
             )}
-            <IconButton label="Back 10 s" onClick={() => handleSkipButtonClick(-10)}>
+            <IconButton label="Back 10 s" className="step-control" onClick={() => handleSkipButtonClick(-10)}>
               <RotateCcw className={ICON} />
             </IconButton>
-            <IconButton label="Forward 10 s" onClick={() => handleSkipButtonClick(10)}>
+            <IconButton label="Forward 10 s" className="step-control" onClick={() => handleSkipButtonClick(10)}>
               <RotateCw className={ICON} />
             </IconButton>
             {hasEpisodes && (
-              <IconButton label="Next episode" onClick={playNextEpisode}>
+              <IconButton label="Next episode" className="step-control" onClick={playNextEpisode}>
                 <SkipForward className={ICON} />
               </IconButton>
             )}
@@ -203,10 +204,10 @@ export const VODControls = React.memo(() => {
                 data-focusable="true"
                 data-control="fullscreen"
                 aria-label={isFullscreen ? 'Exit full screen' : 'Full screen'}
-                className="group/btn relative flex h-10 w-10 items-center justify-center rounded-full text-white transition hover:bg-white/15 focus-visible:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 md:h-11 md:w-11"
+                className={transportButton}
               >
                 {isFullscreen ? <MinimizeIcon className={ICON} /> : <MaximizeIcon className={ICON} />}
-                <span className="pointer-events-none absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md bg-black/80 px-2 py-0.5 text-xs font-semibold opacity-0 transition-opacity group-hover/btn:opacity-100 group-focus-visible/btn:opacity-100">
+                <span className="pointer-events-none absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md ui-tip-label px-2 py-0.5 text-xs font-semibold opacity-0 transition-opacity group-hover/btn:opacity-100 group-focus-visible/btn:opacity-100">
                   {isFullscreen ? 'Exit full screen' : 'Full screen'}
                 </span>
               </FullscreenButton>
@@ -216,52 +217,52 @@ export const VODControls = React.memo(() => {
             <div className="relative flex items-center justify-center md:hidden">
               <button
                 onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-                className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/15"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-fg hover:bg-interaction"
                 aria-label="More options"
               >
                 <MoreVertical className="h-5 w-5" />
               </button>
               {isMoreMenuOpen && (
-                <div className="more-options-menu absolute bottom-[calc(100%+12px)] right-0 z-50 flex w-48 origin-bottom-right flex-col rounded-xl border border-gray-600/40 bg-gray-900/95 p-2 text-sm text-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl">
+                <div className="more-options-menu absolute bottom-[calc(100%+12px)] right-0 z-50 flex w-48 origin-bottom-right flex-col rounded-xl border border-divider/40 bg-panel/95 p-2 text-sm text-fg shadow-[0_-10px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl">
                   <button
                     onClick={() => { setUseProxy(!useProxy); setIsMoreMenuOpen(false); }}
-                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-interaction"
                   >
-                    {!useProxy ? <ShieldX className="h-4 w-4 text-gray-400" /> : <ShieldCheck className="h-4 w-4 text-green-400" />}
+                    {!useProxy ? <ShieldX className="h-4 w-4 text-fg-muted" /> : <ShieldCheck className="h-4 w-4 text-green-400" />}
                     <span>Proxy: {useProxy ? 'On' : 'Off'}</span>
                   </button>
                   {!isReceiver && (
                     <button
                       onClick={() => { refreshReceivers(); setIsSettingsMenuOpen(true); onActiveSettingsMenuChange('cast'); setIsMoreMenuOpen(false); }}
-                      className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
+                      className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-interaction"
                     >
-                      <FaChromecast className="h-4 w-4 text-gray-400" />
+                      <FaChromecast className="h-4 w-4 text-fg-muted" />
                       <span>Cast</span>
                     </button>
                   )}
                   {hasEpisodes && (
                     <button
                       onClick={() => { setShowEpisodeList(true); setIsMoreMenuOpen(false); }}
-                      className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
+                      className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-interaction"
                     >
-                      <ListVideo className="h-4 w-4 text-gray-400" />
+                      <ListVideo className="h-4 w-4 text-fg-muted" />
                       <span>Episodes</span>
                     </button>
                   )}
                   <button
                     onClick={() => { setIsSettingsMenuOpen(true); onActiveSettingsMenuChange('main'); setIsMoreMenuOpen(false); }}
-                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-interaction"
                   >
-                    <SettingsIcon className="h-4 w-4 text-gray-400" />
+                    <SettingsIcon className="h-4 w-4 text-fg-muted" />
                     <span>Settings</span>
                   </button>
                   <button
                     onClick={() => { onCycleFitMode(); }}
-                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-white/10"
+                    className="flex items-center space-x-3 rounded-sm px-3 py-2 transition-colors hover:bg-interaction"
                   >
-                    {fitMode === 'contain' && <Shrink className="h-4 w-4 text-gray-400" />}
-                    {fitMode === 'cover' && <SquareDashedBottomCode className="h-4 w-4 text-gray-400" />}
-                    {fitMode === 'fill' && <Maximize2 className="h-4 w-4 text-gray-400" />}
+                    {fitMode === 'contain' && <Shrink className="h-4 w-4 text-fg-muted" />}
+                    {fitMode === 'cover' && <SquareDashedBottomCode className="h-4 w-4 text-fg-muted" />}
+                    {fitMode === 'fill' && <Maximize2 className="h-4 w-4 text-fg-muted" />}
                     <span className="capitalize">{fitMode}</span>
                   </button>
                 </div>
@@ -271,7 +272,7 @@ export const VODControls = React.memo(() => {
         </div>
 
         {/* The bar: thin at rest, thicker with the pointer or remote focus on it, a white handle
-            ringed in blue, and where it will land while dragging or seeking. */}
+            ringed in the focus colour, and where it will land while dragging or seeking. */}
         <div
           data-focusable="true"
           data-control="seekbar"
@@ -293,13 +294,13 @@ export const VODControls = React.memo(() => {
               style={{ width: 'var(--slider-progress)' }}
             />
             <TimeSlider.TrackFill
-              className="absolute h-full rounded-full bg-blue-500"
+              className="ui-accent absolute h-full rounded-full"
               style={{ width: 'var(--slider-fill)' }}
             />
 
             {showTooltip && (
               <div
-                className="pointer-events-none absolute bottom-full mb-4 -translate-x-1/2 rounded-md bg-black/80 px-2.5 py-1 text-sm font-semibold text-white shadow-md"
+                className="pointer-events-none absolute bottom-full mb-4 -translate-x-1/2 rounded-md ui-tip-label px-2.5 py-1 text-sm font-semibold text-fg shadow-md"
                 style={{ left: 'var(--slider-fill)' }}
               >
                 {tooltipText}
@@ -307,16 +308,16 @@ export const VODControls = React.memo(() => {
             )}
 
             <TimeSlider.Thumb
-              className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white opacity-0 ring-blue-500 transition group-hover:h-4 group-hover:w-4 group-hover:opacity-100 group-hover:ring-[3px] group-[.focused]:h-5 group-[.focused]:w-5 group-[.focused]:opacity-100 group-[.focused]:ring-[3px]"
+              className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white opacity-0 ring-focus transition group-hover:h-4 group-hover:w-4 group-hover:opacity-100 group-hover:ring-[3px] group-[.focused]:h-5 group-[.focused]:w-5 group-[.focused]:opacity-100 group-[.focused]:ring-[3px]"
               style={{ left: 'var(--slider-fill)' }}
             />
           </TimeSlider.Root>
         </div>
 
-        <div className="flex items-center justify-between font-mono text-xs text-gray-200 md:text-sm">
+        <div className="flex items-center justify-between font-mono text-xs text-fg-soft md:text-sm">
           <Time type="current" />
           {/* One line: each <Time> is a block of its own. */}
-          <span className="flex items-center gap-1.5 whitespace-nowrap text-gray-400">
+          <span className="flex items-center gap-1.5 whitespace-nowrap text-fg-muted">
             <Time type="current" remainder /> <span>·</span> <Time type="duration" />
           </span>
         </div>

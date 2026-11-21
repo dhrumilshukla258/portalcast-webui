@@ -100,13 +100,13 @@ const EpisodeOverlay = forwardRef<EpisodeOverlayRef, EpisodeOverlayProps>(
 
     return (
       <div
-        className="glass-panel absolute right-0 top-0 z-40 flex h-full w-full max-w-[420px] flex-col bg-gray-950/80 shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-xl border-l border-white/5 p-4 transition-all duration-300 sm:p-6"
+        className="glass-panel absolute right-0 top-0 z-40 flex h-full w-full max-w-[420px] flex-col bg-page/80 shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-xl border-l border-white/5 p-4 transition-all duration-300 sm:p-6"
         tabIndex={-1}
       >
         {showCloseButton && (
           <button
             onClick={onBack}
-            className="absolute right-6 top-4 z-50 rounded-full p-2 text-gray-400 outline-hidden transition-transform hover:scale-110 hover:text-white focus:scale-110 focus:bg-white/10 focus:text-white"
+            className="absolute right-6 top-4 z-50 rounded-full p-2 text-fg-muted outline-hidden transition-transform hover:scale-110 hover:text-fg focus:scale-110 focus:bg-interaction focus:text-fg"
             aria-label="Close"
             data-focusable="true"
           >
@@ -131,7 +131,7 @@ const EpisodeOverlay = forwardRef<EpisodeOverlayRef, EpisodeOverlayProps>(
           <h1 className="text-2xl font-black tracking-tight text-white/90 drop-shadow-md">
             Episodes
           </h1>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-fg-muted">
             {episodes.length} episodes in this season
           </p>
         </div>
@@ -152,28 +152,28 @@ const EpisodeOverlay = forwardRef<EpisodeOverlayRef, EpisodeOverlayProps>(
                 onClick={() => onEpisodeSelect(ep)}
                 className={`group flex cursor-pointer flex-col rounded-xl border p-3 text-left transition-all duration-200 ${
                   isItemFocused
-                    ? 'scale-[1.01] bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 border-transparent'
+                    ? 'ui-selected scale-[1.01]'
                     : isItemPlaying
-                      ? 'bg-blue-950/40 text-blue-400 border-blue-500/40'
-                      : 'bg-white/5 text-gray-300 border-white/5 hover:bg-white/10 hover:text-white'
+                      ? 'bg-accent/10 text-accent border-accent/40'
+                      : 'bg-white/5 text-fg-soft border-white/5 hover:bg-interaction hover:text-fg'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className={`text-sm font-bold truncate ${isItemFocused ? 'text-white' : isItemPlaying ? 'text-blue-400' : 'text-gray-100'}`}>
+                  <span className={`text-sm font-bold truncate ${isItemFocused ? 'text-fg' : isItemPlaying ? 'text-accent' : 'text-fg'}`}>
                     {displayTitle}
                   </span>
                   {isItemPlaying && (
                     <span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
                       isItemFocused
-                        ? 'bg-white/20 text-white'
-                        : 'bg-blue-500/20 text-blue-400'
+                        ? 'bg-white/20 text-fg'
+                        : 'bg-accent/20 text-accent'
                     }`}>
                       Now Playing
                     </span>
                   )}
                 </div>
                 {ep.duration && (
-                  <span className={`mt-1 text-[10px] ${isItemFocused ? 'text-white/70' : 'text-gray-500'}`}>
+                  <span className={`mt-1 text-3xs ${isItemFocused ? 'text-white/70' : 'text-fg-subtle'}`}>
                     {Math.floor(ep.duration / 60) || ep.duration} mins
                   </span>
                 )}

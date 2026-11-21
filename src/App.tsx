@@ -1,7 +1,8 @@
 import IptvOfflineBanner from '@/components/atoms/IptvOfflineBanner';
 import { lazyImport } from '@/utils/staleBuild';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
+import Toaster from '@/components/ui/Toaster';
 import 'react-toastify/dist/ReactToastify.css';
 import '@/App.css';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
@@ -42,7 +43,8 @@ import SectionChips, { type HomeSection } from '@/components/molecules/SectionCh
 import ContinueHero from '@/components/organisms/browse/ContinueHero';
 // Lazy — only mounted when the user opens the Discover tab, not on initial load.
 const DiscoverView = React.lazy(lazyImport(() => import('@/components/organisms/discover/DiscoverView')));
-import { OpenTitleContext, PersonPageContext } from '@/context/PersonPageContext';
+import { OpenGenreContext, OpenTitleContext, PersonPageContext } from '@/context/PersonPageContext';
+import { pickSharedDiscoverFilters } from '@/utils/sharedDiscoverFilters';
 import MyListView from '@/components/organisms/discover/MyListView';
 // Lazy — only mounted when a cast or crew member is opened.
 const PersonPage = React.lazy(lazyImport(() => import('@/components/organisms/person/PersonPage')));
@@ -58,10 +60,13 @@ import { useCastReceiver } from '@/hooks/useCastReceiver';
 import { isTvApp, exitTvApp } from './utils/helpers';
 import type { MediaItem } from '@/types';
 import { type DiscoverVariant } from '@/api/endpoints/discover';
+import { usePart } from '@/themes/registry';
 
 function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   const isTizen = isTvApp(); // Samsung or LG
-  const AppHeader = isTizen ? TvHeader : Header;
+  const ThemedHeader = usePart('Header', Header);
+  const AppHeader = isTizen ? TvHeader : ThemedHeader;
+  const AppHero = usePart('Hero', ContinueHero);
   const { user, updatePreferences } = useAuth();
   // Cleaned for display too, so fragments saved by older builds disappear at once.
   const recentSearches = useMemo(() => cleanRecentSearches(user?.preferences?.recentSearches || []), [user?.preferences?.recentSearches]);
@@ -291,8 +296,9 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     };
   }, [backTargets, goHome, isHome, isTizen]);
   const activeSection: HomeSection = typedHome ?? (overlayPage === 'people' ? 'people' : 'home');
+  const SectionRow = usePart('SectionRow', SectionChips);
   const sectionChips = (filterButton: React.ReactNode) => (
-    <SectionChips
+    <SectionRow
       active={activeSection}
       onSelect={openSection}
       trailing={filterButton}
@@ -371,8 +377,55 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
 
   // More Like This on a detail page opens titles the way a person's page does.
   const openTitle = React.useMemo(
-    () => ({ open: (item: MediaItem) => void openPersonTitle(item), loadingItemId: discoverLoadingItemId }),
-    [openPersonTitle, discoverLoadingItemId]
+    () => ({
+      open: (item: MediaItem) => void openPersonTitle(item),
+      openPage: openDiscoverItem,
+      // The player's Settings → Version: the variant's own file, from the same place.
+      playVersion: (version: MediaItem, at: number) =>
+        startPlayback(
+          {
+            ...version,
+            id: String(version.id).replace(/^movie_/, ''),
+            catalogId: String(version.id),
+            category_id: version.category ?? '*',
+            title: currentItem?.title || version.title,
+            is_playable_movie: true,
+          } as MediaItem,
+          at
+        ),
+      loadingItemId: discoverLoadingItemId,
+    }),
+    [openPersonTitle, openDiscoverItem, startPlayback, currentItem, discoverLoadingItemId]
+  );
+
+  const openSearchPage = useCallback(() => {
+    resetHistory(true);
+    setDetailItem(null);
+    setCurrentSeriesItem(null);
+    setSearchLiveQuery(undefined);
+    setOverlayPage('search');
+    setShowDiscover(true);
+  }, [resetHistory, setDetailItem, setCurrentSeriesItem, setShowDiscover]);
+  // Cmd+K (Ctrl+K elsewhere) opens Search from anywhere but the player, as in most apps.
+  useEffect(() => {
+    if (isTizen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'k' || streamUrl) return;
+      e.preventDefault();
+      openSearchPage();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isTizen, streamUrl, openSearchPage]);
+
+  // A genre on a title's page: Movies (or Shows) filtered to it, the title's page closed.
+  const openGenre = useCallback(
+    (genre: string, type: 'movie' | 'series') => {
+      pickSharedDiscoverFilters({ genre: [genre] });
+      setPersonId(null);
+      openSection(type);
+    },
+    [openSection]
   );
 
   const searchPlayChannel = useCallback((channel: MediaItem) => {
@@ -482,6 +535,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
   const titleGrid = (
     <MainContentGrid
       items={items}
+      epgData={epgData}
       currentSeriesItem={currentSeriesItem}
       loading={loading}
       error={error}
@@ -521,6 +575,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
     <PersonPageContext.Provider value={setPersonId}>
     <TitleMenuContext.Provider value={openTitleMenu}>
     <OpenTitleContext.Provider value={openTitle}>
+    <OpenGenreContext.Provider value={openGenre}>
       {streamUrl ? (
         <React.Suspense
           fallback={
@@ -565,7 +620,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
         />
         </React.Suspense>
       ) : (
-        <div className="flex h-screen flex-col overflow-hidden app-bg font-sans text-gray-200">
+        <div className="flex h-screen flex-col overflow-hidden app-bg font-sans text-fg-soft">
           <div className="flex min-h-0 w-full flex-1 flex-col pb-16 sm:pb-0">
             <AppHeader
               currentTitle={currentTitle}
@@ -589,14 +644,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                 setOverlayPage('mylist');
                 setShowDiscover(true);
               }}
-              onSelectSearch={() => {
-                resetHistory(true);
-                setDetailItem(null);
-                setCurrentSeriesItem(null);
-                setSearchLiveQuery(undefined);
-                setOverlayPage('search');
-                setShowDiscover(true);
-              }}
+              onSelectSearch={openSearchPage}
               isPeopleActive={isPeoplePage}
               onSelectPeople={() => openSection('people')}
               isSportsActive={isSportsPage}
@@ -608,8 +656,6 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                 setShowDiscover(true);
               }}
               onSelectDiscover={goHome}
-              sort={context.sort}
-              cycleSort={cycleSort}
               showAdmin={false}
               setShowAdmin={onShowAdmin}
               handleClearWatched={onClearWatched}
@@ -679,7 +725,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
                     continueWatching={
                       <>
                         {/* TV apps: Home's own hero shows the last title (tv/TvHero). */}
-                        {!isTizen && <ContinueHero progressRecords={homeProgress} onResume={handleItemClick} />}
+                        {!isTizen && <AppHero progressRecords={homeProgress} onResume={handleItemClick} />}
                         <ContinueWatching
                           onClick={handleItemClick}
                           skipFirst
@@ -800,6 +846,7 @@ function TVPortal({ onShowAdmin }: { onShowAdmin: () => void }) {
           onChanged={onTitlesChanged}
         />
       )}
+    </OpenGenreContext.Provider>
     </OpenTitleContext.Provider>
     </TitleMenuContext.Provider>
     </PersonPageContext.Provider>
@@ -816,8 +863,8 @@ function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen app-bg flex justify-center items-center font-sans text-gray-200">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      <div className="min-h-screen app-bg flex justify-center items-center font-sans text-fg-soft">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
     );
   }
@@ -856,7 +903,7 @@ export default function App() {
           path="/admin"
           element={
             <ProtectedRoute adminOnly>
-              <div className="min-h-screen app-bg pt-6 font-sans text-gray-200 md:pt-10">
+              <div className="min-h-screen app-bg pt-6 font-sans text-fg-soft md:pt-10">
                 <React.Suspense
                   fallback={
                     <div className="flex h-screen w-full items-center justify-center">
@@ -872,25 +919,7 @@ export default function App() {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={4000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-        toastClassName={(context) =>
-          "relative flex p-1 min-h-[60px] rounded-2xl justify-between overflow-hidden cursor-pointer bg-[#0b0f19] border border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.4)] text-gray-200 mb-3 " +
-          (context?.type === 'success' ? 'border-l-4 border-l-emerald-500' : 
-           context?.type === 'error' ? 'border-l-4 border-l-red-500' : 
-           'border-l-4 border-l-[#3b82f6]') // Matching your app's electric blue
-        }
-        bodyClassName={() => "text-sm font-medium p-3 flex items-start text-gray-300"}
-      />
+      <Toaster />
     </>
   );
 }

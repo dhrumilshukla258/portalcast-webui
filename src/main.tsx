@@ -1,6 +1,9 @@
 import { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@/index.css';
+// Sets html[data-theme] from the saved choice before the first render.
+import '@/themes/theme';
+import SavedTheme from '@/themes/SavedTheme';
 // Catalog reads carry the server's answer version (cached for a year at that address).
 import '@/api/answerVersions';
 import App from '@/App';
@@ -54,6 +57,7 @@ introGate.then(() => createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <SocketProvider>
           <HashRouter>
+            <SavedTheme />
             <App />
           </HashRouter>
         </SocketProvider>
