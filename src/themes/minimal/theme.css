@@ -386,6 +386,7 @@ html[data-theme='minimal'] *::after {
 html[data-theme='minimal'] .rounded-full,
 html[data-theme='minimal'] [class*=':rounded-full'],
 html[data-theme='minimal'] .ui-chip,
+html[data-theme='minimal'] .ui-play-button[data-icon-only],
 html[data-theme='minimal'] .ui-field-input {
   corner-shape: round;
 }
@@ -573,6 +574,8 @@ html[data-theme='minimal'] .seek-readout {
   -webkit-backdrop-filter: var(--ui-glass-blur);
   backdrop-filter: var(--ui-glass-blur);
 }
+/* The ±10 s readout sits over the picture: the player's lighter glass (~55 %), so the blur shows. */
+html[data-theme='minimal'] .seek-readout { --ui-glass-bg: var(--ui-player-panel-bg); }
 html[data-theme='minimal'] .step-control:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) {
   html[data-theme='minimal'] .step-control:active { scale: .95; }
