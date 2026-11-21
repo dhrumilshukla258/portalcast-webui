@@ -1,7 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
 import ActivityIndicator from '@/components/ui/ActivityIndicator';
-import { snappy } from './motion';
 
 interface MinimalPosterProps {
   /** Console uses a plain frame: CSS marks the one hovered/focused card. */
@@ -32,21 +30,15 @@ interface MinimalPosterProps {
 /**
  * Minimal's poster, shared by every card it draws (MinimalCard, MinimalContinueCard): the art
  * with soft corners, the title and a detail line in small grey type under it. It rests at 96 %
- * and lifts to 100 % on hover (a spring, plus a shadow), so the hovered poster fills its slot
+ * and lifts to 100 % on hover (plus a shadow), so the hovered poster fills its slot
  * exactly and a row that scrolls sideways (and so clips) never cuts its corners. Pressed, it
  * gives a little. Opening, it stays lifted, the art dims a little and Apple's activity
  * indicator turns in the middle (after a moment, so a quick open shows nothing).
  */
 export default function MinimalPoster(p: MinimalPosterProps) {
-  const Frame = p.staticFrame ? 'div' : motion.div;
-  const motionProps = p.staticFrame ? {} : {
-    initial: false as const, animate: { scale: p.loading ? 1 : 0.96 },
-    whileHover: { scale: 1 }, whileTap: { scale: 0.93 }, transition: snappy,
-  };
   return (
     <div className={`group ${p.dim ? 'opacity-35' : ''}`} data-ui={p.staticFrame ? 'console-card' : undefined}>
-      <Frame
-        {...motionProps}
+      <div
         onClick={() => {
           if (!p.loading) p.onActivate();
         }}
@@ -55,7 +47,9 @@ export default function MinimalPoster(p: MinimalPosterProps) {
         aria-busy={p.loading || undefined}
         data-focusable="true"
         tabIndex={-1}
-        className="relative aspect-2/3 w-full cursor-pointer overflow-hidden rounded-xl bg-gray-900 shadow-black/70 transition-shadow duration-300 group-hover:shadow-2xl"
+        className={`relative aspect-2/3 w-full cursor-pointer overflow-hidden rounded-xl bg-gray-900 shadow-black/70 transition duration-300 group-hover:shadow-2xl ${
+          p.staticFrame ? '' : `${p.loading ? 'scale-100' : 'scale-96'} hover:scale-100 active:scale-93`
+        }`}
       >
         {p.image ? (
           <img {...p.image} draggable={p.staticFrame ? false : p.image.draggable} alt={p.title} loading="lazy" decoding="async" className="h-full w-full object-cover" onError={p.onImageError} />
@@ -75,7 +69,7 @@ export default function MinimalPoster(p: MinimalPosterProps) {
             <ActivityIndicator className="text-[1.75rem] text-white" />
           </div>
         )}
-      </Frame>
+      </div>
 
       <div className={`mt-2 px-0.5 text-left ${p.captionHiddenOnPhone ? 'hidden sm:block' : ''}`}>
         <p className="truncate text-sm font-medium text-white/85">{p.caption}</p>
