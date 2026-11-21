@@ -17,9 +17,6 @@ import path from 'path';
 const SUPPORTED = ['chrome >= 68', 'and_chr >= 69', 'safari >= 12', 'ios_saf >= 12', 'firefox >= 78', 'edge >= 79', 'samsung >= 10'];
 const ESBUILD_TARGETS = ['chrome68', 'safari12', 'ios12', 'firefox78', 'edge79'];
 
-// Server the dev proxy talks to: PORTALCAST_SERVER=https://your-server npm run dev
-const API = process.env.PORTALCAST_SERVER || 'http://localhost:3000';
-
 export default defineConfig({
   plugins: [
     react(),
@@ -183,30 +180,25 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/proxy': {
-        target: API,
+        target: 'http://localhost:3000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/proxy/, ''),
       },
       '/api': {
-        target: API,
+        target: 'http://localhost:3000',
         changeOrigin: true,
       },
       '/live.m3u8': {
-        target: API,
+        target: 'http://localhost:3000',
         changeOrigin: true,
       },
       '/player': {
-        target: API,
+        target: 'http://localhost:3000',
         changeOrigin: true,
       },
       '/uploads': {
-        target: API,
+        target: 'http://localhost:3000',
         changeOrigin: true,
-      },
-      '/socket.io': {
-        target: API,
-        changeOrigin: true,
-        ws: true,
       },
     },
   },
