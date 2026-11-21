@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import '@/index.css';
 // Sets html[data-theme] from the saved choice before the first render.
 import '@/themes/theme';
+import { MotionConfig } from 'motion/react';
 import SavedTheme from '@/themes/SavedTheme';
 // Catalog reads carry the server's answer version (cached for a year at that address).
 import '@/api/answerVersions';
@@ -57,8 +58,11 @@ introGate.then(() => createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <SocketProvider>
           <HashRouter>
-            <SavedTheme />
-            <App />
+            {/* Animations follow the system's Reduce Motion setting. */}
+            <MotionConfig reducedMotion="user">
+              <SavedTheme />
+              <App />
+            </MotionConfig>
           </HashRouter>
         </SocketProvider>
       </AuthProvider>

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   Bookmark,
   Clapperboard,
@@ -22,6 +23,7 @@ import type { HeaderProps } from '@/components/organisms/layout/Header';
 import { themeLabel, useTheme } from '@/themes/theme';
 import ThemePicker from '@/themes/ThemePicker';
 import { setHeaderSlot } from '@/themes/headerSlot';
+import { smooth, snappy } from './motion';
 
 type Tab = 'home' | 'movies' | 'shows' | 'cast' | 'tv' | 'sports' | 'mylist' | 'search';
 
@@ -133,7 +135,7 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
                     tabIndex={-1}
                   >
                     {active === t.id && theme !== 'console' && (
-                      <span className="absolute inset-0 rounded-full bg-white/15" />
+                      <motion.span layoutId="minimal-nav-pill" className="absolute inset-0 rounded-full bg-white/15" transition={snappy} />
                     )}
                     <span className="relative">{t.label}</span>
                   </button>
@@ -171,9 +173,12 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
 
               {user && (
                 <div className="relative ml-1" ref={menuRef}>
-                  <button
+                  <motion.button
+                    whileHover={theme === 'console' ? undefined : { scale: 1.06 }}
+                    whileTap={theme === 'console' ? undefined : { scale: 0.92 }}
+                    transition={snappy}
                     onClick={() => setMenuOpen((o) => !o)}
-                    className={`flex h-9 w-9 cursor-pointer select-none items-center justify-center rounded-full bg-white/15 transition hover:bg-white/25 ${theme === 'console' ? '' : 'hover:scale-106 active:scale-92'} aria-expanded:bg-white/25 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-white [&.focused]:outline-2 [&.focused]:outline-white`}
+                    className="flex h-9 w-9 cursor-pointer select-none items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25 aria-expanded:bg-white/25 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-white [&.focused]:outline-2 [&.focused]:outline-white"
                     data-focusable="true"
                     data-control="profile"
                     tabIndex={-1}
@@ -181,7 +186,7 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
                     aria-expanded={menuOpen}
                   >
                     {user.name ? user.name[0].toUpperCase() : 'U'}
-                  </button>
+                  </motion.button>
 
                 </div>
               )}
@@ -193,10 +198,16 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
       {/* The profile menu and the phone tab bar sit outside the header: a blurred element only
           blurs what is inside a blurred parent, and the header's blur would also make it the box
           `fixed` is measured from. */}
-      {menuOpen && user && (
-          <div
+      <AnimatePresence>
+        {menuOpen && user && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.15 } }}
+            transition={smooth}
+            style={{ transformOrigin: 'top right' }}
             ref={panelRef}
-            className="row-content-fade-in ui-glass fixed top-[calc(var(--chrome-top)+0.5rem)] right-4 z-[60] w-72 rounded-2xl p-1.5 text-left shadow-2xl shadow-black/60 ring-1 ring-white/10 sm:right-8"
+            className="ui-glass fixed top-[calc(var(--chrome-top)+0.5rem)] right-4 z-[60] w-72 rounded-2xl p-1.5 text-left shadow-2xl shadow-black/60 ring-1 ring-white/10 sm:right-8"
           >
             <div className="px-3 pt-2 pb-2.5">
               <p className="truncate text-base font-semibold text-white">{user.name}</p>
@@ -231,8 +242,9 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
             <button onClick={menuAction(logout)} className={`${menuItem} text-red-400`} data-focusable="true" tabIndex={-1}>
               <LogOut className="h-4 w-4" /> Log Out
             </button>
-          </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
 
       {!p.streamUrl && (
@@ -243,19 +255,21 @@ const MinimalHeader: React.FC<HeaderProps> = React.memo((p) => {
               const Icon = t.icon;
               const on = active === t.id;
               return (
-                <button
+                <motion.button
                   key={t.id}
+                  whileTap={theme === 'console' ? undefined : { scale: 0.9 }}
+                  transition={snappy}
                   onClick={t.onClick}
-                  className={`flex flex-1 flex-col items-center gap-0.5 pt-2 pb-1.5 text-3xs font-medium transition ${
+                  className={`flex flex-1 flex-col items-center gap-0.5 pt-2 pb-1.5 text-3xs font-medium transition-colors ${
                     on ? 'text-white' : 'text-white/45'
-                  } ${theme === 'console' ? '' : 'active:scale-90'}`}
+                  }`}
                   data-focusable="true"
                   tabIndex={-1}
                   aria-current={on ? 'page' : undefined}
                 >
                   <Icon className="h-[22px] w-[22px]" strokeWidth={on ? 2.2 : 1.8} />
                   {t.label}
-                </button>
+                </motion.button>
               );
             })}
         </nav>
