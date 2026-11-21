@@ -1,5 +1,6 @@
 import React from 'react';
 import LoadingSpinner from '@/components/atoms/LoadingSpinner';
+import Button from '@/components/ui/Button';
 import TvChannelList from '@/components/organisms/channels/TvChannelList';
 import { TvMovieDetail, TvSeriesDetail } from '@/tv/TvTitlePage';
 import MovieDetailPage from '@/components/organisms/browse/MovieDetailPage';
@@ -11,11 +12,13 @@ import CategorySidebar from './main-content-grid/CategorySidebar';
 import MobileCategoryDrawer from './main-content-grid/MobileCategoryDrawer';
 import { useResizableWidth } from '@/hooks/useResizableWidth';
 import { isTvApp } from '@/utils/helpers';
-import type { MediaItem, ContextType, ChannelGroup } from '@/types';
+import type { MediaItem, ContextType, ChannelGroup, EPG_List } from '@/types';
 import type { ProgressRecord } from '@/api/types/user';
 
 interface MainContentGridProps {
   items: MediaItem[];
+  /** Live TV's guide (useMediaLibrary), for the channel rows' now and next. */
+  epgData?: Record<string, EPG_List[]>;
   currentSeriesItem?: MediaItem | null;
   loading: boolean;
   error: string | null;
@@ -64,6 +67,7 @@ interface MainContentGridProps {
 const MainContentGrid = React.memo(
   ({
     items,
+    epgData,
     currentSeriesItem,
     loading,
     error,
@@ -187,13 +191,9 @@ const MainContentGrid = React.memo(
       return (
         <div className="text-center">
           <p className="text-red-500">{error}</p>
-          <button
-            onClick={() => fetchData(context, contentType)}
-            className="mt-4 rounded-lg bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600"
-            data-focusable="true"
-          >
+          <Button variant="accent" className="mt-4" onClick={() => fetchData(context, contentType)}>
             Reload
-          </button>
+          </Button>
         </div>
       );
     }
@@ -201,7 +201,7 @@ const MainContentGrid = React.memo(
     return (
       <div className="flex h-full flex-col">
         {!isTizen && contentType === 'tv' ? (
-          <div className="relative min-h-0 w-full flex-1 overflow-hidden rounded-xl border border-white/10 bg-black/70">
+          <div className="relative min-h-0 w-full flex-1 overflow-hidden rounded-xl border border-line bg-black/70">
             <TvChannelList
               channels={items}
               channelGroups={channelGroups}
@@ -212,6 +212,7 @@ const MainContentGrid = React.memo(
               favorites={favorites}
               recentChannels={recentChannels}
               providerKey={providerKey}
+              epgData={epgData}
             />
           </div>
         ) : (
@@ -293,7 +294,7 @@ const MainContentGrid = React.memo(
                 {/* No carousel or Continue Watching here any more: the Movies / Series tabs show
                     them in the new layout; this is the per-category browse. */}
                 {!isEpisodeList && (
-                  <h2 className="mb-3 px-2 text-left text-lg font-bold text-white sm:mb-4 sm:px-0 sm:text-2xl">
+                  <h2 className="mb-3 px-2 text-left text-lg font-bold text-fg sm:mb-4 sm:px-0 sm:text-2xl">
                     {context.parentTitle}
                   </h2>
                 )}
@@ -327,7 +328,7 @@ const MainContentGrid = React.memo(
                       <button
                         onClick={() => setShowMobileCategoryDrawer(true)}
                         data-focusable="true"
-                        className="flex items-center gap-2 rounded-lg border border-white/10 bg-black/70 px-3 py-2 text-sm font-bold text-gray-200 transition-colors hover:bg-black/80"
+                        className="flex items-center gap-2 rounded-lg border border-line bg-black/70 px-3 py-2 text-sm font-bold text-fg-soft transition-colors hover:bg-black/80"
                       >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />

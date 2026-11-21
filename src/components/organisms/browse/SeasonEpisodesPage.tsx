@@ -50,18 +50,18 @@ const SeasonEpisodesPage: React.FC<SeasonEpisodesPageProps> = ({
 
   return (
     <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-4">
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/70 shadow-2xl">
+      <div className="relative overflow-hidden rounded-3xl border border-line bg-black/70 shadow-2xl">
         <div className="flex items-center gap-4 p-4 sm:p-6">
           {posterUrl && (
-            <div className="hidden h-24 w-16 shrink-0 overflow-hidden rounded-lg border border-white/10 shadow-lg sm:block">
+            <div className="hidden h-24 w-16 shrink-0 overflow-hidden rounded-lg border border-line shadow-lg sm:block">
               <img src={posterUrl} alt="" className="h-full w-full object-cover" />
             </div>
           )}
           <div>
-            <p className="text-xs font-black uppercase tracking-wider text-blue-400">
+            <p className="text-xs font-black uppercase tracking-wider text-accent">
               {seriesItem.title || seriesItem.name}
             </p>
-            <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
+            <h2 className="text-xl font-black tracking-tight text-fg sm:text-2xl">
               {seasonTitle}
             </h2>
           </div>
@@ -71,10 +71,10 @@ const SeasonEpisodesPage: React.FC<SeasonEpisodesPageProps> = ({
       <div className="flex flex-col gap-2">
         {episodes.length === 0 && loadingEpisodes ? (
           <div className="flex w-full justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-blue-500" />
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-accent" />
           </div>
         ) : episodes.length === 0 ? (
-          <p className="py-6 text-center text-sm text-gray-500">No episodes found for this season.</p>
+          <p className="py-6 text-center text-sm text-fg-subtle">No episodes found for this season.</p>
         ) : (
           <>
             {episodes.map((ep, index) => {
@@ -97,7 +97,7 @@ const SeasonEpisodesPage: React.FC<SeasonEpisodesPageProps> = ({
             })}
             {loadingEpisodes && (
               <div className="flex w-full justify-center py-4">
-                <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-t-2 border-blue-500" />
+                <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-t-2 border-accent" />
               </div>
             )}
           </>

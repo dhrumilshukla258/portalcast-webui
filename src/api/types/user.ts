@@ -23,6 +23,8 @@ export interface User {
     lastSelectedTvChannel?: Record<string, string>;
     /** The Sports page's leagues (servers from 2026-10-22). */
     sportsLeagues?: string[];
+    /** The web app's theme (src/themes/theme.ts ids); servers that keep it (accountTheme.ts). */
+    theme?: string;
   };
 }
 

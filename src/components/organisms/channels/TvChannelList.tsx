@@ -1,6 +1,10 @@
-import { forwardRef, useImperativeHandle } from 'react';
-import type { MediaItem, ChannelGroup } from '@/types';
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import type { MediaItem, ChannelGroup, EPG_List } from '@/types';
 import TvChannelListCard from '@/components/molecules/TvChannelListCard';
+import CategoryIcon from '@/components/atoms/CategoryIcon';
+import WhatsOn from '@/components/organisms/channels/WhatsOn';
+import { CirclePlay } from 'lucide-react';
+import { titleCase } from '@/utils/channelRow';
 import { useResizableWidth } from '@/hooks/useResizableWidth';
 import { useChannelListNav } from '@/hooks/useChannelListNav';
 
@@ -19,6 +23,8 @@ interface TvChannelListProps {
   favorites?: string[];
   recentChannels?: string[];
   providerKey?: string;
+  /** The guide already loaded (useMediaLibrary's EPG window): rows show what is on now and next. */
+  epgData?: Record<string, EPG_List[]>;
 }
 
 const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
@@ -34,9 +40,23 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
       favorites = [],
       recentChannels = [],
       providerKey = 'default',
+      epgData,
     },
     ref
   ) => {
+    // One clock for every row, once a minute, only while there is a guide to show.
+    const [now, setNow] = useState(() => Date.now());
+    useEffect(() => {
+      if (!epgData) return;
+      setNow(Date.now());
+      const id = window.setInterval(() => setNow(Date.now()), 60_000);
+      return () => window.clearInterval(id);
+    }, [epgData]);
+    // What's On (WhatsOn.tsx): the first view of Live TV, above the categories. Not in the
+    // player's channel panel, and only with a guide to build it from.
+    const canWhatsOn = !isOverlay && !!epgData;
+    const [whatsOnOpen, setWhatsOnOpen] = useState(true);
+    const showWhatsOn = canWhatsOn && whatsOnOpen;
     const { width: groupsWidth, onMouseDown: onGroupsResizeStart } =
       useResizableWidth(`tvGroupsWidth_${providerKey}`, 150, 120, 360);
 
@@ -75,6 +95,7 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
 
     return (
       <div
+        data-ui={isOverlay ? 'channel-picker' : undefined}
         className={`glass-panel absolute left-0 top-0 z-40 flex h-full flex-row shadow-2xl transition-all duration-300 ${
           isOverlay
             ? 'w-full md:w-auto md:max-w-[480px] lg:max-w-[560px]'
@@ -86,7 +107,7 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
         {!isMobile && showCloseButton && (
           <button
             onClick={onBack}
-            className="absolute right-6 top-4 z-30 rounded-full p-2 text-gray-400 outline-hidden transition-transform hover:scale-110 hover:text-white focus:scale-110 focus:bg-white/10 focus:text-white"
+            className="absolute right-6 top-4 z-30 rounded-full p-2 text-fg-muted outline-hidden transition-transform hover:scale-110 hover:text-fg focus:scale-110 focus:bg-interaction focus:text-fg"
             aria-label="Close"
             data-focusable="true"
           >
@@ -109,22 +130,21 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
 
         {}
         <div
+          data-part="categories"
           ref={groupListRef}
           style={!isMobile ? { width: groupsWidth } : undefined}
-          className={`custom-scrollbar no-scrollbar-mobile z-20 flex h-full w-full shrink-0 flex-col overflow-y-auto border-r border-white/5 bg-gray-900/60 p-3 shadow-[4px_0_24px_rgba(0,0,0,0.2)] ${
+          className={`custom-scrollbar no-scrollbar-mobile z-20 flex h-full w-full shrink-0 flex-col overflow-y-auto border-r border-white/5 bg-panel/60 p-3 shadow-[4px_0_24px_rgba(0,0,0,0.2)] ${
             isMobile && showChannelsList
               ? 'hidden'
               : 'animate-in slide-in-from-left block duration-300'
           }`}
         >
           <div className="mb-4 mt-2 flex items-center justify-between px-2">
-            <h2 className="text-sm font-black uppercase tracking-tight text-white/80 drop-shadow-md sm:text-base">
-              Categories
-            </h2>
+            <h2 className="ui-label">Categories</h2>
             {isMobile && showCloseButton && (
               <button
                 onClick={onBack}
-                className="rounded-full bg-white/5 p-2 text-gray-400 transition-colors hover:text-white"
+                className="rounded-full bg-white/5 p-2 text-fg-muted transition-colors hover:text-fg"
                 aria-label="Close"
               >
                 <svg
@@ -146,27 +166,48 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
           </div>
 
           <div className="custom-scrollbar flex flex-col gap-1 pb-20">
+            {canWhatsOn && (
+              <div
+                data-focusable="true"
+                onClick={() => {
+                  setWhatsOnOpen(true);
+                  if (isMobile) setShowChannelsList(true);
+                }}
+                className={`flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2 text-left text-xs font-semibold transition-all duration-200 sm:text-sm ${
+                  showWhatsOn ? 'bg-white/15 text-fg shadow-inner' : 'text-fg-muted hover:bg-interaction hover:text-fg'
+                }`}
+              >
+                <CirclePlay className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
+                <span className="truncate">What's On</span>
+              </div>
+            )}
             {channelGroups?.map((group, index) => {
               if (!group) return null;
 
               const isGroupFocused =
                 focusedColumn === 'groups' && focusedGroupIndex === index;
-              const isGroupSelected = selectedGroup?.id === group.id;
+              const isGroupSelected = !showWhatsOn && selectedGroup?.id === group.id;
 
               return (
                 <div
                   key={group.id || index}
                   data-focusable="true"
-                  onClick={() => handleGroupClick(group, index)}
+                  onClick={() => {
+                    setWhatsOnOpen(false);
+                    handleGroupClick(group, index);
+                  }}
                   className={`group flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 text-left text-xs font-semibold transition-all duration-200 sm:text-sm ${
                     isGroupFocused
-                      ? 'scale-[1.01] bg-blue-600 text-white shadow-md shadow-blue-900/30'
+                      ? 'ui-selected scale-[1.01]'
                       : isGroupSelected
-                        ? 'bg-white/15 text-white shadow-inner'
-                        : 'text-gray-400 hover:bg-white/10 hover:text-gray-100'
+                        ? 'bg-white/15 text-fg shadow-inner'
+                        : 'text-fg-muted hover:bg-interaction hover:text-fg'
                   }`}
                 >
-                  <span className="truncate drop-shadow-xs">{group.title}</span>
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <CategoryIcon title={group.title} className="h-4 w-4 shrink-0 opacity-70" />
+                    <span className="truncate drop-shadow-xs">{titleCase(group.title)}</span>
+                  </span>
                   {(isGroupFocused || isGroupSelected) && (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -190,18 +231,20 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
         {/* Drag handle to resize the categories panel */}
         {!isMobile && (
           <div
+            data-part="divider"
             onMouseDown={onGroupsResizeStart}
             title="Drag to resize categories panel"
-            className="group z-20 hidden w-3 shrink-0 cursor-col-resize items-center justify-center bg-gray-900/40 md:flex"
+            className="group z-20 hidden w-3 shrink-0 cursor-col-resize items-center justify-center bg-panel/40 md:flex"
           >
-            <div className="h-16 w-1 rounded-full bg-gray-700/60 transition-colors group-hover:bg-blue-500" />
+            <div className="h-16 w-1 rounded-full bg-panel-hover/60 transition-colors group-hover:bg-focus" />
           </div>
         )}
 
         {}
         <div
+          data-part="channels"
           ref={channelListRef}
-          className={`custom-scrollbar no-scrollbar-mobile relative z-10 h-full flex-1 overflow-y-auto bg-gray-900/30 p-2 sm:p-3 ${
+          className={`custom-scrollbar no-scrollbar-mobile relative z-10 h-full flex-1 overflow-y-auto bg-panel/30 p-2 sm:p-3 ${
             isMobile
               ? showChannelsList
                 ? 'slide-enter-active block'
@@ -210,10 +253,10 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
           }`}
         >
           {isMobile && (
-            <div className="sticky top-0 z-20 mb-2 flex w-full items-center justify-between rounded-b-2xl border-b border-white/10 bg-gray-900/90 p-3 shadow-md backdrop-blur-xl sm:p-4">
+            <div data-part="mobile-heading" className="sticky top-0 z-20 mb-2 flex w-full items-center justify-between rounded-b-2xl border-b border-line bg-panel/90 p-3 shadow-md backdrop-blur-xl sm:p-4">
               <button
                 onClick={() => setShowChannelsList(false)}
-                className="flex flex-1 items-center text-white/90 transition-colors hover:text-white"
+                className="flex flex-1 items-center text-white/90 transition-colors hover:text-fg"
               >
                 <div className="mr-3 rounded-full bg-white/10 p-1">
                   <svg
@@ -232,12 +275,12 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
                   </svg>
                 </div>
                 <span className="truncate text-lg font-extrabold tracking-tight sm:text-xl">
-                  {selectedGroup?.title || 'Channels'}
+                  {showWhatsOn ? "What's On" : selectedGroup?.title ? titleCase(selectedGroup.title) : 'Channels'}
                 </span>
               </button>
               <button
                 onClick={onBack}
-                className="ml-2 rounded-full bg-white/5 p-2 text-gray-400 transition-colors hover:text-white"
+                className="ml-2 rounded-full bg-white/5 p-2 text-fg-muted transition-colors hover:text-fg"
                 aria-label="Close"
               >
                 <svg
@@ -258,20 +301,32 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
             </div>
           )}
 
-          {!isMobile && (
+          {showWhatsOn && (
+            <WhatsOn
+              channels={channels}
+              groups={channelGroups}
+              epgData={epgData!}
+              now={now}
+              favorites={favorites}
+              recentChannels={recentChannels}
+              onPlay={(ch) => handleChannelSelect(ch, Math.max(0, filteredChannels.findIndex((c) => String(c.id) === String(ch.id))))}
+            />
+          )}
+
+          {!isMobile && !showWhatsOn && (
             <div className="mb-6 px-3">
               <h1 className="text-3xl font-black tracking-tight text-white/90 drop-shadow-md">
-                {selectedGroup?.title || 'Channels'}
+                {selectedGroup?.title ? titleCase(selectedGroup.title) : 'Channels'}
               </h1>
-              <p className="mt-1 text-gray-400">
+              <p className="mt-1 text-fg-muted">
                 {filteredChannels.length} channels available
               </p>
             </div>
           )}
 
-          <div className="flex flex-col gap-0.5 pb-32">
+          <div className={`flex flex-col gap-0.5 pb-32 ${showWhatsOn ? 'hidden' : ''}`}>
             {filteredChannels.length === 0 ? (
-              <div className="flex h-64 flex-col items-center justify-center text-gray-500">
+              <div className="flex h-64 flex-col items-center justify-center text-fg-subtle">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="mb-4 h-16 w-16 opacity-50"
@@ -293,6 +348,8 @@ const TvChannelList = forwardRef<TvChannelListRef, TvChannelListProps>(
                 <TvChannelListCard
                   key={item.id}
                   item={item}
+                  programs={epgData?.[String(item.id)]}
+                  now={epgData ? now : undefined}
                   onClick={() => handleChannelSelect(item, index)}
                   isFocused={
                     focusedColumn === 'channels' &&

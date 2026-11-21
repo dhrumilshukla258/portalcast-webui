@@ -1,7 +1,8 @@
 import React from 'react';
-import { Check, Plus } from 'lucide-react';
+import { Check, ChevronRight, Layers, Plus } from 'lucide-react';
 import MediaCard from '@/components/molecules/MediaCard';
-import { getMyListIds, getSimilar, setInMyList } from '@/api/endpoints/discover';
+import TitleActionButton from '@/components/ui/TitleActionButton';
+import { getDiscoverVariants, getMyListIds, getSimilar, setInMyList, type DiscoverVariant } from '@/api/endpoints/discover';
 import { useOpenTitle } from '@/context/PersonPageContext';
 import { isContentId } from '@/utils/titleFormat';
 import type { MediaItem } from '@/types';
@@ -39,16 +40,48 @@ export const MyListButton: React.FC<{ contentId: string }> = ({ contentId }) => 
     }
   };
   return (
-    <button
-      type="button"
+    <TitleActionButton
       onClick={() => void toggle()}
-      data-focusable="true"
       aria-pressed={inList}
-      className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 font-bold text-gray-200 transition-colors hover:bg-white/10"
     >
-      {inList ? <Check size={18} className="text-sky-400" /> : <Plus size={18} />}
+      {inList ? <Check size={18} className="text-accent" /> : <Plus size={18} />}
       <span>{inList ? 'In My List' : 'Add to My List'}</span>
-    </button>
+    </TitleActionButton>
+  );
+};
+
+/**
+ * The version open ("Version: Hindi 1080p") under a title's buttons, when it has several: opens
+ * the same picker as the first time, so another one can be chosen (its page replaces this one;
+ * Back comes back). Nothing for a title with one version.
+ */
+export const VersionsButton: React.FC<{ contentId: string }> = ({ contentId }) => {
+  const openTitle = useOpenTitle();
+  const [versions, setVersions] = React.useState<DiscoverVariant[]>([]);
+  React.useEffect(() => {
+    let cancelled = false;
+    setVersions([]);
+    if (!isContentId(contentId)) return;
+    getDiscoverVariants(contentId)
+      .then((v) => {
+        if (!cancelled) setVersions(v);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [contentId]);
+  if (!openTitle || versions.length < 2) return null;
+  const current = versions.find((v) => String(v.id) === contentId);
+  return (
+    <TitleActionButton
+      onClick={() => openTitle.open({ ...(current ?? versions[0]), id: contentId } as MediaItem)}
+      title={`${versions.length} versions`}
+    >
+      <Layers size={18} className="shrink-0" />
+      <span className="truncate">{current?.variantLabel ? `Version: ${current.variantLabel}` : `${versions.length} versions`}</span>
+      <ChevronRight size={16} className="shrink-0 opacity-60" />
+    </TitleActionButton>
   );
 };
 
@@ -69,8 +102,8 @@ export const MoreLikeThis: React.FC<{ contentId: string }> = ({ contentId }) => 
   }, [contentId]);
   if (!openTitle || items.length === 0) return null;
   return (
-    <div className="space-y-3 border-t border-white/10 p-4 sm:p-6">
-      <h3 className="text-lg font-bold text-white">More Like This</h3>
+    <div className="space-y-3 border-t border-line p-4 sm:p-6">
+      <h3 className="text-lg font-bold text-fg">More Like This</h3>
       <div className="flex gap-3 overflow-x-auto px-1 pb-2 pt-1 custom-scrollbar sm:gap-4" data-focus-group="more-like-this">
         {items.map((item) => (
           <div key={String(item.id)} className="w-28 shrink-0 sm:w-36">

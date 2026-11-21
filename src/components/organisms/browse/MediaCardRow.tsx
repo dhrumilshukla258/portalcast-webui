@@ -26,6 +26,9 @@ interface MediaCardRowProps {
   size?: 'normal' | 'large';
   // A card other than MediaCard (Continue Watching's poster with progress); same row, widths, paging.
   renderItem?: (item: MediaItem, index: number) => React.ReactNode;
+  // The title leads somewhere (a genre row: show only that genre): drawn as a button with a
+  // chevron, on phones and computers.
+  onTitleClick?: () => void;
 }
 
 /** Card widths per breakpoint: as many columns as the grids (MainContentGrid) for 'normal'. */
@@ -37,7 +40,7 @@ const ROW_WIDTHS = {
 const TV_WIDTHS = { normal: 'w-[130px]', large: 'w-[130px]' } as const;
 /** Row heading and strip in the TV apps: rowTitle 20 semibold, 12 to the cards, 16 between cards, 24 between rows. */
 const TV_ROW = 'mb-6';
-const TV_TITLE = 'mb-3 text-left text-[20px] font-semibold text-slate-100';
+const TV_TITLE = 'mb-3 text-left text-[20px] font-semibold text-fg';
 
 const MediaCardRow: React.FC<MediaCardRowProps> = ({
   title,
@@ -50,7 +53,23 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
   onLoadMore,
   size = 'normal',
   renderItem,
+  onTitleClick,
 }) => {
+  const heading =
+    onTitleClick && !TV ? (
+      <button
+        type="button"
+        onClick={onTitleClick}
+        data-focusable="true"
+        title={`Show only ${title}`}
+        className="group/title inline-flex items-center gap-1 text-left transition-opacity hover:opacity-80 focus:outline-hidden focus-visible:underline"
+      >
+        {title}
+        <ChevronRight className="h-5 w-5 opacity-50 transition-transform group-hover/title:translate-x-0.5 sm:h-6 sm:w-6" strokeWidth={2.5} />
+      </button>
+    ) : (
+      title
+    );
   const widths = (TV ? TV_WIDTHS : ROW_WIDTHS)[size];
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -160,7 +179,7 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
     return (
       <div className={TV ? TV_ROW : 'content-transition group/row relative mb-6 px-2 sm:mb-8 sm:px-0'} data-tv-section="">
         <h2 className={TV ? TV_TITLE : 'mb-2 text-left text-lg font-bold text-white sm:mb-4 sm:text-2xl'}>
-          {title}
+          {heading}
         </h2>
         <div className={TV ? 'flex gap-4 overflow-hidden' : 'flex gap-2 overflow-hidden sm:gap-4'}>
           {Array.from({ length: 6 }).map((_, i) => (
@@ -177,14 +196,14 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
   return (
     <div className={TV ? `relative ${TV_ROW}` : 'content-transition group/row relative mb-6 px-2 sm:mb-8 sm:px-0'} data-tv-section="">
       <h2 className={TV ? TV_TITLE : 'mb-2 text-left text-lg font-bold text-white sm:mb-4 sm:text-2xl'}>
-        {title}
+        {heading}
       </h2>
 
       {canScrollLeft && !TV && (
         <button
           onClick={() => scrollBy(-1)}
           aria-label="Scroll left"
-          className="absolute bottom-0 left-0 top-6 z-10 hidden w-10 items-center justify-center bg-linear-to-r from-black/60 to-transparent text-white opacity-70 transition-opacity hover:opacity-100! sm:flex"
+          className="row-step step-control absolute bottom-0 left-0 top-6 z-10 hidden w-10 items-center justify-center bg-linear-to-r from-black/60 to-transparent text-white opacity-70 transition-opacity hover:opacity-100! sm:flex"
         >
           <ChevronLeft className="h-8 w-8" />
         </button>
@@ -219,7 +238,7 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
         ))}
         {loadingMore && (
           <div className={`flex shrink-0 items-center justify-center ${widths}`}>
-            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-blue-500" />
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-accent" />
           </div>
         )}
       </div>
@@ -228,7 +247,7 @@ const MediaCardRow: React.FC<MediaCardRowProps> = ({
         <button
           onClick={() => scrollBy(1)}
           aria-label="Scroll right"
-          className="absolute bottom-0 right-0 top-6 z-10 hidden w-10 items-center justify-center bg-linear-to-l from-black/60 to-transparent text-white opacity-70 transition-opacity hover:opacity-100! sm:flex"
+          className="row-step step-control absolute bottom-0 right-0 top-6 z-10 hidden w-10 items-center justify-center bg-linear-to-l from-black/60 to-transparent text-white opacity-70 transition-opacity hover:opacity-100! sm:flex"
         >
           <ChevronRight className="h-8 w-8" />
         </button>

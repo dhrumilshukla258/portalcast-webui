@@ -10,9 +10,11 @@ import { isTvApp } from '@/utils/helpers';
 import { PasswordStrengthChecklist } from '@/components/molecules/PasswordStrengthChecklist';
 import { useLoginForm } from '@/hooks/useLoginForm';
 import { useTVDeviceFlow } from '@/hooks/useTVDeviceFlow';
+import { useTheme } from '@/themes/theme';
 
 export default function Login() {
   const { isLoggedIn, loginWithGoogle, loginWithCredentials } = useAuth();
+  const theme = useTheme();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/';
@@ -214,7 +216,7 @@ export default function Login() {
 
         if (googleBtnRef.current) {
           win.google.accounts.id.renderButton(googleBtnRef.current, {
-            theme: 'filled_blue',
+            theme: theme === 'minimal' ? 'filled_black' : 'filled_blue',
             size: 'large',
             text: 'signin_with',
             shape: 'rectangular',
@@ -227,11 +229,11 @@ export default function Login() {
     // Poll for the Google SDK script load
     const checkInterval = setInterval(initGoogle, 100);
     return () => clearInterval(checkInterval);
-  }, [activeTab, isLoggedIn, isSignUp, handleCredentialResponse, googleClientId]);
+  }, [activeTab, isLoggedIn, isSignUp, handleCredentialResponse, googleClientId, theme]);
 
   return (
-    <div className="min-h-screen app-bg flex flex-col justify-center items-center px-4 font-sans text-gray-200">
-      <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center">
+    <div className="min-h-screen app-bg flex flex-col justify-center items-center px-4 font-sans text-fg-soft">
+      <div className="max-w-md w-full bg-panel border border-line rounded-3xl p-8 shadow-2xl flex flex-col items-center">
 
         {/* Logo */}
         <div className="flex items-center mb-6">
@@ -257,13 +259,13 @@ export default function Login() {
             login bounce, since generating a second code there would only
             loop back to /verify instead of into the app (see isVerifyRedirect above) */}
         {(activeTab === 'web' || activeTab === 'tv') && !isVerifyRedirect && (
-          <div className="flex w-full bg-slate-950 p-1.5 rounded-2xl border border-slate-800/80 mb-6">
+          <div className="flex w-full bg-page p-1.5 rounded-2xl border border-divider/80 mb-6">
             <button
               onClick={() => setActiveTab('web')}
               className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 cursor-pointer ${
                 activeTab === 'web'
-                  ? 'bg-linear-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/10'
-                  : 'text-gray-400 hover:text-gray-255'
+                  ? 'ui-brand shadow-lg shadow-accent/10'
+                  : 'text-fg-muted hover:text-fg-soft'
               }`}
             >
               Credentials
@@ -272,8 +274,8 @@ export default function Login() {
               onClick={() => setActiveTab('tv')}
               className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 cursor-pointer ${
                 activeTab === 'tv'
-                  ? 'bg-linear-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/10'
-                  : 'text-gray-400 hover:text-gray-255'
+                  ? 'ui-brand shadow-lg shadow-accent/10'
+                  : 'text-fg-muted hover:text-fg-soft'
               }`}
             >
               Sign-in via QR
@@ -287,7 +289,7 @@ export default function Login() {
             <h2 className="text-xl font-bold text-center mb-2">
               {isSignUp ? 'Create Account' : 'Welcome Back'}
             </h2>
-            <p className="text-gray-400 text-sm text-center mb-6">
+            <p className="text-fg-muted text-sm text-center mb-6">
               {isSignUp
                 ? 'Sign up to request access to the streaming portal.'
                 : 'Sign in with your email credentials or Google account.'}
@@ -296,9 +298,9 @@ export default function Login() {
             <form onSubmit={handleCredentialsSubmit} className="space-y-4 w-full">
               {isSignUp && (
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Full Name</label>
+                  <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Full Name</label>
                   <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-550" />
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle" />
                     <input
                       type="text"
                       value={nameInput}
@@ -307,7 +309,7 @@ export default function Login() {
                         clearMessages();
                       }}
                       placeholder="John Doe"
-                      className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-hidden transition-all duration-300"
+                      className="w-full bg-page border border-line hover:border-line focus:border-focus rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
                       required
                     />
                   </div>
@@ -315,9 +317,9 @@ export default function Login() {
               )}
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Email Address</label>
+                <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-550" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle" />
                   <input
                     type="email"
                     value={emailInput}
@@ -326,16 +328,16 @@ export default function Login() {
                       clearMessages();
                     }}
                     placeholder="name@example.com"
-                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-hidden transition-all duration-300"
+                    className="w-full bg-page border border-line hover:border-line focus:border-focus rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Password</label>
+                <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Password</label>
                 <div className="relative">
-                  <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-550" />
+                  <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle" />
                   <input
                     type="password"
                     value={passwordInput}
@@ -344,7 +346,7 @@ export default function Login() {
                       clearMessages();
                     }}
                     placeholder="••••••••"
-                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-hidden transition-all duration-300"
+                    className="w-full bg-page border border-line hover:border-line focus:border-focus rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
                     required
                   />
                 </div>
@@ -370,7 +372,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={credsLoading}
-                className="w-full py-3.5 rounded-2xl bg-linear-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
+                className="w-full py-3.5 rounded-2xl ui-brand hover:brightness-110 font-semibold transition-all duration-300 shadow-xl shadow-accent/10 hover:shadow-accent/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
               >
                 {credsLoading ? (
                   <>
@@ -384,12 +386,12 @@ export default function Login() {
             </form>
 
             <div className="mt-4 text-center text-sm">
-              <span className="text-gray-400">
+              <span className="text-fg-muted">
                 {isSignUp ? 'Already have an account?' : "Don't have an account?"}
               </span>
               <button
                 onClick={toggleMode}
-                className="text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline ml-1 bg-transparent border-none p-0 inline focus:outline-hidden"
+                className="text-accent hover:text-accent font-semibold cursor-pointer underline ml-1 bg-transparent border-none p-0 inline focus:outline-hidden"
               >
                 {isSignUp ? 'Log In' : 'Sign Up'}
               </button>
@@ -400,7 +402,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => { setActiveTab('forgot'); clearMessages(); }}
-                  className="text-xs text-gray-400 hover:text-indigo-400 transition-colors duration-250 cursor-pointer"
+                  className="text-xs text-fg-muted hover:text-accent transition-colors duration-250 cursor-pointer"
                 >
                   Forgot password?
                 </button>
@@ -410,15 +412,15 @@ export default function Login() {
             {!isSignUp && googleClientId && (
               <>
                 <div className="relative flex py-5 items-center w-full">
-                  <div className="grow border-t border-slate-800/80"></div>
-                  <span className="shrink mx-4 text-gray-500 text-xs font-semibold uppercase tracking-wider">or sign in with</span>
-                  <div className="grow border-t border-slate-800/80"></div>
+                  <div className="grow border-t border-divider/80"></div>
+                  <span className="shrink mx-4 text-fg-subtle text-xs font-semibold uppercase tracking-wider">or sign in with</span>
+                  <div className="grow border-t border-divider/80"></div>
                 </div>
 
                 {googleLoading ? (
                   <div className="flex flex-col items-center space-y-3 py-2 w-full">
-                     <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
-                     <span className="text-xs text-gray-500">Verifying credentials...</span>
+                     <Loader2 className="w-6 h-6 text-accent animate-spin" />
+                     <span className="text-xs text-fg-subtle">Verifying credentials...</span>
                   </div>
                 ) : (
                   <div ref={googleBtnRef} id="google-signin-btn" className="w-full flex justify-center min-h-[44px]"></div>
@@ -434,40 +436,40 @@ export default function Login() {
         {activeTab === 'tv' && (
           <div className="w-full flex flex-col items-center py-2">
             <h2 className="text-xl font-bold mb-2">Sign In via QR Code</h2>
-            <p className="text-gray-400 text-sm text-center mb-6">
+            <p className="text-fg-muted text-sm text-center mb-6">
               Scan the QR code or visit the link on another device to authorize this browser session.
             </p>
 
             {deviceStatus === 'loading' && (
               <div className="flex flex-col items-center py-10 space-y-4">
-                <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
-                <span className="text-sm text-gray-500">Generating authorization codes...</span>
+                <Loader2 className="w-10 h-10 text-accent animate-spin" />
+                <span className="text-sm text-fg-subtle">Generating authorization codes...</span>
               </div>
             )}
 
             {deviceStatus === 'pending' && deviceFlow && (
               <div className="flex flex-col items-center w-full space-y-6">
                 {/* QR Code Container */}
-                <div className="p-3 bg-slate-950 border border-slate-800 rounded-2xl shadow-inner">
+                <div className="p-3 bg-page border border-line rounded-2xl shadow-inner">
                   {qrCodeUrl && (
                     <img
                       src={qrCodeUrl}
                       alt="QR Code to scan"
-                      className="w-[180px] h-[180px] rounded-lg"
+                      className={`w-[180px] h-[180px] rounded-lg${theme === 'minimal' ? ' grayscale' : ''}`}
                     />
                   )}
                 </div>
 
                 {/* User Authorization Code */}
-                <div className="text-center w-full bg-slate-950 border border-slate-800/80 rounded-2xl py-4">
-                  <div className="text-xs text-gray-500 tracking-wider uppercase mb-1">Authorization Code</div>
-                  <div className="text-3xl font-mono font-extrabold tracking-widest text-indigo-400 select-all">
+                <div className="text-center w-full bg-page border border-divider/80 rounded-2xl py-4">
+                  <div className="text-xs text-fg-subtle tracking-wider uppercase mb-1">Authorization Code</div>
+                  <div className="text-3xl font-mono font-extrabold tracking-widest text-accent select-all">
                     {deviceFlow.userCode}
                   </div>
                 </div>
 
-                <div className="text-xs text-gray-500 flex items-center space-x-1.5">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-500" />
+                <div className="text-xs text-fg-subtle flex items-center space-x-1.5">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />
                   <span>Waiting for mobile authorization...</span>
                 </div>
               </div>
@@ -478,7 +480,7 @@ export default function Login() {
                 <p className="text-red-400 text-sm">The authorization code has expired.</p>
                 <button
                   onClick={startTVDeviceFlow}
-                  className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition-all duration-300 flex items-center space-x-2 shadow-lg shadow-indigo-600/10"
+                  className="px-5 py-2.5 rounded-xl ui-brand hover:brightness-110 font-medium text-sm transition-all duration-300 flex items-center space-x-2 shadow-lg shadow-accent/10"
                 >
                   <RefreshCw className="w-4 h-4" />
                   <span>Generate New Code</span>
@@ -492,14 +494,14 @@ export default function Login() {
         {activeTab === 'forgot' && (
           <div className="w-full flex flex-col py-2 text-left animate-in fade-in duration-200">
             <h2 className="text-xl font-bold text-center mb-2">Reset Password</h2>
-            <p className="text-gray-400 text-sm text-center mb-6">
+            <p className="text-fg-muted text-sm text-center mb-6">
               Enter your email address to request a secure password reset link.
             </p>
             <form onSubmit={handleForgotPasswordSubmit} className="space-y-4 w-full">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Email Address</label>
+                <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-550" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle" />
                   <input
                     type="email"
                     value={emailInput}
@@ -508,7 +510,7 @@ export default function Login() {
                       clearMessages();
                     }}
                     placeholder="name@example.com"
-                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-hidden transition-all duration-300"
+                    className="w-full bg-page border border-line hover:border-line focus:border-focus rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
                     required
                   />
                 </div>
@@ -530,7 +532,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={credsLoading}
-                className="w-full py-3.5 rounded-2xl bg-linear-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer text-sm"
+                className="w-full py-3.5 rounded-2xl ui-brand hover:brightness-110 font-semibold transition-all duration-300 shadow-xl shadow-accent/10 hover:shadow-accent/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer text-sm"
               >
                 {credsLoading ? (
                   <>
@@ -546,7 +548,7 @@ export default function Login() {
             <div className="mt-6 text-center text-sm">
               <button
                 onClick={() => { setActiveTab('web'); clearMessages(); }}
-                className="text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline bg-transparent border-none p-0 inline focus:outline-hidden"
+                className="text-accent hover:text-accent font-semibold cursor-pointer underline bg-transparent border-none p-0 inline focus:outline-hidden"
               >
                 Back to Login
               </button>
@@ -558,14 +560,14 @@ export default function Login() {
         {activeTab === 'reset' && (
           <div className="w-full flex flex-col py-2 text-left animate-in fade-in duration-200">
             <h2 className="text-xl font-bold text-center mb-2">Create New Password</h2>
-            <p className="text-gray-400 text-sm text-center mb-6">
+            <p className="text-fg-muted text-sm text-center mb-6">
               Enter your new secure password below to finalize your reset.
             </p>
             <form onSubmit={handleResetPasswordSubmit} className="space-y-4 w-full">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">New Password</label>
+                <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">New Password</label>
                 <div className="relative">
-                  <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-555" />
+                  <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle" />
                   <input
                     type="password"
                     value={passwordInput}
@@ -574,7 +576,7 @@ export default function Login() {
                       clearMessages();
                     }}
                     placeholder="••••••••"
-                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-indigo-500 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-200 focus:outline-hidden transition-all duration-300"
+                    className="w-full bg-page border border-line hover:border-line focus:border-focus rounded-2xl py-3 pl-11 pr-4 text-sm text-fg-soft focus:outline-hidden transition-all duration-300"
                     required
                   />
                 </div>
@@ -594,7 +596,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={credsLoading}
-                className="w-full py-3.5 rounded-2xl bg-linear-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-semibold transition-all duration-300 shadow-xl shadow-indigo-600/10 hover:shadow-indigo-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer text-sm"
+                className="w-full py-3.5 rounded-2xl ui-brand hover:brightness-110 font-semibold transition-all duration-300 shadow-xl shadow-accent/10 hover:shadow-accent/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer text-sm"
               >
                 {credsLoading ? (
                   <>

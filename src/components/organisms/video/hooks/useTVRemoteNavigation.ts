@@ -349,6 +349,24 @@ export function useTVRemoteNavigation(
           e.preventDefault();
           remote.togglePaused();
           break;
+        // A keyboard's (YouTube's keys): Space or K plays and pauses, F full screen, M mute.
+        // Not with Cmd/Ctrl/Alt (the browser's own), and Space presses the row in an open menu.
+        case 32: // Space
+        case 75: // K
+          if (e.metaKey || e.ctrlKey || e.altKey || (e.keyCode === 32 && isMenuOpen)) break;
+          e.preventDefault();
+          remote.togglePaused();
+          break;
+        case 70: // F
+          if (e.metaKey || e.ctrlKey || e.altKey) break;
+          e.preventDefault();
+          remote.toggleFullscreen();
+          break;
+        case 77: // M
+          if (e.metaKey || e.ctrlKey || e.altKey) break;
+          e.preventDefault();
+          remote.toggleMuted();
+          break;
         case 412: // Rewind
           e.preventDefault();
           contentType === 'tv' ? onPrevChannel?.() : handleSkipButtonClick(-30);

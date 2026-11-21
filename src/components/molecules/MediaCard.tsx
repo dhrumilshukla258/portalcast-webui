@@ -9,10 +9,11 @@ import { cardPoster } from '@/utils/imageSize';
 import { ratingLabel } from '@/utils/titleFormat';
 import { isTvApp } from '@/utils/helpers';
 import { useTvFocusedItem } from '@/tv/TvHeroContext';
+import { usePart } from '@/themes/registry';
 
 const TV = isTvApp();
 
-interface MediaCardProps {
+export interface MediaCardProps {
   item: MediaItem;
   onClick: (item: MediaItem) => void;
   progressPercent?: number;
@@ -38,7 +39,7 @@ function splitOnMatch(text: string, term: string): [string, string, string] | nu
   return [text.slice(0, index), text.slice(index, index + term.length), text.slice(index + term.length)];
 }
 
-const MediaCard: React.FC<MediaCardProps> = React.memo(({
+const ClassicMediaCard: React.FC<MediaCardProps> = React.memo(({
   item,
   onClick,
   progressPercent,
@@ -90,7 +91,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
     return (
       <div className={iptvOffline && String(item.is_local) !== '1' && item.category_id !== 'local' ? 'opacity-35' : ''}>
         <div
-          className="tv-card relative aspect-2/3 w-full overflow-hidden rounded-lg bg-[#121A2B]"
+          className="tv-card relative aspect-2/3 w-full overflow-hidden rounded-lg bg-surface-8"
           onClick={() => { if (!isLoading) onClick(item); }}
           onFocus={reportFocus ? () => reportFocus(item) : undefined}
           {...hold}
@@ -110,7 +111,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
             </div>
           )}
           {String(item.is_local) === '1' ? (
-            <span className="absolute right-1.5 top-1.5 rounded-md bg-sky-500/90 px-1.5 py-0.5 text-[11px] font-bold text-white">
+            <span className="absolute right-1.5 top-1.5 rounded-md bg-accent/90 px-1.5 py-0.5 text-2xs font-bold text-white">
               {item.quality?.includes('4K') ? 'Local · 4K' : 'Local'}
             </span>
           ) : rating && !isCompleted ? (
@@ -121,12 +122,12 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
           {isCompleted && <span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-green-500" />}
           {displayProgress !== undefined && displayProgress > 0 && (
             <div className="absolute inset-x-0 bottom-0 h-[3px] bg-white/25">
-              <div className="h-full bg-sky-400" style={{ width: `${Math.min(100, displayProgress)}%` }} />
+              <div className="h-full bg-accent" style={{ width: `${Math.min(100, displayProgress)}%` }} />
             </div>
           )}
         </div>
-        <p className="tv-card-caption mt-2 truncate text-[13px] font-medium text-slate-400">{displayTitle}</p>
-        {categoryLabel && <p className="truncate text-[12px] text-slate-500">{categoryLabel}</p>}
+        <p className="tv-card-caption mt-2 truncate text-[13px] font-medium text-fg-muted">{displayTitle}</p>
+        {categoryLabel && <p className="truncate text-[12px] text-fg-subtle">{categoryLabel}</p>}
       </div>
     );
   }
@@ -149,7 +150,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
           aria-label="More"
           title="More: My List, Mark as watched, Not interested"
           onClick={(e) => { e.stopPropagation(); openMenu(item); }}
-          className="absolute bottom-2 right-2 z-20 hidden h-8 w-8 items-center justify-center rounded-full bg-black/70 text-lg font-bold leading-none text-white hover:bg-sky-500 sm:group-hover:flex"
+          className="absolute bottom-2 right-2 z-20 hidden h-8 w-8 items-center justify-center rounded-full bg-black/70 text-lg font-bold leading-none text-white hover:bg-action-hover hover:text-on-action sm:group-hover:flex"
         >
           ⋯
         </button>
@@ -186,7 +187,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
         )}
         {String(item.is_local) === '1' ? (
           <span
-            className="absolute right-2 top-2 z-10 rounded-md bg-sky-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white shadow"
+            className="absolute right-2 top-2 z-10 rounded-md bg-accent/90 px-1.5 py-0.5 text-3xs font-bold text-white shadow"
             title="On your NAS: plays without the IPTV portal"
           >
             {item.quality?.includes('4K') ? 'Local · 4K' : 'Local'}
@@ -194,14 +195,14 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
         ) : rating && !isCompleted ? (
           // The title's one rating (design-system.md, Cards): "★ 8.4", top right.
           <span
-            className="absolute right-2 top-2 z-10 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur-sm"
+            className="absolute right-2 top-2 z-10 rounded-full bg-black/60 px-2 py-0.5 text-2xs font-semibold text-white backdrop-blur-sm"
             title={item.rating_source ? `${item.rating_source} rating` : 'Rating'}
           >
             <span className="text-amber-400">★</span> {rating}
           </span>
         ) : null}
         {displayProgress !== undefined && displayProgress > 0 && (
-          <div className="absolute bottom-0 left-0 h-1 w-full bg-gray-600/80">
+          <div className="absolute bottom-0 left-0 h-1 w-full bg-divider/80">
             <div
               className="h-full bg-linear-to-r from-portalcast-light to-portalcast-dark transition-all duration-300"
               style={{ width: `${Math.min(100, displayProgress)}%` }}
@@ -214,7 +215,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
           {highlighted ? (
             <>
               {highlighted[0]}
-              <mark className="rounded-sm bg-blue-500/40 text-white">{highlighted[1]}</mark>
+              <mark className="rounded-sm bg-accent/40 text-white">{highlighted[1]}</mark>
               {highlighted[2]}
             </>
           ) : (
@@ -222,13 +223,19 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({
           )}
         </h3>
         {categoryLabel && (
-          <span className="w-full truncate text-center text-xs text-gray-500">
+          <span className="w-full truncate text-center text-xs text-fg-subtle">
             {categoryLabel}
           </span>
         )}
       </div>
     </div>
   );
+});
+
+// The current theme's card (src/themes/registry.ts); Classic's, which also draws the TV apps' poster.
+const MediaCard: React.FC<MediaCardProps> = React.memo((props) => {
+  const Card = usePart('Card', ClassicMediaCard);
+  return <Card {...props} />;
 });
 
 export default MediaCard;

@@ -26,59 +26,9 @@
   margin: 0 auto;
   padding: 2rem; */
   text-align: center;
-   --toastify-color-dark: #0b0f19; 
-  --toastify-color-info: #3b82f6; 
-  --toastify-color-success: #10b981; 
-  --toastify-color-error: #ef4444; 
-  
-  --toastify-toast-min-height: 60px;
-  --toastify-z-index: 9999;
 }
 
-/* Base Toast styling */
-.Toastify__toast {
-  border-radius: 1rem !important; /* rounded-2xl */
-  backdrop-filter: blur(10px); /* Gives a slight glassy premium feel */
-}
-
-/* Gradient progress bar for standard/info toasts to match your active buttons */
-.Toastify__progress-bar--info {
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6) !important; 
-}
-
-/* Subtle close button */
-.Toastify__close-button {
-  color: #64748b !important; /* slate-500 */
-  opacity: 0.8;
-  margin-top: 10px;
-  margin-right: 5px;
-}
-
-.Toastify__close-button:hover {
-  color: #f8fafc !important; 
-  opacity: 1;
-}
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* Notifications: src/components/ui/Toaster.tsx and ui.css .ui-toast (theme tokens). */
 
 /* Cheap page-transition: opacity + transform only (both compositor-only,
    no layout/paint cost), so it stays smooth even on low-power TV hardware.
@@ -116,54 +66,8 @@
   animation: row-content-fade-in 400ms ease-out;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
-.focused {
-  outline: 2px solid #3b82f6 !important;
-  outline-offset: 2px;
-}
-
-/* Premium scale and glow effects for focused media cards and grid elements on
-   smart TVs — excludes text inputs (:not([type="search"])) since scaling up
-   a text box while it's focused/being typed into reads as a bug, not a
-   feature; the plain .focused outline above is still enough there. */
-[data-focusable="true"]:not([type="search"]).focused {
-  z-index: 10;
-  transform: scale(1.03) !important;
-  border-color: rgba(59, 130, 246, 0.8) !important; /* blue-500 */
-  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4), 0 8px 10px -6px rgba(59, 130, 246, 0.4) !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Premium gradient style for TV channel list card when focused */
-.channel-list [data-focusable="true"].focused {
-  transform: scale(1.01) !important;
-  background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%) !important;
-  color: white !important;
-  border-color: transparent !important;
-  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3) !important;
-}
-
-/* Ensure child texts color transitions beautifully when parent list card is focused */
-.channel-list [data-focusable="true"].focused h3 {
-  color: #ffffff !important;
-  font-weight: 700;
-}
-.channel-list [data-focusable="true"].focused span {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
+/* Focus (.focused) and selection: src/components/ui/ui.css, on the theme's --ui-focus-* and
+   --ui-selected-* tokens. */
 
 /* Hide scrollbar for Chrome, Safari and Opera */
 .hide-scrollbar::-webkit-scrollbar {

@@ -3,12 +3,31 @@ import { createPortal } from 'react-dom';
 import { ArrowLeft } from 'lucide-react';
 import { takeCardOrigin, type CardOrigin } from '@/utils/cardOrigin';
 
-// The same motion as the Android TV app's title pages (ui/nav/TitleTransitions.kt): grow out of
-// the card in 380 ms (Material's emphasized decelerate), shrink back into it in 260 ms.
+// The motion is the theme's (--ui-title-* in src/components/ui/ui.css). Classic: the Android TV
+// app's title pages (ui/nav/TitleTransitions.kt), growing out of the card in 380 ms (Material's
+// emphasized decelerate) and shrinking back into it in 260 ms; the fallbacks below.
 const OPEN_MS = 380;
 const CLOSE_MS = 260;
 const EASE_OPEN = 'cubic-bezier(0.05, 0.7, 0.1, 1)';
 const EASE_CLOSE = 'cubic-bezier(0.3, 0, 0.8, 0.15)';
+
+function titleMotion() {
+  const cs = getComputedStyle(document.documentElement);
+  const token = (name: string) => cs.getPropertyValue(name).trim();
+  // An easing this browser cannot run (linear() before Chrome 113) would make animate() throw.
+  const ease = (name: string, fallback: string) => {
+    const v = token(name);
+    return v && window.CSS?.supports?.('animation-timing-function', v) ? v : fallback;
+  };
+  return {
+    openMs: Number(token('--ui-title-open-ms')) || OPEN_MS,
+    openEase: ease('--ui-title-open-ease', EASE_OPEN),
+    closeMs: Number(token('--ui-title-close-ms')) || CLOSE_MS,
+    closeEase: ease('--ui-title-close-ease', EASE_CLOSE),
+    /** How much of the motion the page takes to fade in (and, closing, out): 1 = all of it. */
+    fade: Math.min(1, Math.max(0.05, Number(token('--ui-title-fade')) || 1)),
+  };
+}
 
 const reducedMotion = () => !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -58,12 +77,14 @@ const TitlePageLayer: React.FC<TitlePageLayerProps> = ({ open, pageKey, onBack, 
     const target = opening ? layer : contentRef.current;
     if (!target) return;
     const m = motionFrom(origin.current);
+    const t = titleMotion();
     const box = target.getBoundingClientRect();
     target.style.transformOrigin = origin.current ? `${origin.current.x - box.left}px ${origin.current.y - box.top}px` : m.origin;
-    const anim = target.animate([{ transform: m.transform, opacity: 0 }, { transform: 'none', opacity: 1 }], {
-      duration: OPEN_MS,
-      easing: EASE_OPEN,
-    });
+    const frames: Keyframe[] =
+      t.fade < 1
+        ? [{ transform: m.transform, opacity: 0 }, { opacity: 1, offset: t.fade }, { transform: 'none', opacity: 1 }]
+        : [{ transform: m.transform, opacity: 0 }, { transform: 'none', opacity: 1 }];
+    const anim = target.animate(frames, { duration: t.openMs, easing: t.openEase });
     return () => anim.cancel();
   }, [open, pageKey]);
 
@@ -81,12 +102,13 @@ const TitlePageLayer: React.FC<TitlePageLayerProps> = ({ open, pageKey, onBack, 
       return;
     }
     const m = motionFrom(origin.current);
+    const t = titleMotion();
     layer.style.transformOrigin = m.origin;
-    const anim = layer.animate([{ transform: 'none', opacity: 1 }, { transform: m.transform, opacity: 0 }], {
-      duration: CLOSE_MS,
-      easing: EASE_CLOSE,
-      fill: 'forwards',
-    });
+    const frames: Keyframe[] =
+      t.fade < 1
+        ? [{ transform: 'none', opacity: 1 }, { opacity: 1, offset: 1 - t.fade }, { transform: m.transform, opacity: 0 }]
+        : [{ transform: 'none', opacity: 1 }, { transform: m.transform, opacity: 0 }];
+    const anim = layer.animate(frames, { duration: t.closeMs, easing: t.closeEase, fill: 'forwards' });
     // The finish event waits for a drawn frame (none in a hidden tab): a timer as well.
     let finished = false;
     const finish = () => {
@@ -95,7 +117,7 @@ const TitlePageLayer: React.FC<TitlePageLayerProps> = ({ open, pageKey, onBack, 
       done();
     };
     anim.onfinish = finish;
-    const timer = window.setTimeout(finish, CLOSE_MS + 100);
+    const timer = window.setTimeout(finish, t.closeMs + 100);
     return () => {
       anim.onfinish = null;
       window.clearTimeout(timer);
@@ -119,7 +141,7 @@ const TitlePageLayer: React.FC<TitlePageLayerProps> = ({ open, pageKey, onBack, 
   return createPortal(
     <div
       ref={layerRef}
-      className="fixed inset-0 z-[85] overflow-y-auto overscroll-contain bg-[#05080F] custom-scrollbar"
+      className="fixed inset-0 z-[85] overflow-y-auto overscroll-contain bg-surface-2 custom-scrollbar"
       data-tv-layer=""
       style={open ? undefined : { pointerEvents: 'none' }}
     >

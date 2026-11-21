@@ -146,7 +146,7 @@ export const AmbientBackdrop: React.FC<AmbientBackdropProps> = ({ items, rotateM
           onTransitionEnd={() => setOutgoingUrl(null)}
         />
       )}
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-linear-to-b from-[#030305]/5 via-[#030305]/35 to-[#030305]/80" />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-linear-to-b from-surface-0/5 via-surface-0/35 to-surface-0/80" />
     </>
   );
 };

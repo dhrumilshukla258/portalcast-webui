@@ -93,18 +93,18 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="text-gray-200 selection:bg-blue-500/30">
+    <div className="text-fg-soft selection:bg-accent/30">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 md:flex-row md:gap-10">
         {/* Sections: a side menu on wide screens, a row of chips on narrow ones */}
         <aside className="md:sticky md:top-6 md:h-fit md:w-48 md:shrink-0">
           <div className="mb-4 flex items-center justify-between md:mb-8 md:block">
-            <h1 className="text-lg font-bold text-white">Admin</h1>
+            <h1 className="text-lg font-bold text-fg">Admin</h1>
             <div className="flex gap-1 md:mt-3">
               <button
                 type="button"
                 onClick={back}
                 data-focusable="true"
-                className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-gray-400 hover:bg-white/5 hover:text-white"
+                className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-fg-muted hover:bg-interaction hover:text-fg"
               >
                 <ArrowLeft size={14} /> Back to TV
               </button>
@@ -112,7 +112,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
                 type="button"
                 onClick={() => logout()}
                 data-focusable="true"
-                className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-gray-500 hover:bg-white/5 hover:text-red-400"
+                className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-fg-subtle hover:bg-interaction hover:text-red-400"
               >
                 <LogOut size={14} /> Log out
               </button>
@@ -130,10 +130,10 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
                       data-focusable="true"
                       aria-current={active ? 'page' : undefined}
                       className={`flex w-full items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors ${
-                        active ? 'bg-white/10 font-semibold text-white' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
+                        active ? 'bg-white/10 font-semibold text-fg' : 'text-fg-muted hover:bg-interaction hover:text-fg-soft'
                       }`}
                     >
-                      <s.icon size={16} className={active ? 'text-sky-400' : 'text-gray-500'} />
+                      <s.icon size={16} className={active ? 'text-accent' : 'text-fg-subtle'} />
                       {s.label}
                     </button>
                   </li>
@@ -158,7 +158,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
                         data-focusable="true"
                         aria-current={active ? 'page' : undefined}
                         className={`-mb-px whitespace-nowrap border-b-2 pb-2.5 text-sm transition-colors ${
-                          active ? 'border-sky-400 font-semibold text-white' : 'border-transparent text-gray-500 hover:text-gray-300'
+                          active ? 'border-accent font-semibold text-fg' : 'border-transparent text-fg-subtle hover:text-fg-soft'
                         }`}
                       >
                         {p.label}
